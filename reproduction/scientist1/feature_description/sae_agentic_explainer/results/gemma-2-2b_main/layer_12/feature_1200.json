@@ -1,0 +1,408 @@
+{
+  "feature_idx": 1200,
+  "max_act_ref": 6.228416442871094,
+  "trigger_threshold": 1.2456832885742188,
+  "sage": {
+    "candidates": [
+      "Feature is currently unsupported by probes; the safest revision is that it may key on dataset-specific corruption where a token fragment is inserted between literal `<<` and `>>` inside otherwise technical text, especially in math/code/biomedical strings such as `BHLH1<<0>>1`, `\\<<alpha>>`, or `a_{<<1>>3}`.",
+      "Possible polysemantic alternative: feature responds to broken technical identifiers where a short fragment like a digit, Greek-name piece, or stem (`0`, `1`, `alpha`, `own`) is split out from a larger token by surrounding punctuation/formatting boundaries.",
+      "Possible narrower math/code-table context feature: malformed serialized technical text containing quoting or escaping plus field/name fragments, e.g. LaTeX/control-sequence text, SQL/backticked column names, or indexed algebraic expressions that have been interrupted by annotation markers."
+    ],
+    "top": "Feature is currently unsupported by probes; the safest revision is that it may key on dataset-specific corruption where a token fragment is inserted between literal `<<` and `>>` inside otherwise technical text, especially in math/code/biomedical strings such as `BHLH1<<0>>1`, `\\<<alpha>>`, or `a_{<<1>>3}`.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "This feature fires on a token that immediately begins the second half of a string split by punctuation or a delimiter, such as after a backslash-command comma, underscore, or internal numeric break (e.g. `\\alpha, \\alpha'`, `own_only`, `1 0 1`, `a_{13}`).",
+            "positive_probes": [
+              "Type x_y and watch y begin the second half.",
+              "Write \\\\beta, \\\\beta' so beta-prime starts after comma.",
+              "Enter 1 0 1; the middle zero begins after a break.",
+              "Use a_{13} where 13 starts after the underscore brace.",
+              "In own_only, only begins right after the underscore."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Type xy together with no delimiter between letters.",
+              "Write \\\\beta then continue the same phrase normally.",
+              "Use alpha only once, without commas or subscripts."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "This feature detects repeated lexical material across a short local span, where the same word/stem/name appears again in a coordinated or paired construction (e.g. `Michael, Jr., and Michael, Sr.` or duplicated `alpha`).",
+            "positive_probes": [
+              "Alpha and alpha appeared on adjacent labels.",
+              "Michael Jr. and Michael Sr. signed separately.",
+              "Paris, Texas, and Paris, France, were both mentioned.",
+              "Delta or delta may denote different quantities.",
+              "The elder John and younger John testified."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Michael and Sarah signed separately.",
+              "Alpha and beta appeared on adjacent labels.",
+              "Paris, Texas, and London, England, were both mentioned."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "This feature responds to tokens at the start of a suffix-like continuation that completes an identifier or label after a separator, especially in technical text with SQL fields, gene/transcript names, LaTeX symbols, or indexed variables.",
+            "positive_probes": [
+              "After gene:, transcript_variant_3 appeared in the annotation.",
+              "The SQL field user. id_number was indexed yesterday.",
+              "We defined x_ as x_i in notation.",
+              "Following label-, section42 completed the parser token.",
+              "In LaTeX, \\alpha_ was followed by j in subscripts."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "The gene variant three appeared in the annotation.",
+              "The SQL field was indexed yesterday.",
+              "In LaTeX, alpha and j were discussed separately."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "This feature likely fires on standalone subword-like fragments created by tokenizer or markup boundaries inside technical strings, especially short pieces like `alpha`, `own`, or digits that appear immediately after symbols such as `<<`, `_`, or backslashes.",
+            "positive_probes": [
+              "Token shows <<alpha in the debug trace.",
+              "Filename contains _own before the checksum field.",
+              "Regex captured \\7 inside the malformed token.",
+              "Parser emitted <<3 after the marker boundary.",
+              "Markup split produced _alpha in the technical string."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "The variable alpha appears in the equation.",
+              "Ownership data was logged during the benchmark.",
+              "Backslash and underscores were removed from text."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "This feature may detect tokens that begin a numeric or alphanumeric suffix immediately after an identifier stem in scientific notation, variable names, or gene names, such as the `1` in `BHLH11` or the `13` part of `a_{13}`.",
+            "positive_probes": [
+              "Mutation in BRCA1 alters repair efficiency.",
+              "We quantified a_{13} during the simulation.",
+              "The transcription factor BHLH11 was highly expressed.",
+              "Parameter x2 increased after normalization.",
+              "Signal from HSP70B2 peaked at noon."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Mutation in BRCA was linked to repair.",
+              "We quantified a plus thirteen during simulation.",
+              "The transcription factor bHLH was highly expressed."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "This feature may respond to text inside angle-bracket placeholder markup `<<...>>`, especially when the bracketed span isolates a token fragment within code, math, or quoted text.",
+            "positive_probes": [
+              "Return `foo<<Bar>>Baz` unchanged.",
+              "Compute x + <<y>> inside the formula.",
+              "She whispered \"hello <<wor>> ld\" softly.",
+              "Parse the tag <<item_id>> from code.",
+              "Keep token frag `ab<<cd>>ef` intact."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Return `foo<Bar>Baz` unchanged.",
+              "Compute x + y inside the formula.",
+              "Parse the tag item_id from code."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Feature is currently unsupported by probes; the safest revision is that it may key on dataset-specific corruption where a token fragment is inserted between literal `<<` and `>>` inside otherwise technical text, especially in math/code/biomedical strings such as `BHLH1<<0>>1`, `\\<<alpha>>`, or `a_{<<1>>3}`.",
+            "positive_probes": [
+              "Equation includes a_{<<1>>3} in the derivation notes.",
+              "Parser failed on BHLH1<<0>>1 during alignment.",
+              "Macro expands \\\\<<alpha>> inside technical documentation.",
+              "Biomedical string shows kinaseX<<2>>beta in the appendix.",
+              "Code comment references vec<<7>>idx within template math."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Equation includes a_{13} in the derivation notes.",
+              "Parser failed on BHLH101 during alignment.",
+              "Macro expands <<alpha>> inside plain prose."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "Possible polysemantic alternative: feature responds to broken technical identifiers where a short fragment like a digit, Greek-name piece, or stem (`0`, `1`, `alpha`, `own`) is split out from a larger token by surrounding punctuation/formatting boundaries.",
+            "positive_probes": [
+              "Set x.alpha-value before parsing the header.",
+              "Compare user.own-profile against the cached copy.",
+              "The build tagged release-1-candidate overnight.",
+              "Path segment api/v0/users failed authorization.",
+              "Rename field beta_version to beta.version temporarily."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Set alpha values before parsing the header.",
+              "Compare the user's profile against the cached copy.",
+              "The build tagged release candidate one overnight."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "Possible narrower math/code-table context feature: malformed serialized technical text containing quoting or escaping plus field/name fragments, e.g. LaTeX/control-sequence text, SQL/backticked column names, or indexed algebraic expressions that have been interrupted by annotation markers.",
+            "positive_probes": [
+              "Use `col_name` where \\alpha_i[3]\"note\" breaks parsing.",
+              "The fragment '\\beta_{k}`field`' includes stray annotation markers.",
+              "Malformed SQL says `user_id` = \"x\\n\" and stops.",
+              "Equation piece x_{i}^{2}`meta` has escaped quote noise.",
+              "Control sequence \\frac{\"a\"}{b}`tag` interrupts indexed algebra."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Use `col_name` in a valid SQL query.",
+              "The equation x_i^2 is written clearly.",
+              "LaTeX \\alpha and \\beta compile without errors."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "CellRenderer *renderer;\n\n\tmove_to_line = ml;\n\tselect_thread = st;\n\tselect_frame = sf;\n\n\t/* create tree view */\n\tstore = gtk_tree_store_new (",
+    "The company announced quarterly earnings yesterday afternoon.",
+    "$\\hat{S}_{\\text{gf}}$, $\\hat{S}_{R}$, $\\hat{\\Gamma}$ and $\\hat{\\Gamma}_{R",
+    "The train from Milan arrived twenty minutes late.",
+    "var bye = function(param, param2){\n    console.log(param);\n    console.log(param2);\n    console.log(\"bye\");\n    console.log(this.x)\n}\n\nt =",
+    "A single cloud drifted over the harbor.",
+    "32), and Fc\u03b3R\u0399\u0399\u0399 (CD16). Fc\u03b3R\u0399\u0399 and Fc\u03b3R\u0399\u0399\u0399 have multiple isoforms (Fc\u03b3R\u0399\u0399\u0399A/C and B; Fc\u03b3R\u0399\u0399\u0399A and",
+    "The senator refused to comment before the hearing.",
+    "Small pebbles crunched under his boots on the path.",
+    "The lawyer objected on procedural grounds.",
+    "^2^ tissue culture flasks. Culture conditions were as follows: DLKP, DLKP-A, and DLKP-A5F and were cultured in minimal essential medium/Hams F12 ("
+  ],
+  "heldout_true_acts": [
+    3.882108688354492,
+    0.0,
+    4.45497989654541,
+    0.0,
+    23.241256713867188,
+    0.0,
+    17.418310165405273,
+    0.0,
+    0.0,
+    0.0,
+    4.511450290679932
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "references to data formats, versions, or structural components in a technical context",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 0.0,
+        "sentences": [
+          "The API returns JSON schema version 1.2.",
+          "Parse the CSV header before loading rows.",
+          "Our protocol uses a fixed-length packet footer.",
+          "Update the XML namespace in the config file.",
+          "The database dump is stored in SQL format.",
+          "Check the MIME type and file extension.",
+          "Version 3.1 changes the binary header layout.",
+          "Each YAML document includes metadata fields."
+        ],
+        "activations": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 0.7320541326690684,
+        "spearman": 0.8568906197768386,
+        "preds": [
+          8.0,
+          0.0,
+          4.0,
+          0.0,
+          7.0,
+          0.0,
+          8.0,
+          0.0,
+          0.0,
+          1.0,
+          7.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Feature is currently unsupported by probes; the safest revision is that it may key on dataset-specific corruption where a token fragment is inserted between literal `<<` and `>>` inside otherwise technical text, especially in math/code/biomedical strings such as `BHLH1<<0>>1`, `\\<<alpha>>`, or `a_{<<1>>3}`.",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 0.0,
+        "sentences": [
+          "The mutant label was BHLH1<<0>>1 in Table 2.",
+          "Parse the token \\\\<<alpha>> before compilation.",
+          "We observed a_{<<1>>3} in the malformed equation.",
+          "The log shows x<<7>>y during checksum failure.",
+          "Insert q_{<<2>>9} into the symbolic model.",
+          "Bioassay record: MAPK<<3>>2 remained unreadable.",
+          "Debugger output included ptr<<dead>>beef unexpectedly.",
+          "Sequence note listed \\<<beta>> beside the primer."
+        ],
+        "activations": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 0.6993901039578538,
+        "spearman": 0.9444002816030351,
+        "preds": [
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 65.22377014160156,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "references to data formats, versions, or structural components in a technical context"
+}

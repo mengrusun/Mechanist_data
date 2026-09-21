@@ -1,0 +1,17 @@
+variant: dataset-swap-seqonly-ssreadout
+dimension: dataset
+claim: C2
+# DIFF from main experiment (only the SS-READOUT TOOL changes):
+#   main:    predicted %-helix via ESM-2 650M + SS-probe (protein LM based)
+#   variant: predicted %-helix via a windowed amino-acid (GOR/PSSM-style) 3-state SS
+#            predictor — NO protein LM, fully independent of ESM-2.
+# HELD FIXED (identical to main experiment):
+generations: results/m3final_a0.json (baseline n=2168), results/m3final_astar.json (alpha*=1 n=2205)
+#   ^ the EXACT cached generations are reused; NO regeneration. Only the readout tool changes.
+predictor: {type: windowed_onehot_MLP, window: "+/-8 (17 wide)", hidden: 256, states: [H,E,C]}
+train_labels: S0 DSSP 3-state on AlphaFold structures (train-split genes)  # same GT as ESM-2 probe
+validation: held-out TEST-split genes (report 3-state acc + helix F1)
+secondary: Chou-Fasman Pa helix propensity (model-free, exploratory)
+composition_control: helix-favoring residue (E,M,A,L,K,F,Q) frequency per arm
+cross_calibration: per-seq correlation new-readout vs ESM-2-probe helix
+stat: two-sample bootstrap of Delta %-helix (alpha*=1 minus baseline), 5000 resamples

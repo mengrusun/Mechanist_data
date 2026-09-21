@@ -1,0 +1,21 @@
+{
+  "Name": "enzyme_catalytic_mechanism_ec",
+  "Title": "Does a Protein Model Know How an Enzyme Works? Representing Catalytic Mechanism Classes",
+  "Short Hypothesis": "Protein language models represent enzyme catalytic mechanism classes (aligned with EC hierarchy and catalytic residue chemistry) in structured subspaces, and these representations reflect shared reaction chemistry (mechanistic similarity) rather than sequence homology, distinguishing convergently evolved enzymes with the same mechanism from homologous enzymes with divergent function.",
+  "Related Work": "ESM and related pLMs encode function-relevant structure (Rives et al., 2021); function-prediction heads predict EC numbers. Mechanistic enzymology resources (M-CSA catalytic residues) enumerate mechanisms. Prior probing links representations to fold or EC labels but does not separate mechanistic chemistry from homology. We test whether models capture catalytic mechanism as an abstraction that generalizes across non-homologous enzymes sharing chemistry.",
+  "Abstract": "Enzyme function is defined by catalytic mechanism, yet whether protein language models represent mechanism as an abstract, homology-independent concept is untested. We probe ESM-2 representations for enzyme-mechanism structure using the M-CSA database of catalytic residues and mechanisms and the EC hierarchy. We first fit probes to decode EC class and catalytic-residue chemistry from pooled and per-residue embeddings, localizing where catalytic residues receive distinctive representations. The critical test contrasts two grouping principles: we assemble (a) sets of non-homologous enzymes that converged on the same mechanism (e.g., independent serine hydrolases) and (b) homologous enzymes that diverged to different mechanisms. If the model represents mechanism, convergent same-mechanism enzymes will cluster in a mechanism subspace despite low sequence identity, while divergent homologs will separate. We quantify this with a mechanism-vs-homology discriminability score, controlling for sequence identity. We test residue-level grounding by checking whether catalytic residues are flagged by attention or high-attribution features and whether ablating their representation degrades mechanism decoding more than ablating matched non-catalytic residues. We predict a mechanism subspace that partially transcends homology, especially in larger models. This determines whether pLMs encode established enzymatic mechanism as a transferable concept, with implications for annotating orphan enzymes and designing novel catalysts.",
+  "Experiments": [
+    "Build labeled sets from M-CSA and Swiss-Prot: catalytic residues, mechanism classes, EC numbers, with sequence-identity metadata.",
+    "Probe ESM-2 embeddings to decode EC class and catalytic-residue identity; report accuracy and per-layer localization.",
+    "Convergence test: measure clustering of non-homologous same-mechanism enzymes vs homologous different-mechanism enzymes in embedding space, controlling for % sequence identity.",
+    "Compute a mechanism-vs-homology discriminability index (e.g., silhouette by mechanism after regressing out homology).",
+    "Catalytic-residue grounding: test whether catalytic positions have distinctive attention/attribution; ablate their embeddings and measure drop in mechanism decoding vs control residues.",
+    "Scaling: repeat across ESM-2 sizes to test whether mechanism abstraction strengthens with scale."
+  ],
+  "Risk Factors and Limitations": [
+    "M-CSA coverage is limited and biased toward well-studied enzymes.",
+    "Sequence identity and mechanism are correlated; fully removing homology confounds is difficult.",
+    "Catalytic-residue-level attribution methods are noisy.",
+    "A negative result may reflect probe weakness rather than absent representation."
+  ]
+}

@@ -1,0 +1,404 @@
+{
+  "feature_idx": 1300,
+  "max_act_ref": 31.321279525756836,
+  "trigger_threshold": 6.2642559051513675,
+  "sage": {
+    "candidates": [
+      "Forum/tutorial prose introducing a Java code example, where the introduced snippet begins with a `package <java-style-name>;` declaration (e.g. 'I have the following class:' or 'the main class as follows:').",
+      "Java `package ...;` declaration shown as the first line of a displayed code snippet or file header, often immediately after prose like 'here is my class' or 'file begins' and often followed by `import` lines.",
+      "Java source-file header pattern specifically: `package <name>;` near the top of the file, often followed by blank lines and `import` statements."
+    ],
+    "top": "Forum/tutorial prose introducing a Java code example, where the introduced snippet begins with a `package <java-style-name>;` declaration (e.g. 'I have the following class:' or 'the main class as follows:').",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on the Java source keyword `package` when it begins a package declaration line like `package com.example;` near the top of a class file.",
+            "positive_probes": [
+              "package com.example.app; begins the Java source file.",
+              "package org.acme.tools; appears before any import statements.",
+              "At the top: package net.company.project;",
+              "Java class header starts with package io.demo.lib;",
+              "First line reads package edu.school.course; in source."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              11.399995803833008,
+              0.0
+            ],
+            "distractor_probes": [
+              "import com.example.app; begins the Java source file.",
+              "The Java package name is com.example.app.",
+              "This method uses a package-private helper class."
+            ],
+            "distractor_acts": [
+              0.0,
+              3.4125771522521973,
+              0.0
+            ],
+            "score": 1.1424734433492023
+          },
+          {
+            "hypothesis": "The feature responds to code snippets from Java tutorials or Q&A posts where a package declaration is shown immediately before `import` statements or class definitions.",
+            "positive_probes": [
+              "package com.example.demo; import java.util.List; public class Main {",
+              "package org.app; import java.io.File; class Reader {",
+              "package tutorial.basic; public class HelloWorld {",
+              "package stackoverflow.sample; import javax.swing.JButton; class GuiExample {",
+              "package myproject.utils; import java.net.URL; public class Fetcher {"
+            ],
+            "positive_acts": [
+              6.782593250274658,
+              5.829246997833252,
+              0.0,
+              6.439535617828369,
+              5.200402736663818
+            ],
+            "distractor_probes": [
+              "import java.util.List; public class Main {",
+              "namespace com.example.demo; import java.util.List; class Main {",
+              "The package documentation appears before the class example."
+            ],
+            "distractor_acts": [
+              0.0,
+              3.097626209259033,
+              0.0
+            ],
+            "score": 3.8178136507670084
+          },
+          {
+            "hypothesis": "The feature detects package-namespace declarations in programming code, especially dotted Java-style package names or simple exercise package names followed by a semicolon.",
+            "positive_probes": [
+              "package com.example.project.module;",
+              "package org.apache.commons.io;",
+              "package exercise3;",
+              "package edu.mit.csail.ai;",
+              "package week07homework;"
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "import com.example.project.module;",
+              "the package name is com.example.project.module",
+              "namespace com.example.project.module;"
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature fires on Java package declaration snippets when `package ...;` appears as part of a larger source/header context, especially in tutorial or Q&A-style code examples near the top of a file and often adjacent to `import` statements or a class declaration.",
+            "positive_probes": [
+              "In this example, package com.example.app; import java.util.*;",
+              "Top of file: package tutorial.demo; public class HelloWorld {",
+              "Q&A snippet shows package my.school.project; before imports.",
+              "Header example: package net.sample.tools; import java.io.File;",
+              "Use package org.example.quiz; then define the main class."
+            ],
+            "positive_acts": [
+              7.4874653816223145,
+              4.523334980010986,
+              0.0,
+              7.97265100479126,
+              0.0
+            ],
+            "distractor_probes": [
+              "The Java package contains utility classes and helpers.",
+              "Import statements belong after comments in Java files.",
+              "A class declaration starts the example source code."
+            ],
+            "distractor_acts": [
+              3.4063143730163574,
+              0.0,
+              0.0
+            ],
+            "score": 2.861252148946126
+          },
+          {
+            "hypothesis": "The feature is specifically sensitive to the token pattern `package <java-style-name>;` in Java source when introduced by surrounding prose like 'the main class as follows' or 'I have the following class', i.e. code quoted inside forum/tutorial discussion rather than raw standalone code.",
+            "positive_probes": [
+              "I have the following class: package com.example.app;",
+              "The main class as follows: package org.demo.test;",
+              "Here is my Java class: package net.sample.tool;",
+              "Consider this class definition: package edu.school.project;",
+              "In the tutorial, the class begins: package io.acme.main;"
+            ],
+            "positive_acts": [
+              11.216201782226562,
+              14.839239120483398,
+              20.305091857910156,
+              14.186349868774414,
+              14.98541259765625
+            ],
+            "distractor_probes": [
+              "Raw code only: public class Main without package line.",
+              "I have the following package declaration in XML config.",
+              "The main class as follows: namespace com.example.app;"
+            ],
+            "distractor_acts": [
+              8.235540390014648,
+              0.0,
+              5.924294948577881
+            ],
+            "score": 10.38651393254598
+          },
+          {
+            "hypothesis": "The feature may be a narrower formatting marker for a package declaration at the start of a displayed code block or line break boundary, such as `\\npackage com.example;\\n\\nimport ...` or `... follows:\\npackage com.scorer.app;`.",
+            "positive_probes": [
+              "Then write:\\npackage com.example.app;\\n\\nimport java.util.List;",
+              "Code starts here:\\npackage com.scorer.app;",
+              "Next line is exactly:\\npackage com.example;\\n\\nimport android.os.Bundle;",
+              "Java file begins:\\npackage com.tools.parser;",
+              "Displayed block follows:\\npackage com.example.service;\\n\\nimport java.io.File;"
+            ],
+            "positive_acts": [
+              10.228300094604492,
+              11.51569938659668,
+              5.706685543060303,
+              20.07945442199707,
+              8.193090438842773
+            ],
+            "distractor_probes": [
+              "The Java package is com.example.app in this project.",
+              "Use namespace com.example.app before defining the class.",
+              "Import java.util.List after the class declaration."
+            ],
+            "distractor_acts": [
+              3.3906846046447754,
+              2.7915945053100586,
+              0.0
+            ],
+            "score": 9.083886273701987
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Java `package ...;` declaration shown as the first line of a displayed code snippet or file header, often immediately after prose like 'here is my class' or 'file begins' and often followed by `import` lines.",
+            "positive_probes": [
+              "Here is my class: package com.example.app;",
+              "File begins with package org.acme.tools; then imports.",
+              "First line reads package net.demo.core;",
+              "Snippet header: package edu.sample.project; import java.util.*;",
+              "My Java file starts: package io.company.lib;"
+            ],
+            "positive_acts": [
+              4.3452019691467285,
+              0.0,
+              0.0,
+              8.00221061706543,
+              16.17937660217285
+            ],
+            "distractor_probes": [
+              "Java class with imports but no package declaration shown.",
+              "The word package appears in prose, not code.",
+              "Python file begins with import os, no package line."
+            ],
+            "distractor_acts": [
+              7.787449359893799,
+              0.0,
+              0.0
+            ],
+            "score": 3.1095413843790687
+          },
+          {
+            "hypothesis": "Forum/tutorial prose introducing a Java code example, where the introduced snippet begins with a `package <java-style-name>;` declaration (e.g. 'I have the following class:' or 'the main class as follows:').",
+            "positive_probes": [
+              "I have the following class, starting with package com.example.app;",
+              "The main class is as follows: package org.demo.tools;",
+              "Here is my Java file: package net.sample.project;",
+              "Consider this class declaration: package io.company.service;",
+              "My example begins like this: package edu.school.portal;"
+            ],
+            "positive_acts": [
+              6.850402355194092,
+              15.241262435913086,
+              16.970149993896484,
+              17.751649856567383,
+              5.828291416168213
+            ],
+            "distractor_probes": [
+              "I have the following class declaration without any package statement.",
+              "Here is my Python module: import os",
+              "The Java snippet starts with public class Example {"
+            ],
+            "distractor_acts": [
+              6.170179843902588,
+              7.876449108123779,
+              5.207581996917725
+            ],
+            "score": 6.110280895233155
+          },
+          {
+            "hypothesis": "Java source-file header pattern specifically: `package <name>;` near the top of the file, often followed by blank lines and `import` statements.",
+            "positive_probes": [
+              "package com.example.app;\n\nimport java.util.List;",
+              "package org.acme.tools;\n\nimport java.io.File;",
+              "package my.library.core;\n\nimport static java.lang.Math.*;",
+              "package edu.school.project;\n\nimport java.util.*;",
+              "package net.company.module;\n\nimport com.company.Helper;"
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "import java.util.List;\n\npublic class Main {",
+              "package.json defines the app metadata fields.",
+              "Python package example.module imports os and sys."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "perform getNumber() on the Phonebook object but I can't since getNumber() only works on objects of type Person.\npackage problem94_phonebook;\nimport java.util.ArrayList;\n\npublic class Phonebook {\n\n    private ArrayList",
+    "Two children played chess on a wooden bench.",
+    "] package in R.\n\nForward genetic simulations {#s3i}\n---------------------------\n\nTo simulate genome-wide allele frequency change due",
+    "She whisked the eggs and folded them into the batter.",
+    "follows:\npackage com.scorer.game;\n\npublic class BattingStats {\n    private Integer battingPosition;\n    private Integer",
+    "The senator refused to comment before the hearing.",
+    "A soft breeze moved the curtains at dawn.",
+    "The mountain trail wound past three small lakes.",
+    "can make use of your class Phonebook. This will be your new Person class.\npackage problem94_phonebook;\nimport java.util.ArrayList;\nimport Phonebook;\n\npublic class Person {",
+    "The company announced quarterly earnings yesterday afternoon."
+  ],
+  "heldout_true_acts": [
+    27.0877742767334,
+    0.0,
+    24.657621383666992,
+    0.0,
+    21.754009246826172,
+    0.0,
+    0.0,
+    0.0,
+    23.39299774169922,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "occurrences of package and import statements in code",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 1.2741520404815674,
+        "sentences": [
+          "package main declares the executable entry point.",
+          "import java.util.List enables list usage in Java.",
+          "The file begins with package com.example.app.",
+          "Python code often says import os at top.",
+          "Use import React from \"react\" in JavaScript.",
+          "A Go source may start with package server.",
+          "Then write import numpy as np below.",
+          "Rust can include use std::io after extern crate."
+        ],
+        "activations": [
+          0.0,
+          0.0,
+          0.0,
+          2.5711374282836914,
+          3.3054661750793457,
+          0.0,
+          0.0,
+          4.316612720489502
+        ]
+      },
+      "predictive": {
+        "pearson": 0.8326326987116126,
+        "spearman": 0.9420919641588171,
+        "preds": [
+          10.0,
+          0.0,
+          1.0,
+          0.0,
+          8.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Forum/tutorial prose introducing a Java code example, where the introduced snippet begins with a `package <java-style-name>;` declaration (e.g. 'I have the following class:' or 'the main class as follows:').",
+      "generative": {
+        "trigger_rate": 0.75,
+        "mean_max": 11.125620424747467,
+        "sentences": [
+          "I have the following class: package com.example.demo;",
+          "The main example starts as follows: package org.sample.app;",
+          "Here is my Java file: package net.company.tool;",
+          "Consider this code snippet: package edu.school.project;",
+          "The class begins like this: package io.github.userlib;",
+          "Use the sample below: package com.acme.service;",
+          "My source file starts here: package dev.team.module;",
+          "See the example class below: package app.core.feature;"
+        ],
+        "activations": [
+          11.299493789672852,
+          11.01116943359375,
+          16.922067642211914,
+          17.023590087890625,
+          9.783500671386719,
+          0.0,
+          3.7240090370178223,
+          19.241132736206055
+        ]
+      },
+      "predictive": {
+        "pearson": 0.7716343022230338,
+        "spearman": 0.6636546873994554,
+        "preds": [
+          7.0,
+          0.0,
+          0.0,
+          0.0,
+          9.0,
+          0.0,
+          0.0,
+          0.0,
+          8.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 65.17244005203247,
+  "layer": 6,
+  "sae_info": {
+    "layer": 6,
+    "width": "16k",
+    "l0": 70,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_6/width_16k/average_l0_70/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "occurrences of package and import statements in code"
+}

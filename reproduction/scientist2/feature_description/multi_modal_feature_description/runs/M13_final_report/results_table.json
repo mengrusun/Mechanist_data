@@ -1,0 +1,265 @@
+{
+  "headline_setting": "k=16, pool=mean",
+  "C1_evaluation": {
+    "P1a_last_layer_purity": {
+      "k": 16,
+      "pool": "mean",
+      "n_last_layer_components": 1000,
+      "top1_purity": 0.898,
+      "top5_purity": 0.969,
+      "random_baseline_top1_purity": 0.001,
+      "random_baseline_top5_purity": 0.006,
+      "delta_pure": 0.897,
+      "p_value_mcnemar": 1.8928834978668395e-270,
+      "passes": true,
+      "reference_range_note": "CLIP-Dissect (Oikarinen & Weng 2023) reports ~0.55-0.76 top-1 purity on ResNet-50 fc; our numbers should fall in that range if the pipeline is faithful."
+    },
+    "P1b_layer4_matched_control": {
+      "n_comp": 500,
+      "delta_sep_mean": 0.02015438862144947,
+      "delta_sep_std": 0.019713466987013817,
+      "delta_sep_ci_95": [
+        0.01840798929333687,
+        0.021903499960899353
+      ],
+      "p_value_paired_greater": 0.0,
+      "passes_P1b": true
+    },
+    "P1b_layer3_matched_control": {
+      "n_comp": 500,
+      "delta_sep_mean": 0.004915478173643351,
+      "delta_sep_std": 0.0054860590025782585,
+      "delta_sep_ci_95": [
+        0.004418998956680298,
+        0.005373245570808649
+      ],
+      "p_value_paired_greater": 0.0,
+      "passes_P1b": true
+    },
+    "P1c_plateau_layer4": {
+      "plateau_k": 1,
+      "monotone_nondecreasing": false,
+      "delta_sep_by_k": {
+        "16": 0.02015438862144947,
+        "1": 0.018618576228618622,
+        "256": 0.005695614032447338,
+        "4": 0.020354777574539185,
+        "64": 0.014170551672577858
+      },
+      "passes_P1c": false
+    },
+    "P1c_plateau_layer3": {
+      "plateau_k": 1,
+      "monotone_nondecreasing": false,
+      "delta_sep_by_k": {
+        "16": 0.004915478173643351,
+        "1": 0.02201097458600998,
+        "256": 0.004247742705047131,
+        "4": 0.007250519003719091,
+        "64": 0.0043198056519031525
+      },
+      "passes_P1c": false
+    },
+    "verdict": "partial",
+    "gate_details": {
+      "P1a": true,
+      "P1b_layer4": true,
+      "P1c_layer4": false
+    }
+  },
+  "C2_evaluation": {
+    "P2a_MRR_mean": {
+      "k": 16,
+      "pool": "mean",
+      "n_queries": 1000,
+      "n_components": 1000,
+      "mrr": 0.8982967484500607,
+      "recall_at_1": 0.848,
+      "recall_at_5": 0.958,
+      "recall_at_10": 0.974,
+      "permutation_mrr_ci_95_upper": 0.009700099006295204,
+      "significant": true,
+      "n_permute": 1000
+    },
+    "P2a_MRR_act_weighted_mean": {
+      "k": 16,
+      "pool": "act_weighted_mean",
+      "n_queries": 1000,
+      "n_components": 1000,
+      "mrr": 0.8980254941848068,
+      "recall_at_1": 0.848,
+      "recall_at_5": 0.958,
+      "recall_at_10": 0.974,
+      "permutation_mrr_ci_95_upper": 0.009749271906912327,
+      "significant": true,
+      "n_permute": 1000
+    },
+    "P2a_MRR_max": {
+      "k": 16,
+      "pool": "max",
+      "n_queries": 1000,
+      "n_components": 1000,
+      "mrr": 0.6989586629459562,
+      "recall_at_1": 0.59,
+      "recall_at_5": 0.84,
+      "recall_at_10": 0.892,
+      "permutation_mrr_ci_95_upper": 0.00979949627071619,
+      "significant": true,
+      "n_permute": 1000
+    },
+    "P2a_MRR_medoid": {
+      "k": 16,
+      "pool": "medoid",
+      "n_queries": 1000,
+      "n_components": 1000,
+      "mrr": 0.7831542405794311,
+      "recall_at_1": 0.683,
+      "recall_at_5": 0.906,
+      "recall_at_10": 0.951,
+      "permutation_mrr_ci_95_upper": 0.009857813827693462,
+      "significant": true,
+      "n_permute": 1000
+    },
+    "P2b_stability_mean": {
+      "half_k": 16,
+      "pool": "mean",
+      "n_components": 2000,
+      "median_cosine": 0.9703419208526611,
+      "mean_cosine": 0.9671711325645447,
+      "ci_95": [
+        0.9693812727928162,
+        0.971237301826477
+      ],
+      "tau_stable_threshold": 0.5,
+      "passes": true
+    },
+    "P2c_separation_mean": {
+      "k": 16,
+      "pool": "mean",
+      "n_pairs_between": 10000,
+      "fc": {
+        "n_within": 118983,
+        "n_between": 10000,
+        "mean_within_cos": 0.6568095684051514,
+        "mean_between_cos": 0.6580955982208252,
+        "gap": -0.0012860298156738281,
+        "cohens_d": -0.015104830265045166,
+        "p_value_ttest_greater": 0.9276981353759766,
+        "passes": false,
+        "grouping": "CLIP-text-neighbor clusters, threshold=0.85",
+        "n_groups": 46,
+        "threshold_sensitivity": {
+          "0.75": {
+            "n_groups": 2,
+            "n_classes_in_groups": 967
+          },
+          "0.8": {
+            "n_groups": 13,
+            "n_classes_in_groups": 879
+          },
+          "0.85": {
+            "n_groups": 46,
+            "n_classes_in_groups": 611
+          },
+          "0.9": {
+            "n_groups": 71,
+            "n_classes_in_groups": 206
+          }
+        }
+      },
+      "layer4": {
+        "n_within": 205,
+        "n_between": 10000,
+        "mean_within_cos": 0.8652045726776123,
+        "mean_between_cos": 0.6952977776527405,
+        "gap": 0.16990679502487183,
+        "cohens_d": 1.9585057497024536,
+        "p_value_ttest_greater": 0.0,
+        "passes": true,
+        "grouping": "layer4 components grouped by top-1 broden concept identity",
+        "n_groups": 85
+      }
+    },
+    "verdict": "partial",
+    "gate_details": {
+      "P2a": true,
+      "P2b": true,
+      "P2c": true,
+      "P2d_consistency": false
+    }
+  },
+  "P3_cross_model": {
+    "per_model": {
+      "efficientnet_b0": {
+        "mrr": 0.8979301146557891,
+        "significant": true,
+        "perm95_upper": 0.009557454846799374
+      },
+      "vgg16": {
+        "mrr": 0.8625972639656964,
+        "significant": true,
+        "perm95_upper": 0.009785179980099201
+      },
+      "vit_b_16": {
+        "mrr": 0.8940130275468439,
+        "significant": true,
+        "perm95_upper": 0.009518275037407875
+      }
+    },
+    "n_significant_of_3": 3,
+    "soft_passes_p3": true
+  },
+  "M11_layer_granularity": {
+    "per_layer_headline": {
+      "fc": {
+        "P1a_top1_purity": 0.898,
+        "P1a_delta_pure": 0.897,
+        "P1a_passes": true,
+        "P2a_mrr": 0.8982967484500607,
+        "P2a_significant": true,
+        "P2c_fc_gap": -0.0012860298156738281,
+        "P2c_fc_cohens_d": -0.015104830265045166,
+        "P2c_fc_passes": false
+      },
+      "layer4": {
+        "P1b_delta_sep_mean": 0.02015438862144947,
+        "P1b_p_value": 0.0,
+        "P1b_passes": true,
+        "P2c_l4_gap": 0.16990679502487183,
+        "P2c_l4_cohens_d": 1.9585057497024536,
+        "P2c_l4_passes": true
+      },
+      "layer3": {
+        "P1b_delta_sep_mean": 0.004915478173643351,
+        "P1b_p_value": 0.0,
+        "P1b_passes": true
+      }
+    },
+    "P1c_plateau_analysis": {
+      "layer3": {
+        "plateau_k": 1,
+        "monotone_nondecreasing": false,
+        "delta_sep_by_k": {
+          "16": 0.004915478173643351,
+          "1": 0.02201097458600998,
+          "256": 0.004247742705047131,
+          "4": 0.007250519003719091,
+          "64": 0.0043198056519031525
+        },
+        "passes_P1c": false
+      },
+      "layer4": {
+        "plateau_k": 1,
+        "monotone_nondecreasing": false,
+        "delta_sep_by_k": {
+          "16": 0.02015438862144947,
+          "1": 0.018618576228618622,
+          "256": 0.005695614032447338,
+          "4": 0.020354777574539185,
+          "64": 0.014170551672577858
+        },
+        "passes_P1c": false
+      }
+    }
+  }
+}

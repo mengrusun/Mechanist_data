@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "SAGE: An Agentic Explainer for SAE Features",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The M1 pipeline defines a genuine, seed-locked 80/20 split per feature that is honored in code: scripts/m1_main_pair.py lines 181-192 build rng_f=default_rng(split_seed*1000+fid), shuffle the Neuronpedia snippet indices, take n_train=max(int(0.8*len), 6) capped to leave >=4 held-out, then train_snips feed explanation generation (SAGE Explainer, single-pass GPT-5) and tau_f (99th-percentile activation threshold, line 211), while held_snips (disjoint) are the ONLY data used for the C2 predictive-accuracy Pearson (lines 276-285). Generative accuracy (C1) is computed on freshly LLM-written probe texts (write_probes) that are not drawn from the corpus at all and are pushed through the real Gemma-2-2B+SAE forward pass, so there is no path by which held-out labels or fitting data leak into evaluation. The explaining LLM never sees the held-out snippets. M2 (scripts/m2_verify_pair.py lines 175-177) applies the same 80/20 seed-locked split. The split is verifiable in code, not merely asserted.",
+    "score": 5,
+    "evidence_files": ["scripts/m1_main_pair.py", "scripts/m2_verify_pair.py", "refine-logs/EXPERIMENT_PLAN.md", "results/m1/features_L4.jsonl"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The two ground-truth signals validly operationalize exactly the two behaviors the claims name and match the paper's Appendix-A metric definitions. For C1 generative accuracy the label is whether an explanation-derived probe text actually drives the target feature above tau_f, measured by a REAL Gemma-2-2B + JumpReLU-SAE forward pass (common.py compute_feature_activations_on_texts / ResidualCapture hook at model.model.layers[L]); raw per-probe activations are stored (e.g. results/m1/features_L4.jsonl 'probe_activations':[27.62,0.0,NaN...]). For C2 the ground truth is Neuronpedia's cached per-snippet max activation (min-max normalized within feature), and the scorer LLM predicts it — the same activation-simulation protocol the paper cites (Cunningham 2023). Labels are non-circular: the activation ground truth comes from the model/Neuronpedia, not from the explaining LLM. One disclosed proxy: M2 on Qwen3-4B uses Neuronpedia's cached activations as ground truth (no live Qwen3-4B forward), honestly labeled 'Neuronpedia-proxy' in scripts/m2_verify_pair.py docstring — a reasonable, documented proxy that is the same GT source the paper uses.",
+    "score": 5,
+    "evidence_files": ["scripts/common.py", "scripts/m1_main_pair.py", "scripts/m2_verify_pair.py", "results/m1/features_L4.jsonl"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment (M1) uses exactly the task-specified resources: Gemma-2-2B (loaded from /data/zhenqian/models/gemma-2-2b, float32) + gemmascope-res-16k JumpReLU SAE (load_gemma_scope_sae from gemma-scope-2b-pt-res, GEMMA_SCOPE_L0_MAP={4:124,12:82,20:139}), Neuronpedia as the reference dictionary, and the fixed GPT-5 agent backbone (common.py DMXAPI_MODEL='gpt-5.4' via https://www.dmxapi.cn/v1, matching task.md). Both verify-stage pairs are the task-specified ones: Qwen3-4B+transcoder-hp (M2) and GPT-OSS-20B+resid-post-aa (Phase-9 model swap). Two disclosed deviations: (1) layers L4/L12/L20 instead of the paper's 3/7/11/23 — task.md does not mandate exact layers, only 'early-to-late', so this is acceptable; (2) the cross-pair M2/C4 experiment was degraded to 'SAGE-lite' (Explainer+Reviewer only, no Designer+Analyzer, predictive-only) because the transcoder-hp forward hook was not implemented — a real method downgrade, but it affects a verify-stage pair (Qwen3-4B is a verify model per task.md), is exempt as a robustness-stage variant, and is disclosed prominently. Data volume (44 features main, comparable to the paper's own 40) is not a task-specified resource and is honestly flagged as under-powered vs the pipeline's own 300-plan. Main experiment resource fidelity is essentially exact.",
+    "score": 4,
+    "evidence_files": ["scripts/common.py", "scripts/m1_main_pair.py", "runs/m1_L4/run.sh", "refine-logs/EXPERIMENT_RESULTS.md", "claims_ledger.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Realized used_n: C1/C2 n=44 (15 L4 + 15 L12 + 14 L20, confirmed by wc on results/m1/features_L{4,12,20}.jsonl), C3 n=14-15 per depth, C4 n=34 (Qwen3-4B) + 45 (GPT-OSS-20B variant). These are small, and the pipeline flags every claim suspected_under_power=true (EXPERIMENT_RESULTS.md 'Under-power flag', ratios 0.14-0.23 of the 300/150 plan). Crucially the thinness is FULLY, not partially, disclosed and claim strength is matched to evidence: all nulls (C2/C3/C4) are marked provisional, the one significant result (C1 vs Neuronpedia) is qualified as backbone-attributable and fragile, and no conclusion is asserted without having run the corresponding experiment. Context: the paper itself used only 10 features/layer (40/model), so n=44 is comparable to the reference. The main deduction is genuine narrowness for C3 (n=14-15/layer is too small to detect per-layer effects, which the run itself concedes), not overclaim.",
+    "score": 4,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "results/aggregate.json", "results/m1/features_L20.jsonl", "claims_ledger.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Uncertainty is quantified well beyond point estimates: every comparison reports a paired bootstrap 95% CI (10k resamples, _paired_bootstrap_ci in scripts/m1_main_pair.py) plus a paired Wilcoxon p-value, stored verbatim in results/aggregate.json (e.g. C1 sage_vs_neuronpedia mean_delta=0.01818, ci_low=0.004545, ci_high=0.03636, wilcoxon p=0.0455; C2 delta=-0.018, CI spans 0, p=0.43). The one 'significant' positive (C1) is honestly flagged as fragile by the run's own integrity audit (Wilcoxon n_eff=4, 90.9% zero-differences, 5 coarse probes/feature). Weakness: a single split_seed=42 and a single SAGE generation per feature, so uncertainty over LLM-generation stochasticity and seed is not characterized (bootstrap only resamples the fixed feature set). No seed cherry-picking evidence. Strong significance/CI reporting but single-seed keeps it below the top anchor.",
+    "score": 4,
+    "evidence_files": ["results/aggregate.json", "scripts/m1_main_pair.py", "verify/INTEGRITY_AUDIT.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a — no additive/interventional mechanistic claim. The reproduction targets are comparative explanation-quality claims (generative + predictive accuracy vs Neuronpedia), not steering/patching/ablation mechanism claims. The pipeline correctly routes SAGE as a 'Unit Interpretation' method with no mechanism intervention: verify/INTEGRITY_AUDIT.md marks Mech. audit N/A for all four claims ('SAGE is a Unit Interpretation pipeline with no additive steering'). Note that the generative-accuracy metric is itself a mini causal-validity assay (generate text from the explanation, then measure the REAL feature activation) and it is implemented genuinely via a live forward pass rather than correlationally — so where a causal flavor exists, it is honestly grounded, not asserted.",
+    "score": 5,
+    "evidence_files": ["verify/INTEGRITY_AUDIT.md", "refine-logs/MECHANISM_ROUTING.md", "scripts/m1_main_pair.py"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number traces to a concrete on-disk product and agrees with it. EXPERIMENT_RESULTS.md's C1 Δ=+0.018, CI[+0.005,+0.036], p=0.045 and Δ vs GPT-5-1shot=-0.005 match results/aggregate.json (0.018181, ci_low 0.004545, ci_high 0.036, wilcoxon 0.04550; -0.004545) and results/m1/summary.json byte-for-byte; C2 -0.018, C3 per-layer deltas, and C4 +0.153 all reconcile across aggregate.json/summary.json. figures/C1/c1_comparison_table.md reproduces the same values. The raw per-feature JSONL (results/m1/features_L4.jsonl) stores the actual explanations, probe activations, held-out preds and true_norm arrays that the aggregates are computed from; cost.json files record GPU-hours (m1_L4 0.389, total 1.66). The only traceability blemish is descriptive, not a fabricated value: EXPERIMENT_RESULTS.md text says M2 covered 'L8, L16, L28' but results/m2/summary.json contains only L8 (20) + L16 (14) = 34 features (L28 empty) — the reported numbers themselves still trace. No sourceless or back-filled numbers found.",
+    "score": 5,
+    "evidence_files": ["results/aggregate.json", "results/m1/summary.json", "refine-logs/EXPERIMENT_RESULTS.md", "figures/C1/c1_comparison_table.md", "runs/m1_L4/cost.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The records are largely self-consistent: C1 partial-support/WARN, C2 null/PASS, C3 null/WARN, C4 inconclusive→PASS(robust-null) propagate consistently across EXPERIMENT_RESULTS.md, results/aggregate.json, claims_ledger.json, verify/VERIFY_REPORT.md, verify/INTEGRITY_AUDIT.md and review-stage/AUTO_ITERATION_FINAL_REPORT.md; prose conclusions agree with their numbers; no claim is PASS in one place yet integrity-broken elsewhere. A few minor bookkeeping slips (no verdict change): (1) the C4 M2 CI is reported as [-0.039,+0.391] in verify/VERIFY_REPORT.md and verify/C4_.../ROBUSTNESS.md but as [-0.031,+0.341] in results/aggregate.json — a stale/rounded CI; (2) M2 depth coverage is described as 'L8,L16,L28' / '~11 per depth' in EXPERIMENT_RESULTS.md and claims_ledger.json while only L8+L16 (34 features) actually exist — though this is caught and propagated by the integrity audit ('C4 WARN: L28 absent'). These are loose-bookkeeping items, not contradictions that flip a conclusion.",
+    "score": 4,
+    "evidence_files": ["verify/VERIFY_REPORT.md", "verify/C4_cross_pair_generalization/ROBUSTNESS.md", "results/aggregate.json", "refine-logs/EXPERIMENT_RESULTS.md", "verify/INTEGRITY_AUDIT.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "You should build a pipeline around the following basic idea — letting an LLM agent propose several candidate explanations for an SAE feature, query the target LLM+SAE with probe inputs to gather empirical activation feedback, and iteratively accept, reject, or revise those candidates — produces feature explanations that outperform Neuronpedia on both generative accuracy (success rate of triggering the feature with text written from the explanation) and predictive accuracy (correlation between explanation-based predictions and true activations on held-out text), across multiple open-source LLMs and across early-to-late layers. [generative-accuracy half, main pair]",
+        "method": {
+          "justification": "9a — Method matches the claim's mechanism category exactly: the full 4-role SAGE loop (Explainer→Designer→Analyzer→Reviewer, run_sage_loop in common.py) is implemented with real empirical activation feedback from the target Gemma-2-2B+SAE forward pass, and generative accuracy is measured by writing probe text from the explanation and checking a genuine forward-pass activation. It additionally adds the paper-faithful 'uniform explanation model' control (matched-backbone single-pass GPT-5). This is precisely the SAE auto-interpretation method the paper defines.",
+          "score": 5,
+          "evidence_files": ["scripts/common.py", "scripts/m1_main_pair.py"]
+        },
+        "experiment": {
+          "justification": "9b — Design is strong: paired bootstrap CI + Wilcoxon, seed-locked 80/20 split, three comparators (public Neuronpedia, matched-backbone GPT-5-1shot, SAGE), no post-hoc criterion adjustment. Deductions: (a) only 5 probes/feature makes gen_acc a coarse discrete metric (Wilcoxon n_eff=4, honestly flagged in INTEGRITY_AUDIT.md); (b) the success threshold tau_f = 99th percentile of the training activation distribution differs from the paper's Tact = 50% of the top-10 max, compressing all methods' absolute gen_acc to ~0.04-0.11 vs the paper's 0.56-0.97 (the paired delta stays valid but the deviation is undocumented as such); (c) single seed, n=44, layers 4/12/20 not the paper's 3/7/11/23. Sound but with a few real design gaps.",
+          "score": 4,
+          "evidence_files": ["scripts/m1_main_pair.py", "verify/INTEGRITY_AUDIT.md", "refine-logs/EXPERIMENT_PLAN.md"]
+        },
+        "result": {
+          "justification": "9c — Honestly and rigorously analyzed. Δgen_acc(SAGE−Neuronpedia)=+0.018, CI[+0.005,+0.036], p=0.045 reproduces the paper's DIRECTION (SAGE > public Neuronpedia), but the run correctly attributes it to the GPT-5-vs-GPT-4o-mini backbone upgrade: Δ(SAGE−matched-backbone GPT-5-1shot)=-0.005 n.s. (aggregate.json). So the paper's headline reproduces against the older-backbone public catalog while the loop-only advantage the paper actually claims does not — a nuanced partial reproduction that surfaces a confound the paper's Table-2 leaves implicit. No goalpost-tuning; the honest reframing (C1a public-catalog beat / C1b matched-backbone null) is well-justified and traceable.",
+          "score": 5,
+          "evidence_files": ["results/aggregate.json", "refine-logs/EXPERIMENT_RESULTS.md", "figures/C1/c1_comparison_table.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        }
+      },
+      "C2": {
+        "claim": "...produces feature explanations that outperform Neuronpedia on ... predictive accuracy (correlation between explanation-based predictions and true activations on held-out text) ... [predictive-accuracy half, main pair]",
+        "method": {
+          "justification": "9a — Full SAGE loop plus the paper's exact predictive metric: a scorer LLM predicts per-token/snippet activation conditioned on the explanation, Pearson r against min-max-normalized true activations on the disjoint held-out split (score_activation in common.py; m1_main_pair.py lines 276-298). Method category matches the claim.",
+          "score": 5,
+          "evidence_files": ["scripts/common.py", "scripts/m1_main_pair.py"]
+        },
+        "experiment": {
+          "justification": "9b — Paired bootstrap CI + Wilcoxon on held-out Pearson, three comparators, clean integrity (INTEGRITY_AUDIT.md C2 PASS). Metric corresponds strictly to the claim. Limitations are the shared single-seed and n=44, honestly flagged as under-power; the design itself is reasonable and not manipulated.",
+          "score": 4,
+          "evidence_files": ["scripts/m1_main_pair.py", "results/aggregate.json", "verify/INTEGRITY_AUDIT.md"]
+        },
+        "result": {
+          "justification": "9c — Δpearson(SAGE−Neuronpedia)=-0.018, CI[-0.093,+0.058], p=0.43 (aggregate.json): a clean NULL, even slightly negative. This DISAGREES with the paper (which reports modest consistent predictive gains, e.g. Gemma 0.83 vs 0.68), but it is reported as an honest failed replication with a reliable justification (provisional under-power, CI spans zero), not disguised or goalpost-tuned. With the preceding dimensions clean, an honest NOT-REPRODUCED is fully reliable.",
+          "score": 5,
+          "evidence_files": ["results/aggregate.json", "refine-logs/EXPERIMENT_RESULTS.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        }
+      },
+      "C3": {
+        "claim": "The C1 and C2 improvements hold individually at early / mid / late residual-stream depths (L4, L12, L20) after Bonferroni correction over 3 depths x 2 metrics. [layer-depth generalization]",
+        "method": {
+          "justification": "9a — The layer-stratified read-off of the same M1 assays is the correct method for a depth-generalization question; residual-stream layers L4/L12/L20 span early/mid/late as the claim requires. Method choice fits.",
+          "score": 5,
+          "evidence_files": ["scripts/m1_main_pair.py", "results/aggregate.json"]
+        },
+        "experiment": {
+          "justification": "9b — Genuinely under-powered and partially unimplemented: per-layer n=14-15 (planned 100) is far too small to resolve per-layer effects, and the integrity audit notes the Bonferroni correction is 'described in EXPERIMENT_RESULTS.md but not explicitly implemented in the aggregate script' (though the CI-excludes-zero rule actually used is more conservative). L20's l0 alignment is looser (l0_71 variant downloaded but not swapped in). This makes it impossible to distinguish a true negative from under-exploration — the honest-but-underpowered case.",
+          "score": 3,
+          "evidence_files": ["verify/INTEGRITY_AUDIT.md", "results/aggregate.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c — No per-layer CI excludes zero for either metric (aggregate.json C3), and the run reframes this honestly as 'unresolved due to under-power, NOT evidence for absence of depth dependence' rather than claiming the paper's depth pattern is refuted. This neither reproduces nor overclaims; the reason for the non-result (per-layer n=14-15) is fully disclosed. Reliable, if uninformative about the paper's depth claim.",
+          "score": 4,
+          "evidence_files": ["results/aggregate.json", "refine-logs/EXPERIMENT_RESULTS.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        }
+      },
+      "C4": {
+        "claim": "...across multiple open-source LLMs... The C1 / C2 improvements hold on at least one cross-LLM+SAE pair from {Qwen3-4B + transcoder-hp, GPT-OSS-20B + resid-post-aa}. [cross-LLM+SAE-pair generalization]",
+        "method": {
+          "justification": "9a — Cross-pair generalization is the right test, and both task-specified pairs were attempted. However the method was materially degraded to 'SAGE-lite' (Explainer + Reviewer only, NO Designer + Analyzer, hence NO empirical activation feedback loop) on both cross-pairs because the transcoder-hp / resid-post-aa forward hooks were not implemented (scripts/m2_verify_pair.py docstring). The empirical propose→test→revise loop is the defining mechanism of the paper's SAGE; dropping it means the cross-pair experiment tests a proxy, not SAGE proper. Generative accuracy (the C1 half) is not tested cross-pair at all. Honestly disclosed, but the method as run does not faithfully instantiate the claimed mechanism for this claim.",
+          "score": 2,
+          "evidence_files": ["scripts/m2_verify_pair.py", "refine-logs/EXPERIMENT_RESULTS.md", "claims_ledger.json"]
+        },
+        "experiment": {
+          "justification": "9b — Predictive-only, n=34 on Qwen3-4B + a genuine Phase-9 model-swap robustness variant on GPT-OSS-20B (n=45), each with paired bootstrap CI + Wilcoxon (results/m2/summary.json, verify/.../ROBUSTNESS.md). The swap-variant is a real strength. Weaknesses: scope narrowed to predictive-only + SAGE-lite, only 2/3 planned depths realized (L28 empty), single seed, under-power. Metric covers only the predictive facet of the claim. Honest but under-powered and scope-reduced.",
+          "score": 3,
+          "evidence_files": ["results/m2/summary.json", "verify/C4_cross_pair_generalization/ROBUSTNESS.md", "verify/VERIFY_REPORT.md", "verify/INTEGRITY_AUDIT.md"]
+        },
+        "result": {
+          "justification": "9c — Qwen3-4B Δpearson=+0.153 (CI[-0.031,+0.341], p=0.18) and GPT-OSS-20B Δ=-0.045 (n.s.): reported honestly as 'verified negative transfer — SAGE-lite does not significantly outperform the Neuronpedia proxy on either pair; effect directions differ, only the null verdict is robust.' This disagrees with the paper (Table 2 shows SAGE gains on Qwen3-4B and GPT-OSS-20B) but is not disguised — the review log explicitly forbids framing 'PASS' as cross-pair success and repeatedly states the SAGE-lite scope caveat. No goalpost-tuning; the null is the reliably-supported conclusion. Slight deduction only because the SAGE-lite degradation (penalized in 9a) means the negative cannot be cleanly attributed to full SAGE, which the analysis itself concedes.",
+          "score": 4,
+          "evidence_files": ["results/aggregate.json", "verify/VERIFY_REPORT.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md", "claims_ledger.json"]
+        }
+      }
+    }
+  }
+}

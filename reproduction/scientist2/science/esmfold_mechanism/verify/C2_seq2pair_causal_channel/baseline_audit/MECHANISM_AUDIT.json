@@ -1,0 +1,45 @@
+{
+  "claim_id": "C2",
+  "audit_type": "mechanism",
+  "phase": 2,
+  "date": "2026-07-15",
+  "mechanism_family": "Causal Attribution / Patching (pathway ablation submethod)",
+  "overall_severity": "FAIL",
+  "overall_verdict": "FAIL",
+  "admission_decision": "REJECTED — claim proceeds as INCONCLUSIVE",
+  "findings": [
+    {
+      "id": "M-C2-01",
+      "category": "paradigm_design",
+      "severity": "PASS",
+      "description": "Pathway ablation design is logically correct: seq2pair output replacement at target pairs tests necessity of s→z channel. pair2seq symmetric control is appropriate."
+    },
+    {
+      "id": "M-C2-02",
+      "category": "seq2pair_hook_implementation",
+      "severity": "PASS",
+      "description": "seq2pair forward_hook implementation in collect_donor_pathway_outputs is correct: captures [1,L,L,Z] output tensor and replaces at target pair positions [pi,pj] with donor values."
+    },
+    {
+      "id": "M-C2-03",
+      "category": "pair2seq_hook_implementation",
+      "severity": "FAIL",
+      "description": "pair_to_sequence hook assumes output shape [B,L,S_HIDDEN] but actual shape is [B,num_heads,L,L,32] (pair-attention bias). Index new_out[0,tgt_idx,:] raises IndexError. Fatal implementation error blocking Steps B,C,D."
+    },
+    {
+      "id": "M-C2-04",
+      "category": "primary_effect_magnitude",
+      "severity": "FAIL",
+      "description": "seq2pair donor-patch Δ=-0.017 is 50x smaller than claim threshold (Δ≥0.2pp) and 50x smaller than M1 s-patch (Δ=-0.862). Even if specificity controls were available, the primary effect fails mechanistic threshold."
+    },
+    {
+      "id": "M-C2-05",
+      "category": "specificity_controls_absent",
+      "severity": "WARN",
+      "description": "Without pair2seq control, cannot distinguish seq2pair-specific effect from non-specific pair-level perturbation. Scientific interpretation of Δ=-0.017 as 'seq2pair is not the critical channel' is directionally plausible but not rigorously established."
+    }
+  ],
+  "n_pass": 2,
+  "n_warn": 1,
+  "n_fail": 2
+}

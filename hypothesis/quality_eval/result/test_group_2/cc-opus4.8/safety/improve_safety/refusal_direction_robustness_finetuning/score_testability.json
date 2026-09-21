@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan aligns with the safety hypothesis by varying the fine-tuning protection method and measuring \"post-FT harmful-compliance (HarmBench), task metric, over-refusal (XSTest)\" against \"vanilla FT, safety-region freezing, KL regularization.\" It makes directional predictions—\"standard fine-tuning degrades the refusal direction and safety\" while anchoring \"preserves safety substantially better at minimal task cost\"—so failure to outperform the baselines on safety retention, or a larger task cost, could refute it. However, \"refusal direction,\" \"parameters that write to it,\" \"substantially better,\" and \"minimal task cost\" lack operational definitions or numeric thresholds, and preserving projection behavior alone does not cleanly establish the stronger causal claim that perturbing supporting parameters causes safety erosion.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is \"Identify refusal direction and writing parameters in Llama-3-8B-Instruct\": extracting a refusal direction is supported by standard activation-analysis tooling, but selecting the parameters that \"write to it\" is under-specified and requires custom attribution or causal-intervention logic rather than a fully defined operation. Llama-3-8B-Instruct, Alpaca, HarmBench, and XSTest are established artifacts, and fine-tuning, projection penalties, KL regularization, activation hooks, and parameter freezing are supported by mature tooling, although \"a domain corpus,\" \"a mildly-harmful set,\" and the precise safety-region-freezing implementation are not concretely specified. Resources receive some useful quantification through the named 8B model, but there are no sample sizes, anchor-set size, fine-tuning scale, or other concrete planning figures. The vanilla, freezing, and KL baselines plus the adversarial-fine-tuning stress test make negative outcomes runnable, so the remaining limitations are specification and custom-engineering gaps rather than a fundamental methodological barrier.",
+      "score": 6
+    }
+  }
+}

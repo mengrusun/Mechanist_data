@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The goal and measurements align: the proposal would \"decode (a) atom electrophilicity/nucleophilicity, (b) breaking bonds, (c) forming bonds,\" relate decoding correctness to \"top-1 product-prediction accuracy,\" and test causality by measuring a predicted \"switch in the model's product regiochemistry.\" The predictions are directional and implicitly refutable by probe performance failing to exceed the template baseline, no positive accuracy relationship, or patching failing to induce the predicted switch, but no numeric decision thresholds or statistical criteria define when these outcomes count as confirmation. Important details remain ambiguous, including how attention/features are identified as the electron-flow representation, how a decoded mechanism is judged to \"match ground truth,\" and how template overlap is controlled when interpreting probe accuracy as mechanistic representation rather than correlational decodability.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "Frozen-activation probing, layer/head localization, product evaluation, and held-out-class testing are standard operations supported by existing transformer and cheminformatics tooling; Molecular Transformer-style models and USPTO reaction data exist, although the required \"mechanistic datasets and rule-based labeling\" are not named and the labeling procedure is insufficiently specified. The hardest step is \"swap nucleophile-electrophile attention between regiochemical isomers\": activation patching itself is standard, but selecting the relevant attention components, aligning them across isomers, and defining a chemically valid swap require custom logic not supplied here, so this is not yet a fully specified operation. Negative outcomes are runnable because the plan includes held-out classes, regiochemical-isomer interventions, and a \"template-matching model with no internal mechanism,\" but resources are entirely unquantified—there is no model version or scale, reaction count, annotation count, or number of patching pairs.",
+      "score": 5
+    }
+  }
+}

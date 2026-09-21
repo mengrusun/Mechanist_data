@@ -1,0 +1,51 @@
+{
+  "score": 2,
+  "verdict": "not ready",
+  "weaknesses": [
+    "Baseline integrity gate failed, so all claims remain unsupported",
+    "RR objective was effectively cos^2 because cos<0, causing near-zero gradient at initialization",
+    "M4 shows no movement on harmful or control directions, indicating the mechanism never engaged",
+    "Tail-step gradient spikes and retention blow-up suggest unstable collapse without useful RR progress",
+    "Executed alpha=10 deviated from planned alpha=1 and skipped required alpha sweep evidence",
+    "Direction construction changed from mean-diff to probe coefficients without validating trainability",
+    "Downstream safety metrics worsened, consistent with an inactive or noisy adapter"
+  ],
+  "action_type": "\u2461",
+  "fix_axis": "loss_reformulation",
+  "fix_spec": {
+    "run": "M3+M4 rerun only",
+    "cli_flags": [
+      "--rr_loss signed",
+      "--alpha 10.0",
+      "--beta 1.0",
+      "--lambda_lm 1.0",
+      "--lora_r 16",
+      "--lora_alpha 32",
+      "--target_modules q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj",
+      "--learning_rate 2e-4",
+      "--lr_scheduler_type cosine",
+      "--warmup_ratio 0.05",
+      "--max_steps 500",
+      "--effective_batch_size 8",
+      "--train_pairs 384",
+      "--bf16 true",
+      "--sites 9,10,11,12,13,14",
+      "--direction_source probe_coef",
+      "--heldout_pairs 128"
+    ],
+    "code_diffs": [
+      "Change RR loss selection in main experiment script from cos_sq_plus_signed to signed cosine.",
+      "Implement signed loss as L_rr = mean(cos(a_site, d_site)) over harmful examples/sites; optimize by minimizing L_total = lambda_lm * L_ret + alpha * L_rr + beta * L_kl_or_retention_term if present.",
+      "Remove/disable ReLU(cos) and cos^2 terms for this run.",
+      "Keep all other hyperparameters identical to the failed run to isolate loss-surface effects.",
+      "Add logging of mean cosine per site on train and held-out every 25 steps to verify monotonic movement negative.",
+      "Abort-and-save-best on held-out retention blow-up if L_ret exceeds 0.5 for 3 consecutive evals; report best-checkpoint M4."
+    ]
+  },
+  "rationale": "The blocker is not capacity, data, or sites; it is the objective. Your own diagnostics show |cos| starts around 0.035 and remains negative, so cos_sq_plus_signed collapses to cos^2 with gradient proportional to |cos|, i.e. tiny exactly where learning must start. That explains the flat M4 and inactive downstream behavior. Switching to pure signed cosine changes the local gradient at cos\u22480 from near-zero to O(1), directly pushing activations opposite the harmful direction without needing more alpha, more layers, or more data. Holding every other knob fixed makes the rerun a clean mechanism test: if \u0394cos_harmful moves substantially while control directions stay near zero and retention remains acceptable, the RR mechanism is finally engaged. This is the single highest-probability one-iteration fix for moving from \u22120.02 toward the target \u2264\u22120.30 within the remaining budget.",
+  "expected_signal": "Success if held-out M4 reaches \u0394cos_harmful <= -0.30, with \u0394cos_ctrl near 0 (e.g. |\u0394| < 0.05) and no late retention collapse.",
+  "budget_gpu_hours": 2.5,
+  "still_unresolved_after_fix": [
+    "C3"
+  ]
+}

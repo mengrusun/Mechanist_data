@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Do Emotions in Prompts Matter? Effects of Emotional Framing on LLMs",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The behavioral claims C1/C2/C3 are pure inference-time accuracy evaluations (T=0.0, zero-shot) with no fitting or threshold learned from test labels, so no train/test leakage path exists there. The only fitting process is the CM-Location residual-stream probe (M5): a 6-way logistic emotion-identity probe on the last-prefix-token residual with an explicit item-disjoint 70/30 split, 3 seeds, and a length-shuffled null baseline (CLAIMS_LEDGER.md line 92; reports/M5_location.json reports per-layer probe_acc_mean/std and null_acc_mean/std over n_samples=4800). The split is item-disjoint and honored in reported artifacts, and the C1 sign-consistency/noise-floor gate (M2b) is calibrated on neutral-format perturbations, not on emotional-condition labels. One mild residual-hygiene caveat: the 24 emotional prefix strings are fixed across all items, so an item-disjoint split still exposes the probe to the identical 24 prefix texts in both train and test, which makes the 1.00 held-out probe accuracy near-trivial (a decodability tautology rather than leakage per se). The split itself is correct; the caveat is one of interpretation, noted also in the run. No contaminated main-conclusion metric was found.",
+    "score": 4,
+    "evidence_files": ["CLAIMS_LEDGER.md", "reports/M5_location.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Ground truth for every executed claim is the standard gold answer of the benchmark: GSM8K exact-match (runs/M2/gsm8k_neutral.json records n_correct=410, accuracy=0.82 over 500 items), SocialIQA 3-way MCQ and MedQA US-MLE MCQ accuracy (runs/M3/*, reports/M4_c3_analysis.json neutral_acc socialiqa=0.746, medqa=0.614). These labels are externally sourced, independent of the system under test, and validly operationalize 'accuracy' — exactly what the claims measure. The emotional manipulation is the treatment (first-person prefixes prepended to unchanged questions, data/prefixes/prefixes.json: 26 conditions = neutral + 6 emotions x 2 intensities x 2 wording-sources + filler), faithfully matching the paper's prefix design (Sec 2.1). The CM probe's 'label' (emotion identity) is derived from the fixed prefix assignment — independent, non-circular. Labels are clean and standard; the C2 cross-task-spread confound (CoT vs MCQ eval modes) is a metric-alignment issue scored under Dim 9b, not a label-validity failure.",
+    "score": 5,
+    "evidence_files": ["runs/M2/gsm8k_neutral.json", "reports/M4_c3_analysis.json", "data/prefixes/prefixes.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The canonical task.md main experiment stage specifies model=Qwen3-14B and dataset=GSM8K; both are honored exactly — logs (e.g. logs/M2_gsm8k_happiness_1_human_gpu2.log) show loading 8 safetensors shards from /data/zhenqian/models/Qwen3-14B, and all M2/M2b/M3 runs use it. Deviations, all disclosed: (1) GSM8K subsetted to first 500 of 1319 test items (38%, cost-aware, refine-logs/EXPERIMENT_RESULTS.md 'Data Actually Used' table); (2) LLM-generated prefixes were produced with dmxapi 'gpt-5.4' rather than the paper's GPT-4o (EXPERIMENT_RESULTS.md M1); (3) the paper's other two backbones (Llama-3.3-70B, DeepSeek-V3.2) and the other three datasets (BBH, BoolQ, OpenBookQA) were not run — but task.md marks these as verify-stage candidates 'use as needed, not necessarily all', so their omission is permitted, not a silent downgrade. The CM verify swap used Qwen3-4B because Qwen3-8B had only an index file with no weight shards (verify/VERIFY_REPORT.md note 1) — a verify-stage swap, exempt. The main-experiment resource is used exactly as specified; the disclosed 500-item subset and prefix-generator model difference are the only deviations.",
+    "score": 4,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "logs/M2_gsm8k_happiness_1_human_gpu2.log", "verify/VERIFY_REPORT.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The executed behavioral claims rest on adequate scale: C1 uses 500 GSM8K items x 26 conditions plus 8 noise-floor perturbations; C2 uses 500 items each on SocialIQA and MedQA; C3a/C3b are post-hoc over those 500-item runs (refine-logs/EXPERIMENT_RESULTS.md 'Data Actually Used'). Thin/absent spots are honestly flagged rather than overclaimed: CM-Causal (M6) ran only 50 items x 1 of 12 prefixes and is tagged '[suspected under-power]' (CLAIMS_LEDGER.md line 99); C4/EmotionRL was entirely descoped (0/500 test, 0/2000 train) and reported as UNTESTED, not as supported (CLAIMS_LEDGER.md line 83). Coverage limitation relative to the paper's cross-model claims: only a single backbone (Qwen3-14B) was tested for claims whose paper wording spans 'all models', so the 'across models' facet of C1/C3 is under-covered — but the run does not assert it. No conclusion is stated without the corresponding experiment having been run (the one un-run experiment, C4, is labeled untested). Claim strength matches evidence with caveats attached.",
+    "score": 4,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Uncertainty handling is reasonable for a deterministic-decoding (T=0.0) setup. C1 calibrates a null noise floor from 8 semantics-preserving format perturbations (p90 |delta|=0.0524) and compares per-emotion deltas against it (refine-logs/EXPERIMENT_RESULTS.md M2b); C3b reports per-emotion 95% bootstrap CIs (1000 resamples) on delta(intensity-2 - intensity-1), e.g. fear [-0.004,0.046], surprise [-0.062,-0.008] in reports/M4_c3_analysis.json; the M5 probe reports mean+/-std over 3 seeds (reports/M5_location.json probe_acc_std, null_acc_std). Weaknesses: main per-condition accuracies are single deterministic runs with no seed variance (defensible under T=0.0 but leaves generation-order/tokenization noise unquantified), C1's per-emotion deltas lack their own CIs, and several claimed effects (C1 emotion means +/-1.5pp, CM-Causal steering range <=4pp) sit at or below the noise floor — which the run correctly treats as null rather than as real effects. Overall: noise-floor + bootstrap CIs + multi-seed probe give respectable but not comprehensive rigor.",
+    "score": 4,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "reports/M4_c3_analysis.json", "reports/M5_location.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The run adds a mechanistic claim CM (not in canonical task.md) asserting a residual-stream direction carries emotional-frame identity and causally modulates GSM8K accuracy. The Location arm is explicitly correlational (a linear probe + SVD) and is honestly labeled as such. The Causal arm is a genuine intervention — activation steering with a coefficient sweep alpha in {-1,0,+0.5,+1} at L4/L8 in sigma_proj units (runs/M6/steer_*.json, manifest.json) plus activation patching (runs/M6/patch_*.json). However, key controls are missing or descoped: no random-direction baseline, the matched-filler patch, off-target MedQA, and off-layer L20 null were all descoped, and only 1 of 12 prefixes (happiness_2_human) and 50/200 items were used; the patching test is identity-patch (happiness->happiness) only, with the cross-emotion sufficiency patch descoped (refine-logs/EXPERIMENT_RESULTS.md M6; CLAIMS_LEDGER.md line 99). Crucially the causal wording does NOT overreach: the run reports CM-Causal 'not-supported at tested scale' (steering range <=4pp within the 5.24pp noise floor) rather than asserting a demonstrated mechanism. So an intervention with a sweep exists but rigor elements (random-direction control, specificity controls, multiple prefixes) are weakened — the honest negative labeling prevents a poor score.",
+    "score": 3,
+    "evidence_files": ["runs/M6/manifest.json", "runs/M6/steer_L4_ap1.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number traces to a concrete on-disk product and agrees with it. Neutral GSM8K acc 0.820 -> runs/M2/gsm8k_neutral.json (accuracy=0.82, n_correct=410, per_item list of 500). Per-emotion means and argmax (fear/surprise/fear) -> reports/M4_c3_analysis.json (per_task_summary matches CLAIMS_LEDGER.md line 53). C3b CIs -> reports/M4_c3_analysis.json C3b.per_task.gsm8k. M5 probe 1.00 vs null ~0.28 -> reports/M5_location.json (probe_acc_mean=1.0, null_acc_mean=0.2859 at L4). M6 steering acc 0.94/parse_rate 1.0 -> runs/M6/steer_L4_ap1.json. C1 sign-consistency (e.g. happiness_1_human 0.271, delta -0.112) -> reports/C1_sign_consistency.json. GPU-hours per run -> runs/*/cost.json (gpu_ids within allowed {1,2,3,5,6}). No sourceless or back-filled numbers were found; the reported values match the products checked.",
+    "score": 5,
+    "evidence_files": ["runs/M2/gsm8k_neutral.json", "reports/M4_c3_analysis.json", "reports/M5_location.json", "reports/C1_sign_consistency.json", "runs/M6/steer_L4_ap1.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline's records are largely self-consistent across CLAIMS_LEDGER.md, refine-logs/EXPERIMENT_RESULTS.md, refine-logs/main-experiment-verdicts.json, and verify/VERIFY_REPORT.md: C2 not-supported (spread math 0.186 >> social 0.030 > factual 0.028), C3a supported, C3b supported (3/6 exactly), C4 untested/INCONCLUSIVE, CM Location supported / Causal not-supported — all identical numbers everywhere. Minor bookkeeping frictions (no verdict changed): (1) C1 is labeled 'partial' in the ledger table but 'not-supported' in main-experiment-verdicts.json, reconciled by an explicit note that the binary scheme maps partial->not-supported; (2) CM shows 'main_experiment_verdict: not-supported' in main-experiment-verdicts.json yet 'Verdict: PASS' in VERIFY_REPORT.md and '✓ PASS' in the ledger — reconciled because PASS is the Stage-2 robustness axis (Location robust to Qwen3-4B swap) while the combined main-experiment verdict requires both arms; the distinction is documented rather than contradictory. These are dual-axis labelings with explicit reconciliation, not genuine metric conflicts, so the records do not contradict each other on any number.",
+    "score": 4,
+    "evidence_files": ["CLAIMS_LEDGER.md", "refine-logs/main-experiment-verdicts.json", "verify/VERIFY_REPORT.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Across diverse task domains, static emotional prefixes change LLM accuracy only by small, input-dependent amounts and do not behave as a general-purpose enhancement.",
+        "method": {
+          "justification": "9a — The method is a behavioral accuracy comparison of prepended emotional prefixes vs a neutral baseline, with a null noise floor built from 8 semantics-preserving format perturbations, a length-matched filler control, and a per-item sign-consistency band. This directly matches the mechanism category of a behavioral/perturbation claim and mirrors the paper's delta-accuracy-vs-baseline design (Fig 3). Well-suited and well-controlled.",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "data/prefixes/format_noise_variants.json"]
+        },
+        "experiment": {
+          "justification": "9b — 500 GSM8K items x 26 conditions (6 emotions x 2 intensities x 2 wording-sources + neutral + filler), with a p90=0.0524 noise-floor gate and post-hoc per-item sign-consistency (reports/C1_sign_consistency.json). The metric (per-emotion mean |delta| <= noise floor AND sign-consistency in [0.4,0.6]) corresponds tightly to 'small, input-dependent shifts'. Limitations vs the paper: the paper's C1 spans 6 datasets and 3 models, whereas this arm covers only GSM8K on Qwen3-14B (the task-specified main resource), so the 'across diverse task domains' facet is only partially exercised here (C2/C3 add SocialIQA+MedQA). Design is otherwise complete and criteria were fixed a priori.",
+          "score": 4,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "reports/C1_sign_consistency.json"]
+        },
+        "result": {
+          "justification": "9c — Per-emotion mean deltas all fall within +/-1.5pp and inside the 5.24pp noise floor (reports/M4_c3_analysis.json, EXPERIMENT_RESULTS.md M2), qualitatively agreeing with the paper's finding that static prefixes are 'a mild perturbation rather than a reliable general-purpose intervention'. The run adds an honest refinement — 8/24 individual prefix cells cross the noise floor / sign-consistency band (e.g. happiness_1_human -11.2pp, disgust_2_llm +7.4pp) — and reports 'partial support' rather than forcing a clean pass. This is faithful, non-goalpost-tuned agreement with the paper's direction plus an honestly disclosed nuance.",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "reports/C1_sign_consistency.json", "reports/M4_c3_analysis.json"]
+        }
+      },
+      "C2": {
+        "claim": "The effect of emotional framing is most pronounced on socially grounded tasks (interpersonal/social reasoning), where the emotional context interacts meaningfully with task content; on tasks like mathematical reasoning or factual QA the effect is markedly smaller.",
+        "method": {
+          "justification": "9a — Method is inter-emotion accuracy-spread comparison across task families (social=SocialIQA, factual=MedQA, math=GSM8K). Spread comparison is a reasonable operationalization of 'which domain is most affected', but the design compares CoT free-form generation on GSM8K against constrained MCQ log-likelihood scoring on SocialIQA/MedQA — an eval-mode mismatch that confounds cross-task spread magnitude. The run itself flags this confound (CLAIMS_LEDGER.md line 44). The method is broadly fit but methodologically compromised for this specific cross-domain claim.",
+          "score": 3,
+          "evidence_files": ["CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "experiment": {
+          "justification": "9b — 500 items each on three single-representative datasets (one social, one factual, one math) with a single model; the gate (spread_social >= 2x spread_math AND ordering social>factual>math in >=2/3 pairs) is well-defined and not adjusted post-hoc. But the GSM8K spread (0.186) is inflated by ~250-token CoT generation variance while MCQ tasks are protected by log-likelihood scoring, so the spreads are not measured on a comparable footing — a genuine design flaw for this claim, only partially mitigated (no same-mode comparison run). Coverage is also narrower than the paper's six-dataset evaluation.",
+          "score": 3,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "reports/M4_c3_analysis.json"]
+        },
+        "result": {
+          "justification": "9c — The realized ordering is math(0.186) >> social(0.030) > factual(0.028), the reverse of the paper's claim that social tasks show the largest dispersion. The run reports this honestly as 'not-supported / failed hypothesis' and does not disguise it as agreement (no fabrication or goalpost-tuning). However, the disconfirmation is itself confounded by the disclosed CoT-vs-MCQ eval-mode mismatch, so it is not a clean refutation of the paper — the claim was not tested on a comparable measurement footing. Honest disagreement with a partially-reliable, explicitly-stated reason.",
+          "score": 3,
+          "evidence_files": ["CLAIMS_LEDGER.md", "refine-logs/main-experiment-verdicts.json", "reports/M4_c3_analysis.json"]
+        }
+      },
+      "C3": {
+        "claim": "No single basic emotion among {happiness, sadness, fear, anger, disgust, surprise} provides a consistent benefit across all models and tasks; stronger emotional wording does not yield proportionally larger gains.",
+        "method": {
+          "justification": "9a — Split into two well-matched analyses: C3a computes the argmax emotion per task and checks whether the identity flips across {GSM8K, SocialIQA, MedQA} (scripts/analyze_c3.py); C3b runs paired 1000-resample bootstrap CIs on delta(intensity-2 - intensity-1) per emotion. Both are appropriate methods for the two facets of the claim (no consistent winner; no monotone intensity gain).",
+          "score": 5,
+          "evidence_files": ["scripts/analyze_c3.py", "reports/M4_c3_analysis.json"]
+        },
+        "experiment": {
+          "justification": "9b — C3a over 500-item runs on 3 tasks; C3b with per-emotion bootstrap CIs on GSM8K. Criteria pre-specified. Limitations: only a single model is tested, so the claim's explicit 'across all models' scope is not exercised (the paper spans 3 models); and C3b passes at exactly the 3/6 threshold (fear, anger, surprise straddle/reverse; sadness borderline at CI lower bound +0.001), a fragile margin the run acknowledges (EXPERIMENT_RESULTS.md M4). Sound but narrow and borderline.",
+          "score": 4,
+          "evidence_files": ["reports/M4_c3_analysis.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c — Both facets qualitatively agree with the paper. C3a: argmax is fear on GSM8K/MedQA but surprise on SocialIQA (argmax flips), so no single emotion wins across tasks — matching the paper's 'no single emotion is consistently beneficial'. C3b: 3/6 GSM8K emotions fail monotonicity in intensity, matching 'stronger emotional wording induces only modest extra change'. The run honestly labels C3b as threshold-level (borderline) support rather than overselling, and the single-model coverage is disclosed. Directionally faithful agreement.",
+          "score": 4,
+          "evidence_files": ["reports/M4_c3_analysis.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C4": {
+        "claim": "An adaptive policy that selects the emotional prefix per query (EmotionRL) yields more reliable accuracy gains than any fixed emotional prefix or neutral baseline.",
+        "method": {
+          "justification": "9a — The planned method (offline grouped reward table per emotion, soft reward-weighted cross-entropy over a lightweight MLP policy on frozen sentence embeddings) faithfully mirrors the paper's EmotionRL formulation (paper Sec 2.6), and the scripts exist (scripts/build_reward_table.py, scripts/train_emotionrl.py, scripts/eval_emotionrl.py). The method choice is appropriate for the claim; however it was never executed, so its suitability is only established on paper, not in practice.",
+          "score": 3,
+          "evidence_files": ["scripts/train_emotionrl.py", "scripts/build_reward_table.py", "CLAIMS_LEDGER.md"]
+        },
+        "experiment": {
+          "justification": "9b — No experiment was run. M7 (reward table, policy SFT, held-out eval) was entirely descoped after ~9.08 of 10 GPU-h were consumed by M2/M2b/M3/M5/M6: 0/2000 train items, 0/500 test items, 0/3 seeds, no reward table, no policy trained or evaluated (CLAIMS_LEDGER.md line 79; refine-logs/EXPERIMENT_RESULTS.md M7). Descoping the single most novel claim of the paper with zero execution is a complete design non-realization, however honestly disclosed.",
+          "score": 1,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "verify/VERIFY_REPORT.md"]
+        },
+        "result": {
+          "justification": "9c — There is no result to compare against the paper's EmotionRL finding. The run reports C4 as UNTESTED/INCONCLUSIVE (not falsified) and does not disguise anything as agreement, so there is no fabrication or goalpost-tuning — an honest non-execution. But the claim is left entirely dangling with no analysis, so it provides no reliable verdict either way. Honesty lifts it marginally above the worst case.",
+          "score": 2,
+          "evidence_files": ["verify/VERIFY_REPORT.md", "refine-logs/main-experiment-verdicts.json"]
+        }
+      }
+    }
+  }
+}

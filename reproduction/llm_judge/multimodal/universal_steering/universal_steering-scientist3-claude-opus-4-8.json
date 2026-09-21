@@ -1,0 +1,212 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Toward Universal Steering and Monitoring of AI Models",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The main pipeline has almost no fitting/selection process: the 'concept vector' is a fixed difference-of-means over hidden states (no trained classifier/probe/threshold), and steering success is judged by an external GPT-4o model, so most of the pipeline is n/a for leakage. However two hygiene gaps exist in code. (1) The evaluation prompts are a subset of the negative prompts used to build the vector: in every experiment_code.py `make_negative_prompts(n=8)` returns `GENERIC_PROMPTS[:8]` and `eval_prompts = GENERIC_PROMPTS[:N_EVAL_PROMPTS]` (=`GENERIC_PROMPTS[:3]`), so the 3 held-out eval prompts overlap the 8 generic prompts used to compute the difference-of-means 'negative' mean (logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_code.py). (2) Hyperparameters best_alpha=8.0 and best_layer=16 are selected by maximizing steering success on the very same 60-judgment concept_benchmark set that is then reported (baseline_summary.json, ablation_summary.json), i.e. model selection on the reported set with no separate validation split. These are minor because the metric scores output concept-reflection rather than a fitted decision boundary, but the overlap and selection-on-eval are real, so this is not a clean 5.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_code.py",
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/ablation_summary.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The ground-truth label is a GPT-4o judgment (`gpt-4o-2024-11-20`, temperature 0) of whether a generated output 'clearly reflects, embodies, or expresses the given target concept' (judge prompt embedded in every experiment_code.py). This is non-circular (the judge model is distinct from the steered Llama-3.1-8B) and matches the paper's own evaluator (GPT-4o gpt-4o-2024-11-20, temp 0), so it is a valid operationalization of 'did steering push the output toward concept X'. Verified real judgments are stored on disk (e.g. a fear-steered output '..*gulp*... *whimper*... *shudder*...' with per-prompt baseline/steered judge flags in experiment_data.npy). The gap: the 20 hand-coded concepts (fear of heights, joyful mood, pirate persona, etc.) do not operationalize the claim-1 target behaviors the task names — anti-refusal/jailbreak, political stance, honesty — so while the label validly measures concept-reflection, it measures a set of generic concepts rather than the claim's safety-relevant behaviors.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_code.py",
+      "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_data.npy"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The steered model is correct: every experiment_code.py loads `/data/zhenqian/models/Llama-3.1-8B-Instruct` (config confirms model_path across all 8 experiment_data.npy files), and the judge is the specified `gpt-4o-2024-11-20`. However the dataset was silently and heavily downgraded/substituted. The task specifies a 'GPT-4o-generated concept benchmark — 512 concepts across 5 classes + 400 generic statements.' The run instead uses 20 HARD-CODED concepts (4 per class in `CONCEPT_CLASSES`, e.g. 'fear of heights','expert chef','joyful mood','love of mountains','pirate persona') and 12 hard-coded generic prompts — n_concepts=20 in every config, ~4% of the specified 512, and NOT auto-generated via the API as the task requires. The specified concept-generation and 400-statement training-data components were never executed. The specified method RFM is also replaced by a difference-of-means 'proxy' (documented, but a method substitution). No verify-stage models (70B, VLM, DeepSeek) were used (only Llama-3.1-8B appears, 26 references), which is acceptable since verify variants are optional, but the main-experiment dataset substitution is a genuine silent downgrade.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_code.py",
+      "logs/0-run/baseline_summary.json",
+      "idea.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Evidence is severely insufficient relative to the claim set. Only claim 1's general steering mechanism was tested, and on a tiny sample: n_concepts=20, n_eval_prompts_per_concept=3 → 60 judgments per configuration (well under the 40-item thinness threshold in effective concept coverage vs the specified 512). Claims 2 (Python→C++/HackerRank), 3 (cross-language transfer), 4 (composability), and 5 (monitoring/AUROC vs GPT-4o) have NO experiment at all — every experiment_data.npy contains only concept_benchmark steering keys (concept_benchmark / alpha_tuning / layer_ablation / layer_alpha_sweep); no code, data, or metrics exist for coding, multilingual, composition, or monitoring. This is a direct overclaim-by-absence for 4 of 5 claims, aggravated by summary artifacts (draft/research/ablation summaries) whose VLM analyses assert these unrun experiments succeeded. Even claim 1's conclusion rests on 20 concepts, far thinner than the paper's 512.",
+    "score": 1,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_code.py",
+      "report.md",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Some rigor exists: the pipeline ran multiple seeds and produced seed-aggregation artifacts that compute mean ± SEM across runs (logs/0-run/experiment_results/seed_aggregation_*/aggregation_plotting_code.py defines `sem(arr)=np.std(arr,ddof=1)/sqrt(len)` and plots 'mean±SEM, n=n_runs'). However robustness is weak: n_runs is small (2-3 seeds), and cross-seed variance on the identical config is large — e.g. alpha=8.0 steered success is 0.45 in one run (baseline_summary.json) yet 0.7333 in the different-seed node, a ~0.28 spread on only 60 judgments — and this large variance is not surfaced or caveated in the headline numbers. The reported headline figures (draft_summary overall 0.4333; report.md) are single-run point estimates without error bars, and no significance testing is done. Claims 2-5 have no statistical treatment because they were not run.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/seed_aggregation_cbaaae52b26d44a98617ab8c97ea1703/aggregation_plotting_code.py",
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The steering claim is genuinely mechanistic/causal (adding a vector to activations CAUSES behavior change), and the run implements a real intervention, not correlational evidence: a `SteerHook` adds α·v to the residual-stream output of a chosen block during generation (experiment_code.py), with generations stored on disk showing the intervention shifting outputs (fear vector → whimpering/shuddering text). Controls are partially present, strongest in the research-stage node (experiment_cfe801e...proc_2170206/experiment_code.py): a coefficient sweep (FIXED_ALPHAS=[4,8,12], ADAPTIVE_ALPHAS=[0.5,1.0]), a layer sweep, a distractor/off-target success metric (steering toward concept A must not trigger concept B), a perplexity coherence check, and a prompt-based baseline ('mention concept X') for fair comparison. Missing rigor element: no random-direction baseline is actually run (the paper uses PCA/random controls; the summaries' claim of an 'RFM vs Mean-Difference vs Random' comparison is hallucinated VLM text, not real code). So the intervention is genuine and coefficient-swept with off-target control, but a standard control (random direction) is absent.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/experiment_code.py",
+      "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_data.npy"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "The headline numbers that are actually reported for the run's one real experiment trace cleanly to on-disk products and agree with them: draft_summary overall steered 0.4333 / baseline 0.0167; stage_1 stage_progress.json 0.4167 steered / 0.0 baseline with per-class moods 0.9167, personas 0.8333, experts 0.0; baseline_summary alpha=8.0 → 0.45 — all recoverable from experiment_data.npy files that contain real generations and per-concept judge verdicts (verified by loading experiment_9aa5f7...npy). This is genuine execution, not conjured numbers. The provenance concern is elsewhere: the summary artifacts contain interpretive content with NO backing product — baseline_summary.json's plot_analyses describe accuracies on 'fashion_mnist, dtd, imagenet-val, imagenette' with flat loss ≈2.30 (a vision experiment that never ran), and research/ablation summaries narrate RFM-vs-Random, cross-lingual, composability, and monitoring-AUROC results that have no on-disk data. These fabricated analyses do not feed the reported headline metrics but are sourceless, back-fillable content living in the run's own artifacts.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_data.npy",
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json",
+      "logs/0-run/baseline_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The raw metric values are internally consistent across the real artifacts (draft_summary 0.4333, stage_1 0.4167, baseline_summary alpha=8→0.45, research best-composite 0.4722 all sit in the ~0.42-0.47 band on the concept benchmark). But there is a material inconsistency between the interpretive artifacts and the actual experiments. baseline_summary.json's `plot_analyses`/`vlm_feedback_summary` describe a completely different (vision) experiment — 'fashion_mnist ~0.10, dtd ~0.02, imagenet-val ~0.68, imagenette ~0.94' with 'flat loss curves at ~2.30' — for plots that actually show LLM concept-steering. research_summary.json / ablation_summary.json `plot_analyses` narrate 'RFM outperforms Mean Difference and Random across 5 classes', 'concept vectors transfer across languages (English/Chinese/French)', 'composability via linear combinations', and 'internal features competitive vs GPT-4o judges on FAVABENCH/HaluEval/RAGTruth/ToxicChat' — none of which correspond to any experiment run or any on-disk data (every npy holds only concept_benchmark keys). These artifact descriptions contradict the actual run content, which is a genuine cross-artifact inconsistency that could mislead a reader into believing claims 2-5 were validated.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/ablation_summary.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "RFM--a supervised feature learning algorithm can extract per-block linear concept vectors from the internal activations of large-scale AI models, and adding these vectors to activations during inference effectively steers model behavior toward or away from the target concept. Example application scenarios: Anti-refusal (jailbreak)，Political stance，Honesty (negative steering).",
+        "method": {
+          "justification": "9a: The run extracts a per-block linear direction and adds α·v to the residual stream via a forward hook — the correct mechanism category (additive linear steering) for this claim. However it substitutes the specifically-named RFM (kernel-ridge + AGOP top-eigenvector, per the paper) with a normalized difference-of-means 'RFM proxy' (documented in baseline_summary overall_plan and the code `v = pos_h.mean(0) - neg_h.mean(0)`). Difference-of-means is a legitimate supervised linear concept direction and is in fact one of the paper's own baselines (Diff. Means, 41.4% vs RFM 49% overall on Llama-3.1-8b), so the method family broadly fits the claim about linear steerability, but it is not the RFM the claim names and cannot speak to RFM's specific advantage.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_code.py",
+            "logs/0-run/baseline_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: The design has reasonable elements — coefficient sweep (α∈{4,6,8,12}), layer sweep (8/16/24/29), adaptive-alpha, prompt baseline, off-target/distractor metric, perplexity coherence, and the paper-matching GPT-4o (temp 0) concept-reflection judge. But it is under-powered and off-target: only 20 hard-coded concepts × 3 prompts (vs the specified 512 GPT-4o-generated), no random-direction control, and — critically — none of the claim's three named application scenarios (anti-refusal/jailbreak on harmful_harmless_instructions, political stance, honesty/deception on RolePlaying with a deception judge) were built or run. So the experiment tests generic-concept steerability, not the safety behaviors the claim asserts, and does so on a small sample.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/experiment_code.py",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "9c: For the general steering mechanism the real result is qualitatively consistent with the paper: overall steered success ~0.42-0.49 with moods ~0.92-1.0 and personas ~0.83 high, experts 0.0 / topophiles ~0.08 / fears ~0.17 low (stage_1 stage_progress.json, draft_summary.json). The paper's Llama-3.1-8b concept benchmark shows the same shape — moods highest (~96-99%), overall Diff-Means 41.4% / RFM 49% — so the reproduction directionally agrees that simple linear directions steer some concept classes on the 8b model, and it honestly reports the failures (no fabricated experts success). Deductions: it did not validate the claim's named scenarios (anti-refusal/political/honesty) at all, and its own prompt baseline (0.6111) actually beat activation steering (best-composite 0.4722, research_summary.json), a sub-result in mild tension with a strong steering claim that is not reconciled; plus the summaries carry hallucinated 'RFM>Diff>Random' narratives with no data.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json",
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Steering can improve performance on high-precision tasks: steering from Python to C++ when answering coding questions on algorithm problems with different task difficulties, a C++ concept vector can raise llm's test-case pass rate, beating both the default Python output and \"Answer in C++\" prompting.",
+        "method": {
+          "justification": "9a: No method was implemented for this claim. There is no Python→C++ concept-vector extraction, no LeetCode/HackerRank code, and no code-language steering anywhere in the run — every experiment_data.npy contains only concept_benchmark steering keys. The required mechanism (a code-language concept vector + test-case pass-rate evaluation) is entirely absent, so there is no method to assess.",
+          "score": 0,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment exists. HackerRank (50 challenges / 732 test cases), the C++-steered vs C++-prompted vs Original comparison, and the pass-rate metric described in the paper (overall 73.2% steered vs 66.6% prompted vs 69.5% original on Llama-3.3-70b) were never run; no coding dataset or test-harness artifact is present in the case tree.",
+          "score": 0,
+          "evidence_files": [
+            "report.md"
+          ]
+        },
+        "result": {
+          "justification": "9c: There is no result for this claim; report.md only emits a boilerplate 'See overall verdict (claim 2/5)'. The claim is left dangling with no evidence, and worse, the run's summary artifacts do not honestly flag the absence — research/ablation VLM analyses assert coding/high-precision steering worked. An unrun claim reported without a reliable disposition is an unreliable outcome.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Concept representations are transferable across human languages: concept vectors trained on English text can steer model responses in other languages (e.g., Chinese, French, Spanish).",
+        "method": {
+          "justification": "9a: No method implemented. There is no train-on-English/apply-to-other-language pipeline, no multilingual prompts, and no translation/cross-lingual steering code anywhere in the run; all experiments operate on English generic prompts only. The mechanism required by the claim is absent.",
+          "score": 0,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_code.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment exists. No Chinese/French/Spanish/Hindi/Mandarin evaluation was run; no multilingual dataset or output is present. The cross-lingual transfer study the paper reports (Figs 3, S6-S9) has no counterpart in the case tree.",
+          "score": 0,
+          "evidence_files": [
+            "report.md"
+          ]
+        },
+        "result": {
+          "justification": "9c: No result; report.md gives only 'See overall verdict (claim 3/5)'. The claim is dangling. This is compounded by a fabrication risk: research_summary.json's plot_analyses explicitly claim 'concept vectors transfer across languages (English/Chinese/French) with similar effectiveness' as if demonstrated, when no such experiment or data exists — a misleading, unreliable disposition.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "Concept vectors are composable: linear combinations of multiple concept vectors enable simultaneous multi-concept steering.",
+        "method": {
+          "justification": "9a: No method implemented. No multi-vector linear-combination steering exists in the code; the hook adds a single concept vector at a time. (The token 'compos' in the research code refers to a 'composite score' metric = success − off_target − ppl_penalty, not to composing concept vectors.) The composability mechanism is absent.",
+          "score": 0,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/experiment_code.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment exists. No multi-concept combination (e.g. conspiracy+Shakespeare, influencer+conservative as in the paper) was constructed or evaluated; no on-disk product tests simultaneous steering of two concepts.",
+          "score": 0,
+          "evidence_files": [
+            "report.md"
+          ]
+        },
+        "result": {
+          "justification": "9c: No result; report.md gives 'See overall verdict (claim 4/5)'. Dangling claim, again with a fabrication risk: research_summary.json plot_analyses narrate 'compositional steering results ... linear combinations of concept vectors can achieve simultaneous activation of multiple target concepts' with no backing experiment — an unreliable, unsupported disposition.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C5": {
+        "claim": "Internal concept features are more effective for monitoring misaligned content (hallucinations, toxic content) than LLM judges that evaluate outputs directly — even when the features come from smaller open-source models compared to powerful judges like GPT-4o.",
+        "method": {
+          "justification": "9a: No method implemented. There is no monitoring/probing variant — no top-p-eigenvector projection, no per-block or aggregated classifier, no AUROC computation, and no LLM-judge-vs-probe comparison anywhere in the run. All artifacts are generative steering; the classification/monitoring mechanism required by the claim is entirely absent.",
+          "score": 0,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment exists. None of the monitoring benchmarks (FAVABENCH, HE-Gen, HE-Wild, PubMedQA, RAGTruth, ToxicChat) were loaded, no GPT-4o/ToxicChat-T5 judge baseline was run, and no AUROC table (paper Fig 6) has any counterpart. No on-disk product addresses monitoring.",
+          "score": 0,
+          "evidence_files": [
+            "report.md"
+          ]
+        },
+        "result": {
+          "justification": "9c: No result; report.md gives 'See overall verdict (claim 5/5)'. The claim is left dangling, and research_summary.json plot_analyses again hallucinate support — 'Internal-feature-based probes from smaller open-source models likely match or exceed GPT-4o judge performance on several monitoring tasks, supporting the paper's fifth hypothesis' — asserted with zero underlying data. An unrun claim presented with fabricated corroboration is an unreliable disposition.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      }
+    }
+  }
+}

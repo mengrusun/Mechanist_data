@@ -1,0 +1,16 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4)",
+  "claim_id": "C1",
+  "linked_milestones": ["M-prep", "M1"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {"status": "pass", "details": "Harmfulness labels from AdvBench dataset; refusal proxy explicitly labeled in directions.json as harmful-vs-benign proxy"},
+    "score_normalization": {"status": "pass", "details": "AUROC uses dataset labels as GT; cosine is geometric measure; no self-normalization"},
+    "result_existence": {"status": "pass", "details": "results/m1/claim1_verdict.json exists; numbers match EXPERIMENT_RESULTS.md"},
+    "dead_code": {"status": "warn", "details": "Refusal sub-test code is called but outputs NaN due to only 7 natural jailbreaks; cannot be exercised on this data"},
+    "scope": {"status": "warn", "details": "Claim says independently-recoverable but refusal-side independence check unmeasurable; only geometric distinctness established"},
+    "eval_type": "proxy_gt"
+  }
+}

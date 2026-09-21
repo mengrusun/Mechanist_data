@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal is strongly aligned with the scientific question: it varies enzyme retention through “a bypass swap S->S_bypass” versus “a same-enzyme control swap S->S_same,” measures the resulting interaction signal, and includes structural, co-mention, randomized-label, and pharmacodynamic controls. It is directionally falsifiable with unusually concrete criteria, including “CI lower bound > 2.0” as support and “CI upper bound < 1.3” as the surface-feature signature, while explicitly treating intermediate intervals as indecisive. Some mechanism details still need clarification: “accuracy ... minus what structural + co-mention similarity achieve, after regressing both out” does not uniquely specify the residualization and evaluation pipeline, and Experiment 3 shifts from a pair-level shared-enzyme probe to a per-drug “‘CYP-E substrate/inhibitor’ direction” without explaining that derivation. Moreover, steering a representation along its probe direction and reading the same probe-derived prediction risks a partly tautological causal result unless the downstream prediction and intervention layer are specified independently.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is constructing roughly “200 clean single-isoform PK pairs” with “therapeutically-equivalent but different-enzyme” and matched same-enzyme swaps; this is demanding custom curation rather than a magic step because the claim states the restriction and matching variables, including indication, route, dosage form, structural distance, and text frequency. The named artifacts—MedGemma 4B, ChemBERTa-2, MoleculeSTM, DrugBank, Flockhart CYP tables, and the University of Washington Drug Interaction Database—exist, and frozen embeddings, linear probes, ECFP4 similarities, prompt likelihoods, and matched-norm activation perturbations are supported by standard ML and interpretability tooling. Resources are concretely scoped as “up to 1,000 PK pairs and 500 PD pairs,” “~200” counterfactual pairs, three models, and “linear probes only (3 seeds),” which makes the plan operationally estimable. The negative branch is runnable because the design includes same-enzyme swaps, PD pairs, random directions, randomized enzyme labels, and random swaps, although the exact representation layer and injection point for MedGemma steering and the pairwise readout for models lacking a native DDI head remain implementation gaps.",
+      "score": 8
+    }
+  }
+}

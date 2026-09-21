@@ -1,0 +1,143 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Xin Xu",
+    "paper_title":         "SAGE: An Agentic Explainer Framework for Interpreting SAE Features in Language Models",
+    "agent":         "scientist2",
+    "review_date":         "2026-07-19"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "划分在m1_main_pair.py:182-192明确定义:每feature用seed锁定(split_seed=42,per-feature派生种子)的80/20随机切分,train_snips/held_snips,切分参数逐feature落盘于results/m1/features_L*.jsonl。代码严格遵守:SAGE与GPT-5-1shot解释生成只见train(m1:226-242);C1阈值tau_f仅由train激活值的99分位算出(m1:207-212)且三方法共用;C2仅在held-out上评测(m1:214-216, 275-286);C1探测文本为全新生成。M2/M0.5沿用同一模式。",
+    "score": 5,
+    "evidence_files": [
+      "scripts/m1_main_pair.py",
+      "scripts/m2_verify_pair.py",
+      "scripts/m0_5_baseline_sanity.py",
+      "results/m1/features_L12.jsonl"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "C1/C2的ground truth均为目标LLM+SAE的真实激活(C1本地前向传播实测,C2用Neuronpedia同一SAE的权威记录值),直接操作化claim所关心的行为,非循环。且M0.5 sanity gate实证校准了本地测量与Neuronpedia记录的尺度一致性(activation_match_ratio≈1.04,results/m0_5/sanity.json),SAE l0变体按比率最接近1.0挑选。还额外加了matched-backbone GPT-5-1shot对照以隔离scorer/explainer同backbone的潜在偏差。轻微缺口:scorer只见文本前500字符(common.py:667)而held-out文本达1500字符,max激活token可能在截断外,但对三方法一致,不构成偏向",
+    "score": 4,
+    "evidence_files": [
+      "scripts/common.py",
+      "scripts/m0_5_baseline_sanity.py",
+      "scripts/m1_main_pair.py",
+      "results/m0_5/sanity.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "task.md指定的资源全部真实使用:Gemma-2-2B+gemmascope-res-16k(M0.5还按激活比率校准每层l0变体)、Neuronpedia、backbone gpt-5.4(common.py:36),GPT-OSS-20B在verify swap中使用(豁免)。两处偏差均充分披露而非静默:(1) used_n从计划300/150缩至44/34(15%/23%),EXPERIMENT_RESULTS.md列出planned/realized对照表并将全部claim标记suspected_under_power,归因于DMXAPI吞吐(明确说明GPU预算仅用1.66/10小时、不是瓶颈);task.md本身未指定n。(2) M2降配为SAGE-lite(去掉Designer/Analyzer即无激活反馈)且仅predictive、未对Qwen3-4B做真实前向传播,理由与影响在结果和ledger中反复声明。",
+    "score": 4,
+    "evidence_files": [
+      "task.md",
+      "scripts/common.py",
+      "scripts/m1_main_pair.py",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "claim强度被严格压到与证据相称:C1的显著正差被matched-backbone对照主动归因为backbone假象而非SAGE有效;C2如实报null;C3明确定性为\"unresolved-under-power\"而非无效应证据;C4定性verified negative transfer并警告勿框架为成功;四条claim全部标注suspected_under_power,EXPERIMENT_RESULTS.md列有planned/realized对照。",
+    "score": 5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md",
+      "results/m1/summary.json",
+      "results/m2/summary.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "所有pairwise差值均报告配对bootstrap 95% CI(10k重采样)+配对Wilcoxon p(m1_main_pair.py:353-365),per-layer/overall两级齐全;C3做Bonferroni α=0.05/6多重校正;split_seed=42逐feature锁定、bootstrap种子确定化,可复现。唯一显著结果C1(p=0.045,边缘)未被夸大,反而经matched-backbone对照归因为backbone假象;所有不显著结果如实报null,无噪声内差异被当作效应、无挑种子迹象。",
+    "score": 5,
+    "evidence_files": [
+      "scripts/m1_main_pair.py",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md",
+      "results/m1/summary.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a",
+    "score": null,
+    "evidence_files": [
+      "scripts/m1_main_pair.py",
+      "refine-logs/EXPERIMENT_RESULTS.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "claim关键数字全部精确可溯源:C1/C2的Δ与CI(如+0.018 CI[+0.005,+0.036]、-0.018 CI[-0.094,+0.058])、M1三方法的gen_acc/pearson均值,均经44条results/m1/features_L*.jsonl原始记录重算验证,与results/m1/summary.json、CLAIMS_LEDGER一致;C4(+0.153, n=34)与GPT-OSS变体(-0.045, n=45)与results/m2/summary.json、verify/.../model-swap-gpt-oss-20b/summary.json及45行features.jsonl一致。但EXPERIMENT_RESULTS.md两张表的Mean Detection AUROC列(M1: 0.597/0.634/0.628;M2: 0.577/0.483/0.607)与落盘重算值(0.679/0.686/0.659;0.585/0.567/0.617)矛盾,且在全部产物中无法定位来源——时间前缀快照、剔除0.5退化值、按层子集等切片均无法复现,results/aggregate.json亦无AUROC字段,属无来源数字(M2 Neuronpedia格0.483 vs 实际0.567偏差最大)。所幸AUROC自标'secondary',C1-C4判定均只依赖可溯源的gen_acc/pearson列,结论不受影响。另ROBUSTNESS.md引M2 CI为[-0.039,+0.391],与他处[-0.031,+0.341]不符(陈旧数字,结论不变)。",
+    "score": 3,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "results/m1/summary.json",
+      "results/m1/features_L4.jsonl",
+      "results/m1/features_L12.jsonl",
+      "results/m1/features_L20.jsonl",
+      "results/m2/summary.json",
+      "results/m2/features.jsonl",
+      "results/aggregate.json",
+      "verify/C4_cross_pair_generalization/ROBUSTNESS.md",
+      "verify/C4_cross_pair_generalization/variants/model-swap-gpt-oss-20b/summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "claim关键数字与状态传播高度一致:EXPERIMENT_TRACKER的per-layer数字经JSONL重算逐一吻合;完整性状态(C1 WARN/C2 PASS/C3 WARN/C4 WARN→variant PASS)在INTEGRITY_AUDIT、VERIFY_REPORT、CLAIMS_LEDGER间无冲突;审计还自查出C3\"Bonferroni文字与脚本不符\"并标WARN。但存在多处小不一致:(1) EXPERIMENT_RESULTS.md两表AUROC列与summary.json/JSONL重算值矛盾且无来源(同一指标跨产物不同);(2) ROBUSTNESS.md引M2 CI[-0.039,+0.391]与他处[-0.031,+0.341]不符;(3) main-experiment-verdicts.json的C2 evidence误写\"SAGE-lite\"(M1实为full SAGE);(4) C4 baseline verdict措辞在VERIFY_REPORT(\"not-supported\")与ledger(\"inconclusive-positive-trend\")间不统一。均不改变判定,但累计暴露记账松散。",
+    "score": 3,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "refine-logs/EXPERIMENT_TRACKER.md",
+      "refine-logs/main-experiment-verdicts.json",
+      "CLAIMS_LEDGER.md",
+      "verify/VERIFY_REPORT.md",
+      "verify/INTEGRITY_AUDIT.md",
+      "verify/C4_cross_pair_generalization/ROBUSTNESS.md",
+      "results/m1/summary.json",
+      "results/m2/summary.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "You should build a pipeline around the following basic idea — letting an LLM agent propose several candidate explanations for an SAE feature, query the target LLM+SAE with probe inputs to gather empirical activation feedback, and iteratively accept, reject, or revise those candidates — produces feature explanations that outperform Neuronpedia on both generative accuracy (success rate of triggering the feature with text written from the explanation) and predictive accuracy (correlation between explanation-based predictions and true activations on held-out text), across multiple open-source LLMs and across early-to-late layers.",
+        "method": {
+          "justification": "主pair(Gemma-2-2B,覆盖claim的generative/predictive/跨层子句)上机理方法与论文正确匹配且还原度高:full四角色SAGE循环(common.py:run_sage_loop),Explainer→Designer→Analyzer(真实前向传播测激活)→Reviewer(显式ACCEPT/REVISE/REJECT决策+提前停止),含跨候选控制(other_pos_mean);并额外引入matched-backbone GPT-5-1shot对照隔离backbone效应,方法论强于原文。缺口:未实现refute独立状态与最终synthesis步骤;更重要的是claim的'跨多个LLM'子句仅用SAGE-lite检验(m2_verify_pair.py:85,只剩Explainer+Reviewer,去掉Designer+Analyzer即整个激活反馈机制)且未对Qwen3-4B做前向传播——该子句实际未被论文所指方法覆盖,偏离已在ledger中充分披露。",
+          "score": 4,
+          "evidence_files": [
+            "scripts/common.py",
+            "scripts/m1_main_pair.py",
+            "scripts/m2_verify_pair.py",
+            "CLAIMS_LEDGER.md"
+          ]
+        },
+        "experiment": {
+          "justification": "设计本身优秀:Neuronpedia+matched-backbone双baseline、seed锁定80/20切分、tau_f事前定义(train激活99分位)且三方法共用、配对bootstrap CI+Wilcoxon、C3做Bonferroni校正、M0.5 sanity gate校准SAE l0变体与激活尺度,判据无事后调整。但存在一处未被发现的重大执行缺陷:C1探测句激活值76.8%为NaN(660个probe_activations中507个,results/m1/features_L*.jsonl,模式为batch内被padding的序列全NaN),NaN与tau_f比较恒为False被计为miss,把三方法gen_acc全部压至≈0.06-0.09(论文尺度为0.5-0.9),直接导致Wilcoxon n_eff=4(90.9%零差);同一测量函数(common.py:compute_feature_activations_on_texts)也供给SAGE循环的Analyzer,循环内实证反馈同样受NaN污染。该缺陷在EXPERIMENT_RESULTS与integrity audit中均未被察觉。另:realized n仅为计划的15-23%(44/300、34/150),gen_acc每feature仅5条probe(自家audit标WARN'coarse metric'),K/T等超参数单一配置无sweep,scorer仅见文本前500字符。诚实但执行有重大未检出缺陷、探索欠充分。",
+          "score": 2,
+          "evidence_files": [
+            "results/m1/features_L4.jsonl",
+            "results/m1/features_L12.jsonl",
+            "results/m1/features_L20.jsonl",
+            "scripts/common.py",
+            "scripts/m1_main_pair.py",
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "verify/INTEGRITY_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "结果与论文不一致(论文:SAGE在两指标上大幅显著优于Neuronpedia;本复现:gen_acc仅+0.018且归因为backbone假象、loop-only Δ≈0,predictive为null,跨层跨pair均不成立),报告为诚实的未复现/null,无任何凑数、放宽阈值或伪装一致的迹象,且主动用matched-backbone对照做归因、对C1的fragility(n_eff=4)有标注——诚信层面无可指摘。但对未复现原因的披露不完整:所给原因(under-power、DMXAPI吞吐、backbone混淆)遗漏了最关键的技术原因——76.8%的probe激活为NaN使gen_acc测量基本失效,'loop-only Δ≈0'在此测量条件下不能作为SAGE循环无增益的可靠证据。predictive子结果不受NaN影响,其null结论与scientist1在Gemma上独立得到的'predictive打平'定性一致,相对可靠。",
+          "score": 3,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "results/m1/features_L4.jsonl",
+            "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+          ]
+        }
+      }
+    }
+  }
+}

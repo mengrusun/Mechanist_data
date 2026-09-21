@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the hypothesis by measuring whether “external-modality predictivity, cross-dataset stability, and causal ablation specificity” separate known-signal from planted-artifact orphans, then evaluating the combined classifier prospectively against a random-orphan baseline. The central prediction is strongly falsifiable: success requires “triage AUROC >= 0.8,” a held-out-family/modality drop “<= 0.1,” and an advantage over the LLM baseline “by >= 0.15,” while “triage AUROC <= 0.6 or no improvement” refutes it; Experiment 6 likewise specifies confirmation of at least “2x the random-orphan baseline” and treats parity as refutation. Minor clarification remains necessary because the “specificity index” is described as concentration on a “coherent biological subset” without a precise concentration formula, and top-K is not assigned a value, but these do not undermine the otherwise clear directional comparisons and predeclared decision bands.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is matching independently learned features “by activation-correlation and matched top-activating examples”; this is implementable custom logic rather than a magic step, although the plan does not specify the shared evaluation samples or exact matching rule needed to make activation correlations comparable. The named artifacts—“scGPT,” “Geneformer,” “ESM-2 650M,” CITE-seq, multiome ATAC, deep-mutational-scanning data—and the SAE, ridge/logistic-readout, bootstrap, and activation-ablation methods exist and are supported by standard ML and interpretability tooling, though several exact public datasets and the prospective “newer/independent database” remain unnamed. Resources are unusually well quantified through “dictionary width 16x hidden dim, k=32,” “3 SAE seeds,” “5 seeds,” approximately “1e8 token-activations,” and a target of “>= 100 orphans per class per model.” Negative outcomes are runnable because the design includes grouped splits, held-out model families and modalities, “matched random-feature ablations,” an LLM baseline, and a “random-orphan baseline,” rather than measuring only favorable target conditions.",
+      "score": 7
+    }
+  }
+}

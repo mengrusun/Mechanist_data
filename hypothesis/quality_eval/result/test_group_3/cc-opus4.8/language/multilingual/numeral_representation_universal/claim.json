@@ -1,0 +1,22 @@
+{
+  "Name": "numeral_representation_universal",
+  "Title": "Counting Without Words: Language-Independent Numerical Representations",
+  "Short Hypothesis": "Cardinal numbers and quantities are represented in a shared, language-independent magnitude subspace regardless of how they are lexicalized (digits, spelled-out words, different languages), and arithmetic operates over this shared code before language-specific verbalization.",
+  "Related Work": "Work on number representations in LMs (Gould et al. on modular circuits, 'Language Models represent numbers on a helix' Levy & others) is English/digit-centric. Cross-lingual numeral studies are rare. We test whether spelled-out numerals across languages and digits map to one magnitude manifold, and whether arithmetic circuits act on it language-independently.",
+  "Abstract": "Numbers are a rare case where meaning is precisely defined and shared across human languages, making them an ideal probe for universal representation. We hypothesize multilingual models encode numerical magnitude in a single subspace shared across digit forms and spelled-out numerals in many languages, and that arithmetic circuits compute over this shared code prior to language-specific output. Using number words in 12 languages plus Arabic digits, we test whether a magnitude probe trained on one form generalizes to all others, and whether the geometry (e.g., helical/log structure) is form-invariant. Causally, we run cross-form arithmetic: prompt '2+3' with operands spelled in Hindi and answer in Japanese, patching the operand-magnitude subspace to verify the arithmetic circuit reads the shared code. We predict a form-invariant magnitude manifold, cross-form probe generalization near ceiling, and that ablating the shared magnitude direction disrupts arithmetic in all languages equally. Metrics: cross-form probe R^2, geometric similarity (Procrustes) of manifolds across forms, and arithmetic accuracy under shared-subspace ablation vs random. We contrast with idioms/collocations that we predict are NOT shared. This establishes numerals as a clean instance of language-independent conceptual computation and locates the interface between shared cognition and language-specific expression.",
+  "Experiments": [
+    "Collect number words (0-100 and round numbers) in 12 languages plus digits; extract token representations.",
+    "Train magnitude probe on one form; test cross-form and cross-language generalization (R^2).",
+    "Geometric analysis: Procrustes/PCA to compare number-line manifolds across forms; test log/helix structure invariance.",
+    "Cross-form arithmetic: operands and answer in different languages/forms; measure accuracy.",
+    "Causal: ablate shared magnitude subspace; measure arithmetic accuracy drop across languages vs random ablation.",
+    "Contrast control: idioms/collocations expected to be language-specific, not shared.",
+    "Report manifold overlap and ablation effects."
+  ],
+  "Risk Factors and Limitations": [
+    "Multi-token numerals (large numbers, some languages) complicate token-level analysis.",
+    "Digit tokenization can dominate, making 'shared' code mostly digit-driven.",
+    "Small/round numbers may share while large numerals do not, limiting generality.",
+    "Arithmetic capability itself is weak in small models, adding noise to causal tests."
+  ]
+}

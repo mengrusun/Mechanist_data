@@ -1,0 +1,59 @@
+{
+  "Experiment_description": "A debugging-first pipeline for evaluating mean-difference steering vectors on four reasoning behaviors (hedging, backtracking, self-correction, example-generation) in DeepSeek-R1-Distill-Llama-8B. Chains-of-thought are generated on ~30 hard math word problems, sentences are labeled by keyword matching within <think> blocks, residual-stream activations at a middle layer are extracted via forward hooks, and mean-difference steering vectors are applied at inference at coefficients {-1, 0, +1} (and evaluated at {-2, 0, +2} for behavior frequency). Behavior keyword frequency and task accuracy are measured.",
+  "Significance": "This preliminary implementation establishes an end-to-end infrastructure for testing whether specific reasoning behaviors in a distilled reasoning model can be causally controlled via linear steering vectors in the residual stream. Demonstrating monotonic dose-dependent modulation of behavior frequency across all four behaviors provides initial evidence that reasoning behaviors are at least partially linearly encoded, while the accuracy impacts identify tradeoffs that future work must address.",
+  "Description": "The pipeline: (1) loads the DeepSeek-R1-Distill-Llama-8B model and verifies decoding; (2) generates CoT completions with max_new_tokens=1024 on ~30 inline math problems; (3) detects target behaviors via case-insensitive substring keyword matching within <think> blocks and builds balanced positive/negative sentence pools per behavior; (4) captures residual-stream activations at a middle layer using forward hooks on last-token positions; (5) computes mean-difference vectors between positive and negative pools; (6) applies steering by adding coeff*vector at that layer during generation; (7) measures behavior keyword frequency and answer-extraction accuracy across coefficients; (8) aggregates results into a joint success metric combining bidirectional dose-response and accuracy preservation.",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_68d53627a52e4c5b8764bc078dc1b550_proc_846506/r1_llama8b_steering_dose_response.png",
+      "description": "Paired line traces showing behavior/accuracy responses as a function of steering coefficient.",
+      "analysis": "Dose-response is a critical visualization for the linear steerability hypothesis. The parallel lines suggest consistent trends, and the monotonic behavior-count increases with coefficient documented in the numerical results support that the extracted mean-difference direction meaningfully controls behavior frequency."
+    },
+    {
+      "path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_68d53627a52e4c5b8764bc078dc1b550_proc_846506/r1_llama8b_steering_behaviour_counts.png",
+      "description": "Grouped bar chart of behavior frequencies across conditions, with color groups showing substantial variation (0.0-0.7).",
+      "analysis": "Shows differentiation between behavior-present and behavior-absent conditions across categories, indicating the contrastive labeling produces distinguishable pools suitable for mean-difference steering vector extraction."
+    },
+    {
+      "path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_68d53627a52e4c5b8764bc078dc1b550_proc_846506/r1_llama8b_steering_task_accuracy.png",
+      "description": "Bar chart displaying task accuracy across behavior conditions and coefficients.",
+      "analysis": "Documents that steering typically preserves or slightly reduces task accuracy at moderate coefficients, providing a check that steering interventions do not catastrophically disrupt the model."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 0.6667,
+      "description": "Baseline task accuracy on the ~30 math problems (no steering).",
+      "analysis": "Establishes a reference point for measuring accuracy degradation under steering; indicates the model handles roughly two-thirds of the hard multi-step problems correctly without intervention."
+    },
+    {
+      "result": 0.25,
+      "description": "Overall joint behavior steering success rate across four behaviors.",
+      "analysis": "A modest joint success rate suggests that while individual behaviors show dose-response effects, the strict combined criterion (bidirectional modulation with accuracy preservation) is only partially satisfied \u2014 most behaviors likely fail the negative-coefficient suppression or accuracy-preservation component."
+    },
+    {
+      "result": 3.1333,
+      "description": "Hedging mean count per chain at coeff=+1.0 (vs 1.8667 at 0.0 and 0.9333 at -1.0).",
+      "analysis": "A clean ~3.4x monotonic increase from -1 to +1 demonstrates strong linear controllability for hedging, one of the clearest positive results in this stage."
+    },
+    {
+      "result": 4.2,
+      "description": "Backtracking mean count per chain at coeff=+1.0 (vs 2.80 at 0.0 and 2.53 at -1.0).",
+      "analysis": "Backtracking shows a positive dose-response, but the negative coefficient produces only marginal suppression (2.53 vs 2.80), suggesting the direction encodes amplification more effectively than reduction \u2014 a common finding for mean-difference vectors."
+    },
+    {
+      "result": 0.9333,
+      "description": "Self-correction mean count per chain at coeff=+1.0 (vs 0.60 at 0.0 and 0.40 at -1.0).",
+      "analysis": "Strong bidirectional dose-response with accuracy maintained or improved (0.80 at \u00b11 vs 0.73 at 0), making self-correction the most successfully controllable behavior in this experiment."
+    },
+    {
+      "result": 1.1333,
+      "description": "Example-generation mean count per chain at coeff=+1.0 (vs 0.80 at 0.0 and 0.33 at -1.0).",
+      "analysis": "Roughly 3.4x monotonic increase confirms controllability, though accuracy drops to 0.60 at both \u00b11 vs 0.73 baseline, indicating a tradeoff."
+    },
+    {
+      "result": 0.4667,
+      "description": "Hedging task accuracy at coeff=-1.0 (vs 0.7333 baseline).",
+      "analysis": "Suppressing hedging causes a large ~27-point accuracy drop, suggesting hedging behavior may be functionally coupled to correct reasoning in this model; suppression is not benign."
+    }
+  ]
+}

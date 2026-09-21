@@ -1,0 +1,35 @@
+# Variant config — C1 model swap: Qwen3-32B (bf16) vs main-experiment Qwen3-32B-AWQ
+# Diff from main experiment: model path + dtype only
+
+variant_tag: model-swap-qwen3-32b-bf16
+dimension: model
+claim_id: C1
+main_experiment_model: /data/zhenqian/models/Qwen3-32B-AWQ
+swap_model: /data/zhenqian/models/Qwen3-32B
+
+# Extraction
+model_path: /data/zhenqian/models/Qwen3-32B
+torch_dtype: bfloat16            # changed from float16 (AWQ) to bfloat16 (full precision)
+device_map: auto
+scenarios: /data/zhenqian/data/mabench_core/scenarios.jsonl
+K: 3
+layers: [27, 37, 48, 59]         # unchanged — same 64-layer model
+max_new_tokens: 60               # unchanged
+out_activations: runs/verify/model-swap-qwen3-32b-bf16/activations.pt
+cuda_visible_devices: "1,2,3,5"  # 4 GPUs for bf16 (2x memory vs AWQ)
+
+# Probe training (unchanged from M1)
+probe_type: logistic
+train_split: train
+dev_split: dev
+test_split: test
+seed: 42
+C_sweep: [0.01, 0.1, 1.0, 10.0]
+sanity_checks: [label-permute, length-match, topic-swap]
+out_probe_dir: runs/verify/model-swap-qwen3-32b-bf16/probes/
+
+# Verdict
+probe_auroc_threshold: 0.75
+probe_minus_judge_threshold: 0.05
+judge_auroc: 0.60               # reused from M1 (same truncated-transcript baseline)
+out_verdict: verify/C1_probe_existence_signal/variants/model-swap-qwen3-32b-bf16/result.json

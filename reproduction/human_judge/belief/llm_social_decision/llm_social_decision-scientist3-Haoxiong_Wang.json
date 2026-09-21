@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name":   "Haoxiong Wang",
+    "paper_title":   "Computational Basis of LLM's Decision Making in Social Simulation",
+    "agent":         "scientist3",
+    "review_date":   "2026-07-15"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "n/a",
+    "score": 5,
+    "evidence_files": []
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签是数据生成时直接随机赋值并记录下来的，无歧义。",
+    "score": 5,
+    "evidence_files": ["logs/0-run/experiment_results/experiment_2b5b7c0d7e88427e82cea18998335774_proc_1769076/experiment_code.py", "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "模型与 task.md 指定一致，数据量降配：task.md 指定 1000 baseline trials，v1 代码虽写 N_TRIALS=1000 但实际只评估 N_BASE=100 基线 / N_INT=60 注入 / N_PAIRS=64 方向对；v2 降为 400 trials、N_BASE=80；stage4 消融降为 200 trials、N_BASE=40。即真正落到指标上的样本量仅 40-100，远低于指定的 1000，且仅体现在代码中未作理由说明。",
+    "score": 3,
+    "evidence_files": ["logs/0-run/experiment_results/experiment_2b5b7c0d7e88427e82cea18998335774_proc_1769076/experiment_code.py", "logs/0-run/experiment_results/experiment_f02ce271b6e74ae2819cf24a5065df4b_proc_2319836/experiment_code.py"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "数据量降配导致统计力偏弱",
+    "score": 3,
+    "evidence_files": ["report.md", "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "统计严谨度弱：全程单种子（random.Random(0)）、贪心解码（do_sample=False，确定性），无置信区间、无 p 值/显著性。号称多次运行聚合的环节,实际只聚合了1次运行,基本等于没做多次验证。",
+    "score": 2,
+    "evidence_files": ["logs/0-run/experiment_results/seed_aggregation_e6fef06d94884fd5819353924dff0def/aggregation_plotting_code.py", "logs/0-run/experiment_results/experiment_e721cb46fc77426d872ac6195212393b_proc_2105748/experiment_code.py"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "因果性有效，且配齐必要对照：random-direction 控制、α sweep [-2..+2]×ALPHA_UNIT、layer scan、specificity 矩阵、以及 logit 级 EV 位移度量。",
+    "score": 5,
+    "evidence_files": ["logs/0-run/experiment_results/experiment_e721cb46fc77426d872ac6195212393b_proc_2105748/experiment_code.py"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "报告中每个关键数字都与实验记录一致，无冲突。",
+    "score": 5,
+    "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/journal.json", "logs/0-run/stage_4_ablation_studies_1_first_attempt/journal.json", "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "未发现不一致。",
+    "score": 5,
+    "evidence_files": ["logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json", "logs/0-run/stage_4_ablation_studies_1_first_attempt/journal.json", "report.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "For each social/contextual variable (gender, age, instruction framing, meeting condition), the LLM encodes its influence on decision making as a linearly extractable direction in the residual stream.",
+        "method": {
+          "justification": "用的技术(配对提示做差值提取方向)与论文相同。",
+          "score": 5,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_2b5b7c0d7e88427e82cea18998335774_proc_1769076/experiment_code.py"]
+        },
+        "experiment": {
+          "justification": "设计合理但有偏差：层覆盖仅 3 层（8/16/24）非论文全 31 层；n 偏小、单种子。",
+          "score": 3,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_e721cb46fc77426d872ac6195212393b_proc_2105748/experiment_code.py"]
+        },
+        "result": {
+          "justification": "结论与论文一致。",
+          "score": 5,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"]
+        }
+      },
+      "C2": {
+        "claim": "A \"pure\" variable direction, obtained by removing overlapping components with other variables, isolates the unique effect of that variable, free of confounding from co-varying factors.",
+        "method": {
+          "justification": "Gram-Schmidt 正交化各变量方向（gram_schmidt()），与论文相同。",
+          "score": 5,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_2b5b7c0d7e88427e82cea18998335774_proc_1769076/experiment_code.py"]
+        },
+        "experiment": {
+          "justification": "实验设计正确但 n 小（N_SPEC=12）、单种子、无显著性。",
+          "score": 4,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_f02ce271b6e74ae2819cf24a5065df4b_proc_2319836/experiment_code.py"]
+        },
+        "result": {
+          "justification": "结论与论文一致。",
+          "score": 5,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"]
+        }
+      },
+      "C3": {
+        "claim": "Injecting these directions into the model at inference time causally and substantially alters the relationship between the targeted variable and the model's decision output, while leaving other variables' effects intact.",
+        "method": {
+          "justification": "残差流注入干预，与论文相同。",
+          "score": 5,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_e721cb46fc77426d872ac6195212393b_proc_2105748/experiment_code.py"]
+        },
+        "experiment": {
+          "justification": "实验设计正确。不足：每变量注入 n≈30-60、specificity n=12、单种子、无显著性检验。",
+          "score": 4,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_e721cb46fc77426d872ac6195212393b_proc_2105748/experiment_code.py"]
+        },
+        "result": {
+          "justification": "结论与论文一致。",
+          "score": 5,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json", "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json"]
+        }
+      },
+      "C4": {
+        "claim": "The same mechanism supports both directions of intervention — amplifying a variable's effect or attenuating/inverting it — yielding a practical handle for alignment and debiasing.",
+        "method": {
+          "justification": "同一注入机制以 ±α 双向注入（α>0 放大、α<0 削弱/反转），对应论文，机理方法正确。",
+          "score": 5,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_e721cb46fc77426d872ac6195212393b_proc_2105748/experiment_code.py"]
+        },
+        "experiment": {
+          "justification": "α sweep 覆盖负到正区间并分别记录 pos/neg 注入均值与剂量-响应曲线（alpha_sweep_dose_response.png），可检验双向性。不足同上：n 小、单种子、无显著性，且 α 范围（±2×8 单位）未系统扫至论文的 |α|≤30。",
+          "score": 4,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_f02ce271b6e74ae2819cf24a5065df4b_proc_2319836/experiment_code.py"]
+        },
+        "result": {
+          "justification": "与论文一致。",
+          "score": 5,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"]
+        }
+      }
+    }
+  }
+}

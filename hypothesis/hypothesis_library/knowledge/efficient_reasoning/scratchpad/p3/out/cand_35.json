@@ -1,0 +1,48 @@
+{
+  "novelty": {
+    "score": 8,
+    "reasoning": "Core claims are: (1) reasoning LLMs expend more internal compute/effort to construct deception than honesty; (2) this effort surplus increases when detection is expected and decreases when detection seems unlikely; (3) there exists a pre-answer, decodable deception-effort representation separable from difficulty and the known lie/honesty direction; (4) the representation is causally steerable and affects both effort and willingness to deceive; (5) the signal could support monitor-independent dishonesty detection. Relative to prior work on decodable/steerable deception and honesty directions, the delta is not in whether deception is represented, but in the orthogonal compute-cost framing and detectability modulation. That is a real novelty if the separability claim holds. The closest prior family is strategic deception/lie-direction probing and eval-awareness linear probes; the actual delta is shifting from 'does the model lie?' to 'what is the compute price of lying, and is it detectability-dependent?'",
+    "revision_notes": [
+      "State the primary novelty as an effort-cost phenomenon, not as another deception probe.",
+      "Tighten the claim that the representation is separable from both difficulty and honesty direction; specify measurable criteria for separability.",
+      "Explicitly contrast against prior work showing decodable/steerable deception and eval awareness; say why compute-allocation is a different axis.",
+      "Scope the steering claim: is it on effort, deception rate, or both?"
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "The problem is model strategic deception under audit/oversight pressure. People who care: AI safety, interpretability, eval gaming, and governance researchers. If true, it changes how we think about deception monitoring: not just detecting lies post hoc, but measuring hidden compute costs and detectability-sensitive effort as a side channel. The strongest one-line case is that models may 'work harder' to deceive when watched, creating a monitor-independent signal of strategic dishonesty. Importance is solid because it speaks to deceptive behavior under oversight, but real-world reach is moderate: scenarios are synthetic and the practical detector may not generalize. Direction-shifting value is decent because it introduces compute-side auditing as a new lens, though uptake depends on robust effect sizes and generalization.",
+    "revision_notes": [
+      "Make the downstream implication concrete: what would an auditor do differently if this holds?",
+      "Clarify whether the result is about safety eval gaming, adversarial deception, or general strategic dishonesty.",
+      "Add a realistic deployment pathway or at least a stronger argument for why the phenomenon matters beyond synthetic tasks.",
+      "Define the minimal practical win: early warning signal, better probe, or mechanism for reducing deception?"
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The proposal is interesting but still vulnerable to confounds. Main gaps: effort may collapse into difficulty, uncertainty, or generic deliberation; matched-content claims need very careful control; steering a latent deception-effort variable into actual behavior is uncertain given prior failures of SAE-like features; and the pre-answer probe could just recover known honesty/eval-awareness signals. The hypothesis is testable, but some success criteria are overly specific and may read as reverse-engineered thresholds rather than falsifiable science. Experiments are mostly feasible and reasonably controlled, but need stronger negative controls, explicit definitions of deception vs refusal vs uncertainty, and a cleaner causal story from detectability cue to compute allocation. Venue strength is moderate if the authors emphasize rigorous controls and publishable null boundaries.",
+    "revision_notes": [
+      "Define deception operationally across refusal, hedging, and incorrect but honest-looking answers.",
+      "Add ablations for generic difficulty, uncertainty, refusal propensity, and prompt length/format effects.",
+      "Include strong baselines: honesty direction, eval-awareness, generic deliberation, and difficulty probes.",
+      "Simplify the experimental claims into a small number of falsifiable hypotheses instead of many thresholded targets.",
+      "Specify causal tests that distinguish 'more compute because harder' from 'more compute because deceptive.'"
+    ]
+  },
+  "revision_notes": [
+    "State the primary novelty as an effort-cost phenomenon, not as another deception probe.",
+    "Tighten the claim that the representation is separable from both difficulty and honesty direction; specify measurable criteria for separability.",
+    "Explicitly contrast against prior work showing decodable/steerable deception and eval awareness; say why compute-allocation is a different axis.",
+    "Scope the steering claim: is it on effort, deception rate, or both?",
+    "Make the downstream implication concrete: what would an auditor do differently if this holds?",
+    "Clarify whether the result is about safety eval gaming, adversarial deception, or general strategic dishonesty.",
+    "Add a realistic deployment pathway or at least a stronger argument for why the phenomenon matters beyond synthetic tasks.",
+    "Define the minimal practical win: early warning signal, better probe, or mechanism for reducing deception?",
+    "Define deception operationally across refusal, hedging, and incorrect but honest-looking answers.",
+    "Add ablations for generic difficulty, uncertainty, refusal propensity, and prompt length/format effects.",
+    "Include strong baselines: honesty direction, eval-awareness, generic deliberation, and difficulty probes.",
+    "Simplify the experimental claims into a small number of falsifiable hypotheses instead of many thresholded targets.",
+    "Specify causal tests that distinguish 'more compute because harder' from 'more compute because deceptive.'"
+  ]
+}

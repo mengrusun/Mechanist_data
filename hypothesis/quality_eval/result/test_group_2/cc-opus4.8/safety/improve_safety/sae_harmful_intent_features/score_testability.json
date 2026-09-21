@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the hypothesis by constructing a “2x2 contrastive dataset: {sensitive topic, benign topic} x {malicious intent, benign intent},” ranking features by intent while controlling for topic, causally clamping them, and comparing monitor performance on harmful detection and over-refusal. The prediction is directional—intent features should “yield substantially lower over-refusal than topic-based filtering”—and the stated negative result, “if intent and topic prove inseparable in feature space,” is conceptually refuting. However, neither “substantially lower” nor “inseparable” has an operational threshold, and feature selection, monitor construction, and the treatment of ambiguous intent labels require clarifying decisions, so success and refutation are less decidable than they would be with numeric criteria.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to “rank features by mutual information with the intent label controlling for topic” and turn the selected features into a monitor; this requires custom statistical and classifier logic but is implementable rather than an undefined magic step. The named artifacts—“Gemma-2-9B-it / Llama-3-8B,” Gemma Scope, HarmBench, XSTest, and Llama-Guard—exist, while SAE activation extraction, max-activating-example inspection, feature clamping, and refusal measurement are supported by standard interpretability and ML tooling. Resources are meaningfully specified through named models, benchmarks, and “~2k prompts,” although SAE configuration, layer count, auditor count, and compute magnitude are not quantified. The refuting branch is runnable because the factorial topic/intent controls, a separate “topic-feature monitor,” benign-sensitive prompts, XSTest, and the Llama-Guard comparison permit null, entanglement, and false-positive outcomes rather than only supportive findings.",
+      "score": 7
+    }
+  }
+}

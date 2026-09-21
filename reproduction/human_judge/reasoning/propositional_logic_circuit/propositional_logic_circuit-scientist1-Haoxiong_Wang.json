@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "A Implies B: Circuit Analysis in LLMs for Propositional Logical Reasoning",
+    "agent":         "scientist1",
+    "review_date":         "2026-07-19"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "top-K 头由 attribution 在 128 题上排名选出，而 nec/suff 又在其中前 64 题上验证，选择集包含评估集、无留出划分。",
+    "score": 3,
+    "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/scripts/nec_suff.py", "scientist1/reasoning/propositional_logic_circuit/scripts/attr_patching.py"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "ground truth 是逻辑上精确的正确答案 token，clean/corrupt 仅翻转一个决定答案的 token，指标(signed logit-diff)非循环。",
+    "score": 5,
+    "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/data/logic_ds.jsonl", "scientist1/reasoning/propositional_logic_circuit/results/baseline_mistral.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验用 Mistral-7B-v0.1 与自建命题逻辑数据集，与要求一致。",
+    "score": 5,
+    "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/scripts/nec_suff.py", "scientist1/reasoning/propositional_logic_circuit/report.md", "scientist1/reasoning/propositional_logic_circuit/task.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "C1/C3 证据充分(128 题、随机对照)；但 C2 模块化结论主要靠中等相关(Gemma 各轴皆 ~0.5、相当纠缠)却仍判 supported，且仅测单步 modus ponens 一种题型(brief 的链长/干扰项等变体未跑)。",
+    "score": 3,
+    "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/report.md", "scientist1/reasoning/propositional_logic_circuit/results/nec_suff_mistral.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "随机-K 对照做 3 seeds 并报告 ±std，top-K 与随机的差距远超噪声。",
+    "score": 5,
+    "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/results/nec_suff_mistral.json", "scientist1/reasoning/propositional_logic_circuit/scripts/nec_suff.py"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "必要性(resample ablation)与充分性(clean→corrupt patch-in)双向真实激活 patching，并配同规模随机-K 对照，因果中介严格。",
+    "score": 5,
+    "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/scripts/nec_suff.py", "scientist1/reasoning/propositional_logic_circuit/results/nec_suff_mistral.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "C1 头排名与 C2 相关系数所依赖的 attr_patching/modularity 的 .npz 未落盘(仅剩图)，这两处不可回验。",
+    "score": 3,
+    "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/results/nec_suff_mistral.json", "scientist1/reasoning/propositional_logic_circuit/results/baseline_mistral.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "报告与实验各记录相符。",
+    "score": 5,
+    "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/report.md", "scientist1/reasoning/propositional_logic_circuit/results/nec_suff_mistral.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "A sparse subset of attention heads and MLP components jointly implements the minimal propositional-logic task (circuit is small relative to the full model).",
+        "method": {
+          "justification": "attribution patching 扫描 + 激活 patching 验证，与论文方法族匹配。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/scripts/attr_patching.py", "scientist1/reasoning/propositional_logic_circuit/scripts/nec_suff.py"]
+        },
+        "experiment": {
+          "justification": "全头/MLP 扫描 + K 扫描 + 随机-K 对照，判据可靠。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/results/nec_suff_mistral.json"]
+        },
+        "result": {
+          "justification": "Mistral top-16 头(1.6%)恢复 97.6% clean logit-diff、随机-16 近零；Gemma 仅 4 头即足，稀疏电路与论文强一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/results/nec_suff_mistral.json", "scientist1/reasoning/propositional_logic_circuit/results/nec_suff_gemma2b.json"]
+        }
+      },
+      "C2": {
+        "claim": "The circuit decomposes into a small number of modular sub-circuits with distinct functional roles (fact identification / rule application / answer projection).",
+        "method": {
+          "justification": "三条 corruption 轴(rule/fact/query flip)分别归因并比较逐头效应图，是合理的模块化探测。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/scripts/modularity_attr.py"]
+        },
+        "experiment": {
+          "justification": "判据为逐头效应图的 Pearson 相关，较粗；相关值中等(0.22–0.61)，Gemma 各轴皆 ~0.5，未做更强的模块特异性交叉验证。",
+          "score": 3,
+          "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/report.md"]
+        },
+        "result": {
+          "justification": "fact 头(层10–16)与 rule 头(层17–22)按层分带、Mistral fact-query 相关低至 0.22，方向上支持模块分解、与论文一致；但模块相互重叠(如 L17H0 跨轴)、且仅 3 角色 vs 论文 4 模块、Gemma 较纠缠，为部分/较弱一致(已如实标注)。",
+          "score": 3,
+          "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/report.md"]
+        }
+      },
+      "C3": {
+        "claim": "Activation-patching shows the identified components are both necessary and sufficient for the behaviour.",
+        "method": {
+          "justification": "充分性 clean→corrupt patch-in + 必要性 resample ablation + 随机-K 对照，与论文方法一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/scripts/nec_suff.py"]
+        },
+        "experiment": {
+          "justification": "双向 patching、K 扫描、3-seed 随机对照，指标可靠。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/results/nec_suff_mistral.json"]
+        },
+        "result": {
+          "justification": "patch-in 恢复 +2.41(clean 2.47)、knock-out 降到 −2.35(corrupt −2.47)、随机几乎不动；必要与充分双向成立，与论文一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/propositional_logic_circuit/results/nec_suff_mistral.json", "scientist1/reasoning/propositional_logic_circuit/results/nec_suff_gemma2b.json"]
+        }
+      }
+    }
+  }
+}

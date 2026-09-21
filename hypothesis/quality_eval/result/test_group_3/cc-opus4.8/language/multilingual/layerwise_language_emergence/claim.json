@@ -1,0 +1,22 @@
+{
+  "Name": "layerwise_language_emergence",
+  "Title": "Rise, Fade, Return: The Layerwise Life Cycle of Language-Specific Information",
+  "Short Hypothesis": "Language-specific information follows a non-monotonic layer trajectory: strong in early layers (surface/script), suppressed in middle layers (shared concept computation), and re-emerging in late layers (language-specific generation), producing a characteristic U-shaped decodability curve that marks the shared-computation window.",
+  "Related Work": "Wendler et al. and logit-lens studies hint at a language-agnostic middle. We rigorously chart the full layerwise decodability of language identity and content, characterizing the U-shape and testing whether the middle 'trough' is the causal shared-computation window, unifying scattered observations into a quantitative life cycle.",
+  "Abstract": "When is a multilingual model most language-agnostic? We hypothesize language-specific information has a U-shaped layer profile: high early (script/surface), minimal in the middle (shared conceptual computation), and rising again late (target-language generation). Using parallel multilingual text, we decode language identity at each layer with probes and, in parallel, decode language-independent content, expecting an inverse relationship. We predict a decodability trough in the middle layers coinciding with peak shared-concept decodability. Causally, we test whether the middle trough is the shared-computation window: cross-lingual patching and concept editing should succeed maximally at trough layers and fail at high-language-decodability layers. We quantify trough location and depth across model sizes and relate it to cross-lingual transfer quality (deeper/wider trough -> better transfer). Metrics: layerwise language-ID vs content decodability curves, trough layer and depth, cross-lingual patch success by layer, and correlation of trough characteristics with transfer. This provides a unifying quantitative description of where multilingual abstraction happens and a principled target layer for cross-lingual interventions.",
+  "Experiments": [
+    "Extract activations for parallel multilingual text across all layers.",
+    "Probe language-ID decodability and content decodability per layer; plot curves.",
+    "Identify U-shape: trough layer and depth; test inverse relation with content decodability.",
+    "Causal validation: cross-lingual patching and concept editing success by layer; expect peak at trough.",
+    "Vary model size; track trough location/depth.",
+    "Correlate trough characteristics with cross-lingual transfer performance.",
+    "Controls: monolingual model (no trough expected in same sense); shuffled labels."
+  ],
+  "Risk Factors and Limitations": [
+    "Probe decodability depends on probe capacity, biasing curve shape.",
+    "Content decodability is hard to define independently of language.",
+    "Trough may be gradual, making 'shared window' fuzzy.",
+    "Scale trends may not be monotonic."
+  ]
+}

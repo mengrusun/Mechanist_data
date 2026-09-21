@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The experiments directly test the three stated mechanisms through anchor decoding, failure prediction, and causal recovery, with clearly defined variations and comparisons such as “anchor-vs-query mismatch,” a “fixed-English-hub” baseline, and a “label-shuffle control.” Falsifiability is unusually strong: for example, Experiment 2 requires an AUROC gain “>=0.05” and absolute AUROC “>=0.70,” while “A <= B” is explicitly negative, and the other experiments likewise provide distinct confirming, negative, and indecision ranges. The main residual ambiguity is how the exact “anchor-language direction” and “language-transition band” are operationally derived from the probes for the interventions, so an expert would need a limited clarification before implementation.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is constructing and manipulating the latent routing direction described as “suppress the anchor-language direction” or “steer the transition earlier toward the query language”; this is custom engineering rather than a magic step because the plan specifies residual-stream probes, activation patching, matched-norm controls, transition layers, and doses “{0,0.5,1,2,4},” although the direction-extraction rule remains underspecified. The core artifacts—Llama-3-8B, Qwen2.5-7B, Gemma-2-9B, OLMo-7B, linear probes, activation editing, and ROME—exist and are supported by standard interpretability tooling; the recent named “Paths-Not-Taken translation/recall vectors” comparator could not be independently verified, but it is not essential to the primary test. Resources are exceptionally concrete, including “3,000 facts,” “18,000 queries,” “Target 1,200 verified-override pairs,” three seeds, explicit train/test splits, and multiple held-out control sets. The refuting branch is runnable because the design includes label shuffling, random and reverse directions, already-correct and unrelated facts, perplexity and accuracy controls, and explicit negative criteria such as recovery “<=5pp.”",
+      "score": 8
+    }
+  }
+}

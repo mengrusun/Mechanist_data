@@ -1,0 +1,58 @@
+{
+  "novelty": {
+    "score": 6,
+    "reasoning": "The proposal's main practical claim—that prose reasoning is token-inefficient relative to symbolic notation—is not novel and is strongly anticipated by prior efficiency, formatting, and symbolic-reasoning work. The genuine novelty is narrower and mechanistic: reframing spontaneous notation choice as a distinct inference-time compute tax on matched computations, claiming a pre-generation notation-mode representation separable from difficulty/length, and proposing causal steering/patching of that internal mode. That is a nontrivial delta over prompting, external selectors, RL compression, and generic verbosity steering, but the proposal risks collapsing into an already-known verbosity/conciseness axis unless the separability claim holds convincingly.",
+    "revision_notes": [
+      "Reframe the contribution explicitly away from 'symbols save tokens' and toward the mechanistic claim: an internal pre-generation notation-mode variable distinct from generic verbosity and difficulty.",
+      "Name the closest prior family more concretely and state the exact delta against each: format-selection/symbolic reasoning, CoT compression, and verbosity steering.",
+      "Tighten the novelty claim to avoid implying a new efficiency phenomenon; present the novel part as localization, separability, and causal control of notation mode.",
+      "Define more precisely where novelty lives: finding/mechanism/representation, not task/dataset/problem definition.",
+      "Add a stronger argument that notation mode is meaningfully different from generic style, length, or shorthand preferences."
+    ]
+  },
+  "impact": {
+    "score": 5,
+    "reasoning": "The problem under study is excess inference-time token use from choosing verbose narration over equivalent symbolic derivations. That matters mainly to efficient-reasoning and interpretability researchers, and potentially to practitioners optimizing latency/cost. However, the direct practical payoff is limited because simpler prompting/RL/selectors already reduce verbosity, so a positive result may not strongly change deployed systems unless the internal steering method clearly outperforms them or reveals a broader principle about reasoning control. The strongest impact case is as a phenomenon/mechanism paper: if notation mode is a real pre-generation latent state, it could sharpen how the field thinks about reasoning style versus actual computation.",
+    "revision_notes": [
+      "Strengthen the 'so what' by stating what researchers or practitioners would do differently if notation mode is confirmed versus falsified.",
+      "Quantify the practical stakes more concretely: expected cost/latency reduction ranges and which deployment settings care.",
+      "Clarify the target audience hierarchy: mechanistic interpretability first, efficient inference second, practical deployment third.",
+      "Show why internal notation-mode control would matter beyond existing prompting/RL baselines—e.g., robustness, controllability, transfer, or scientific insight.",
+      "Emphasize whether the main value is phenomenon discovery rather than immediate systems gains, and align claims accordingly."
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The proposal is unusually concrete and testable for an ML idea, with explicit models, datasets, controls, thresholds, and negative-result criteria. The central hypothesis is reasonably falsifiable. Still, there are major technical vulnerabilities. 'Identical computation' under symbolic rewrite is hard to verify and could become subjective. The notation labels may be noisy and entangled with problem type, answer format, length, or difficulty. Mixed-effects plus minimal-solve proxies may not truly isolate reasoning depth. AUROC/probe-angle evidence is suggestive but not sufficient for a distinct latent factor, and activation patching could still act through generic verbosity/style circuits. The dataset choices also mix domains where symbolic notation is naturally more or less appropriate, which may confound the core claim. If executed very well it could be viable for a serious ML venue as a mechanistic empirical paper, but it needs sharper controls and more defensible operationalization.",
+    "revision_notes": [
+      "Operationalize 'same computation' much more rigorously, ideally with formal equivalence checks, step alignment rules, and clearer exclusion criteria beyond same-answer/same-structure.",
+      "Add stronger controls for confounds: problem domain, prompt format, answer length, numerical density, equation count, and generic verbosity/conciseness directions.",
+      "Include human evaluation or expert annotation on a stratified sample to validate narration/symbolic/mixed labels and symbolic-amenability strata.",
+      "Test whether the probe/steer remains after regressing out generic verbosity, output length, and difficulty, not just by principal-angle separation.",
+      "Add intervention controls showing that notation-mode steering changes surface form without merely truncating reasoning or harming faithfulness.",
+      "Clarify how truncate-and-resume minimal-solve length is computed and why it is a valid proxy for reasoning depth.",
+      "Specify statistical power, sample sizes, multiple-comparison handling, and robustness across seeds/model families more explicitly.",
+      "Narrow the claim language: do not overclaim a distinct cognitive 'mode' unless causal and separability evidence is strong."
+    ]
+  },
+  "revision_notes": [
+    "Reframe the contribution explicitly away from 'symbols save tokens' and toward the mechanistic claim: an internal pre-generation notation-mode variable distinct from generic verbosity and difficulty.",
+    "Name the closest prior family more concretely and state the exact delta against each: format-selection/symbolic reasoning, CoT compression, and verbosity steering.",
+    "Tighten the novelty claim to avoid implying a new efficiency phenomenon; present the novel part as localization, separability, and causal control of notation mode.",
+    "Define more precisely where novelty lives: finding/mechanism/representation, not task/dataset/problem definition.",
+    "Add a stronger argument that notation mode is meaningfully different from generic style, length, or shorthand preferences.",
+    "Strengthen the 'so what' by stating what researchers or practitioners would do differently if notation mode is confirmed versus falsified.",
+    "Quantify the practical stakes more concretely: expected cost/latency reduction ranges and which deployment settings care.",
+    "Clarify the target audience hierarchy: mechanistic interpretability first, efficient inference second, practical deployment third.",
+    "Show why internal notation-mode control would matter beyond existing prompting/RL baselines—e.g., robustness, controllability, transfer, or scientific insight.",
+    "Emphasize whether the main value is phenomenon discovery rather than immediate systems gains, and align claims accordingly.",
+    "Operationalize 'same computation' much more rigorously, ideally with formal equivalence checks, step alignment rules, and clearer exclusion criteria beyond same-answer/same-structure.",
+    "Add stronger controls for confounds: problem domain, prompt format, answer length, numerical density, equation count, and generic verbosity/conciseness directions.",
+    "Include human evaluation or expert annotation on a stratified sample to validate narration/symbolic/mixed labels and symbolic-amenability strata.",
+    "Test whether the probe/steer remains after regressing out generic verbosity, output length, and difficulty, not just by principal-angle separation.",
+    "Add intervention controls showing that notation-mode steering changes surface form without merely truncating reasoning or harming faithfulness.",
+    "Clarify how truncate-and-resume minimal-solve length is computed and why it is a valid proxy for reasoning depth.",
+    "Specify statistical power, sample sizes, multiple-comparison handling, and robustness across seeds/model families more explicitly.",
+    "Narrow the claim language: do not overclaim a distinct cognitive 'mode' unless causal and separability evidence is strong."
+  ]
+}

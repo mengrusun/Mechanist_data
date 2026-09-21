@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "Do LLMs Feel? Emotion Circuits Discovery and Control",
+    "agent":         "scientist2",
+    "review_date":         "2026-07-20"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "train 拟合、val 选组件与超参、eval 评测，三者不重叠。",
+    "score": 5,
+    "evidence_files": ["runs/A0.5_dataprep_judge/split.json", "experiments/m0_5_dataprep_judge.py", "runs/A3_applied/arm_A_val.json", "runs/A3_applied/selected_configs.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "judge 为外部 gpt-5.4 强制六选一，与被测模型无关，非循环。扣分处：所谓 gold 校验实为代码中手写的合成参考句，任务过易，180/180 agreement=1.0 无法说明 judge 在真实生成文本上的可靠性。",
+    "score": 3,
+    "evidence_files": ["experiments/m0_5_dataprep_judge.py", "runs/A0.5_dataprep_judge/gold.json", "runs/A0.5_dataprep_judge/judge_audit_raw.json", "runs/A0.5_dataprep_judge/judge_audit.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验使用 task.md 指定的 Llama-3.2-3B-Instruct 与指定路径的 SEV 全量 480 stem×6 emotion，无降配或取子集；verify 阶段另跑了候选中的 Qwen2.5-7B-Instruct。",
+    "score": 5,
+    "evidence_files": ["task.md", "refine-logs/EXPERIMENT_RESULTS.md", "runs/A1_location/metrics.json", "runs/A4_verify_qwen/", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "C1 用 2880 对 + 3 折子采样，C2 用 720 对 + 100 次随机抽样，C3 用 2160 条生成全判分 + 19440 次 val 前向，Qwen 另 2160 条，规模充分且结论措辞与证据量匹配。",
+    "score": 5,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "runs/A2_causal/ablation.json", "runs/A3_applied/metrics.json", "runs/A4_verify_qwen/", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "统计处理严谨：置换零分布 95% CI、bootstrap CI、每情绪 A−B/A−C 的 95% CI、100 次随机集 null、3 折稳定性、Qwen 模型交换复现，并自查发现首轮 random-null std=0 退化后扩池重跑。",
+    "score": 5,
+    "evidence_files": ["runs/A1_location/jaccard.json", "runs/A2_causal/random_null.json", "runs/iteration_round_1/A2_causal_fixed/random_null.json", "refine-logs/EXPERIMENT_RESULTS.md", "verify/VERIFY_REPORT.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "ablation 验必要性 + 三档 α 加性注入验充分性与剂量反应，并配齐随机集 null、targeted-C_{e'} 交叉情绪、off-target 三类对照，外加场景稳定性与模型交换，控制条件完备。",
+    "score": 5,
+    "evidence_files": ["experiments/m2_causal.py", "runs/A2_causal/random_null.json", "runs/A2_causal/targeted_ce.json", "runs/A2_causal/cross_emotion.json", "runs/A2_causal/scenario_stability.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "逐一核对通过。",
+    "score": 5,
+    "evidence_files": ["runs/A3_applied/metrics.json", "runs/iteration_round_1/A3_applied_fixed/metrics.json", "runs/iteration_round_1/A2_causal_fixed/ablation.json", "runs/A1_location/jaccard.json", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "扣分处：EXPERIMENT_RESULTS.md 将合成参考句校验表述为 human-annotated gold，与代码自述不符。",
+    "score": 4,
+    "evidence_files": ["CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_RESULTS.md", "verify/VERIFY_REPORT.md", "verify/INTEGRITY_AUDIT.md", "experiments/m0_5_dataprep_judge.py"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "通过整合情绪方向抽取、组件识别与全局电路整合的系统框架，识别情绪特异的全局电路。",
+        "method": {
+          "justification": "定位思路（成对对比方向 + 组件打分 + 稀疏化）大方向正确，但方法族偏离原论文较多：用 ITI 式线性探针 + cosine 对齐替代 W_d^T·v_e 解析分解，用 target-prefix logprob 替代残差流投影分数；且自查确认 head 的 Stage-B hook 是层级而非头级，头级定位实际未实现；全程缺失 sublayer importance 与全局预算分配。",
+          "score": 3,
+          "evidence_files": ["experiments/m1_location.py", "refine-logs/MECHANISM_ROUTING.md", "verify/VERIFY_REPORT.md", "runs/A1_location/stageB_scores.json"]
+        },
+        "experiment": {
+          "justification": "设计扎实：3×3 稀疏度网格、3 折 Jaccard、200 次置换零分布、random top-k 对照，判据事先写入 plan。扣分处：9 个网格单元 macro_gain 完全相同，k* 落在最小格，选择判据不具区分力；且判定 locatability 的指标实为选择器跨折可重复性，与论文用 k 扫描曲线论证的“少数组件主导”并非同一件事。",
+          "score": 3,
+          "evidence_files": ["runs/A1_location/kstar.json", "runs/A1_location/jaccard.json", "runs/A1_location/random_control_jaccard.json", "verify/VERIFY_REPORT.md"]
+        },
+        "result": {
+          "justification": "与论文“存在可定位的情绪特异组件集合”定性同向，并诚实收窄为 coarse-locatability。扣分处：受上述网格退化与头级失效影响，支撑强度弱于论文，收窄后与原结论已有距离。",
+          "score": 4,
+          "evidence_files": ["runs/A1_location/jaccard.json", "CLAIMS_LEDGER.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        }
+      },
+      "C2": {
+        "claim": "提供机制性证据：情绪生成由可追溯的电路支撑，且跨场景、跨情绪稳定。",
+        "method": {
+          "justification": "方法族正确：必要性 + 充分性 + 剂量反应 + 三类特异性对照 + 场景稳定性。",
+          "score": 5,
+          "evidence_files": ["experiments/m2_causal.py", "refine-logs/MECHANISM_ROUTING.md", "runs/A2_causal/"]
+        },
+        "experiment": {
+          "justification": "扣分处：“其余五情绪均值替换”在数学上并非移除信号，作者已识别出这一错配却始终未换成论文口径重测，也未做 k 扫描，导致无法区分真负结果与算子选错。",
+          "score": 3,
+          "evidence_files": ["experiments/m2_causal.py", "runs/A2_causal/ablation.json", "runs/iteration_round_1/A2_causal_fixed/ablation.json", "verify/VERIFY_REPORT.md", "CLAIMS_LEDGER.md"]
+        },
+        "result": {
+          "justification": "结论与论文相反，但披露充分。给出的原因指向一个可验证却未验证的方向，负结果未闭合。",
+          "score": 3,
+          "evidence_files": ["runs/iteration_round_1/A2_causal_fixed/ablation.json", "runs/A2_causal/scenario_stability.json", "CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+        }
+      },
+      "C3": {
+        "claim": "基于电路的控制方法可在任意输入上无需显式指令诱发目标情绪，且在情绪表达准确率上优于 prompting 与 direction steering。",
+        "method": {
+          "justification": "circuit / prompting / steering 三臂等预算、hidden-target 六选一判分、每臂各自在 val 上独立调参，并在 Qwen 上整套重跑，方法族与论文对应。",
+          "score": 5,
+          "evidence_files": ["experiments/m3_applied.py", "experiments/m4_verify_qwen.py", "runs/A3_applied/selected_configs.json", "verify/VERIFY_REPORT.md"]
+        },
+        "experiment": {
+          "justification": "三臂对照与判分流程本身规范。扣分处：(a) Arm A 的 α 用 target-prefix logprob 在 val 上选，该代理指标与生成级准确率错配，选出的 α 把生成打成退化重复，准确率 0.053 低于随机基线，检验的是失败实现而非论文方法；(b) baseline 自身未复现，prompting 仅 0.669、steering 仅 0.357（论文为 98.85%、91.22%），说明整条评测链路偏离，而此差距未被任何产物诊断；(c) iteration 只降了 α，始终未实现论文的 δ 差向量注入与 sublayer 重要性加权电路。",
+          "score": 3,
+          "evidence_files": ["runs/A3_applied/eval_generations.json", "runs/A3_applied/metrics.json", "runs/iteration_round_1/A3_applied_fixed/metrics.json", "refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+        },
+        "result": {
+          "justification": "与论文结论定性相反，而给出的理由未能解释为何 prompting baseline 也只有 0.669；在 baseline 未复现的前提下判定，结论可靠性被高估。",
+          "score": 3,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "runs/A4_verify_qwen/", "CLAIMS_LEDGER.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "date": "2026-07-13",
+  "auditor": "executor (cross-model self-review; llm-chat MCP degraded gracefully)",
+  "audit_type": "experiment",
+  "claim_id": "C3",
+  "linked_milestones": ["M4", "M4-supp"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "C3 evaluation target (transfer τ) decoded from Llama-3.1-8B-Instruct via greedy generation — synthetic_proxy evaluation. This is unavoidable for a causal-steering claim (no external GT exists for what the LLM should decide). Not labeled as proxy in EXPERIMENT_RESULTS.md. Evidence: scripts/m4_steer_and_m5_selectivity.py lines 253-259.",
+      "evidence": "base_taus decoded from model greedy generation in run_one_grid_point(). Supp run identical: m4_supplementary_deeper.py lines 107-108."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "v_effect and shift computed as absolute differences in transfer amounts — no division by model max/mean. sigma_proj scaling is from activation distribution, not model output. 25% baseline criterion uses absolute baseline as reference floor."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All 56 main M4 grid point files present in runs/M_main_v1/artifacts/m4/ (4V × 7α × 2decorrs; window3 descoped per Phase 1.5 re-bind documented in tracker). All 40 supplementary files present in runs/M4_supp_deep_v1/m4/ (4V × 2L × 5α). supp_summary.json present. Tracker M4_r1 and M4supp_r1 both done. Numbers consistent with EXPERIMENT_RESULTS.md.",
+      "evidence": "Spot-checked M_L16_a+2.json: v_effect=-0.309 (sign inversion for V=M confirmed). G_L16_a-2.json: v_effect=-0.950 (2.5× amplification). A_L16_a+2.json: v_effect=+0.584 (5.5× amplification)."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "run_one_grid_point() called in main M4 grid loop (lines 420-435). coherence_check() called at line 285 within run_one_grid_point(). Supplementary script imports and calls same core functions."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "Three pre-registered deviations in supplementary run: (1) 5-point α-grid vs 7-point ({-4,-2,-1,0,+1,+2,+4} → {-2,-1,0,+1,+2}); (2) raw v̂_V used at L=16, not GS/LEACE pure directions — positive C3 evidence is for un-purified directions; (3) coherence gate gating step not applied to filter supp cells from headline (though format_ok_rate=1.0 makes this moot). Deviations not explicitly flagged in EXPERIMENT_RESULTS.md C3 summary.",
+      "evidence": "scripts/m4_supplementary_deeper.py line 47: --alpha_grid default -4,-2,-1,0,1,2,4 but actual run used 5 points (files: {-2,-1,0,+1,+2} only in M4_supp_deep_v1/m4/). Line 87: v = raw_pack['raw'][V][li] — confirms raw direction."
+    },
+    "eval_type": "synthetic_proxy — τ is model greedy-decode output; no external real_gt for causal-steering evaluation"
+  }
+}

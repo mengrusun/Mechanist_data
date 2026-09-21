@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly addresses the hypothesis by proposing to \"run causal tracing to get candidate MLP loci\" and then \"greedily ablate loci ... until recall probability drops below threshold,\" followed by tests of editing resistance and noise tolerance. The predictions are directional and refutable: the claim expects robust or high-frequency facts to have larger redundancy counts and expects redundancy to predict lower \"paraphrase-robust edit success\" and greater noise tolerance, so null or opposite relationships would count against it. However, the recall threshold, definitions of robust versus fragile facts, and criteria for edit recovery are unstated, while calling the output of a greedy procedure the \"minimal ablation-set size\" is not generally justified without exhaustive or otherwise certified search.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is \"greedily ablating causally-implicated MLP modules until recall breaks\" and interpreting that count as independent redundancy; the ablation loop is a standard operation with activation hooks, but establishing minimality and independence requires custom search logic rather than a magic or impossible step. Causal tracing, zero/mean activation patching, Gaussian-noise injection, pairwise ablation, and the named ROME/MEMIT methods exist and are supported by established deep-learning and interpretability tooling; the proposed \"zero or mean-patch\" variants and pairwise tests provide some controls, though random-locus or sham-ablation controls are not designed in. Resources are not quantified—the proposal says only \"across models and a large fact set,\" without naming models, datasets, sample sizes, or concrete run figures—but the correlation and intervention measurements can still return null or contrary results, so the refuting branch is runnable.",
+      "score": 6
+    }
+  }
+}

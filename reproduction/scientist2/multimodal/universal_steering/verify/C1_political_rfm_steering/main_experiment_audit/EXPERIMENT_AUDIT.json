@@ -1,0 +1,16 @@
+{
+  "claim_id": "C1",
+  "claim_dir": "C1_political_rfm_steering",
+  "overall_verdict": "warn",
+  "checks": {
+    "A_gt_provenance": {"verdict": "pass", "note": "GPT-4o used as rubric judge (steering effect score), not binary GT oracle. Training pairs use labeled semantic categories for extraction — legitimate."},
+    "B_score_normalization": {"verdict": "pass", "note": "Rubric on absolute 5-point scale; deltas are arithmetic differences, no model-max normalization."},
+    "C_result_file_existence": {"verdict": "warn", "note": "Summary.json exists and is populated with per-alpha means (n=50 each). alpha_star labelling bug: argmax(|delta|) picks wrong-signed alpha for honesty (-3 instead of +3). Reported numbers in EXPERIMENT_RESULTS.md use raw per-alpha values — unaffected. Cosmetic issue only, verified."},
+    "D_dead_code": {"verdict": "pass", "note": "All evaluation functions (generate_with_steering, judge_completion, aggregation) are called in main execution path."},
+    "E_scope": {"verdict": "warn", "note": "Claim's '3 demo scenarios' scope is overclaimed: refusal is null, honesty is within noise, only political meets strict success predicate. EXPERIMENT_RESULTS.md correctly labels as 'partial'."},
+    "F_eval_type": {"verdict": "pass", "note": "synthetic_proxy (GPT-4o rubric judge) — appropriate for open-ended steering eval. Random-direction control addresses magnitude-alone confound at matched norm."}
+  },
+  "milestones_audited": ["M1_C1_screen", "M2_C1_extract", "M3_C1_alpha_sweep"],
+  "runs_audited": ["B1_extract_vectors", "C1_steer_judge", "C1b_refusal_block14", "C1c_high_alpha"],
+  "audited_at": "2026-07-15"
+}

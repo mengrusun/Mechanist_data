@@ -1,0 +1,44 @@
+{
+  "novelty": {
+    "score": 8,
+    "reasoning": "Core claim is a temporal shift from static difficulty readouts to mid-generation difficulty dynamics, plus a causal steering test. Closest prior family already shows difficulty is linearly decodable and steerable, but mostly as a pre-generation property for compute allocation. The actual delta - difficulty contraction during CoT, overthinking as failure to contract, and intervention mid-trace - is genuine and non-trivial. The main novelty risk is that it is a refinement of an established representation rather than a wholly new mechanism.",
+    "revision_notes": [
+      "Make the temporal claim sharper: specify exactly which layer/head/direction and at which trace points contraction is expected.",
+      "Explicitly contrast with confidence/uncertainty dynamics to isolate what is new about difficulty.",
+      "State the minimum falsifier: if difficulty is only readable pre-gen, the paper still becomes a strong negative result, but the novelty shifts accordingly."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "The problem is important to interpretability and inference efficiency researchers because it targets wasted reasoning tokens and premature/late stopping. If true, it could change how we think about overthinking and enable dynamic early termination. That said, the likely audience is specialized, and real-world reach is narrower than general capability work. Strongest case: a mechanistic signal for when to stop reasoning without losing accuracy.",
+    "revision_notes": [
+      "Center the problem statement on wasted compute and unreliable stopping, not on the method or representation.",
+      "Quantify downstream relevance in terms of token savings and latency, not just probe scores.",
+      "Clarify who will use this: interpretability, decoding/efficiency, and agentic inference communities."
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The hypothesis is reasonably scoped and testable, but there are several credibility gaps. The residual-work proxy is noisy and expensive, and the steering experiment could confound difficulty with confidence or generic entropy. Related work is good at the high level but needs tighter specificity on the exact prior mechanisms and why mid-generation dynamics were not already implied. The plan is feasible, but some thresholds feel arbitrary and the causal story needs stronger controls to support the claim that contraction failure causes overthinking rather than merely correlating with it.",
+    "revision_notes": [
+      "Add controls that separate difficulty from confidence, uncertainty, entropy, and length at every intervention point.",
+      "Pre-register or justify the key thresholds; otherwise they read as post hoc success criteria.",
+      "Include ablations for head choice, layer choice, and intervention timing to show specificity.",
+      "Define residual work more rigorously and report robustness to alternative proxies.",
+      "Add a negative control where steering difficulty is applied when residual work is not low, to test whether early termination only appears in the intended regime."
+    ]
+  },
+  "revision_notes": [
+    "Make the temporal claim sharper: specify exactly which layer/head/direction and at which trace points contraction is expected.",
+    "Explicitly contrast with confidence/uncertainty dynamics to isolate what is new about difficulty.",
+    "State the minimum falsifier: if difficulty is only readable pre-gen, the paper still becomes a strong negative result, but the novelty shifts accordingly.",
+    "Center the problem statement on wasted compute and unreliable stopping, not on the method or representation.",
+    "Quantify downstream relevance in terms of token savings and latency, not just probe scores.",
+    "Clarify who will use this: interpretability, decoding/efficiency, and agentic inference communities.",
+    "Add controls that separate difficulty from confidence, uncertainty, entropy, and length at every intervention point.",
+    "Pre-register or justify the key thresholds; otherwise they read as post hoc success criteria.",
+    "Include ablations for head choice, layer choice, and intervention timing to show specificity.",
+    "Define residual work more rigorously and report robustness to alternative proxies.",
+    "Add a negative control where steering difficulty is applied when residual work is not low, to test whether early termination only appears in the intended regime."
+  ]
+}

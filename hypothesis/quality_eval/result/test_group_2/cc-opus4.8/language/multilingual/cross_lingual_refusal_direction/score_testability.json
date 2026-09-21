@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan aligns with the topic and gives directional tests: it predicts \"high directional overlap but systematically lower refusal activation in low-resource languages\" and measures cosine similarity, activation, jailbreak success, refusal restoration, and helpfulness. However, the central mechanism is internally unclear: a \"lower (weaker)\" trigger threshold is said to make harmful prompts \"fail to cross it,\" although lowering a threshold ordinarily makes it easier to cross, and the proposed fix again includes \"lowering the threshold.\" The absence of numeric decision criteria and an operational definition of the threshold leaves the boundaries between confirmation and refutation implicit, though low overlap, no resource-level activation difference, or failure of the intervention would plainly count against the claim.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "Extracting directions from \"harmful/harmless contrast pairs,\" computing cosine similarities, adding a residual-stream direction, and using the stated \"random-direction addition\" and \"over-refusal check on benign prompts\" are standard operations supported by existing model-hooking and interpretability tooling, and these controls make negative outcomes runnable. The hardest step is \"estimate per-language refusal-trigger thresholds,\" which is not operationalized by layer, token position, classifier, dose-response procedure, or threshold-fitting rule and therefore remains a substantial custom or potentially magic step. Multilingual models, translated contrast construction, red-team sets, and refusal-direction methods exist in general, but no particular model, dataset, layer, language set, or implementation is named. Resources are entirely unquantified—there are no sample counts, numbers of languages, model scales, intervention strengths, or evaluation sizes—so a researcher would need to make several material design choices before starting.",
+      "score": 5
+    }
+  }
+}

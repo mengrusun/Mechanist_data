@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The primary test is tightly aligned with the hypothesis: matched-base students are LoRA-tuned on filtered teacher data, then evaluated for the directional prediction that \"over-abstaining students refuse >=10 pp more and under-abstaining >=10 pp less (CIs excluding 0)\" while \"accuracy stays within 2 pp.\" Refutation is decidable because the proposal defines \"null <3 pp,\" treats accuracy movement above 4 pp as a capability confound, and separately requires cross-category and cross-format transfer to support the meta-policy interpretation. The main residual ambiguity is that \"abstention-shift (M1-M4)\" groups quantities with different meanings and scales—recall/rate, AUROC, curves, and ECE—without specifying which metric governs every 10 pp decision or how discordant metrics are adjudicated; the 2–4 pp accuracy interval is also left unassigned, though this is only a minor gap.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is to \"Build CALIBRATED, OVER-, and UNDER-abstaining teachers\" that retain answerable accuracy and hidden-competence parity; this requires custom policy shaping and matching whose construction is not specified, but it is achievable with standard fine-tuning, calibration, and benchmark-evaluation operations rather than an undefined magic step. The named Qwen2.5-7B-Instruct and Llama-3.2-3B-Instruct artifacts exist, and LoRA, activation extraction, difference-in-means directions, probes, regressions, and causal direction interventions all have adequate standard tooling; however, the \"healthcare underspecified-query set\" is not concretely identified, and SELECT adaptation plus the uncertainty detector require some custom implementation. Resources are unusually well quantified, including \"30,000 number-sequence continuations,\" fixed \"10,000-example\" conditions, benchmark sizes of 500/300/200 items, five seeds, and explicit LoRA and optimization settings. The refuting branch is runnable because the plan includes calibrated, mismatched-base, token-statistics-matched, randomized-decoding, identity-swap, random-direction, layer, and distributed-subspace controls, allowing genuine null and alternative-explanation outcomes.",
+      "score": 8
+    }
+  }
+}

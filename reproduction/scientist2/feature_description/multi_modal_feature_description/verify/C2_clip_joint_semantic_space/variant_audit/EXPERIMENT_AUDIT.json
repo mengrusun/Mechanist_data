@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-14",
+  "auditor": "llm-chat (gpt-5.4, https://www.dmxapi.cn/v1)",
+  "phase": "9",
+  "audit_type": "experiment",
+  "claim_id": "C2",
+  "variant": "method-swap-crp-compose",
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "GT provenance appears valid for this fc-only audit. The ground truth is not externally fabricated: fc unit index corresponds to the ImageNet class label by architecture/dataset construction, and this mapping is enforced by an assert in code (assert np.all(fc_class_lbls == fc_local_idx)). Acceptable provenance for the tested 1000 fc components."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Normalization appears proper. The variant uses L2-normalized cosine similarity for retrieval/scoring, consistent with the claim's text-queryable cosine-search framing. The permutation baseline is an independent random shuffle (no dependence leakage from observed ranking)."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All claimed artifacts present on disk: result.json, result_p2a.json, result_p2b.json, v_c_crp.h5, verdict.json. Metrics are internally coherent: mrr=0.9024, significant=true, perm95=0.00968, stability_median_cos=0.9581, passes=true, n_valid_components=1000/1000 (no degenerate zero vectors)."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All metric functions are called in v_crp_recover.py: compute_mrr (P2a MRR and R@10), permutation_upper (perm95 bound), compute_stability (P2b disjoint-half cosine). Outputs verified in result.json."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "The tested result supports a narrower conclusion than the full wording of claim C2. This variant shows fc-layer components on ImageNet-val with LRP-epsilon CRP 90th-percentile relevance cropping still yield highly class-recoverable vectors (MRR 0.9024, significant). However, this is a method-swapped preprocessing variant; it supports robustness of C2 under CRP-crop composition for fc components but is not direct confirmation of the unmodified general claim across broader component types or preprocessing choices."
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-14",
+  "auditor": "llm-chat (gpt-5.4, shell env)",
+  "claim_id": "C2",
+  "linked_milestones": ["M8_C2_queryability", "M9_C2_stability", "M10_C2_separation"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "P2a GT from dataset/architecture (fc unit class_label = ImageNet class index). P2b has no GT by design (internal consistency). P2c uses external CLIP-text-neighbor clusters (heuristic proxy, disclosed). No model-output-as-GT."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Only L2 normalization for cosine. Permutation baseline is independent random shuffle. No metric divided by model own max/mean."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All C2 result files exist at claimed paths with numbers matching tracker: M8 MRR=0.8983/perm=0.0097; M9 median_cos=0.9703; M10 layer4 gap=0.170/d=1.96. All tracker rows DONE."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All metric functions called: compute_ranks, mrr_from_ranks, recall_at_k, permutation_mrr_ci_upper (M8); pool function (M9); cohens_d, build_fc_same_concept_groups, within_between_cosines (M10). Threshold sensitivity logging also active."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "C2 claims general placement in 'joint image-text semantic space' but evidence is ResNet-50 only. fc P2c fails under CLIP-text-neighbor grouping heuristic (disclosed). fc P2d mixed (disclosed). P3 cross-model SKIPPED (disclosed). Scope overstatement is documented but claim header is not narrowed."
+    },
+    "eval_type": "real_gt (P2a fc unit GT) + self_supervised_proxy (P2b stability) + synthetic_proxy (P2c/P2d concept grouping)"
+  }
+}

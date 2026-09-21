@@ -1,0 +1,33 @@
+# Variant: model-swap-qwen2-instruct-7b
+# Claim: C1 — Two distinct, approximately-linear, independently-recoverable directions
+# Dimension: model swap
+# Swap: Llama-3-8B-Instruct → Qwen2-Instruct-7B
+
+# === Changes vs main experiment ===
+model: /data/zhenqian/models/Qwen2-Instruct-7B   # CHANGED (was: /data/zhenqian/models/Meta-Llama-3-8B-Instruct)
+out_m_prep: verify/C1_h_r_directions_distinct/variants/model-swap-qwen2-instruct-7b/m_prep  # CHANGED
+out_m1: verify/C1_h_r_directions_distinct/variants/model-swap-qwen2-instruct-7b/m1          # CHANGED
+
+# === Unchanged from main experiment ===
+advbench: /data/zhenqian/data/AdvBench
+alpaca: /data/zhenqian/data/Alpaca
+seed: 0
+n_pairs: 520          # full AdvBench pool (all 520)
+split_ratios: [0.6, 0.2, 0.2]   # 60/20/20 = 312/104/104
+dtype: fp16
+gen_max_new_tokens: 32   # for refusal labeling (short generation)
+gen_batch_size: 8
+fwd_batch_size: 8
+n_bootstrap: 1000
+
+# === Thresholds (pre-registered, same as main) ===
+auroc_threshold: 0.85
+cos_ratio_threshold: 0.5    # cos(h,r) <= 0.5 * split_half_reference
+shuffled_r_band: [0.45, 0.55]
+
+# === Notes ===
+# Qwen2-Instruct-7B has 28 hidden layers vs Llama-3-8B's 32 layers.
+# Layer sweep covers all 28 layers (same protocol: sweep every layer).
+# Chat template: Qwen2 uses <|im_start|>/<|im_end|> format; same position
+# offsets apply (t_final_instr=n-6, t_post_instr=n-1 relative to end).
+# This is verified by inspecting the tokenizer output.

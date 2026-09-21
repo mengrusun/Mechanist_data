@@ -1,0 +1,129 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Zhenqian Xu",
+    "paper_title":         "Aligning Machine and Human Visual Representations across Abstraction Levels",
+    "agent":         "scientist2",
+    "review_date":         "2026-07-19"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "各阶段的划分清晰且在代码/落盘配置中真正被遵守，未见泄漏路径。",
+    "score": 5,
+    "evidence_files": ["runs/M1_teacher_fit/eval_heldout.json", "refine-logs/EXPERIMENT_RESULTS.md", "runs/M3_aligned_dinov2/train_summary.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Ground truth 是 THINGS 数据集的人类 triplet odd-one-out 判断，来源可靠。",
+    "score": 5,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "task.md 的 Experiment stage 只硬性指定 base model=DINOv2 ViT-B、dataset=THINGS、固定 teacher=SigLIP-So400m，这三者均被原样使用",
+    "score": 5,
+    "evidence_files": ["task.md", "runs/M3_aligned_dinov2/cost.json", "refine-logs/EXPERIMENT_RESULTS.md", "verify/VERIFY_REPORT.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "证据规模普遍充分，未构成 overclaim。",
+    "score": 5,
+    "evidence_files": ["runs/M3_aligned_dinov2/eval_things_multilevel.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "不确定性报告较为规范：所有主结果都带 bootstrap CI95扣分点：训练侧为单种子（seed=42），M3/M5/微调未做多种子重复以给出训练随机性方差；不过效应量量级远大于任何合理噪声，且 verify 阶段的 ViT-S 模型替换（Δρ=+0.324 vs 主 +0.366）提供了跨模型稳健性佐证，部分弥补了单种子的不足。",
+    "score": 4,
+    "evidence_files": ["runs/M1_teacher_fit/eval_heldout.json", "runs/M7_downstream/results.json", "runs/M8_ood/results.json", "verify/VERIFY_REPORT.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "无干预claim",
+    "score": "n/a",
+    "evidence_files": ["runs/M3_aligned_dinov2/train_summary.json", "refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md", "verify/VERIFY_REPORT.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "抽查的每个关键数字都能追溯到具体落盘产物并一致.",
+    "score": 5,
+    "evidence_files": ["runs/M1_teacher_fit/eval_heldout.json", "runs/M3_aligned_dinov2/eval_things_multilevel.json", "runs/M7_downstream/results.json", "runs/M8_ood/results.json", "runs/iteration_round_2/M7_lora_a1p0/results.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "CLAIMS_LEDGER.md、EXPERIMENT_RESULTS.md、VERIFY_REPORT.md 与落盘 JSON 之间总体自洽",
+    "score": 5,
+    "evidence_files": ["CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_RESULTS.md", "runs/M3_aligned_dinov2/eval_things_multilevel.json", "verify/INTEGRITY_AUDIT.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "task.md Claim 1：拟合到 THINGS 人类 triplet 判断的教师模型能捕捉人类相似性结构，好到可对大规模无标注图库合成跨多个抽象层级的人类式相似性判断。",
+        "method": {
+          "justification": "方法选取与原论文一致且恰当：在冻结的 SigLIP-So400m 图像塔特征上以三元组 KL/affine 头拟合 THINGS 人类判断，再在 heldout 上评估.用 WordNet/BREEDS 层级把 ImageNet-val 构造成三层triplet，计算教师在每层的选择一致率，检验各层是否 > chance",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_PLAN.md", "runs/M1_teacher_fit/eval_heldout.json"]
+        },
+        "experiment": {
+          "justification": "同method，设计没问题。",
+          "score": 5,
+          "evidence_files": ["runs/M1_teacher_fit/eval_heldout.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "结论与论文定性一致：教师确实捕捉了人类相似性结构本复现教师 0.590 明显高于 unaligned 0.460 与 chance.教师的相似性判断跨这几个抽象层级都高于chance",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C2": {
+        "claim": "task.md Claim 2：通过专用对齐损失把人类式相似性结构蒸馏进预训练视觉基础模型（主实验 DINOv2 ViT-B），可在多个抽象层级显著提升与人类相似性判断的 Spearman 相关。",
+        "method": {
+          "justification": "以 THINGS-fit 教师的 soft-label 经 KL 蒸馏对 DINOv2 ViT-B 做全参对齐微调（triplet_kl，α=1.0，lr=5e-5），再以 held-out THINGS Spearman 对齐前后比较。",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_PLAN.md", "runs/M3_aligned_dinov2/train_summary.json"]
+        },
+        "experiment": {
+          "justification": "练脚本 align_student.py 用的只是随机 batch 内的成对相似度当 soft target，没有像原论文一样做聚类跨border采样",
+          "score":4,
+          "evidence_files": ["runs/M3_aligned_dinov2/eval_things_multilevel.json", "verify/VERIFY_REPORT.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "held-out集上蒸馏后多层级显著提升人类相似性相关",
+          "score": 5,
+          "evidence_files": ["runs/M3_aligned_dinov2/eval_things_multilevel.json", "refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C3": {
+        "claim": "task.md Claim 3：对齐后的学生模型比未对齐版本更准确地再现人类的行为模式与不确定性。",
+        "method": {
+          "justification": "对齐学生（M3）和未对齐 baseline（M4）都在 1,852 张 THINGS 图上前向，在两工人达成一致的 triplet 子集上，比较模型选择与人类一致的准确率",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "experiment": {
+          "justification": "样本量充足",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "定性方向与论文一致：choice accuracy 提升 +15.2pp",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C4": {
+        "claim": "task.md Claim 4：对齐与实用性不冲突——对齐后的学生模型在多样下游任务上匹配或超过原模型，并改善分布外（OOD）鲁棒性。",
+        "method": {
+          "justification": "仅 BREEDS super13/26 为真正的子群漂移 OOD、另 3 个为 in-distribution 或非标准输入，不太可靠。",
+          "score": 3,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "runs/M7_downstream/results.json"]
+        },
+        "experiment": {
+          "justification": "使用的数据集规模没原论文那么大，微调参数不一样，失败情有可原",
+          "score": 3,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "runs/iteration_round_2/M7_lora_a1p0/results.json", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        },
+        "result": {
+          "justification": "结果与论文部分不一致且被诚实呈现（非伪装一致）：论文称对齐同时改善下游 1-shot 与 OOD 鲁棒性；本复现发现对齐后 DINOv2 在 1-shot 上一致退化（mean Δ=−0.284，4/4 数据集 p_positive=0.00）给出的负结果原因（α=1.0 全参微调致一般能力遗忘）合理但指向自身复现的欠充分而非论文被证伪，故为诚实但欠充分的『部分未复现』。",
+          "score": 3,
+          "evidence_files": ["runs/M7_downstream/results.json", "runs/M8_ood/results.json", "CLAIMS_LEDGER.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "novelty": {
+    "score": 7,
+    "reasoning": "Core claims: (1) a just-seen worked example is often not reused by reasoning LLMs, causing token-wasting re-derivation; (2) transfer is modulated by surface vs structural similarity in a human-like way; (3) a linearly decodable internal gate at target onset predicts reuse vs re-derivation; (4) steering this gate causally flips behavior. The behavioral phenomenon is fresher than the mechanism, but each component overlaps with analogy-transfer, task-vector, and circuit-steering literature. The main novelty is the specific in-context efficiency failure and framing it as a causal gate for transfer vs re-derivation rather than generic task representation.",
+    "revision_notes": [
+      "Narrow the novelty claim to the exact setting: 'worked example immediately preceding a structurally identical target' and explicitly distinguish it from generic in-context learning, overthinking, and task-vector reuse.",
+      "Add a table in Related Work separating behavioral analogical transfer, mechanism/steering, and external caching; specify the delta for each proposed claim.",
+      "State one clearly falsifiable novel mechanism claim (e.g., onset gate precedes target reasoning and is distinct from difficulty/surface overlap), and de-emphasize broader 'first to locate analogy gate' language unless uniquely supported."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "Problem: reasoning models waste tokens by re-deriving a solution even after being shown a matching worked example, reducing efficiency and potentially latency/cost. Who cares: users of long-chain reasoning models, prompt engineers, inference systems, and model interpreters. Downstream change: if true, few-shot worked-example prompting and steering could substantially cut reasoning tokens without hurting accuracy, and expose when models fail to exploit available analogies. Strongest case: models are leaving easy token savings on the table in a common prompting regime.",
+    "revision_notes": [
+      "Quantify the user-facing cost in the abstract/introduction (e.g., expected token savings, latency, or dollar cost) to make the efficiency problem concrete.",
+      "Add one sentence on deployment relevance: how a gate detector/steerer would be used in prompting or inference-time routing.",
+      "Clarify whether the result changes prompt design, decoding policy, or evaluation, so the 'so what' is explicit beyond interpretability interest."
+    ]
+  },
+  "review": {
+    "score": 5,
+    "reasoning": "The proposal is interesting and testable, but several claims are over-scoped relative to the evidence plan. The main logical risk is confounding the proposed gate with difficulty, surface similarity, or generic task-state encoding. The experiments are mostly feasible, but the success criteria are somewhat ad hoc, and the behavioral definition of 'reuse vs re-derive' needs tighter operationalization. Related work is decent but still broad; venue-readiness would improve with sharper hypotheses, preregistered metrics, and stronger controls/ablations.",
+    "revision_notes": [
+      "Define reuse vs re-derivation operationally with a primary metric and a secondary validation metric before listing model families; specify how step-template matching is scored and when a run counts as transfer.",
+      "Add ablations that isolate analogy from difficulty, length, and lexical overlap: matched-length targets, matched-answer-form targets, and structurally similar but computationally easier/harder controls.",
+      "Include a stronger causal control suite: patching from unrelated but similarly difficult problems, random subspace steering, and layer/time localization to show the gate is onset-specific.",
+      "Tighten the claims about linear separability and causality: state the expected null, and avoid implying a unique 'analogy gate' unless it outperforms generic task/difficulty probes.",
+      "Add a preregistered analysis plan with exact thresholds, power/variance assumptions, and a failure interpretation for each hypothesis."
+    ]
+  },
+  "revision_notes": [
+    "Narrow the novelty claim to the exact setting: 'worked example immediately preceding a structurally identical target' and explicitly distinguish it from generic in-context learning, overthinking, and task-vector reuse.",
+    "Add a table in Related Work separating behavioral analogical transfer, mechanism/steering, and external caching; specify the delta for each proposed claim.",
+    "State one clearly falsifiable novel mechanism claim (e.g., onset gate precedes target reasoning and is distinct from difficulty/surface overlap), and de-emphasize broader 'first to locate analogy gate' language unless uniquely supported.",
+    "Quantify the user-facing cost in the abstract/introduction (e.g., expected token savings, latency, or dollar cost) to make the efficiency problem concrete.",
+    "Add one sentence on deployment relevance: how a gate detector/steerer would be used in prompting or inference-time routing.",
+    "Clarify whether the result changes prompt design, decoding policy, or evaluation, so the 'so what' is explicit beyond interpretability interest.",
+    "Define reuse vs re-derivation operationally with a primary metric and a secondary validation metric before listing model families; specify how step-template matching is scored and when a run counts as transfer.",
+    "Add ablations that isolate analogy from difficulty, length, and lexical overlap: matched-length targets, matched-answer-form targets, and structurally similar but computationally easier/harder controls.",
+    "Include a stronger causal control suite: patching from unrelated but similarly difficult problems, random subspace steering, and layer/time localization to show the gate is onset-specific.",
+    "Tighten the claims about linear separability and causality: state the expected null, and avoid implying a unique 'analogy gate' unless it outperforms generic task/difficulty probes.",
+    "Add a preregistered analysis plan with exact thresholds, power/variance assumptions, and a failure interpretation for each hypothesis."
+  ]
+}

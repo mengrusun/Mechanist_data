@@ -1,0 +1,23 @@
+
+\begin{table}[t]
+\centering
+\caption{Top-5 cache-site sweep and joint 5-site steering.
+Numbers are max$-$min of $\mathbb{E}[\text{first\_digit}]$ over
+$\alpha \in \{{-16,-8,-4,-1,0,1,4,8,16\}}$ (3 seeds $\times$ 40 items).
+All single-site spans are below $0.15$; the joint 5-site intervention shows
+a small distributed effect (up to $0.32$), still below the $0.5$ threshold.
+Gemma-3-27B-pt on TriviaQA (rc.nocontext) validation.}
+\label{tab:c1_top5_site_and_joint_sweep}
+\begin{tabular}{lccccl}
+\toprule
+Intervention target & seed 42 & seed 123 & seed 2024 & max & verdict \\
+\midrule
+single-site: E4L10 & 0.009 & 0.003 & 0.009 & 0.009 & $<$ 0.5 (distributed\_null) \\
+single-site: E1L5 & 0.084 & 0.146 & 0.141 & 0.146 & $<$ 0.5 (distributed\_null) \\
+single-site: E2L5 & 0.045 & 0.047 & 0.000 & 0.047 & $<$ 0.5 (distributed\_null) \\
+single-site: E3L10 & 0.002 & 0.000 & 0.016 & 0.016 & $<$ 0.5 (distributed\_null) \\
+single-site: E3L5 & 0.009 & 0.001 & 0.005 & 0.009 & $<$ 0.5 (distributed\_null) \\
+joint top-5 (MultiSiteSteeringHook) & 0.326 & 0.285 & 0.326 & 0.326 & $<$ 0.5 (distributed\_null) \\
+\bottomrule
+\end{tabular}
+\end{table}

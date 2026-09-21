@@ -1,0 +1,21 @@
+{
+  "Name": "protein_attention_physical_contacts",
+  "Title": "Do Protein Language Model Attention Heads Encode Physical Residue Contacts or Mere Coevolution?",
+  "Short Hypothesis": "Specific attention heads in protein language models (e.g., ESM-2) encode three-dimensional residue-residue contacts, and we hypothesize that the recovered contacts correspond to physically proximal, energetically coupled residue pairs rather than to statistical coevolution signals alone; the two can be dissociated on protein pairs where coevolution and 3D proximity diverge.",
+  "Related Work": "Rao et al. (2021) and Vig et al. (2021) showed attention maps correlate with contact maps; Rives et al. (2021) linked ESM representations to structure. Prior work conflates coevolution with physical contact because they usually coincide. We distinguish physical proximity from coevolutionary coupling by curating cases where they dissociate (e.g., allosteric long-range coevolving but non-contacting pairs, and contacting but non-coevolving pairs), directly testing the mechanistic claim rather than reporting aggregate correlation.",
+  "Abstract": "Protein language models (pLMs) achieve near-supervised contact prediction from attention maps, but it remains unclear whether attention encodes genuine three-dimensional physical contact or the coevolutionary statistics that usually track it. We disentangle these hypotheses using curated residue-pair sets where physical proximity and evolutionary coupling diverge: contacting-but-conserved pairs (low coevolution) and long-range coevolving-but-distant allosteric pairs. We probe per-head attention in ESM-2 across scales and evaluate precision on each subset, comparing against Direct Coupling Analysis (DCA) coevolution scores computed from the same multiple sequence alignments. If attention encodes physical contact, its errors will differ systematically from DCA's; if it merely relays coevolution, its per-pair scores will be near-collinear with DCA. We further apply activation patching, swapping attention patterns between structurally similar and dissimilar homologs to test whether contact information is causally used for masked-residue prediction. We quantify head specialization, layer depth of contact emergence, and the model-size scaling of physical versus coevolutionary fidelity. Preliminary framing predicts a subset of mid-depth heads whose contact precision exceeds DCA specifically on low-coevolution contacts, indicating representations partially grounded in physical structure. This work provides a principled test of whether pLM internal mechanisms align with established biophysical structure rather than dataset statistics, informing when these models can be trusted for de novo structural inference.",
+  "Experiments": [
+    "Curate three residue-pair test sets from PDB+Pfam: (a) physical contacts with low DCA coevolution, (b) high-DCA long-range allosteric pairs that are not in contact, (c) matched controls where both coincide.",
+    "Extract per-head, per-layer attention matrices from ESM-2 (8M, 35M, 150M, 650M) for each protein; symmetrize and average as in Rao et al.",
+    "Compute contact precision@L/5 per head on each subset; compare to DCA (plmDCA) baseline on identical MSAs.",
+    "Fit a logistic model predicting true contact from (attention score, DCA score) to measure the unique variance attention contributes beyond coevolution.",
+    "Activation patching: replace a target head's attention with that from a structurally divergent homolog and measure change in masked-token cross-entropy and in downstream contact precision.",
+    "Report scaling curves of physical-vs-coevolutionary precision gap across model sizes; identify layer depth where physical contact information peaks."
+  ],
+  "Risk Factors and Limitations": [
+    "DCA and physical contact remain correlated even in curated sets, limiting statistical power; requires careful pair selection and possibly small n.",
+    "Attention maps are not the only locus of contact information; residue-stream probes might tell a different story, so negative attention results are not conclusive.",
+    "MSA depth confounds DCA quality; shallow alignments could unfairly disadvantage the coevolution baseline.",
+    "Activation patching may degrade fluency in ways that swamp contact-specific effects."
+  ]
+}

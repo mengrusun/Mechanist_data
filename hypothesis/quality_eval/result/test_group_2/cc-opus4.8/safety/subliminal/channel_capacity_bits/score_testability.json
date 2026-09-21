@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal gives directional, topic-aligned predictions—\"trait strength follows a saturating function,\" traits \"interfere and mutually degrade,\" and \"soft-label/higher-entropy generation raises capacity\"—so non-saturation, no degradation with increasing k, or no positive entropy effect would refute the respective hypotheses. However, the central inference to \"estimate bits-per-token from the saturating fit\" is not defined: behavioral trait strength is not mapped to mutual information or another bit-valued quantity, and neither the saturating function nor the trait-strength metric is specified. The plan also leaves \"k=1..several,\" trait independence, and the criterion for an \"interference ceiling\" undecided, while the claimed implication of \"shared subspace competition\" is not established merely by correlation with cosine overlap.",
+      "score": 5
+    },
+    "feasibility": {
+      "justification": "Finetuning on \"increasing amounts of teacher tokens,\" varying \"temperature/top-k,\" measuring behavior, and computing \"pairwise cosine among trait directions\" are supported by standard model-training, evaluation, and linear-algebra tooling; the stated shuffle/scramble and \"cross-base teacher\" controls make negative outcomes runnable. The hardest step is \"estimate bits-per-token from the saturating fit,\" which is presently an undefined magic step because no encoding variable, decoder, probability model, mutual-information estimator, or conversion from trait score to bits is supplied. The general dependencies—language models, generated number/code/CoT datasets, finetuning, and weight-space direction analysis—exist, but the required multi-trait teacher construction is only described as \"create teachers holding k traits simultaneously\" despite acknowledged cross-contamination, with no operational construction or independence check. Resources are poorly quantified: apart from \"k=1..several\" and \"log-spaced\" token amounts, no models, token-count endpoints, number of traits, repetitions, or evaluation sample sizes are given.",
+      "score": 4
+    }
+  }
+}

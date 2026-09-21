@@ -1,0 +1,1 @@
+Research on LLM beliefs. **Belief** refers to an LLM’s internal representation of the state of a specific item. you can find the definition in this paper: Language models cannot reliably distinguish belief from knowledge and fact

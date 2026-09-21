@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal has strong goal-method alignment and unusually explicit directional criteria: for example, it defines a geostrophic BCI, requires \"BCI > 0.1,\" and states that \"BCI ≤ 0 means fields are encoded independently, H1 fails.\" However, the central quantities are not fully specified: \"Balance-Coupling Index BCI = shared-subspace predictive R² − what independent per-field encoding predicts\" leaves the baseline and estimation procedure ambiguous, and the claim that internal coupling should \"vanish near the equator where f→0\" does not follow straightforwardly from geostrophic equations, which involve an inverse dependence on f and a breakdown of the approximation rather than necessarily vanishing representation coupling. The causal plan is also underspecified in phrases such as \"perturb the decoded pressure-gradient direction\" and \"induce the geostrophically-correct wind change,\" although the numeric thresholds and explicit negative branches make the overall proposal clearly falsifiable rather than unfalsifiable.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is the intervention/rollout procedure described as \"perturb the decoded pressure-gradient direction\" and \"perturb the internal state into a wind–pressure-inconsistent configuration and roll forward\"; activation hooks and probe-direction edits are standard in principle, but the claim does not specify how the edit is mapped into the model's distributed hidden state, which layer is selected, or how a valid altered state is maintained during rollout, making this a substantial custom-engineering step rather than a fully specified operation. The core artifacts—\"pretrained GraphCast and Pangu-Weather,\" ERA5, linear probes, CCA/PLS, CKA, and matched-norm controls—exist or have standard implementations, and the controls include random/non-balance perturbations, latitude-shuffled nulls, humidity controls, and grid-position controls, so a refuting outcome can in fact be produced. Resources are comparatively well quantified through \"500 snapshots,\" \"200 ERA5 snapshots,\" \"150 ERA5 snapshots,\" and \"3 seeds\" (plus the stated few-GPU-hour extraction), though the plan does not quantify probe training or intervention configurations; under the resource premise this is not a cost deduction, but it limits operational specificity.",
+      "score": 6
+    }
+  }
+}

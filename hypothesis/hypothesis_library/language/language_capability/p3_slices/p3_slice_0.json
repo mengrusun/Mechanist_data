@@ -1,0 +1,584 @@
+[
+  {
+    "index": 0,
+    "Name": "linguistic_cost_of_thought",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core novel claims: (1) redefining language-agnosticism as a per-step, time-varying 'linguistic cost meter' during reasoning; (2) linking higher step difficulty to stronger language-shedding; (3) using that signal to gate steering only on hard steps; (4) claiming gated steering beats blanket language ablation on the accuracy/fluency tradeoff; (5) using LAS as a correctness predictor. The closest prior family is static/global language ablation and English-routing/core-representation work, plus recent shared-difficulty-geometry and probe-based correctness prediction. The actual delta is real but narrower than it first sounds: the H1-style difficulty/representation link is partly anticipated, and H2 is below the bar of existing probes. The strongest potential novelty lives in the intervention/gating mechanism and its comparative tradeoff result, if it holds.",
+      "revision_notes": [
+        "State the exact novelty claim in one sentence: per-step difficulty-gated steering improves multilingual reasoning more than static ablation under matched compute and intervention budget.",
+        "Explicitly distinguish the work from shared-difficulty-geometry by clarifying that you test temporal dynamics and causal gating, not just a shared difficulty direction.",
+        "Remove or de-emphasize the correctness-prediction claim unless you can show a new use case beyond existing high-AUROC probes."
+      ]
+    },
+    "impact": {
+      "score": 6,
+      "reasoning": "The phenomenon under study is whether reasoning difficulty correlates with transient language-shedding in multilingual LLMs, and whether exploiting that signal improves multilingual reasoning. Researchers in multilingual reasoning, interpretability, and inference-time control would care; practitioners care if it improves accuracy without harming fluency or target-language output. The strongest one-line case is: if reasoning difficulty can be detected online from hidden-state language-agnosticism, we can intervene only when needed instead of bluntly suppressing language features everywhere. Importance is moderate-to-high but not field-shifting unless gains are clear and robust. Yes, serious researchers would care if the result comes out either way, but mainly as a mechanistic/controls result rather than an application breakthrough.",
+      "revision_notes": [
+        "Add a concrete downstream scenario showing why adaptive gating matters more than blanket ablation (e.g., preserving fluency/cost while improving multilingual math accuracy).",
+        "Quantify the expected tradeoff improvement that would make practitioners switch from static to gated intervention.",
+        "Broaden evaluation to at least one real user-facing setting beyond benchmark QA/math, if feasible."
+      ]
+    },
+    "review": {
+      "score": 5,
+      "reasoning": "The proposal is testable and reasonably scoped, but the central claims are not yet tight enough. There is a logical gap between a projection onto a language-identity subspace and the interpretation 'cost of thought'; content confounds could drive the signal. The falsifiable hypothesis is present, but the operationalization of difficulty is weakly defined and may not isolate true reasoning difficulty from token entropy, language mixing, or prompt artifacts. Related work is adequate at a high level but needs sharper positioning against the 2026 probe and shared-difficulty papers. Experiments are mostly feasible and include some good controls (random-gated, blanket ablation), but missing are stronger causal controls, calibration of LAS against trivial baselines, and ablations showing the signal is not just length/entropy. Minimum viable edits: tighten definitions, pre-register primary endpoints, add stronger controls, and make the intervention budget strictly comparable across methods.",
+      "revision_notes": [
+        "Define LAS more rigorously and add controls showing it is not just token entropy, language ID confidence, or layer-norm magnitude.",
+        "Add matched-budget comparisons for gated vs blanket steering (same number of modified steps/tokens and same intervention strength).",
+        "Include ablations for alternative difficulty proxies and a null model using random time-varying gates with the same distribution as LAS.",
+        "Specify the exact causal identification strategy for 'difficulty increases LAS' and separate truncation effects from true sub-step difficulty.",
+        "Tighten the related work section to explicitly position against the shared-difficulty-geometry and hidden-state probe literature."
+      ]
+    },
+    "revision_notes": [
+      "State the exact novelty claim in one sentence: per-step difficulty-gated steering improves multilingual reasoning more than static ablation under matched compute and intervention budget.",
+      "Explicitly distinguish the work from shared-difficulty-geometry by clarifying that you test temporal dynamics and causal gating, not just a shared difficulty direction.",
+      "Remove or de-emphasize the correctness-prediction claim unless you can show a new use case beyond existing high-AUROC probes.",
+      "Add a concrete downstream scenario showing why adaptive gating matters more than blanket ablation (e.g., preserving fluency/cost while improving multilingual math accuracy).",
+      "Quantify the expected tradeoff improvement that would make practitioners switch from static to gated intervention.",
+      "Broaden evaluation to at least one real user-facing setting beyond benchmark QA/math, if feasible.",
+      "Define LAS more rigorously and add controls showing it is not just token entropy, language ID confidence, or layer-norm magnitude.",
+      "Add matched-budget comparisons for gated vs blanket steering (same number of modified steps/tokens and same intervention strength).",
+      "Include ablations for alternative difficulty proxies and a null model using random time-varying gates with the same distribution as LAS.",
+      "Specify the exact causal identification strategy for 'difficulty increases LAS' and separate truncation effects from true sub-step difficulty.",
+      "Tighten the related work section to explicitly position against the shared-difficulty-geometry and hidden-state probe literature."
+    ]
+  },
+  {
+    "index": 1,
+    "Name": "syntax_engine_reuse",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core claims: (1) a previously localized hierarchy-selective language circuit is causally reused for non-linguistic hierarchical reasoning; (2) ablation should show a depth-by-ablation interaction on arithmetic/logic/parentheses/code; (3) independently localized reasoning circuits should overlap with the syntax circuit; (4) LoRA on nested reasoning should strengthen the syntax circuit. Relative to prior work, the delta is real and specific: prior circuit-localization work only tested language grammaticality, while adjacent shared-circuit studies were on other domains and no one had directly causally tested reuse of the syntax circuit on non-linguistic hierarchy. Novelty is strongest in the causal test and setting, not in the general reuse idea.",
+      "revision_notes": [
+        "Sharpen the novelty claim around the exact circuit identity and operational definition so it is clear this is not just another mechanistic interpretability ablation paper.",
+        "Explicitly contrast against the dissociation literature and state what result would be surprising under domain-separation views.",
+        "Add one sentence clarifying whether novelty is in the causal reuse finding, the bidirectional transfer test, or the cross-domain circuit-overlap analysis.",
+        "State why the four task families are the minimal set needed to establish general reuse rather than task-specific transfer."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The underlying phenomenon is whether syntax-specific machinery in LLMs is a general-purpose structure engine. That matters to interpretability, cognitive science, and reasoning-mechanism work, and it directly informs the language-vs-thought debate. The strongest one-line case: if syntax circuits are reused for non-linguistic hierarchy, then a major class of reasoning may be explainable as repurposed linguistic machinery; if not, that strengthens modularity/dissociation. This is not a niche curiosity, but uptake depends on the result because either outcome would be informative for how people model structure processing in LLMs.",
+      "revision_notes": [
+        "Make the downstream implication explicit for at least two communities: interpretability and cognitive science/psycholinguistics.",
+        "Add a brief paragraph on what practical modeling or probing choices would change if reuse is found vs rejected.",
+        "State whether the result would generalize to larger frontier models or just serve as a mechanistic case study, since that affects real-world reach.",
+        "Explain why these tasks are representative of broader structured reasoning rather than isolated benchmarks."
+      ]
+    },
+    "review": {
+      "score": 7,
+      "reasoning": "The proposal is testable and reasonably well-scoped, with a clear causal hypothesis, controls, and multiple complementary readouts. Main weaknesses are that the core claim could still be confounded by token/length effects, ablation may be too blunt, and the related-work framing is a bit thin on the exact prior mechanistic literature. The experiments are feasible and mostly appropriate, but the proposal needs stronger falsifiability around what pattern would count as reuse versus generic degradation. Executed well, this could be a serious ML venue paper, especially because both positive and negative results are informative.",
+      "revision_notes": [
+        "Specify the exact falsification criteria for reuse, dissociation, and generic degradation.",
+        "Add stronger controls for tokenization, sequence length, and difficulty matched across tasks and depths.",
+        "Include a causal mediation or rescue-style analysis, not just ablation, to strengthen the mechanism claim.",
+        "Predefine how circuit localization quality will be validated across models before making cross-model overlap claims.",
+        "Clarify whether the Jaccard overlap threshold is hypothesis-driven or exploratory.",
+        "Add an explicit negative-control task family that is structurally similar but should not recruit hierarchy processing."
+      ]
+    },
+    "revision_notes": [
+      "Sharpen the novelty claim around the exact circuit identity and operational definition so it is clear this is not just another mechanistic interpretability ablation paper.",
+      "Explicitly contrast against the dissociation literature and state what result would be surprising under domain-separation views.",
+      "Add one sentence clarifying whether novelty is in the causal reuse finding, the bidirectional transfer test, or the cross-domain circuit-overlap analysis.",
+      "State why the four task families are the minimal set needed to establish general reuse rather than task-specific transfer.",
+      "Make the downstream implication explicit for at least two communities: interpretability and cognitive science/psycholinguistics.",
+      "Add a brief paragraph on what practical modeling or probing choices would change if reuse is found vs rejected.",
+      "State whether the result would generalize to larger frontier models or just serve as a mechanistic case study, since that affects real-world reach.",
+      "Explain why these tasks are representative of broader structured reasoning rather than isolated benchmarks.",
+      "Specify the exact falsification criteria for reuse, dissociation, and generic degradation.",
+      "Add stronger controls for tokenization, sequence length, and difficulty matched across tasks and depths.",
+      "Include a causal mediation or rescue-style analysis, not just ablation, to strengthen the mechanism claim.",
+      "Predefine how circuit localization quality will be validated across models before making cross-model overlap claims.",
+      "Clarify whether the Jaccard overlap threshold is hypothesis-driven or exploratory.",
+      "Add an explicit negative-control task family that is structurally similar but should not recruit hierarchy processing."
+    ]
+  },
+  {
+    "index": 2,
+    "Name": "linguistic_cognitive_gear",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims that need to be novel are: (1) prompt surface language can shift an LLM's decision strategy on identical problems along an intuition-vs-reflection axis; (2) this appears across a multilingual battery of dual-process-style bias tasks rather than a single benchmark; (3) the effect dissociates from overall accuracy and language resource level; (4) there exists a locatable linear 'reflection direction' mediating the language effect; (5) causal steering along that direction can override language-induced intuitive answers. Relative to the search summary, the dual-process framing itself is not new, cognitive-bias measurement/mitigation in LLMs is already active, and steering/System-1/2 directions already exist. The most defensible novelty is the cross-language dissociation on matched items plus tying it to a causal representation-level intervention. The proposal is more than an obvious baseline comparison, but the chosen human FLE framing is shaky for this bias battery, and some of the mechanistic pieces look like a natural extension of existing probing/steering work rather than a wholly new mechanism.",
+      "revision_notes": [
+        "Reframe the novelty claim away from importing the contested human Foreign Language Effect and toward a distinctly LLM-specific multilingual strategy-routing phenomenon.",
+        "State the exact closest prior families and the delta explicitly: multilingual reasoning accuracy papers, single-bias language effects, and System-1/2 probing/steering papers.",
+        "Add one setting or task component that is clearly not covered by prior bias batteries, e.g. tightly controlled same-semantic-content cross-language switches within model/item, or cross-script/code-switch conditions.",
+        "Clarify whether the main novelty is the finding, the mechanism, or the causal intervention, and narrow claims accordingly.",
+        "Strengthen the mechanism beyond a generic linear probe by specifying what would distinguish a true reflection-direction account from simple language/difficulty separability."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The problem under study is whether multilingual prompt language changes which reasoning strategy an LLM deploys, leading to language-dependent susceptibility to intuitive lures even when task semantics are unchanged. This matters to multilingual-NLP, interpretability, and reliability/safety researchers, and to practitioners deploying LLMs across languages. The strongest case is: if prompt language systematically shifts reasoning mode, multilingual evaluations and deployments cannot treat translation-equivalent prompts as behaviorally equivalent. The phenomenon is meaningful and could affect benchmarking, prompting, and mitigation. That said, the direct practical reach depends on effect size and generality; the selected bias tasks are somewhat narrow and the result may mostly interest research communities unless connected more clearly to deployed workflows. The 'so what?' test is partially passed: a robust effect either way would influence multilingual evaluation methodology and some prompting/steering work, but may not broadly change production practice unless shown on more consequential tasks.",
+      "revision_notes": [
+        "Make the practical consequence concrete: specify how multilingual evaluation, prompt design, or safety auditing would change if the effect is confirmed or rejected.",
+        "Add at least one higher-stakes or applied reasoning setting beyond classic cognitive-bias items, such as medical triage vignettes, policy/risk questions, or tool-use decision prompts.",
+        "Quantify expected deployment relevance by proposing effect-size thresholds that would matter for multilingual product behavior.",
+        "Broaden the stakeholder story beyond interpretability researchers to benchmark designers, localization teams, and safety evaluators.",
+        "Explain what a null result would still settle for the field, to strengthen phenomenon value in either outcome."
+      ]
+    },
+    "review": {
+      "score": 5,
+      "reasoning": "The proposal is testable and more concrete than many idea sketches, but several technical gaps remain. The main hypothesis is reasonably falsifiable, yet 'intuition-vs-reflection axis' is underoperationalized and heavily dependent on a contested mapping from lure responses to cognitive mode. The related work is directionally aware but not specific enough about the strongest nearest baselines from multilingual LLM bias and System-1/2 steering. Experimental design has promising controls (mixed effects, random steering controls, answer-language fidelity), but key confounds remain: translation naturalness, item difficulty shifts, cultural familiarity, tokenization/script effects, and CoT responsiveness as a proxy for reflection. Intuition Index=lure rate among errors may be unstable and can miss language effects that change both error type and accuracy. The probe experiment risks detecting answer class, language identity, or difficulty instead of reflection; causal steering mid-layer may improve performance through generic logit biasing rather than mechanism-specific intervention. The story also overclaims by borrowing human FLE motivation for tasks where human evidence is largely null. If executed well with stronger controls, it could be workshop-to-mid-tier conference material and possibly stronger if the mechanistic evidence is convincing, but in current form it is not yet submission-ready for a serious top ML venue.",
+      "revision_notes": [
+        "Replace or supplement the contested human-FLE framing with a clearer LLM-native hypothesis and preregister primary/secondary claims.",
+        "Add stronger controls for translation artifacts: independent human translations, translationese detection, within-language paraphrase controls, and possibly bilingual speaker validation.",
+        "Use item-level semantic invariance checks and difficulty calibration across languages rather than relying mainly on back-translation and overall accuracy control.",
+        "Redefine or supplement Intuition Index with richer error taxonomy: lure selection rate, confidence/calibration, response latency/token-budget proxies, and answer-distribution analysis conditional on correctness.",
+        "Include stronger baselines: direct translate-to-English then answer, hidden-chain language controls, script-transliterated variants, and code-switched prompts to separate language identity from comprehension/resource effects.",
+        "For the probe, add adversarial controls showing the direction is not merely language ID, correctness, or token-length/difficulty; test cross-task and cross-model transfer more explicitly.",
+        "For the steering claim, include multiple sham controls, off-target layers, sign-flip interventions, and evaluation on non-bias tasks to quantify collateral damage.",
+        "Specify sample size/power and expected effect sizes for mixed-effects estimates; 800 source items may still be underpowered once stratified by task, model, and language.",
+        "State clear acceptance criteria for H1-H3 and what outcomes would falsify the mechanism rather than merely weakening it.",
+        "Narrow the contribution claim to what the proposed experiments can actually establish: behavioral dissociation plus causal intervention evidence, not literal System-1/System-2 cognition."
+      ]
+    },
+    "revision_notes": [
+      "Reframe the novelty claim away from importing the contested human Foreign Language Effect and toward a distinctly LLM-specific multilingual strategy-routing phenomenon.",
+      "State the exact closest prior families and the delta explicitly: multilingual reasoning accuracy papers, single-bias language effects, and System-1/2 probing/steering papers.",
+      "Add one setting or task component that is clearly not covered by prior bias batteries, e.g. tightly controlled same-semantic-content cross-language switches within model/item, or cross-script/code-switch conditions.",
+      "Clarify whether the main novelty is the finding, the mechanism, or the causal intervention, and narrow claims accordingly.",
+      "Strengthen the mechanism beyond a generic linear probe by specifying what would distinguish a true reflection-direction account from simple language/difficulty separability.",
+      "Make the practical consequence concrete: specify how multilingual evaluation, prompt design, or safety auditing would change if the effect is confirmed or rejected.",
+      "Add at least one higher-stakes or applied reasoning setting beyond classic cognitive-bias items, such as medical triage vignettes, policy/risk questions, or tool-use decision prompts.",
+      "Quantify expected deployment relevance by proposing effect-size thresholds that would matter for multilingual product behavior.",
+      "Broaden the stakeholder story beyond interpretability researchers to benchmark designers, localization teams, and safety evaluators.",
+      "Explain what a null result would still settle for the field, to strengthen phenomenon value in either outcome.",
+      "Replace or supplement the contested human-FLE framing with a clearer LLM-native hypothesis and preregister primary/secondary claims.",
+      "Add stronger controls for translation artifacts: independent human translations, translationese detection, within-language paraphrase controls, and possibly bilingual speaker validation.",
+      "Use item-level semantic invariance checks and difficulty calibration across languages rather than relying mainly on back-translation and overall accuracy control.",
+      "Redefine or supplement Intuition Index with richer error taxonomy: lure selection rate, confidence/calibration, response latency/token-budget proxies, and answer-distribution analysis conditional on correctness.",
+      "Include stronger baselines: direct translate-to-English then answer, hidden-chain language controls, script-transliterated variants, and code-switched prompts to separate language identity from comprehension/resource effects.",
+      "For the probe, add adversarial controls showing the direction is not merely language ID, correctness, or token-length/difficulty; test cross-task and cross-model transfer more explicitly.",
+      "For the steering claim, include multiple sham controls, off-target layers, sign-flip interventions, and evaluation on non-bias tasks to quantify collateral damage.",
+      "Specify sample size/power and expected effect sizes for mixed-effects estimates; 800 source items may still be underpowered once stratified by task, model, and language.",
+      "State clear acceptance criteria for H1-H3 and what outcomes would falsify the mechanism rather than merely weakening it.",
+      "Narrow the contribution claim to what the proposed experiments can actually establish: behavioral dissociation plus causal intervention evidence, not literal System-1/System-2 cognition."
+    ]
+  },
+  {
+    "index": 3,
+    "Name": "token_granularity_reasoning_tradeoff",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core technical claims needing novelty are: (1) coarse vs fine tokenization induces a unified fluency/retrieval vs compositional-reasoning trade-off on the same strings; (2) this trade-off is mediated by a per-concept 'granularity depth' where sub-token structure becomes linearly decodable; (3) granularity depth shifts systematically with token coarseness/frequency and predicts downstream reasoning failures; (4) a training-free steering method, STRS, can amplify sub-token reconstruction at the breakthrough layer to move along this trade-off at inference. Relative to prior work, the breakthrough-layer reconstruction phenomenon is already known, and STRS is a natural extension of existing steering methods. The most defensible novelty is the unifying trade-off framing plus an inference-time control lever. The per-concept diagnostic is incremental unless it yields a genuinely new predictive law beyond re-measuring established reconstruction effects.",
+      "revision_notes": [
+        "State the closest prior work family explicitly and rewrite each claimed contribution as a concrete delta over that work, especially inner-lexicon/breakthrough-layer papers and steering baselines.",
+        "Narrow the novelty claim from 'never reconciled' to a precise new claim: e.g., a measurable Pareto frontier between fluency and compositional reasoning under matched strings and controlled tokenization.",
+        "Strengthen novelty by specifying what granularity-depth predicts that prior breakthrough-layer measurements do not, such as out-of-sample prediction of failure rates across tasks/models/tokens.",
+        "Add at least one non-obvious comparison showing STRS is not just equivalent to forced fine tokenization or generic activation steering.",
+        "Define whether novelty lies in the finding, mechanism, diagnostic, or intervention, and avoid implying all four are equally new."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is the effect of token granularity on a model's ability to manipulate internal structure while preserving fluent retrieval. Relevant audiences include tokenization researchers, reasoning-mechanism researchers, multilingual/vocabulary-design practitioners, and model efficiency practitioners. If true, the work could influence how people choose vocabularies, evaluate reasoning under tokenization, and deploy inference-time mitigations. The strongest case is that it unifies two influential but seemingly conflicting tokenization literatures and offers a practical training-free knob. The 'so what?' test is moderately positive: if the result holds strongly, researchers may rethink vocabulary design and add tokenization-sensitive evaluations; if it fails, many would likely continue using existing tokenization heuristics, so direction-shifting potential is real but not guaranteed.",
+      "revision_notes": [
+        "Make the practical decision impacted by the work explicit: vocabulary size choice, tokenizer design, deployment-time steering, or benchmark construction.",
+        "Specify which user groups benefit most and with what quantitative gains, e.g., arithmetic robustness, multilingual morphology, or compressed-vocabulary deployments.",
+        "Include at least one application-facing setting beyond synthetic tasks, such as OCR text, code identifiers, transliteration, or morphologically rich languages.",
+        "Clarify what practitioners would change if STRS works: when to enable it, what performance trade-off they should expect, and compared to which cheaper alternatives.",
+        "Add a sharper claim about how a null result would still matter, for example by falsifying the notion that inference-time access to sub-token structure can recover reasoning without retraining."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is coherent and fairly well scoped, with falsifiable hypotheses and a sensible experimental arc. However, key technical gaps remain. 'Fluency' is weakly operationalized via perplexity plus judged quality, which may not capture the claimed retrieval/fluency construct. The causal story from decodability to reasoning ability is still correlational unless interventions are carefully localized and alternative explanations ruled out. The tokenization manipulations may confound granularity with sequence length, formatting, and token identity effects. Granularity depth uses an arbitrary 80% threshold and linear decodability may reflect probe artifacts rather than actual accessibility. STRS as difference-in-means reconstruction direction is underspecified and may entangle semantic/content shifts. Related work is reasonably specific but overclaims absence of prior reconciliation. If executed strongly, this could be a respectable ML mechanisms/tokenization paper, but it currently needs tighter definitions, controls, and stronger baselines to be submission-ready.",
+      "revision_notes": [
+        "Define 'fluency/retrieval' more rigorously and add task-based measures beyond perplexity, such as next-token calibration, lexical recall, or human pairwise preference under controlled content.",
+        "Specify exactly how coarse vs fine tokenization is induced on the same strings and how length, formatting, delimiter, and prompt artifacts are controlled.",
+        "Replace the single 80% granularity-depth threshold with robustness analyses over thresholds and alternative definitions such as AUC-over-layers or probe-free interventions.",
+        "Add stronger causal tests: intervene before vs after the breakthrough layer, intervene on matched non-reconstruction directions, and test whether effects are concept-specific rather than global activation noise.",
+        "Detail STRS construction precisely: source pairs, averaging scheme, normalization, layer selection, token position handling, and whether steering generalizes across concepts/tasks/models.",
+        "Include ablations against obvious baselines: forced character/digit tokenization, prompt spelling-out, generic function vectors, random same-norm directions, and layer-mismatched steering.",
+        "Add held-out generalization tests showing granularity-depth learned on one token set predicts failures on unseen concepts or tasks.",
+        "Tone down broad claims like 'causally intervene to trade fluency for reasoning' unless the design can isolate causality from correlated activation changes."
+      ]
+    },
+    "revision_notes": [
+      "State the closest prior work family explicitly and rewrite each claimed contribution as a concrete delta over that work, especially inner-lexicon/breakthrough-layer papers and steering baselines.",
+      "Narrow the novelty claim from 'never reconciled' to a precise new claim: e.g., a measurable Pareto frontier between fluency and compositional reasoning under matched strings and controlled tokenization.",
+      "Strengthen novelty by specifying what granularity-depth predicts that prior breakthrough-layer measurements do not, such as out-of-sample prediction of failure rates across tasks/models/tokens.",
+      "Add at least one non-obvious comparison showing STRS is not just equivalent to forced fine tokenization or generic activation steering.",
+      "Define whether novelty lies in the finding, mechanism, diagnostic, or intervention, and avoid implying all four are equally new.",
+      "Make the practical decision impacted by the work explicit: vocabulary size choice, tokenizer design, deployment-time steering, or benchmark construction.",
+      "Specify which user groups benefit most and with what quantitative gains, e.g., arithmetic robustness, multilingual morphology, or compressed-vocabulary deployments.",
+      "Include at least one application-facing setting beyond synthetic tasks, such as OCR text, code identifiers, transliteration, or morphologically rich languages.",
+      "Clarify what practitioners would change if STRS works: when to enable it, what performance trade-off they should expect, and compared to which cheaper alternatives.",
+      "Add a sharper claim about how a null result would still matter, for example by falsifying the notion that inference-time access to sub-token structure can recover reasoning without retraining.",
+      "Define 'fluency/retrieval' more rigorously and add task-based measures beyond perplexity, such as next-token calibration, lexical recall, or human pairwise preference under controlled content.",
+      "Specify exactly how coarse vs fine tokenization is induced on the same strings and how length, formatting, delimiter, and prompt artifacts are controlled.",
+      "Replace the single 80% granularity-depth threshold with robustness analyses over thresholds and alternative definitions such as AUC-over-layers or probe-free interventions.",
+      "Add stronger causal tests: intervene before vs after the breakthrough layer, intervene on matched non-reconstruction directions, and test whether effects are concept-specific rather than global activation noise.",
+      "Detail STRS construction precisely: source pairs, averaging scheme, normalization, layer selection, token position handling, and whether steering generalizes across concepts/tasks/models.",
+      "Include ablations against obvious baselines: forced character/digit tokenization, prompt spelling-out, generic function vectors, random same-norm directions, and layer-mismatched steering.",
+      "Add held-out generalization tests showing granularity-depth learned on one token set predicts failures on unseen concepts or tasks.",
+      "Tone down broad claims like 'causally intervene to trade fluency for reasoning' unless the design can isolate causality from correlated activation changes."
+    ]
+  },
+  {
+    "index": 4,
+    "Name": "verbal_interference_llm",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims needing novelty are: (1) a new evaluation problem—identify which LLM reasoning tasks depend on language production machinery; (2) a new mechanism/method—Concurrent Linguistic Load (CLL), importing human dual-task verbal-interference logic rather than ablation or verbalization removal; (3) a predicted task-by-load selective impairment gradient across task families; (4) a circuit-level claim that CLL cost tracks overlap with language-production components; and (5) a distinction between genuine linguistic competition versus generic token/context overhead via graded and control loads. Relative to prior work, the main novelty is methodological: loading/competition instead of ablation, plus graded controls. The broader question (language vs thought in LLMs) is not new, and the search summary indicates very close prior work already localizes language-relevant units and finds broad dependence of verbally presented tasks on them, which weakens the headline dissociation claim. The proposal's own related work underspecifies this closest family, making the delta seem larger than it is. Still, if executed well, the selective dual-task paradigm and competition-based interpretation are non-trivial and not just an obvious baseline swap.",
+      "revision_notes": [
+        "Explicitly position against ablation/localization papers on LLM language networks and state the precise methodological delta: competition-under-load versus lesion-based necessity.",
+        "Narrow the novelty claim from 'reveal dissociation between language and reasoning' to 'test for selective competition signatures beyond non-specific impairment'.",
+        "Define what is novel at each level: paradigm (CLL), finding (task-by-load interaction), mechanism (shared language-production bottleneck), and setting (multi-model frozen LLMs).",
+        "Add a table comparing CLL to closest baselines: ablation of language units, hidden-state reasoning suppression/removal, longer-context overhead controls, and generic dual-output prompting.",
+        "Pre-register an outcome where even a negative result is novel: failure to find selective interference despite strong controls would challenge the human analogy and refine language-vs-thought claims in LLMs."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether LLM performance on different reasoning tasks actually depends on language-production machinery, not merely whether a new prompt trick works. Who cares: LLM-cognition researchers, mechanistic interpretability, benchmark designers, and anyone making claims about latent reasoning or language-independent thought in models. If the result holds cleanly, it could affect how people evaluate reasoning, interpret verbal chain-of-thought, and design probes for modularity or resource competition. The strongest case is that it offers a more behaviorally grounded test of language dependence than lesions alone. The 'so what?' test is mixed but positive: if selective interference appears, researchers would likely revise claims about which tasks are truly language-mediated and use load-based controls in future work; if all tasks degrade non-specifically, that would still matter but less dramatically, mainly as a caution about anthropomorphic analogies and prompt-based concurrency. Real-world reach is moderate rather than high, because this is mostly foundational/diagnostic rather than directly product-changing.",
+      "revision_notes": [
+        "State explicit downstream decisions this would change: benchmark design, interpretation of CoT, claims about latent reasoning, and future mechanistic probes.",
+        "Strengthen the one-line importance claim around adjudicating whether LLM 'reasoning' is separable from language production under controlled competition.",
+        "Add concrete user communities and venues likely to care: mechanistic interpretability, cognitive modeling, evaluation/benchmarking, safety claims about hidden reasoning.",
+        "Clarify the value of either outcome: selective impairment would support resource-sharing structure; null/non-specific impairment would falsify a popular human analogy and redirect methodology.",
+        "Include at least one application-facing implication, e.g., diagnosing when multiturn assistant behavior is vulnerable to concurrent generation demands or verbosity constraints."
+      ]
+    },
+    "review": {
+      "score": 5,
+      "reasoning": "The proposal is testable and reasonably structured, but several core claims are currently under-defended. The biggest logical gap is whether prompt interleaving constitutes meaningful 'concurrent load' rather than simply added decoding burden, longer contexts, or instruction-format interference. Controls help, but may not isolate linguistic competition cleanly because all conditions still consume the same autoregressive channel. H1 is fairly falsifiable via task-by-load interaction, but the task taxonomy ('language-heavy' to 'abstract') is only hypothesized and needs operationalization independent of the results. H3 is the weakest part: 'language-production components' via next-token fluency attribution and overlap via activation patching are underspecified, and correlation between CLL cost and overlap could be confounded by generic task difficulty, sequence length, or shared decoder usage. Related work is not positioned specifically enough given very close prior work. Experimental design is feasible, but missing key controls: same-token-budget non-fluent loads, paraphrase/format variants, answer-position controls, and analyses separating accuracy loss from compliance failure. As written, this feels like a solid workshop/early-stage mechanistic study, but not yet strong enough for a top ML venue without tighter hypotheses and stronger controls.",
+      "revision_notes": [
+        "Define an operational criterion for 'language dependence' before experiments, e.g., based on independent human annotations or task features, not post hoc labels.",
+        "Add stronger controls that match token count, syntax, semantic coherence, and output alternation structure separately to isolate linguistic competition from autoregressive overhead.",
+        "Measure and report compliance failure, truncation, latency, and answer-position effects; analyze whether impairment remains after conditioning on these nuisances.",
+        "Upgrade H3 with a precise component-identification protocol, validation of S_lang on independent fluency tasks, and confound-adjusted analyses controlling for baseline task difficulty and length.",
+        "Include a baseline using direct ablation/localization from prior work on at least one model to compare load-based versus lesion-based conclusions.",
+        "Specify exact prompt templates, interleaving schedules, task battery composition, power calculations, and mixed-effects formula details.",
+        "Add per-task item-level analyses and within-task manipulations of linguistic surface form to test whether CLL tracks language demand inside a task family, not just across coarse task categories.",
+        "Tone down overclaiming around 'dissociation' unless the design can show selective impairment beyond generic single-channel interference; otherwise frame as a competition probe.",
+        "Minimum viable submission-ready edit: sharply reposition as a controlled behavioral assay for linguistic resource competition in LLMs, with null and non-selective outcomes treated as central tests rather than failure cases."
+      ]
+    },
+    "revision_notes": [
+      "Explicitly position against ablation/localization papers on LLM language networks and state the precise methodological delta: competition-under-load versus lesion-based necessity.",
+      "Narrow the novelty claim from 'reveal dissociation between language and reasoning' to 'test for selective competition signatures beyond non-specific impairment'.",
+      "Define what is novel at each level: paradigm (CLL), finding (task-by-load interaction), mechanism (shared language-production bottleneck), and setting (multi-model frozen LLMs).",
+      "Add a table comparing CLL to closest baselines: ablation of language units, hidden-state reasoning suppression/removal, longer-context overhead controls, and generic dual-output prompting.",
+      "Pre-register an outcome where even a negative result is novel: failure to find selective interference despite strong controls would challenge the human analogy and refine language-vs-thought claims in LLMs.",
+      "State explicit downstream decisions this would change: benchmark design, interpretation of CoT, claims about latent reasoning, and future mechanistic probes.",
+      "Strengthen the one-line importance claim around adjudicating whether LLM 'reasoning' is separable from language production under controlled competition.",
+      "Add concrete user communities and venues likely to care: mechanistic interpretability, cognitive modeling, evaluation/benchmarking, safety claims about hidden reasoning.",
+      "Clarify the value of either outcome: selective impairment would support resource-sharing structure; null/non-specific impairment would falsify a popular human analogy and redirect methodology.",
+      "Include at least one application-facing implication, e.g., diagnosing when multiturn assistant behavior is vulnerable to concurrent generation demands or verbosity constraints.",
+      "Define an operational criterion for 'language dependence' before experiments, e.g., based on independent human annotations or task features, not post hoc labels.",
+      "Add stronger controls that match token count, syntax, semantic coherence, and output alternation structure separately to isolate linguistic competition from autoregressive overhead.",
+      "Measure and report compliance failure, truncation, latency, and answer-position effects; analyze whether impairment remains after conditioning on these nuisances.",
+      "Upgrade H3 with a precise component-identification protocol, validation of S_lang on independent fluency tasks, and confound-adjusted analyses controlling for baseline task difficulty and length.",
+      "Include a baseline using direct ablation/localization from prior work on at least one model to compare load-based versus lesion-based conclusions.",
+      "Specify exact prompt templates, interleaving schedules, task battery composition, power calculations, and mixed-effects formula details.",
+      "Add per-task item-level analyses and within-task manipulations of linguistic surface form to test whether CLL tracks language demand inside a task family, not just across coarse task categories.",
+      "Tone down overclaiming around 'dissociation' unless the design can show selective impairment beyond generic single-channel interference; otherwise frame as a competition probe.",
+      "Minimum viable submission-ready edit: sharply reposition as a controlled behavioral assay for linguistic resource competition in LLMs, with null and non-selective outcomes treated as central tests rather than failure cases."
+    ]
+  },
+  {
+    "index": 5,
+    "Name": "categorical_warping_llm",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims needing novelty are: (1) arbitrary in-context labels can causally induce within-category compression and across-boundary expansion in a pretrained LLM within a single forward pass; (2) this holds for nonce labels, dissociating the effect from pretrained label semantics; (3) the induced boundary tracks an imposed partition and reverses under repartition of the same items; (4) the geometric warp changes downstream discrimination/relational reasoning on the same stimuli; (5) there exists a steerable 'label-warp direction' that can induce or cancel the effect. Relative to the search summary, categorical warping in hidden states is already established in LLMs, and in-context compression/expansion dynamics are also known. The actual defendable delta is the causal arbitrary-partition manipulation with nonce labels, repartition reversal, and steering. That is non-trivial and potentially novel if it works, but the very close 2026 digit-count paper already finds warping mainly at structural/format boundaries and not semantically arbitrary ones, which directly weakens the central surprise. So the proposal is novel in mechanism/setting/manipulation rather than in the broad phenomenon, with meaningful but narrowed originality.",
+      "revision_notes": [
+        "Reframe the contribution around the strongest true delta: arbitrary nonce-label repartitioning plus reversal and steering, not generic 'categorical warping in LLMs.'",
+        "Directly position against the digit-count boundary paper and state the falsifiable contrast: structural boundaries only vs arbitrary in-context boundaries.",
+        "Add a sharper explanation of why arbitrary labels should work despite prior negative evidence on semantic/non-structural boundaries.",
+        "Specify what would count as success beyond known ICL compression/expansion, e.g. partition-specific sign reversal on identical item sets and transfer to behavior.",
+        "Clarify whether the novelty is a finding, a mechanism, or a controllability tool; currently it mixes all three."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether ad-hoc in-context labels can transiently reshape an LLM's discrimination geometry and reasoning over the same items. The audience includes interpretability, in-context learning, controllability, and LLM-cognition researchers. If true, the strongest case is that language prompts would not merely query latent structure but dynamically reconfigure representational discrimination, implying a new lever for steering and a stronger form of prompt-induced cognition. This could matter for theory of ICL, prompt design, and representation steering. The 'so what?' test is moderately favorable: a strong positive result with nonce labels, reversal, and behavioral consequences would change how researchers think about prompt effects and controllability; a null result would also matter by supporting rigidity of pretrained category structure, especially given prior mixed evidence. Real-world application impact is less immediate than scientific impact, and uptake depends heavily on whether the effect is robust beyond toy stimulus spaces.",
+      "revision_notes": [
+        "Make the practical downstream consequence explicit: what specific prompting, alignment, interpretability, or steering practices would change if the effect exists?",
+        "State concrete stakeholder groups and use-cases beyond basic science, e.g. controllable abstraction, task framing, or safe prompt-time steering.",
+        "Demonstrate why the chosen domains generalize to realistic LLM use rather than remaining a toy geometry result.",
+        "Pre-register what conclusions practitioners should draw in both the positive and null-result regimes.",
+        "Strengthen the one-line significance claim around prompt-time causal reconfiguration of discrimination, not just Whorfian analogy."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is testable and better specified than average, with concrete domains, controls, multiple model families, repartition manipulations, and a causal steering experiment. The hypotheses are reasonably falsifiable. However, there are important technical gaps. Related work positioning is incomplete relative to the closest prior art in the search summary, especially the paper showing CP effects at structural but not semantic boundaries; omitting that makes the proposal overclaim novelty and understate risk. The central construct 'categorical warp' risks conflation with token/position/lexical priming, generic ICL compression, or induced task heuristics. The current regression sketch is too thin to isolate these confounds. The behavior experiments are underspecified: exact prompting, response metrics, ceiling/floor avoidance, and how to disentangle strategic use of labels from changed item representation are not yet clear. The steering claim is ambitious and likely fragile; a difference-in-means direction may capture label token content or task state rather than a reusable warp subspace. Still, if executed with stronger controls and more precise analysis, this could be serious workshop/conference material and possibly venue-worthy depending on effect strength.",
+      "revision_notes": [
+        "Add the missing closest prior work explicitly, especially the structural-boundary negative result, and formulate the proposal as a direct adjudication test.",
+        "Define the representational measurement protocol precisely: layer selection, token positions, pooling strategy, distance metric, and invariance checks against surface form.",
+        "Add stronger controls to separate categorical warp from lexical priming and generic ICL state change: paraphrased prompts, position swaps, label-token substitution, non-word symbols, and delayed label removal tests.",
+        "Specify behavioral tasks in operational detail and include controls where labels are absent at test time, so behavior change cannot be explained only by explicit rule following.",
+        "Include model-by-model and domain-by-domain interaction analyses rather than pooled random effects only; the effect may be highly heterogeneous.",
+        "For steering, compare against multiple baselines: random direction, generic instruction direction, label-token direction, and task-state direction; test cross-partition and cross-domain transfer.",
+        "State minimal success criteria and failure modes for each hypothesis, including what effect size would be considered meaningful.",
+        "Tighten the narrative to avoid implying a broad Whorfian conclusion unless the effect survives nonce labels, repartition reversal, and behavior-without-label-at-test controls."
+      ]
+    },
+    "revision_notes": [
+      "Reframe the contribution around the strongest true delta: arbitrary nonce-label repartitioning plus reversal and steering, not generic 'categorical warping in LLMs.'",
+      "Directly position against the digit-count boundary paper and state the falsifiable contrast: structural boundaries only vs arbitrary in-context boundaries.",
+      "Add a sharper explanation of why arbitrary labels should work despite prior negative evidence on semantic/non-structural boundaries.",
+      "Specify what would count as success beyond known ICL compression/expansion, e.g. partition-specific sign reversal on identical item sets and transfer to behavior.",
+      "Clarify whether the novelty is a finding, a mechanism, or a controllability tool; currently it mixes all three.",
+      "Make the practical downstream consequence explicit: what specific prompting, alignment, interpretability, or steering practices would change if the effect exists?",
+      "State concrete stakeholder groups and use-cases beyond basic science, e.g. controllable abstraction, task framing, or safe prompt-time steering.",
+      "Demonstrate why the chosen domains generalize to realistic LLM use rather than remaining a toy geometry result.",
+      "Pre-register what conclusions practitioners should draw in both the positive and null-result regimes.",
+      "Strengthen the one-line significance claim around prompt-time causal reconfiguration of discrimination, not just Whorfian analogy.",
+      "Add the missing closest prior work explicitly, especially the structural-boundary negative result, and formulate the proposal as a direct adjudication test.",
+      "Define the representational measurement protocol precisely: layer selection, token positions, pooling strategy, distance metric, and invariance checks against surface form.",
+      "Add stronger controls to separate categorical warp from lexical priming and generic ICL state change: paraphrased prompts, position swaps, label-token substitution, non-word symbols, and delayed label removal tests.",
+      "Specify behavioral tasks in operational detail and include controls where labels are absent at test time, so behavior change cannot be explained only by explicit rule following.",
+      "Include model-by-model and domain-by-domain interaction analyses rather than pooled random effects only; the effect may be highly heterogeneous.",
+      "For steering, compare against multiple baselines: random direction, generic instruction direction, label-token direction, and task-state direction; test cross-partition and cross-domain transfer.",
+      "State minimal success criteria and failure modes for each hypothesis, including what effect size would be considered meaningful.",
+      "Tighten the narrative to avoid implying a broad Whorfian conclusion unless the effect survives nonce labels, repartition reversal, and behavior-without-label-at-test controls."
+    ]
+  },
+  {
+    "index": 6,
+    "Name": "private_speech_zpd",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core novel claims are: (1) per-item difficulty vs spontaneous CoT emission has an inverted-U, (2) forced CoT can hurt already-mastered items, and (3) CoT abbreviates as competence rises within a matched difficulty band. The private-speech/ZPD framing itself is not new, and difficulty-adaptive reasoning controllers plus overthinking analyses are already well studied. The delta is mainly in the specific, falsifiable empirical laws at inference time, not the overall idea or mechanism.",
+      "revision_notes": [
+        "State explicitly which of the three hypotheses is the primary novel contribution and separate it from the already-published private-speech/ZPD analogy.",
+        "Tighten the claim to the exact new empirical law: per-item difficulty-conditioned emission, not generic accuracy-vs-length overthinking.",
+        "Add a sharper comparison table against difficulty-adaptive controllers, overthinking papers, and developmental analogy papers, showing the exact delta for each.",
+        "Define what counts as 'covert' or 'abbreviation' operationally so the novelty lives in a measurable phenomenon rather than a metaphor."
+      ]
+    },
+    "impact": {
+      "score": 5,
+      "reasoning": "The problem under study is how and when reasoning should be spent, which matters to test-time-compute efficiency and reasoning research. If true, it could inform adaptive prompting/controllers and a better theory of when CoT helps or hurts. But the impact is moderate because the practical space is already active, and the developmental framing is more interpretive than transformative. Serious practitioners would care mainly if the gating result is strong and general, not for the analogy itself.",
+      "revision_notes": [
+        "Make the downstream use-case explicit: what budget savings or accuracy gains would make a controller adoptable.",
+        "Quantify the real-world payoff of the ZPD gate versus existing adaptive-effort methods.",
+        "Broaden beyond toy/benchmark tasks to at least one application-relevant domain where the result would change practice.",
+        "State the 'so what' outcome for both possible directions: what changes if the ZPD claim holds, and what changes if it fails."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is reasonably testable and has concrete experiments, controls, and ablations. However, several claims remain vulnerable: difficulty may be confounded with model-item gap, forced-CoT harm may be prompt- or model-dependent, and the probe/controller could learn superficial signals. The hypothesis is plausible and falsifiable, but the narrative slightly overextends the developmental analogy beyond what the experiments can prove. With stronger controls and clearer operational definitions, it could be fundable/submission-ready.",
+      "revision_notes": [
+        "Add a pre-registered primary endpoint for each hypothesis and specify the exact statistical test for the interior-peak claim.",
+        "Include controls for token budget, prompt length, answer format, and ceiling effects to rule out trivial length artifacts.",
+        "Use at least one cross-model and cross-domain generalization test for the difficulty probe and the ZPD controller.",
+        "Add a matched-hardness baseline that compares difficulty-conditioned CoT against entropy, margin, or uncertainty-based gating.",
+        "Define 'mastered' and 'approaching mastery' operationally and show robustness to alternative calibration methods.",
+        "Separate behavioral analogy from mechanistic claim so the paper does not overclaim cognitive similarity."
+      ]
+    },
+    "revision_notes": [
+      "State explicitly which of the three hypotheses is the primary novel contribution and separate it from the already-published private-speech/ZPD analogy.",
+      "Tighten the claim to the exact new empirical law: per-item difficulty-conditioned emission, not generic accuracy-vs-length overthinking.",
+      "Add a sharper comparison table against difficulty-adaptive controllers, overthinking papers, and developmental analogy papers, showing the exact delta for each.",
+      "Define what counts as 'covert' or 'abbreviation' operationally so the novelty lives in a measurable phenomenon rather than a metaphor.",
+      "Make the downstream use-case explicit: what budget savings or accuracy gains would make a controller adoptable.",
+      "Quantify the real-world payoff of the ZPD gate versus existing adaptive-effort methods.",
+      "Broaden beyond toy/benchmark tasks to at least one application-relevant domain where the result would change practice.",
+      "State the 'so what' outcome for both possible directions: what changes if the ZPD claim holds, and what changes if it fails.",
+      "Add a pre-registered primary endpoint for each hypothesis and specify the exact statistical test for the interior-peak claim.",
+      "Include controls for token budget, prompt length, answer format, and ceiling effects to rule out trivial length artifacts.",
+      "Use at least one cross-model and cross-domain generalization test for the difficulty probe and the ZPD controller.",
+      "Add a matched-hardness baseline that compares difficulty-conditioned CoT against entropy, margin, or uncertainty-based gating.",
+      "Define 'mastered' and 'approaching mastery' operationally and show robustness to alternative calibration methods.",
+      "Separate behavioral analogy from mechanistic claim so the paper does not overclaim cognitive similarity."
+    ]
+  },
+  {
+    "index": 7,
+    "Name": "lexical_gap_resolution",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims requiring novelty: (1) lexical gaps in the model's latent pivot language create a representational-resolution bottleneck for concepts; (2) this bottleneck is measurable via cluster tightness, neighbor separability, and probe AUROC beyond frequency/abstractness effects; (3) the representational penalty propagates to fine-grained discrimination and relational reasoning; (4) a training-free ad-hoc lexicalization can causally sharpen representations, while de-lexicalization blurs them; (5) pivot-crossover should flip the effect in a non-English-pivot model. Relative to the search summary, the basic finding that lexical-gap concepts have weaker cross-lingual alignment is already partially pre-empted by the 2026 lexical-gap-embedding paper, so novelty cannot rest on merely detecting a representational signature. The actual delta is the pivot-vocabulary bottleneck framing, the geometry/behavior link, and the causal intervention. That is non-trivial and potentially novel, but still close to an obvious next step from prior multilingual concept-space and lexical-gap work unless the causal and crossover pieces are executed convincingly.",
+      "revision_notes": [
+        "Explicitly state that the claimed novelty is not 'gaps have weaker representations' but the pivot-language resolution-bottleneck mechanism plus causal intervention and behavioral consequences.",
+        "Differentiate in a dedicated prior-work paragraph from 2605.24310 by naming exactly which measurements, tasks, and interventions are new.",
+        "Strengthen novelty with a sharper mechanistic prediction that competing explanations would not make, e.g. effects should track pivot lexicalization rather than source-language lexicalization, token length alone, or dictionary definitional length.",
+        "Make the pivot-crossover experiment central rather than optional, since it is the cleanest novelty-bearing test of the pivot-bottleneck claim.",
+        "Consider introducing a reusable benchmark/dataset of carefully annotated lexical-gap/control concepts across languages; a dataset contribution would materially raise novelty."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether absence of compact lexicalization in a model's pivot language degrades internal concept resolution and downstream reasoning. The audience is multilingual NLP, interpretability/concept-representation researchers, low-resource language communities, and adjacent cognitive-science-of-language work. If true, the result would matter because it would imply multilingual models are not just unevenly aligned across languages but structurally bottlenecked by pivot vocabulary, suggesting new evaluation and mitigation strategies. The strongest case is that a simple lexicalization intervention could reveal and partially repair concept-quality disparities for underrepresented linguistic categories. The 'so what?' test is moderately positive: if the result holds, researchers may add lexical-gap diagnostics and interventions; if null, that would support vocabulary-independent concept spaces. Impact is limited somewhat because the proposal focuses on a specific explanatory factor within multilingual representation rather than a broad capability or deployed application, but the phenomenon itself could be influential.",
+      "revision_notes": [
+        "Tighten the practical takeaway: specify exactly how multilingual model training, prompting, or evaluation would change if the hypothesis is confirmed.",
+        "Add one or two application-facing case studies, e.g. culturally specific emotion terms, kinship, legal/social concepts, or safety-critical translation categories, to demonstrate real-world reach.",
+        "Define a concrete benchmark or metric suite that others could adopt, increasing likely uptake and citation.",
+        "Clarify what a positive versus null result would change for current multilingual representation theories and model design choices.",
+        "Quantify expected effect sizes or decision thresholds that would make the findings actionable rather than merely interesting."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is coherent and testable, with a reasonably falsifiable hypothesis and a decent experimental outline, but several technical gaps weaken confidence. The biggest issue is construct validity: 'latent pivot language' is asserted more than operationalized, and English lexicalization is used as a proxy for pivot lexicalization in most experiments. Gap status is fuzzy, annotator agreement threshold is low, and the concept set (~120) may be too small and heterogeneous for the breadth of claims. The behavioral tasks risk confounding general description difficulty, cultural familiarity, tokenization length, and paraphrase quality with lexicalization per se. The ad-hoc naming intervention is promising but may improve performance through generic labeling, memorability, or attentional anchoring rather than true concept sharpening; current controls help but may not fully isolate mechanism. The non-English-pivot crossover is crucial yet underdeveloped and contingent on model availability. If executed well, this could be a respectable workshop or conference submission, but for a serious ML venue it needs tighter operational definitions, stronger controls, and a more decisive causal design.",
+      "revision_notes": [
+        "Operationalize 'pivot language' formally for each model, or narrow the claim to English-pivoted multilingual LLMs and justify that scope empirically.",
+        "Pre-register a stricter lexical-gap annotation protocol with expert adjudication, clearer inclusion criteria, and stronger reliability than kappa>=0.6.",
+        "Add controls for token length, definitional length, familiarity, concreteness, cultural salience, and training-data prevalence beyond raw frequency/abstractness.",
+        "Specify exactly how representations are extracted: prompt templates, layers, pooling, paraphrase counts, language conditions, and whether geometry is measured within-language, cross-language, or both.",
+        "For the intervention, add stronger controls such as semantically meaningless but equally salient labels reused across concepts, delayed-label conditions, and tokenization-matched pseudo-words to separate anchoring from lexicalization.",
+        "Include a direct mediation analysis testing whether representational sharpening mediates behavioral gains, rather than only correlating geometry and task performance.",
+        "Strengthen the pivot-crossover test with concrete candidate models and a fallback plan if a true non-English-pivot model is unavailable.",
+        "Narrow the claim scope: emphasize fine-grained concept discrimination under matched descriptions rather than broad 'reasoning' unless tasks truly isolate reasoning.",
+        "Increase sample size or reduce domain heterogeneity; otherwise domain-specific effects may swamp the lexical-gap effect.",
+        "Add explicit failure criteria and power reasoning so the null result is interpretable rather than underpowered."
+      ]
+    },
+    "revision_notes": [
+      "Explicitly state that the claimed novelty is not 'gaps have weaker representations' but the pivot-language resolution-bottleneck mechanism plus causal intervention and behavioral consequences.",
+      "Differentiate in a dedicated prior-work paragraph from 2605.24310 by naming exactly which measurements, tasks, and interventions are new.",
+      "Strengthen novelty with a sharper mechanistic prediction that competing explanations would not make, e.g. effects should track pivot lexicalization rather than source-language lexicalization, token length alone, or dictionary definitional length.",
+      "Make the pivot-crossover experiment central rather than optional, since it is the cleanest novelty-bearing test of the pivot-bottleneck claim.",
+      "Consider introducing a reusable benchmark/dataset of carefully annotated lexical-gap/control concepts across languages; a dataset contribution would materially raise novelty.",
+      "Tighten the practical takeaway: specify exactly how multilingual model training, prompting, or evaluation would change if the hypothesis is confirmed.",
+      "Add one or two application-facing case studies, e.g. culturally specific emotion terms, kinship, legal/social concepts, or safety-critical translation categories, to demonstrate real-world reach.",
+      "Define a concrete benchmark or metric suite that others could adopt, increasing likely uptake and citation.",
+      "Clarify what a positive versus null result would change for current multilingual representation theories and model design choices.",
+      "Quantify expected effect sizes or decision thresholds that would make the findings actionable rather than merely interesting.",
+      "Operationalize 'pivot language' formally for each model, or narrow the claim to English-pivoted multilingual LLMs and justify that scope empirically.",
+      "Pre-register a stricter lexical-gap annotation protocol with expert adjudication, clearer inclusion criteria, and stronger reliability than kappa>=0.6.",
+      "Add controls for token length, definitional length, familiarity, concreteness, cultural salience, and training-data prevalence beyond raw frequency/abstractness.",
+      "Specify exactly how representations are extracted: prompt templates, layers, pooling, paraphrase counts, language conditions, and whether geometry is measured within-language, cross-language, or both.",
+      "For the intervention, add stronger controls such as semantically meaningless but equally salient labels reused across concepts, delayed-label conditions, and tokenization-matched pseudo-words to separate anchoring from lexicalization.",
+      "Include a direct mediation analysis testing whether representational sharpening mediates behavioral gains, rather than only correlating geometry and task performance.",
+      "Strengthen the pivot-crossover test with concrete candidate models and a fallback plan if a true non-English-pivot model is unavailable.",
+      "Narrow the claim scope: emphasize fine-grained concept discrimination under matched descriptions rather than broad 'reasoning' unless tasks truly isolate reasoning.",
+      "Increase sample size or reduce domain heterogeneity; otherwise domain-specific effects may swamp the lexical-gap effect.",
+      "Add explicit failure criteria and power reasoning so the null result is interpretable rather than underpowered."
+    ]
+  },
+  {
+    "index": 8,
+    "Name": "grammatical_evidentiality_calibration",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core claims needing novelty: (1) source-decomposed calibration as a construct, measuring confidence separately for firsthand/inference/hearsay rather than a scalar; (2) obligatory evidential grammar, or an English evidential scaffold, causally improves source-conditioned calibration and reduces confident hallucination; (3) this effect is not just generic reflection, as shown against a length-matched non-evidential scaffold; (4) there exists an internal evidential-source direction that is strengthened by evidential marking and can be steered; (5) source-direction steering can outperform or complement scalar verbal-uncertainty-feature baselines. Relative to the search summary, this is not wholly new territory: Turkish source-sensitive reasoning under trust manipulation is a very close behavioral neighbor, and verbal-uncertainty calibration/steering already exists as the main baseline. The real delta is the decomposition by evidence source, the grammar-vs-scaffold causal contrast, and the mechanistic source-direction claim. That delta is meaningful and non-trivial, but somewhat fragile: if scaffold effects reduce to generic reflection or multilingual prompting artifacts, the typological novelty collapses.",
+      "revision_notes": [
+        "State the exact closest prior papers and explicitly narrow the novelty claim to source-decomposed calibration, grammar-vs-reflection causal contrast, and source-direction steering beyond scalar verbal uncertainty.",
+        "Define precisely what is novel in the finding versus in the benchmark/dataset versus in the mechanism; avoid implying that source-sensitivity itself is new.",
+        "Strengthen differentiation from the Turkish benchmark by explaining why trust manipulation is insufficient for source-conditioned calibration and internal source separability.",
+        "Add a stronger argument for why evidential grammar is meaningfully different from ordinary prompted self-reflection or chain-of-thought formatting.",
+        "If possible, include a preregistered prediction that source-direction steering beats the linear verbal-uncertainty baseline specifically on hearsay/inference, not just overall calibration."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The problem under study is trustworthy confidence assignment conditioned on evidence provenance: whether models know when a claim is firsthand-supported, inferred, hearsay-like, or unsupported. People who would care include calibration/hallucination researchers, multilingual NLP, and RAG/source-attribution practitioners. The strongest case is that if grammatical/source-structured prompting materially reduces overconfident unsupported claims, it offers a cheap intervention for trustworthiness. This matters beyond the method because provenance-sensitive calibration is a real need, not a mere linguistic curiosity. The main limitation is that the proposal's direct practical reach depends on effect size and portability: if gains appear only in a few evidential languages or only as a prompt artifact, uptake may be narrower. The result could influence how researchers think about uncertainty representation, but probably not dramatically unless the causal typology claim is strong and robust.",
+      "revision_notes": [
+        "Make the 'so what' sharper by tying source-conditioned calibration to concrete failure modes in RAG, citation generation, medical/legal advice, or multilingual assistants.",
+        "Specify what practitioners would do differently if the result holds: e.g., adopt evidential scaffolds, source-aware calibration metrics, or steering methods in deployment.",
+        "Clarify whether a null result is still impactful because it rules out a widely appealing linguistic-route-to-calibration hypothesis.",
+        "Add an explicit claim about cross-lingual generality or deployment feasibility in English-only systems via scaffolding, since that determines real-world uptake.",
+        "Report target effect sizes or operational wins practitioners would care about, such as reduction in confident unsupported answers at fixed accuracy."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is thoughtful and testable, but several technical gaps remain. The main hypothesis is reasonably falsifiable, yet key constructs are underspecified: 'firsthand' in QA is unclear for an LLM, source tags may be subjective, and the proposed source types mix epistemic status with dataset provenance. The related-work positioning is decent but should be more explicit about the closest concurrent Turkish benchmark and the exact verbal-uncertainty baseline. Experimental design is promising, especially the reflection control and head-to-head baseline, but there are risks of confounding from multilingual model quality, translation artifacts, marker frequency, prompt naturalness, and language-specific answer style. Probe-based 'source separability' and an 'evidential-source direction' are mechanistically ambitious and may be hard to interpret causally. The dataset size (~600) may be small once split by source type, language, model, and condition. As written, this could become a solid workshop or conference submission if executed well, but for a serious ML venue it needs sharper operationalization and stronger controls.",
+      "revision_notes": [
+        "Operationalize source categories more rigorously: define how 'firsthand', 'inference', 'hearsay-unreliable', and 'no-context internal knowledge' are instantiated in QA, and separate evidence source from truth status.",
+        "Expand dataset design details: balancing by domain/difficulty/truth label/source type, annotation protocol, inter-annotator adjudication, and examples of each item class.",
+        "Add stronger multilingual controls: native-speaker prompt validation, translation/back-translation checks, lexicalized-evidential controls, and a within-language minimal-pair manipulation where only evidential marking changes.",
+        "Specify the exact confidence extraction procedure and calibration metrics, including how verbalized confidence is normalized across languages and how log-prob confidence is made comparable.",
+        "Include power reasoning or at least expected sample sizes per cell; 600 examples may be underpowered for interactions across multiple models and five conditions.",
+        "Predefine failure criteria for the mechanistic claims: what evidence would count as a real source direction versus generic certainty, verbosity, or sentiment.",
+        "Add ablations for scaffold content and position: source-first prompt, source-after prompt, explicit source label without evidential grammar, and generic reflection variants.",
+        "Strengthen the main causal test by making the English evidential scaffold the central practical intervention and the cross-lingual language comparison a supporting test, reducing dependence on multilingual competence differences.",
+        "Tone down overclaiming around 'internal provenance representation' unless you can validate it with stronger interventions than linear probes.",
+        "State the minimum success criterion for venue-worthiness: e.g., source-conditioned calibration gains over both plain English and non-evidential reflection, plus steering gains over the linear VUF baseline on held-out tasks."
+      ]
+    },
+    "revision_notes": [
+      "State the exact closest prior papers and explicitly narrow the novelty claim to source-decomposed calibration, grammar-vs-reflection causal contrast, and source-direction steering beyond scalar verbal uncertainty.",
+      "Define precisely what is novel in the finding versus in the benchmark/dataset versus in the mechanism; avoid implying that source-sensitivity itself is new.",
+      "Strengthen differentiation from the Turkish benchmark by explaining why trust manipulation is insufficient for source-conditioned calibration and internal source separability.",
+      "Add a stronger argument for why evidential grammar is meaningfully different from ordinary prompted self-reflection or chain-of-thought formatting.",
+      "If possible, include a preregistered prediction that source-direction steering beats the linear verbal-uncertainty baseline specifically on hearsay/inference, not just overall calibration.",
+      "Make the 'so what' sharper by tying source-conditioned calibration to concrete failure modes in RAG, citation generation, medical/legal advice, or multilingual assistants.",
+      "Specify what practitioners would do differently if the result holds: e.g., adopt evidential scaffolds, source-aware calibration metrics, or steering methods in deployment.",
+      "Clarify whether a null result is still impactful because it rules out a widely appealing linguistic-route-to-calibration hypothesis.",
+      "Add an explicit claim about cross-lingual generality or deployment feasibility in English-only systems via scaffolding, since that determines real-world uptake.",
+      "Report target effect sizes or operational wins practitioners would care about, such as reduction in confident unsupported answers at fixed accuracy.",
+      "Operationalize source categories more rigorously: define how 'firsthand', 'inference', 'hearsay-unreliable', and 'no-context internal knowledge' are instantiated in QA, and separate evidence source from truth status.",
+      "Expand dataset design details: balancing by domain/difficulty/truth label/source type, annotation protocol, inter-annotator adjudication, and examples of each item class.",
+      "Add stronger multilingual controls: native-speaker prompt validation, translation/back-translation checks, lexicalized-evidential controls, and a within-language minimal-pair manipulation where only evidential marking changes.",
+      "Specify the exact confidence extraction procedure and calibration metrics, including how verbalized confidence is normalized across languages and how log-prob confidence is made comparable.",
+      "Include power reasoning or at least expected sample sizes per cell; 600 examples may be underpowered for interactions across multiple models and five conditions.",
+      "Predefine failure criteria for the mechanistic claims: what evidence would count as a real source direction versus generic certainty, verbosity, or sentiment.",
+      "Add ablations for scaffold content and position: source-first prompt, source-after prompt, explicit source label without evidential grammar, and generic reflection variants.",
+      "Strengthen the main causal test by making the English evidential scaffold the central practical intervention and the cross-lingual language comparison a supporting test, reducing dependence on multilingual competence differences.",
+      "Tone down overclaiming around 'internal provenance representation' unless you can validate it with stronger interventions than linear probes.",
+      "State the minimum success criterion for venue-worthiness: e.g., source-conditioned calibration gains over both plain English and non-evidential reflection, plus steering gains over the linear VUF baseline on held-out tasks."
+    ]
+  },
+  {
+    "index": 9,
+    "Name": "future_tense_present_bias",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims: (1) test the Linguistic Savings Hypothesis inside LLM intertemporal choice; (2) strong-FTR framing should increase present-bias and internal future-distance; (3) a latent future-distance steering direction can induce/cancel that bias; (4) cross-lingual FTR variants provide a native-language setting. The setting is genuinely new (LLMs, causal framing, latent steering), but the mechanism is mostly an adaptation of existing temporal-representation and tense-steering work. Relative to prior work, the delta is real but incremental: first behavioral test of FTR/LSH in LLM choice plus a causal probe, not a new theory. The headline sign claim is also not novel in the broader human literature because recent causal work points the opposite way, so the novelty is in the LLM test and causal decomposition rather than the hypothesized direction.",
+      "revision_notes": [
+        "Reframe the contribution as an empirical test of competing sign predictions, not as confirmation of Chen's direction.",
+        "State the exact novel unit of analysis: within-item grammar-only manipulation on LLM intertemporal choice.",
+        "Make the mechanistic novelty explicit: distinguish 'future-distance representation' from generic temporal encoding and show why existing tense-steering work does not already answer it.",
+        "Add a sharper comparison table against human LSH papers and LLM temporal-representation papers to isolate the delta.",
+        "If possible, add a genuinely new dataset or benchmark release for grammar-controlled intertemporal prompts."
+      ]
+    },
+    "impact": {
+      "score": 6,
+      "reasoning": "The problem under study is whether grammatical future marking changes decision bias and internal temporal representation in language models, which matters mainly for language-and-thought, behavioral econ in LLMs, and interpretability. The strongest one-line case is that if grammar causally shifts choice, it reveals a compositional route from surface form to decision behavior in models and offers a controlled testbed for linguistic relativity. Importance is moderate: serious researchers in these subfields would care and likely cite it, but it is not obviously a broad application or industry problem. So what? If the result holds or fails, it would meaningfully update claims about grammar-driven cognition in LLMs, but would not likely change mainstream ML practice.",
+      "revision_notes": [
+        "Add a concrete explanation of why this matters beyond LSH: e.g., prompt sensitivity, controllable temporal bias, or model-based cognitive science.",
+        "Spell out the downstream audiences and expected use cases separately: linguistics, interpretability, agentic planning, and behavioral modeling.",
+        "Include a strong application-facing angle, such as controllable preference shifts for long-horizon planning prompts.",
+        "Clarify what would change if the result is null versus positive, to sharpen the 'so what' test.",
+        "Position the work as a benchmark for causal language-to-decision effects rather than only a hypothesis test."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is testable and reasonably scoped, but several claims are overloaded and some controls are still underspecified. The main hypothesis is falsifiable, yet the proposed interpretation risks conflating grammar with length, salience, semantic framing, and model prior biases. Related work is adequate but should more explicitly engage the recent human evidence that reverses the expected sign. Experiments are plausible and partially controlled, especially with within-item framing and random-direction controls, but key details are missing: exact prompt templates, pre-registered primary estimand, power/precision targets, probe validation, and how steering directions will be separated from reward magnitude or generic sentiment. A serious venue paper is plausible if executed well, but the proposal needs tighter hypothesis separation and a more defensive analysis plan.",
+      "revision_notes": [
+        "State one primary hypothesis and separate it from secondary exploratory analyses.",
+        "Pre-register the estimand for each experiment: choice logit shift, discount-rate shift, or mediation via distance probe.",
+        "Add explicit controls for sentence length, lexical frequency, semantic valence, and prompt-format artifacts.",
+        "Describe how the temporal-distance probe will be validated against held-out controls and alternative probes.",
+        "Specify the steering method, direction discovery protocol, and ablations against random, reward, and nonspecific latent directions.",
+        "Include power analysis / effect-size targets and a failure-mode plan for null or sign-reversed results.",
+        "Revise related work to foreground the recent causal human studies reversing Chen, rather than treating them as minor caveats."
+      ]
+    },
+    "revision_notes": [
+      "Reframe the contribution as an empirical test of competing sign predictions, not as confirmation of Chen's direction.",
+      "State the exact novel unit of analysis: within-item grammar-only manipulation on LLM intertemporal choice.",
+      "Make the mechanistic novelty explicit: distinguish 'future-distance representation' from generic temporal encoding and show why existing tense-steering work does not already answer it.",
+      "Add a sharper comparison table against human LSH papers and LLM temporal-representation papers to isolate the delta.",
+      "If possible, add a genuinely new dataset or benchmark release for grammar-controlled intertemporal prompts.",
+      "Add a concrete explanation of why this matters beyond LSH: e.g., prompt sensitivity, controllable temporal bias, or model-based cognitive science.",
+      "Spell out the downstream audiences and expected use cases separately: linguistics, interpretability, agentic planning, and behavioral modeling.",
+      "Include a strong application-facing angle, such as controllable preference shifts for long-horizon planning prompts.",
+      "Clarify what would change if the result is null versus positive, to sharpen the 'so what' test.",
+      "Position the work as a benchmark for causal language-to-decision effects rather than only a hypothesis test.",
+      "State one primary hypothesis and separate it from secondary exploratory analyses.",
+      "Pre-register the estimand for each experiment: choice logit shift, discount-rate shift, or mediation via distance probe.",
+      "Add explicit controls for sentence length, lexical frequency, semantic valence, and prompt-format artifacts.",
+      "Describe how the temporal-distance probe will be validated against held-out controls and alternative probes.",
+      "Specify the steering method, direction discovery protocol, and ablations against random, reward, and nonspecific latent directions.",
+      "Include power analysis / effect-size targets and a failure-mode plan for null or sign-reversed results.",
+      "Revise related work to foreground the recent causal human studies reversing Chen, rather than treating them as minor caveats."
+    ]
+  }
+]

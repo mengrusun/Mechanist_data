@@ -1,0 +1,70 @@
+{
+  "direction": "Linear steerability of reasoning behaviours in thinking LLMs (DeepSeek-R1-Distill family)",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "Distinct reasoning behaviours in thinking LLMs (expressing uncertainty, generating validation examples, backtracking, self-correction) each map onto an approximately linear direction in the residual stream, extractable from a small pool of contrastive activation pairs and dose-response steerable via a single scalar α while preserving downstream reasoning accuracy.",
+      "status": "established",
+      "behavior_conclusion": "Reasoning behaviours ARE linearly decodable from residual-stream activations in DeepSeek-R1-Distill-Llama-8B (probe AUC 0.84–1.00 across all four behaviours at chosen L*(b)). However, being linearly *decodable* does NOT imply being causally *steerable* in a direction-specific sense: the learned mean-difference direction for the best-supported behaviour (expressing_uncertainty, n_pos=41) failed a norm-matched random-direction control (learned Δrate=0.000 vs random 0.095±0.015, z=−6.33 at α=1σ on Llama-8B). The three under-represented behaviours (n_pos ≤ 14) yielded directions with no measurable causal effect at any α. Small-pool extractability was not fully testable at planned n_pairs ≤ 200 given the auxiliary corpus size (n_pos {41, 13, 14, 8}).",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention → Tuning & Editing",
+          "family": "Representation and Parameter Analysis / Steering Vectors (unit-vector CAA)",
+          "headline": "Contrastive-pair unit-vector CAA directions are strongly probe-decodable (AUC 0.84–1.00) but NOT causally specific for reasoning behaviours on DeepSeek-R1-Distill-Llama-8B: at norm-matched α=1σ, learned uncertainty direction produces Δrate=0.000 while random unit directions produce Δrate=0.095±0.015 (z=−6.33). Behaviour change only emerges near coherence-collapse boundaries (α≥±3σ, coherence drops to 0.28–0.43), indistinguishable from generic perturbation collapse. Under scale-invariant coefficient (α_frac·mean_residual_norm(L*)) coherence is preserved (≥0.98) but steering shows no fine-grained advantage over NL-instruction prompt engineering (n_distinct(steering)=2=n_distinct(prompt) at ε_r=0.05). Original σ_proj-scaled advantage on Llama-8B (n_distinct(steering)=4>2) was parameterization-dependent and did not survive cross-model transfer to Qwen-14B (σ_proj=886 vs 10.5, 84× larger → coherence collapse). Three of four behaviours (validation, backtracking, self-correction) were under-powered by the auxiliary corpus (n_pos ≤ 14).",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "Each of four reasoning behaviours (uncertainty, validation, backtracking, self-correction) maps onto a linear residual-stream direction in DeepSeek-R1-Distill-Llama-8B at some layer L*(b): held-out probe AUC ≥ 0.75 AND first-PC alignment |cos| ≥ 0.7.",
+              "method": "Per-behaviour per-layer mean-difference direction v_b(L) + linear probe on 80/20 split of 200 LLM-judge-annotated chains; layer chosen by held-out ROC-AUC; first-PC alignment sanity computed.",
+              "conclusion": "Probe-decodability holds strongly (AUC 0.977 / 0.840 / 1.000 / 0.892 at L*(b) 29 / 6 / 1 / 19), but first-PC alignment fails uniformly (|cos| 0.263 / 0.364 / 0.340 / 0.447, all < 0.70 floor) — the behaviour signal is linearly accessible yet geometrically spread across many components, not concentrated on one axis. Audit passed, swap-test deferred (cap) — Stage 1 audit WARN admitted."
+            },
+            {
+              "id": "C2",
+              "statement": "Each behaviour direction is extractable from a small pool (n_pairs ≤ 200) of contrastive pairs: split-half cos ≥ 0.7 at n_pairs ≥ 25 AND steering-effect ratio-to-large-pool ≥ 0.8.",
+              "method": "n_pairs sweep of mean-difference direction on same corpus; split-half stability + steering-effect preservation ratio on 30-task subset.",
+              "conclusion": "Un-testable at plan scale — corpus provided only n_pos ∈ {41, 13, 14, 8} per behaviour vs plan sweep to n_pairs=200. For uncertainty (the only behaviour with adequate positives), split-half cos climbs 0.37 → 0.59 at n=25 (below 0.70 floor but rising) and cos-to-reference reaches 0.944; other three behaviours skip the sweep entirely. Audit passed, swap-test deferred (cap) — Stage 1 audit WARN admitted; the real bottleneck is corpus size, not swap variance."
+            },
+            {
+              "id": "C3",
+              "statement": "Adding α·σ·v_b at L*(b) causes dose-response amplification/suppression: sign(rate(±α_op)) matches sign(α), Spearman ρ ≥ 0.7, off-target |Δrate| ≤ 50% of on-target.",
+              "method": "α-sweep unit-vector CAA additive residual hook at L*(b); LLM-judge rates behaviour + coherence on 60-task benchmark subset; cross-behaviour specificity.",
+              "conclusion": "Main-experiment mechanism integrity FAIL (α range < 3 OOM, no random-direction control, α_op at plateau edge, 3/4 behaviours zero-rate) — no robustness measurable. Superseded by C3_v2 in iteration 2."
+            },
+            {
+              "id": "C3_v2",
+              "statement": "Decoder-identified directions for expressing_uncertainty are linearly predictive (probe AUC 0.977) but NOT causally specific under norm-matched steering on DeepSeek-R1-Distill-Llama-8B: random unit directions of the same L2 norm move behaviour rate more than the learned direction.",
+              "method": "Expanded α-grid ([-3, -1, -0.3, -0.1, 0, +0.1, +0.3, +1, +3]·σ_proj) unit-vector CAA at L*=29 + n=20 random-direction control at α=1σ, LLM-judged.",
+              "conclusion": "Robust negative result — random directions produce Δrate=+0.095±0.015 in expressing_uncertainty at α=1σ while learned direction produces Δrate=0.000 (z=−6.33); Spearman ρ on coherent subset = −0.019 (p=0.97, no monotonic dose-response); coherence collapses at ±3σ (0.43 / 0.28) indistinguishable from generic perturbation. Direction-specificity assumption fails at n_pos=41 with unit-vector CAA; strictly scoped to this model / behaviour / method family / data regime."
+            },
+            {
+              "id": "C4",
+              "statement": "Steering-vector control offers strictly more distinct (rate, accuracy) operating points than NL-instruction prompt engineering and Thinking Intervention, with matched-rate accuracy ≥ prompt − 2 pts and preservation at α_op within 3 pts of baseline.",
+              "method": "8 controllers (4 steering α × NL-prompt suppress/amplify × TI suppress/amplify) × 4 behaviours on same 60-task subset; Pareto count of distinct (rate, acc) operating points.",
+              "conclusion": "Cross-model transfer (Qwen-14B) FAILS: σ_proj=886 on Qwen vs 10.5 on Llama (84× larger), σ_proj-scaled steering falls out of coherent range, n_distinct(steering)=0 vs prompt=2=TI=2 → robustness 0.00. Superseded by C4_v2 in iteration 3."
+            },
+            {
+              "id": "C4_v2",
+              "statement": "Under scale-invariant coefficient (α_frac·mean_residual_norm(L*)) on Llama-8B, steering preserves coherence (≥0.98) but shows NO fine-grained advantage over NL-instruction prompt engineering.",
+              "method": "Scale-invariant α_frac · mean_residual_norm(L*) steering (α_frac ∈ {−0.15, −0.05, +0.05, +0.15}) vs. NL-prompt (suppress/amplify) vs. TI (suppress) on 60-task subset; Pareto count of distinct (rate, acc) operating points at ε_r = 0.05, ε_a = 0.01.",
+              "conclusion": "Dual finding: scale-invariance fix succeeds at coherence preservation (≥0.98 across all α_frac on Llama-8B, vs σ_proj-scaled coherence collapse), but eliminates the fine-grained advantage — n_distinct(steering)=2=n_distinct(prompt) at ε_r=0.05, so the original 'steering finer than prompt' story was parameterization-dependent (a σ_proj-scaling artifact). Cross-model Qwen-14B coherence run in-flight but incomplete (killed by cluster contention at 7/8 controllers)."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Formation Tracing",
+        "Unit Interpretation",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

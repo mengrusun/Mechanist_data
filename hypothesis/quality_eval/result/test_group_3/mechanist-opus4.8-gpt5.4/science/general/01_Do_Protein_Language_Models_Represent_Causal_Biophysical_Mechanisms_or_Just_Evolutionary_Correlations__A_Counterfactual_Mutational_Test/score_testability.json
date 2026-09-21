@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The operational hypothesis is well aligned with the measurements: a mechanistic feature is defined as one whose activation \"changes monotonically with a specified physical parameter,\" and the plan compares mechanism-breaking mutations against physical-preserving, conservation-matched, and generic-perturbation controls. It provides directional, quantified criteria such as \"AUROC ≥ 0.90,\" \"S significantly > 1,\" and \"ρ ≥ 0.5,\" together with negative outcomes such as \"ρ near 0 or no monotonicity,\" making the central claims decidable. However, some decision rules overlap: Experiment 2 calls any significant S > 1 convincing while assigning S in [0.9, 1.3] to an undecidable band, and Experiment 4 similarly combines \"ΔS significantly > 0\" with an undecidable interval of [−0.1, 0.2]. There are also internal specification errors—\"from the 200 test chains ... curate 300 proteins\" and \"three ... mutations\" followed by four conditions—that require clarification before exact execution.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is constructing mutations whose \"BLOSUM62/PSSM conservation change equals the breaking mutation's but leaves the physical mechanism intact\"; this is custom, incompletely specified matching logic rather than a standard operation, and preservation or destruction of an interaction cannot always be established from the wild-type geometry alone. The principal artifacts and methods—ESM-2, PDB/PISCES structures, DSSP, Reduce, SAEs, linear probes, FoldX, ColabFold/UniRef30 searches, PSSMs, and activation extraction—exist and are supported by standard scientific and interpretability tooling. Resources are unusually well quantified, including \"1,000 chains,\" a \"600 train / 200 validation / 200 test\" split, 8,192-feature SAEs, 100 epochs, three seeds, and approximately 100 paired sites per mechanism, although the proposed 300-protein sample cannot literally be drawn from only 200 test chains as written. The refuting branch is runnable in principle because the design includes \"mechanism-preserving,\" \"conservation-matched,\" and \"generic-perturbation null\" controls, but mutant-structure validation and the exact matching procedure must be tightened for a negative result to support the claimed physical-versus-evolutionary distinction rigorously.",
+      "score": 6
+    }
+  }
+}

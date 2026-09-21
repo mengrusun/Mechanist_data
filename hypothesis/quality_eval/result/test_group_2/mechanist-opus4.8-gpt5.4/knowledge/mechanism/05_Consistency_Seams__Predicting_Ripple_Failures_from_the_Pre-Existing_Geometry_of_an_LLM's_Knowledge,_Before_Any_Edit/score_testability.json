@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The experiments directly address the hypothesis by computing a pre-edit \"principal-subspace angle / CCA correlation\" and comparing it with later ripple outcomes under ROME, MEMIT, and in-context editing, while frequency, hop count, lexical overlap, and simpler similarity measures provide relevant comparisons. Falsifiability is unusually concrete: Experiment 2 requires \"AUROC >=0.70\" and performance \"within 0.03 of, or beats, GradSim,\" while \"AUROC <=0.60 or no better than the frequency/hop controls falsifies H1\"; the later causal and inconsistency claims likewise have explicit effect-size and collateral-damage thresholds. Minor clarification remains because \"principal-subspace angle / CCA correlation\" does not select one definitive score or fully specify how a reliable per-fact subspace is estimated, and the prose alternates between claiming performance \"better than\" GradSim and merely matching it within 0.03.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is to \"learn a low-rank alignment map that rotates B's readout subspace toward A's ... inject it,\" which is custom but not a magic step: low-rank maps and activation interventions are implementable with standard tensor operations, although the exact layer, injection site, and persistence of the rotation still need specification. The named models, GPT-J-6B, Llama-3-8B, and Qwen2.5-7B, and the MQuAKE/RippleEdits data and methods such as ROME, MEMIT, linear probes, CCA, tuned-lens probing, and activation intervention exist or are supported by standard interpretability tooling. Resources are concretely scoped through \"target 4,000 pairs,\" \"target 800\" seam pairs, three named models, and seeds \"0/1/2,\" which makes the plan substantially executable. Negative outcomes are runnable because the design includes frequency-/hop-matched controls, no-alignment and random-rotation controls, unrelated-fact accuracy, held-out perplexity, multiple rule phrasings, and explicit failure thresholds.",
+      "score": 7
+    }
+  }
+}

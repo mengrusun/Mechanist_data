@@ -1,0 +1,1 @@
+Investigate how multilingual language models represent knowledge, concepts, and reasoning processes across languages. Examine which mechanisms are language-independent, which are language-specific, and how language distance affects transfer and interference.

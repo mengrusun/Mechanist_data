@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the hypothesis by comparing whether a decoded conserved quantity is \"near-constant across timesteps within a trajectory\" while \"varying across trajectories with different initial conditions,\" followed by a causal intervention measuring long-horizon energy drift. The prediction is directional: projecting out the direction should \"selectively harm long-horizon rollout conservation ... while minimally affecting one-step error,\" whereas random-direction ablation should not; failure to observe this contrast would refute the causal claim, and failure of linear probes to show invariance would refute the linear-representation claim. The measures—probe R^2, within- versus across-trajectory variance, forecast errors at horizons \"1, 10, 100,\" and true-energy drift—are aligned with the stated questions. However, there are no numerical decision thresholds, and details such as the layer at which the direction is identified and ablated, the precise invariance-index formula, and what constitutes \"minimally affecting\" one-step error require clarification.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is to \"project out the invariant direction from the residual stream\" and attribute the resulting rollout change specifically to conservation; this is a standard probe-weight projection and activation-intervention operation, although the affected layers, token positions, and projection schedule are not specified. The required artifacts and methods exist and are supported by standard scientific-computing and interpretability tooling: the named classical-system simulators can be implemented directly, and autoregressive transformers, linear/MLP probes, frozen-state extraction, checkpoint probing, and random-direction ablations are routine. The refuting branch is runnable because the design includes \"random-direction and no-ablation controls\" plus models trained on \"dissipative (frictional) systems,\" though the latter should target particular broken invariants because friction need not eliminate every conservation law. Resources receive partial quantification through \"four simulators\" and rollout horizons of \"1, 10, 100,\" but dataset sizes, trajectory counts, transformer sizes, checkpoint counts, and training magnitude are unstated.",
+      "score": 7
+    }
+  }
+}

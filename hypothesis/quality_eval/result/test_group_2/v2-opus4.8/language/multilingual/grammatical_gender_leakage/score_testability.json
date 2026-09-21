@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan directly tests the three-part hypothesis through a \"Gender-direction probe,\" a \"Semantic-bias behavioral test,\" a \"Cross-lingual leakage test,\" and \"Causal ablation,\" with aligned measurements including probe accuracy, Spearman correlation, within-object effect size, leakage correlation, and ablation-induced bias reduction. Its directional predictions are clear: \"same object, opposite gender → opposite trait shift,\" English traits should track the \"source-language grammatical gender,\" and projecting out the direction should make semantic bias and leakage \"shrink\"; the stated null, \"no leakage; gender cleanly compartmentalized,\" is a conceivable refutation. However, terms such as \"compact, low-rank direction,\" \"shrinks,\" and fluency being \"preserved\" have no numeric decision thresholds, while the alternative adjective-scoring choices—\"a pre-rated adjective lexicon (or an LLM/human rating)\"—leave a consequential measurement choice unresolved.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to \"Project out the gender direction at the localized layer during generation,\" but this is a standard residual-stream intervention implementable with forward hooks and linear projection rather than an undefined magic step; probing, difference-of-means directions, CCA, and steering likewise have mature PyTorch and interpretability tooling. The named artifacts—\"Llama-3.1-8B, Qwen2.5-7B, Aya-23-8B, Gemma-2-9B\"—exist, and resources receive useful quantification through \"~200 concrete object nouns,\" six analyzed languages, and four models, although generation counts, train/test splits, and the exact control-task suite are unspecified. The refuting branch is runnable because the design includes held-out-noun generalization, within-object opposite-gender comparisons, chance baselines, \"unrelated fluency/accuracy on control tasks,\" and steering as a manipulation check, so null leakage or failure of ablation to selectively reduce bias can genuinely emerge.",
+      "score": 8
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "claim": "C1",
+  "scope": "verify/C1_helix_gain_doseresponse/variants/ (model-swap-evo2-7b-262k)",
+  "checks": {
+    "A_gt_provenance": {"verdict": "pass", "finding": "Variant reuses the frozen ESMFold->DSSP helix assay (common.HelixAssay), model-independent; helix GT is not derived from the swapped model's output."},
+    "B_score_normalization": {"verdict": "pass", "finding": "Same helix_frac = helix_res/total_res, same pLDDT policy; no model-max normalization. Identical scoring code path (score_generations) as the main experiment."},
+    "C_result_file_existence": {"verdict": "pass", "finding": "All cited variant numbers exist in verify/.../result.json (8 dose cells with per_gen_helix arrays) and analysis.json (rho=0.878, delta=0.094, cliffs=0.201). Recomputed by analyze_variant.py from the raw per-generation arrays."},
+    "D_dead_code": {"verdict": "pass", "finding": "run_variant.py invokes CAA build, steering hook, generation, NLL, ORF, validity, assay, and per-cell scoring; analyze_variant.py consumes the raw arrays. No orphaned metric."},
+    "E_scope": {"verdict": "pass", "finding": "Single intended model swap (evo2_7b -> evo2_7b_262k). Reduced grid (4 coef x 2 seed x 150) is documented in DIFF.md/config.yaml as cost-driven and applied symmetrically incl. the coef-0 in-model baseline; no overclaim -- the variant is reported as one within-family model-transfer probe, not a broad sweep."},
+    "F_evaluation_type": {"verdict": "pass", "finding": "synthetic_proxy (ESMFold predicted structure + DSSP), identical to the main experiment."}
+  },
+  "overall_verdict": "pass",
+  "notes": "Anti-circularity preserved: CAA built on DEV contrast, evaluated on TEST-split primers with the same 900000+seed*1000 offset. Survivorship-safe endpoint (invalid->0) inherited from the frozen scorer."
+}

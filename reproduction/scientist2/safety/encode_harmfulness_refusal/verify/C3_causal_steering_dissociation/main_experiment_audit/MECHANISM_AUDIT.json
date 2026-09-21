@@ -1,0 +1,42 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4)",
+  "audit_type": "mechanism",
+  "claim_id": "C3",
+  "linked_milestones": ["M3"],
+  "triggered_checks": ["A"],
+  "overall_verdict": "fail",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "fail",
+      "triggered": true,
+      "trigger_match": ["scripts/m3_claim3_steering.py:122-124 (hs[b,p,:] = hs[b,p,:] + alpha * direction)"],
+      "intervention_type": "CAA",
+      "sweep_grid": [-2, -1, -0.5, 0, 0.5, 1, 2],
+      "sigma_proj_scaling": false,
+      "capability_metric": "mean_logp_completion + rep_rate",
+      "plateau_range": null,
+      "locked_alpha": 2.0,
+      "alpha_position": "edge",
+      "random_baseline": {"run": true, "n_random": 1, "passed": false},
+      "sign_pattern": "preserved",
+      "output_case_spotcheck": {
+        "cases_available": false,
+        "verdict": "no_cases_logged",
+        "note": "Only aggregate per-cell metrics in steering_metrics.json; no per-prompt completions sampled at each alpha"
+      },
+      "evidence": [
+        "scripts/m3_claim3_steering.py:59 (--alpha arg)",
+        "scripts/m3_claim3_steering.py:122-124 (hook: hs += alpha * direction)",
+        "results/m3/claim3_verdict.json (r_delta_at_pos1=0.0, r_delta_at_pos2=0.52)",
+        "refine-logs/EXPERIMENT_RESULTS.md M3 section (r monotone only at alpha=+2)"
+      ],
+      "details": "FAIL: r-direction refusal effect is threshold-like (0 at |alpha|<=1, 0.52 at alpha=+2), no interior plateau established. Alpha grid spans only ~2.5 sigma_proj units (not >=3 orders of magnitude). Random-direction baseline n=1 (not >=30). Alpha=+2 is at the boundary of the tested range, not mid-plateau."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

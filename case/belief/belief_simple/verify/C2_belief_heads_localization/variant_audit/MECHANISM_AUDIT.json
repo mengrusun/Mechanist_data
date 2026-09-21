@@ -1,0 +1,38 @@
+{
+  "date": "2026-07-22",
+  "auditor": "self-review (llm-chat MCP unavailable — empty config in .mcp.json)",
+  "claim_id": "C2",
+  "variant_id": "model-swap-olmo-1b",
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "check_A_steering_sweep": {
+      "status": "n/a",
+      "details": "No steering coefficient used. The mechanism intervention is zero-ablation (scale_map = {head: 0.0}): head output x[..., h*hd:(h+1)*hd] is zeroed. No tunable alpha parameter exists to sweep. N/A is treated as pass per SKILL.md convention."
+    },
+    "check_B_cross_vocab_ppl": {
+      "status": "warn",
+      "details": "PPL computed on Pythia-eval tokens (max token ID 50276) applied to OLMo-1B vocabulary (50304 tokens). Since max Pythia token ID (50276) < OLMo vocab size (50304), no out-of-bounds index error occurs and the forward pass is valid. However, absolute PPL values are NOT cross-vocabulary comparable (different tokenizations → different compression → different per-token loss scales). The C2d criterion uses the RATIO ablated_ppl / clean_ppl (both computed in OLMo tokenizer-space), which is an internally consistent ratio: the tokenization mismatch affects numerator and denominator equally, so the ratio remains a valid measure of head ablation effect on PPL. Verdict: WARN (ratio valid, absolute PPL not cross-comparable — do not interpret the 10.782 value as comparable to Pythia's baseline PPL)."
+    },
+    "check_C_hook_correctness": {
+      "status": "pass",
+      "details": "OLMo uses separate q_proj/k_proj/v_proj/o_proj projections (OlmoForCausalLM). The hook is registered as forward_pre_hook with_kwargs=True on o_proj, scaling x[..., h*hd:(h+1)*hd] *= s where hd=128 (head_dim). This targets each attention head's contribution to the output projection before the linear transformation, equivalent to Pythia's dense-head hook that scales rows of the combined projection matrix. For zero-ablation (s=0), this zeroes out head h's contribution to the o_proj output, correctly isolating that head's causal effect on the residual stream."
+    },
+    "check_D_fisher_aggregation": {
+      "status": "pass",
+      "details": "For OLMo's split projections, Fisher score for head h = sum(q_proj.weight[h*d:(h+1)*d,:]) + sum(k_proj.weight[h*d:(h+1)*d,:]) + sum(v_proj.weight[h*d:(h+1)*d,:]) + sum(o_proj.weight[:,h*d:(h+1)*d]). This covers all four projection matrices for each head's dedicated parameter slice, consistent with the main experiment's Fisher aggregation intent (capturing all parameters that exclusively encode head h's computation). No double-counting; no missing projections."
+    },
+    "check_E_m1_gate": {
+      "status": "pass",
+      "details": "M1 above-chance gate correctly applied before any Fisher computation. personal_belief acc=0.778 (CI=[0.746,0.808], above_chance=True), attributed_belief acc=0.731 (CI=[0.697,0.763], above_chance=True), world_knowledge acc=0.930 (CI=[0.889,0.956], above_chance=True). Both belief targets admitted. Fisher and greedy search only run for admitted targets."
+    },
+    "check_F_controls": {
+      "status": "pass",
+      "details": "20 random-head controls implemented with seeds 100-119 (same range as main experiment). Controls use the same greedy-step evaluation infrastructure (eval_hstar with cached clean baselines). C2b criterion: ablated target drop > mean+2sigma of 20 random-head control drops. The main experiment also ran random-mask controls (ablating random parameter subsets) as a supplementary check, but those are not replicated here. Since C2b only specifies random-head controls (not random-mask), this is not a protocol violation — C2b criterion is correctly implemented."
+    },
+    "check_G_memory_optimization": {
+      "status": "pass",
+      "details": "Fisher memory optimization correctly implemented and verified from log: after AND-NOT mask construction (F_tgt, F_a, F_b → mask complete), 'del F_tgt, F_a, F_b; gc.collect(); torch.cuda.empty_cache()' drops GPU from 14.8GB to 7.1GB. After processing last target's Fisher, 'del F_know' drops GPU from 7.1GB to 2.4GB (model weights only). Greedy search for attributed_belief runs at 2.4-6.8GB — well within GPU budget."
+    }
+  }
+}

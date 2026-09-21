@@ -1,0 +1,21 @@
+{
+  "variant_tag": "model-swap-gemma2-9b",
+  "dimension": "model",
+  "claim_id": "C3",
+  "claim_statement": "The shortlisted components are both necessary and sufficient for the propositional-logic task: necessity — patching their clean activations onto a corrupted prompt recovers ≥ 0.8 on logit_diff/prob_diff metrics; sufficiency — reinstating only their clean activations on an otherwise resample-ablated clean prompt gives ≥ 0.8 recovery; both with specificity gap ≥ 0.6 vs a matched random control set.",
+  "main_experiment_verdict": "not-supported",
+  "variant_metric": "necessity_LD=1.018 (PASS), sufficiency_LD=0.019 (FAIL) — necessity-yes/sufficiency-no pattern confirmed on Gemma-2-9B",
+  "main_experiment_metric": "necessity_LD=0.955 (PASS), sufficiency_LD=0.113 (FAIL) on Mistral-7B",
+  "delta": "necessity LD: +0.063 (1.018 vs 0.955); sufficiency LD: -0.094 (0.019 vs 0.113) — both changes reinforce the same qualitative pattern",
+  "claim_supported": "fail",
+  "consistent_with_main_experiment": "pass",
+  "confidence": "high",
+  "reused_result": true,
+  "reused_from": "results/M5_gemma9b.json",
+  "reasoning": "The C3 claim requires BOTH necessity AND sufficiency ≥ 0.8. On Gemma-2-9B: necessity LD=1.018 passes (the shortlist is necessary), but sufficiency LD=0.019 fails dramatically (far below 0.8 — the shortlist is not sufficient). This is the same necessity-yes/sufficiency-no asymmetry as the main experiment on Mistral-7B (necessity LD=0.955 PASS, sufficiency LD=0.113 FAIL). Since the main experiment's verdict on C3 was 'not-supported' (sufficiency FAIL), and the Gemma-2-9B variant also finds C3 'not-supported' (sufficiency FAIL), the variant is CONSISTENT with the main experiment's conclusion. The asymmetry is cross-family robust: a different architecture (Gemma-2 vs Mistral), different scale (9B vs 7B), different tokenizer, and the same striking pattern recurs.",
+  "integrity_status": "pass",
+  "integrity_breakdown": {
+    "experiment": "pass",
+    "mechanism": "n/a"
+  }
+}

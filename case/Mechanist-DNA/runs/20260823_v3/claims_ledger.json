@@ -1,0 +1,67 @@
+{
+  "project": "Constrained property-steering of Evo2-7B toward high α-helical content",
+  "direction": "Steering Evo2-7B to generate DNA sequences whose encoded protein has high α-helical content, above the unintervened baseline",
+  "date_range": {"start": "2026-08-23", "end": "2026-08-24"},
+  "models": {"claim": "claude-opus-4-8 (session)", "experiment": "claude-opus-4-8 (session)", "verify": "claude-opus-4-8 (session)", "iteration": "claude-opus-4-8 (session); external reviewer gpt-5.4"},
+  "pipeline_status": "completed",
+  "round_end": {"qualifier": "", "detail": "", "remedy": "", "see": "", "partial_artifacts": [], "next_round_options": []},
+  "journey_summary": {
+    "claim": "given behavior faithfully split into C1 (helix gain) ∧ C2 (validity preserved); top idea = constrained property-steering of Evo2-7B",
+    "mechanism_strategy": "Location → Causal Intervention (locate α-helix representation via probes + Evo2 SAE features, then steer via contrastive activation addition / SAE-feature clamp with a dose grid)",
+    "mechanism_routing": "family=Representation & Parameter Analysis / Steering Vectors (CAA) [primary, carries the result]; SAE-clamp (Goodfire Evo-2 L26) secondary = negative; localization=Probing / Residual Stream States; committed:true",
+    "experiment": "12 runs, ~27.3 GPU-h, headline POSITIVE — CAA steering along a site-28 residual direction gives a specific, dose-dependent α-helix increase in Evo2-7B's DNA-encoded proteins; validity non-inferior at the conservative winning coefficient",
+    "verify": "2 target claims: 1 PASS (C1, robustness 1.00 — model-swap to evo2_7b_262k reproduces the dose-response ρ=0.878, gain +0.094) / 0 FAIL / 1 INTEGRITY_ONLY (C2, deferred by max_verify_claims cap); integrity Phase2 WARN (C2 off-target wording) / Phase9 PASS; ~1.5 GPU-h",
+    "iteration": "0/6 iterations (converged at entry — no blocking claims), claim-reentries 0/2, score 7/10 verdict 'almost', termination=positive_verdict; 1 ⓪ narrative fix (tightened C2 off-target wording), 0 GPU-h; external reviewer gpt-5.4",
+    "figures": "3 across 2 claims (C1: dose-response line + specificity bar; C2: validity-frontier line); 0 judgment-skipped; 0 render-skipped, 0 errored"
+  },
+  "open_items": [
+    "Off-target shifts at the winning setting are CAA-specific and documented (protein length −36.6 aa, GC −0.139); C1 survives length-matching (+0.089 within band [40,90]) and shows no aa-composition bias, and C2 validity stays non-inferior. Verify found the length/GC signature ALSO transfers to the swapped model (evo2_7b_262k) → a robust family-level property of the CAA lever, not a one-checkpoint artifact (C1 helix gain still holds).",
+    "C2 swap-test DEFERRED (INTEGRITY_ONLY, max_verify_claims cap=1): audit passed but Phase-2 flagged a WARN — the 'off-target not degraded' wording overclaims vs the documented −37% length / −0.139 GC shift (the non-inferiority test itself is clean). Upgrade later via /auto-verify C2 — resume: true (swap-test the length-regressed endpoint).",
+    "SAE-clamp secondary arm is an honest negative — helix DECREASES with clamp strength (ρ=−0.95), driven by SAE recon_rel_error≈1.0; C1 rests on the CAA arm (pre-registered site family), not the SAE arm.",
+    "OPTIONAL next step (fits remaining budget): /auto-verify C2 — resume: true to close the deferred off-target swap-test (length-regressed endpoint) — Stage 1 audit is reused.",
+    "Paper-side caveats (reviewer Section 8, score 7/10 'almost'): the structural endpoint is proxy-heavy (ESMFold→DSSP on translated ORFs, not experimental structures); generalization is demonstrated within the Evo2-7B family only (7B + 262k-context checkpoint), not across architectures.",
+    "Reviewer note: per-generation effect size is modest (Cliff's δ≈0.135) despite the strong, robust trend (q=1.5e-4) — the lever shifts the distribution reliably but not dramatically per sequence.",
+    "External reviewer ran via the gpt-5.4 HTTP fallback (MCP llm-chat tool not exposed to subagents, but the endpoint was reachable/credentialed — genuine external review, no self-review degradation in iteration).",
+    "Budget: ~28.8 / 40 GPU-h used this round (iteration spent 0) → ~11.2 GPU-h unused and available for the optional C2 upgrade or a next round.",
+    "cost.json not emitted by sanity/M1/M2 runs (GPU-hours estimated for those; M3/M4/verify reconstructed) — noted in tracker, not fabricated."
+  ],
+  "iteration_summary": {"score": 7, "verdict": "almost", "rounds_consumed": 0, "max_rounds": 6},
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "Under a targeted internal intervention during decoding, Evo2-7B generates DNA whose encoded protein has a mean α-helix fraction significantly higher than the unintervened baseline, with a monotone dose-response.",
+      "origin": "task.md behavior (given) — helix-gain predicate of the bundled success criterion",
+      "data": {"provenance": "constructed", "source": "Evo2-7B generations (baseline + steered) scored via ESMFold→DSSP; high/low-helix contrast set back-translated from labeled-SS proteins for CAA vector construction", "available_n": "", "used_n": "realized: 1500 baseline gens (M1) + 13,500 steered gens (M3: 3 sites × 6 coefs × 3 seeds × 250) + 3,000 M4 controls (4 conditions × 750)", "subset_note": "DEV/TEST split enforced (vector built on DEV, C1/C2 tested on TEST)"},
+      "models": ["Evo2-7B"],
+      "method": "Committed: Steering Vectors / contrastive activation addition (CAA) at probe-selected residual site 28, coefficient dose grid [0,0.5,1,2,4,8]; ESMFold→DSSP α-helix; primary = permutation dose-response trend test on the all-generations helix endpoint (TEST, invalid→0), BH-FDR; matched-control + same-norm sham for specificity; secondary SAE-clamp (L26) = negative",
+      "main_experiment": {"verdict": "SUPPORTED", "key_stats": "site-28 CAA dose-response ρ=0.922, p=5.0e-5, BH-FDR q=1.5e-4; winning coef 1.0 helix 0.482 vs baseline 0.414 (+0.068, 95% CI [+0.040,+0.098]), Cliff's δ=0.135, Hedges g=0.237; up to +0.161 at coef 4; matched-control −0.024 (n.s.) & sham −0.005 (n.s.) → CAA exceeds both (+0.093 p=9e-10; +0.073 p=1e-6); survives length-matching (+0.089 in [40,90]); no aa-composition bias", "headline": "CAA steering along a site-28 residual direction produces a specific, dose-dependent increase in the α-helical content of Evo2-7B's DNA-encoded proteins."},
+      "verify": {"robustness": 1.0, "axes": {"method": "n/a", "dataset": "n/a", "model": "pass"}, "integrity": "PASS", "verdict": "PASS", "stage2_skip_reason": null},
+      "iteration": {"final_reviewer_status": "PASS held (reviewer consistency check clean — dose ladder, ρ/q, winning gain+CI, specificity, length-matched gain, and model-swap robustness all reconcile with no numeric drift)", "changed": [], "falsified": [], "narrowed_to": ""},
+      "final_status": "✓ holds — supported, robust (model-swap reproduces), reviewer PASS (round score 7/10 'almost'); no back-edge needed",
+      "caveats": ["Off-target: winning setting shortens protein length (−36.6 aa, Cliff's δ −0.45) and lowers GC (−0.139) — CAA-specific, documented; C1 survives length-matching and shows no composition bias.", "Per-generation effect size is small (δ=0.135) though the CI excludes 0 and the trend q=1.5e-4.", "SAE-clamp secondary arm negative (helix decreases with clamp; SAE recon_rel_error≈1.0)."],
+      "artifacts": ["refine-logs/EXPERIMENT_RESULTS.md", "refine-logs/MECHANISM_ROUTING.md", "results/m3/s28_caa.json", "results/m4/specificity.json", "results/m4/validity_frontier.json", "experiments/steer_helix/"],
+      "figures": [
+        {"id": "c1_dose_response", "type": "line", "caption": "α-helix fraction (all generations, invalid→0) vs steering coefficient for CAA at site 28 (primary), site 30, and the SAE-clamp arm; baseline ≈0.414. Site-28 CAA rises monotonically; site 30 peaks at coef 2 then collapses; the SAE arm declines.", "png": "figures/C1/c1_dose_response.png", "pdf": "figures/C1/c1_dose_response.pdf", "md": null, "tex": null, "source_data": "results/m3/{s28_caa,s30_caa,s26_sae_clamp}.json", "status": "ok"},
+        {"id": "c1_specificity", "type": "bar", "caption": "Direction-specificity at the winning setting (site 28, coef 1.0): α-helix fraction for baseline, CAA, matched-control, and same-norm sham. CAA raises helix (+0.068 vs baseline) while both controls show no gain.", "png": "figures/C1/c1_specificity.png", "pdf": "figures/C1/c1_specificity.pdf", "md": null, "tex": null, "source_data": "results/m4/specificity.json", "status": "ok"}
+      ]
+    },
+    {
+      "id": "C2",
+      "statement": "At the C1-winning intervention setting, Evo2-7B's generated DNA sequences remain valid (well-formed / biologically plausible ORFs) at a rate non-inferior to baseline (pre-registered margin −0.05). Validity is preserved within the margin, but not all other sequence properties are: the intervention substantially shifts GC content (−0.139) and inferred protein length (−37%), which are documented, CAA-specific off-target effects. [tightened in iteration ⓪ — supersedes the prior 'off-target properties not degraded' overclaim flagged by the verify Phase-2 WARN]",
+      "origin": "task.md HARD validity requirement — validity-preservation predicate of the bundled success criterion",
+      "data": {"provenance": "constructed", "source": "Evo2-7B full generated set (baseline vs winning CAA setting) — per-sequence validity + off-target (β-sheet, GC, Evo2 NLL, length, aa-composition)", "available_n": "", "used_n": "realized: 750 gens/condition at winning coef 1.0 vs baseline (M4); full generated set (invalid included)", "subset_note": "validity measured over the full generated set, not survivors"},
+      "models": ["Evo2-7B"],
+      "method": "Non-inferiority test on validity rate over the full generated set (pre-registered margin −0.05, one-sided 95% LB) at the C1-winning setting; off-target comparison vs baseline; validity frontier across the coefficient sweep",
+      "main_experiment": {"verdict": "SUPPORTED (non-inferior)", "key_stats": "validity 0.968 (winning coef 1.0) vs 0.991 baseline, Δ=−0.023, one-sided 95% LB −0.035 > margin −0.05 → non-inferior; β-sheet & aa-helixfav unchanged, NLL +0.061 (< 1.5 cap); off-target GC −0.139 & length −36.6 aa documented. Frontier: coef ≤1 pass NI, coef ≥2 fail (dose–validity Pareto).", "headline": "At the conservative winning coefficient, steered generations remain valid at a rate non-inferior to baseline; validity degrades at higher coefficients (dose–validity tradeoff)."},
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "n/a"}, "integrity": "WARN", "verdict": "INTEGRITY_ONLY", "stage2_skip_reason": "max_verify_claims_cap"},
+      "iteration": {"final_reviewer_status": "INTEGRITY_ONLY held (NI test clean; the only issue was the 'off-target not degraded' overclaim wording — resolved)", "changed": ["⓪ narrative-only (0 GPU-h): tightened the C2 statement — validity non-inferior within the −0.05 margin, but GC (−0.139) and protein length (−37%) shift substantially as documented CAA-specific off-targets; supersedes the 'off-target not degraded' phrasing flagged by the verify Phase-2 WARN"], "falsified": [], "narrowed_to": "validity (well-formedness) is preserved within the NI margin, but the claim is narrowed to acknowledge that other sequence properties — GC content and protein length — are NOT preserved (documented off-targets)"},
+      "final_status": "✓ supported, narrowed — validity non-inferior at winning setting; GC/length off-targets now explicitly documented (wording corrected in iteration); Stage-2 swap-test deferred (max_verify_claims cap)",
+      "caveats": ["Non-inferiority holds only at conservative coefficients (≤1.0); coef ≥2 fails the margin — the reported success is the frontier knee, not the max-helix setting.", "Off-target GC/length shifts documented (non-disqualifying)."],
+      "artifacts": ["refine-logs/EXPERIMENT_RESULTS.md", "results/m4/validity_frontier.json", "results/m4/specificity.json"],
+      "figures": [
+        {"id": "c2_validity_frontier", "type": "line", "caption": "Helix-vs-validity frontier for site-28 CAA across the coefficient sweep: helix gain rises with coefficient while validity rate falls. The winning setting (coef 1.0) is the max helix gain with validity non-inferior (one-sided 95% LB > −0.05 margin); coef ≥2 fails the margin.", "png": "figures/C2/c2_validity_frontier.png", "pdf": "figures/C2/c2_validity_frontier.pdf", "md": null, "tex": null, "source_data": "results/m4/validity_frontier.json", "status": "ok"}
+      ]
+    }
+  ]
+}

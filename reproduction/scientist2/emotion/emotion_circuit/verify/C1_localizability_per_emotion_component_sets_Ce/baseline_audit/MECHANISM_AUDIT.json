@@ -1,0 +1,14 @@
+{
+  "claim_id": "C1",
+  "family": "Causal Attribution / Ablation",
+  "mechanism_integrity_verdict": "PASS",
+  "mechanism_warn": true,
+  "warn_reason": "head_stageB_enhancement_is_layer_level_not_head_level",
+  "warn_detail": "The single-component head enhancement hook adds alpha*d_{e,L} (full residual direction) to the layer output, not a head-specific projection. This makes Stage-B head scores equivalent across heads within the same layer. Stage-A (probe AUC) remains head-specific. The Jaccard stability computation uses Stage-A signals, so the Jaccard result is unaffected.",
+  "slot_A_coverage": "partial_by_design",
+  "slot_A_note": "Stage B uses fixed alpha=1.0 for selection; M2 runs alpha in {0.5,1.0,2.0} sweep for causal predicates. Expected partial for M1.",
+  "operator_soundness": "PASS_with_WARN",
+  "null_construction": "PASS",
+  "family_freeze": "PASS",
+  "admit_to_stage2_pool": true
+}

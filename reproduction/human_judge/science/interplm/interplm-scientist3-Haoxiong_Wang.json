@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "InterPLM: discovering interpretable features in protein language models",
+    "agent":         "scientist3",
+    "review_date":         "2026-07-19"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "按概念挑'最佳单元'与其 top-k 阈值都在同一批残基上完成、无留出集。",
+    "score": 3,
+    "evidence_files": ["scientist3/science/interplm/logs/0-run/baseline_summary.json", "scientist3/science/interplm/logs/0-run/draft_summary.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签为 Swiss-Prot FT 注释。",
+    "score": 5,
+    "evidence_files": ["scientist3/science/interplm/logs/0-run/baseline_summary.json", "scientist3/science/interplm/logs/0-run/draft_summary.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验用 ESM-2-8M 替代 task.md 指定的主模型 ESM-2-650M(8M 在任务中仅为 verify 候选)，且只用约 200 条 Swiss-Prot 蛋白，静默降级。",
+    "score": 1,
+    "evidence_files": ["scientist3/science/interplm/logs/0-run/baseline_summary.json", "scientist3/science/interplm/report.md", "scientist3/science/interplm/logs/0-run/draft_summary.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "仅在约 200 蛋白/65 概念上跑了 SAE-vs-neuron 一个基线；claim4(LLM 新概念发现)与 claim5(注释补全+steering)完全未执行，ablation 为空。",
+    "score": 3,
+    "evidence_files": ["scientist3/science/interplm/logs/0-run/draft_summary.json", "scientist3/science/interplm/logs/0-run/ablation_summary.json", "scientist3/science/interplm/report.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "做了多种子聚合，但头条为极小的概念计数(7 vs 1)点估计，结论中未报告方差/显著性。",
+    "score": 3,
+    "evidence_files": ["scientist3/science/interplm/logs/0-run/baseline_summary.json", "scientist3/science/interplm/logs/0-run/research_summary.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "超叠加(claim3)仅由 SAE-vs-neuron 计数差推断，无控制臂或干预。",
+    "score": 3,
+    "evidence_files": ["scientist3/science/interplm/logs/0-run/draft_summary.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字在一致且可追溯。",
+    "score": 5,
+    "evidence_files": ["scientist3/science/interplm/logs/0-run/baseline_summary.json", "scientist3/science/interplm/logs/0-run/research_summary.json", "scientist3/science/interplm/logs/0-run/draft_summary.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "核心数字跨 summary 一致，但图注与文件名不符(如 f1_scatter 图被描述为 L0 直方图)，且报告对 claim4/5 沿用与基线相同的描述，易被误读为已做实验。",
+    "score": 3,
+    "evidence_files": ["scientist3/science/interplm/report.md", "scientist3/science/interplm/logs/0-run/draft_summary.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "c1": {
+        "claim": "SAEs trained on ESM-2 residual-stream activations surface up to ~2,548 interpretable latent features per layer — orders of magnitude more than individual neurons.",
+        "method": {
+          "justification": "以概念对齐数作为'可解释特征数'的代理，并未真正计量 ~2548 个可解释特征，且在降级的 8M 模型上做。",
+          "score": 3,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/baseline_summary.json"]
+        },
+        "experiment": {
+          "justification": "约 200 蛋白、无留出集、单一基线，规模远不足以支撑'每层数千可解释特征'的主张。",
+          "score": 3,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/draft_summary.json"]
+        },
+        "result": {
+          "justification": "SAE 7 vs neuron 1 的方向与论文一致，但绝对量级与指定目标模型均未对齐。",
+          "score": 3,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/baseline_summary.json"]
+        }
+      },
+      "c2": {
+        "claim": "SAE features align with up to ~143 distinct Swiss-Prot concepts, whereas raw ESM-2 neurons align with only ~46 (of which ~15 cleanly recovered).",
+        "method": {
+          "justification": "残基级 F1 概念对齐即论文方法。",
+          "score": 5,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/baseline_summary.json"]
+        },
+        "experiment": {
+          "justification": "判据(F1≥0.5)本身可靠，但概念宇宙仅 65、无留出集、模型降级为 8M，规模过小。",
+          "score": 3,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/baseline_summary.json"]
+        },
+        "result": {
+          "justification": "SAE≫neuron 方向一致，但绝对覆盖数(7)远低于论文(~143)且在 8M 上，未讨论差距。",
+          "score": 3,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/draft_summary.json"]
+        }
+      },
+      "c3": {
+        "claim": "The gap between SAE features and raw neurons is direct evidence that PLMs encode biological concepts in superposition.",
+        "method": {
+          "justification": "超叠加仅凭计数差推断，未设任何特异性控制。",
+          "score": 3,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/draft_summary.json"]
+        },
+        "experiment": {
+          "justification": "无 PCA/随机方向/shuffled 等控制臂，无法排除替代解释。",
+          "score": 3,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/draft_summary.json"]
+        },
+        "result": {
+          "justification": "定性同向，但证据薄弱、未与论文结论作对照。",
+          "score": 3,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/draft_summary.json"]
+        }
+      },
+      "c4": {
+        "claim": "A subset of SAE features corresponds to coherent biological concepts absent from annotation dictionaries, surfaced via an external LLM auto-interpreter.",
+        "method": {
+          "justification": "未搭建或运行任何 LLM 自动解释流程。",
+          "score": 1,
+          "evidence_files": ["scientist3/science/interplm/report.md", "scientist3/science/interplm/logs/0-run/ablation_summary.json"]
+        },
+        "experiment": {
+          "justification": "该 claim 完全未执行。",
+          "score": 1,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/draft_summary.json", "scientist3/science/interplm/logs/0-run/ablation_summary.json"]
+        },
+        "result": {
+          "justification": "无结果。",
+          "score": 1,
+          "evidence_files": ["scientist3/science/interplm/report.md"]
+        }
+      },
+      "c5": {
+        "claim": "The feature dictionary is practically useful: it supports filling missing Swiss-Prot annotations and steering ESM-2 sequence generation.",
+        "method": {
+          "justification": "注释补全与 steering 均未实现。",
+          "score": 1,
+          "evidence_files": ["scientist3/science/interplm/report.md", "scientist3/science/interplm/logs/0-run/ablation_summary.json"]
+        },
+        "experiment": {
+          "justification": "该 claim 完全未执行。",
+          "score": 1,
+          "evidence_files": ["scientist3/science/interplm/logs/0-run/draft_summary.json", "scientist3/science/interplm/logs/0-run/ablation_summary.json"]
+        },
+        "result": {
+          "justification": "无结果。",
+          "score": 1,
+          "evidence_files": ["scientist3/science/interplm/report.md"]
+        }
+      }
+    }
+  }
+}

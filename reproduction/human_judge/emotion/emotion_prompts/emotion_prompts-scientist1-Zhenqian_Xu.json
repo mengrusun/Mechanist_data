@@ -1,0 +1,186 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "Do Emotions in Prompts Matter? Effects of Emotional Framing on Large Language Models",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "不涉及train/test/val划分。",
+    "score": "n/a",
+    "evidence_files": [
+      "emotion_rl.py",
+      "emotion_rl_v2.py",
+      "FINDINGS.md",
+      "run_eval.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "全部使用数据集自带 gold。",
+    "score": 5,
+    "evidence_files": [
+      "datasets_loader.py",
+      "run_eval.py",
+      "results/gsm8k__Qwen3-14B__neutral.jsonl",
+      "results/socialiqa__Qwen3-14B__neutral.jsonl"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验资源无静默替换。",
+    "score": 5,
+    "evidence_files": [
+      "task.md",
+      "FINDINGS.md",
+      "run_eval.py",
+      "results/gsm8k__Qwen3-14B__neutral.jsonl"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "数据量充分。GSM8K/Qwen3=500、GSM8K/Qwen2.5=500、SocialIQA×2=300 each、BoolQ=300、OpenBookQA=300、MedQA=250、BBH=280",
+    "score": 5,
+    "evidence_files": [
+      "FINDINGS.md",
+      "results/report.txt",
+      "results/gsm8k__Qwen3-14B__neutral.jsonl",
+      "results/bbh__Qwen3-14B__neutral.jsonl"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "无 bootstrap CI、无噪声地板对比。未做显著性检验",
+    "score": 3,
+    "evidence_files": [
+      "run_eval.py",
+      "emotion_rl_v2.py",
+      "FINDINGS.md",
+      "results/report.txt"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a —— 无因果主张。",
+    "score": "n/a",
+    "evidence_files": [
+      "FINDINGS.md",
+      "task.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字均可回追。全部落盘可复算，无回填/伪造迹象。",
+    "score": 5,
+    "evidence_files": [
+      "FINDINGS.md",
+      "results/report.txt",
+      "results/gsm8k__Qwen3-14B__neutral.jsonl",
+      "results/bbh__Qwen3-14B__llm_happiness_high.jsonl",
+      "results/socialiqa__Qwen3-14B__llm_surprise_high.jsonl",
+      "final_report.py"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "多数产物自洽（report.txt 与 FINDINGS.md 的 8 个 (model,dataset) 汇总表逐位对齐）。两处小不一致：(1) FINDINGS.md 第 17 行『Total inferences ≈ 44,650』，实测 68,250 行（500×25×2 + 300×25×2 + 300×25×2 + 280×25 + 250×25 = 68,250），报告数字约低估 35%，属汇总口径失真；(2) FINDINGS C1 表 GSM8K/Qwen3 neutral=0.9480 vs C4 表 GSM8K/Qwen3 neutral=0.9520——前者是全 500 项，后者是 5-fold test 折均值，量级差 0.4 pp 属正常但未在文中说明；(3) FINDINGS 举例『llm_surprise_high = +1.3 on SocialIQA/Qwen3』，实测该条件 acc=0.7867、neutral=0.7700 → Δ=+1.67 pp，报告的 +1.3 与产物不精确匹配。三处均不改变任何 claim 判定，属记账松散而非实质造假。",
+    "score": 3,
+    "evidence_files": [
+      "FINDINGS.md",
+      "results/report.txt",
+      "results/socialiqa__Qwen3-14B__llm_surprise_high.jsonl"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Across diverse task domains, static emotional prefixes change LLM accuracy only by small, input-dependent amounts and do not behave as a general-purpose enhancement.",
+        "method": {
+          "justification": "方法与 claim 直接对应：对 24 emotional + 1 neutral 共 25 条件在 (model,dataset) 上跑固定推理，得每条件 accuracy，计算 Δ vs neutral 并观察分布/极值。",
+          "score": 5,
+          "evidence_files": [
+            "run_eval.py",
+            "prefixes.py",
+            "FINDINGS.md"
+          ]
+        },
+        "experiment": {
+          "justification": "覆盖 8 (model,dataset) × 25 conditions，n 250–500。缺点：无噪声地板对照，判定small只靠 5 pp 直觉而非统计显著性",
+          "score": 4,
+          "evidence_files": [
+            "run_eval.py",
+            "final_report.py",
+            "FINDINGS.md",
+            "results/report.txt"
+          ]
+        },
+        "result": {
+          "justification": "结论与 task.md『small, input-dependent, no general enhancement』定性完全一致：best_Δ 从未超 +5 pp",
+          "score": 5,
+          "evidence_files": [
+            "FINDINGS.md",
+            "results/report.txt",
+            "results/socialiqa__Qwen3-14B__llm_surprise_high.jsonl",
+            "results/socialiqa__Qwen2.5-14B-Instruct__llm_surprise_high.jsonl"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The effect of emotional framing is most pronounced on socially grounded tasks (interpersonal/social reasoning), where the emotional context interacts meaningfully with task content; on tasks like mathematical reasoning or factual QA the effect is markedly smaller.",
+        "method": {
+          "justification": "不同任务全部用 free-form generation + Final-answer 抽取，跨任务打分模式统一。",
+          "score": 5,
+          "evidence_files": [
+            "run_eval.py",
+            "datasets_loader.py",
+            "FINDINGS.md"
+          ]
+        },
+        "experiment": {
+          "justification": "6 数据集（math=GSM8K、social=SocialIQA、factual=MedQA、reading=BoolQ、commonsense=OBQA、mixed=BBH）× 24 emotional conds，实验合理。",
+          "score": 5,
+          "evidence_files": [
+            "FINDINGS.md",
+            "results/report.txt",
+            "results/medqa__Qwen3-14B__neutral.jsonl"
+          ]
+        },
+        "result": {
+          "justification": "结论partially supported——诚实地报告 SocialIQA range=5.3–6.7 pp 高于 GSM8K 3.8–4.4 pp 与 BoolQ 3.0 pp，但 MedQA 8.0 pp、BBH 5.4 pp 也和SocialIQA差不多，因此不是纯粹的 social>rest。。",
+          "score": 3,
+          "evidence_files": [
+            "FINDINGS.md",
+            "results/report.txt"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "No single basic emotion among {happiness, sadness, fear, anger, disgust, surprise} provides a consistent benefit across all models and tasks; stronger emotional wording does not yield proportionally larger gains.",
+        "method": {
+          "justification": "方法族匹配。",
+          "score": 5,
+          "evidence_files": [
+            "final_report.py",
+            "prefixes.py",
+            "FINDINGS.md"
+          ]
+        },
+        "experiment": {
+          "justification": "实验合理",
+          "score": 5,
+          "evidence_files": [
+            "FINDINGS.md",
+            "results/report.txt",
+            "final_report.py"
+          ]
+        },
+        "result": {
+          "justification": "定性结论与 claim 完全一致：无单一情绪贯穿 8 combos 胜出。",
+          "score": 5,
+          "evidence_files": [
+            "FINDINGS.md",
+            "results/report.txt"
+          ]
+        }
+      }
+    }
+  }
+}

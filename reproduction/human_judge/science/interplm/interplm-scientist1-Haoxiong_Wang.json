@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "InterPLM: discovering interpretable features in protein language models",
+    "agent":         "scientist1",
+    "review_date":         "2026-07-19"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "用来挑选特征的数据和评估成绩的数据是同一批数据",
+    "score": 3,
+    "evidence_files": ["scientist1/science/interplm/score_f1.py", "scientist1/science/interplm/extract_acts.py", "scientist1/science/interplm/annot_fill.py", "paper/science/interplm/paper.pdf"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签为 Swiss-Prot 数据集专家标注的 FT 记录，方法正确且与论文一致。",
+    "score": 5,
+    "evidence_files": ["scientist1/science/interplm/parse_sprot.py", "scientist1/science/interplm/extract_acts.py", "scientist1/science/interplm/score_f1.py", "paper/science/interplm/paper.pdf"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "实验使用的模型未出现降级，实验和数据集规模缩小但已披露、不影响结论可靠性。",
+    "score": 5,
+    "evidence_files": ["scientist1/science/interplm/test_esm_sae.py", "scientist1/science/interplm/sae_module.py", "scientist1/science/interplm/extract_acts.py", "scientist1/science/interplm/task.md", "scientist1/science/interplm/REPORT.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "主实验规模充分(~1.85M 残基×4层)，Claim 4 仅扫描了 10 个特征，量级不及论文但已披露，属合理简化。",
+    "score": 5,
+    "evidence_files": ["scientist1/science/interplm/results/summary_all_layers.json", "scientist1/science/interplm/results/annot_fill_layer24.json", "scientist1/science/interplm/REPORT.md", "scientist1/science/interplm/pattern_analysis.py"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "单次运行、单种子，未报告方差/误差棒/显著性检验，也未做多 layer 之外的重复。",
+    "score": 3,
+    "evidence_files": ["scientist1/science/interplm/extract_acts.py", "scientist1/science/interplm/results/summary_all_layers.json", "scientist1/science/interplm/REPORT.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "Claim 3 的机制主张建立在相关性证据上、无 steering，与论文口径一致，但在分析中进行了措辞较强的总结，暗指其存在因果性。",
+    "score": 3,
+    "evidence_files": ["scientist1/science/interplm/polysemanticity.py", "scientist1/science/interplm/REPORT.md", "paper/science/interplm/paper.pdf"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "报告数字可追溯到实验文件且相符。",
+    "score": 5,
+    "evidence_files": ["scientist1/science/interplm/REPORT.md", "scientist1/science/interplm/results/summary_all_layers.json", "scientist1/science/interplm/results/summary_layer24.json", "scientist1/science/interplm/results/annot_fill_layer24.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "summary JSON 与 REPORT.md 表格数值一致。",
+    "score": 5,
+    "evidence_files": ["scientist1/science/interplm/REPORT.md", "scientist1/science/interplm/results/summary_all_layers.json", "scientist1/science/interplm/results/summary_8m.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "SAEs trained on ESM-2 residual-stream activations surface up to ~2,548 interpretable latent features per layer — orders of magnitude more than can be pulled from individual neurons.",
+        "method": {
+          "justification": "采用 SAE 特征-概念 F1 对齐并与 raw-neuron 的同一 F1 流程对比，方法族与论文一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/science/interplm/score_f1.py", "scientist1/science/interplm/extract_acts.py"]
+        },
+        "experiment": {
+          "justification": "实验数据量充足：4 层(9/18/24/30)、3 阈值(0.3/0.5/0.75)、SAE(10240) vs neuron(1280) 对称计数'F1≥τ 的单元数'。问题：选阈值与报指标同源，单种子、无方差。",
+          "score": 4,
+          "evidence_files": ["scientist1/science/interplm/score_f1.py", "scientist1/science/interplm/extract_acts.py", "paper/science/interplm/paper.pdf"]
+        },
+        "result": {
+          "justification": "方向性强复现：layer18 F1≥0.3 时 517 SAE vs 54 neuron，F1≥0.5 时 135 vs 0，SAE 远多于神经元，与论文定性一致。受实验规模影响，绝对数值偏低(论文 2548 vs 1280)，但方向一致。",
+          "score": 4,
+          "evidence_files": ["scientist1/science/interplm/results/summary_all_layers.json", "scientist1/science/interplm/REPORT.md"]
+        }
+      },
+      "C2": {
+        "claim": "SAE features align with up to ~143 distinct Swiss-Prot concepts, whereas raw ESM-2 neurons align with only ~46 concepts (of which only ~15 are cleanly recovered).",
+        "method": {
+          "justification": "方法族正确，与论文一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/science/interplm/score_f1.py"]
+        },
+        "experiment": {
+          "justification": "实验在多阈值下统计 SAE/neuron 各自覆盖的概念数，设计合理；缺陷：无留出集、单种子，且概念词表被截到 236 上限。",
+          "score": 4,
+          "evidence_files": ["scientist1/science/interplm/score_f1.py", "scientist1/science/interplm/results/summary_all_layers.json", "scientist1/science/interplm/REPORT.md"]
+        },
+        "result": {
+          "justification": "SAE 最多覆盖 100 概念/16 干净，neuron 仅 7/0。论文为 SAE 143 / neuron 46(其中15干净)。结论方向一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/science/interplm/results/summary_all_layers.json", "scientist1/science/interplm/REPORT.md"]
+        }
+      },
+      "C3": {
+        "claim": "The gap between SAE features and raw neurons is direct evidence that PLMs encode biological concepts in superposition rather than in single units.",
+        "method": {
+          "justification": "方法族正确，与论文一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/science/interplm/polysemanticity.py", "paper/science/interplm/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "实验主体合理，但存在解释性弱点(REPORT 披露)：神经元在本词表下也显得'单义'仅因绝大多数不过阈、保持沉默，并非真正证明神经元单义；且无任何干预/控制来因果性确立'叠加'。",
+          "score": 3,
+          "evidence_files": ["scientist1/science/interplm/polysemanticity.py", "scientist1/science/interplm/REPORT.md"]
+        },
+        "result": {
+          "justification": "解释合理，与原论文定性一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/science/interplm/REPORT.md", "scientist1/science/interplm/polysemanticity.py"]
+        }
+      },
+      "C4": {
+        "claim": "A subset of SAE features corresponds to coherent biological concepts absent from existing annotation dictionaries; these can be surfaced via an external LLM auto-interpreter over top-activating protein contexts.",
+        "method": {
+          "justification": "论文用 Claude-3.5 Sonnet 对 top-activating contexts 做自动解释。复现搭建了对应管线(find_top_contexts.py + auto_interpret.py，调用 gpt-5.4)，但 REPORT 称沙箱屏蔽 API，改用 consensus-motif 模式分析作替代。替代方法是合理但更弱的代理，并非 claim 指定的 LLM 自动解释法，故方法匹配度打折。",
+          "score": 3,
+          "evidence_files": ["scientist1/science/interplm/auto_interpret.py", "scientist1/science/interplm/find_top_contexts.py", "scientist1/science/interplm/pattern_analysis.py", "scientist1/science/interplm/REPORT.md"]
+        },
+        "experiment": {
+          "justification": "仅对约 10 个特征(feats 500/1000/4942 等)看 top 窗口的 consensus motif，证据为定性、样本极小、且未真正跑指定的 LLM 评分，欠充分。",
+          "score": 2,
+          "evidence_files": ["scientist1/science/interplm/pattern_analysis.py", "scientist1/science/interplm/REPORT.md"]
+        },
+        "result": {
+          "justification": "弱结论、仅给出部分定性证据，REPORT 标注为 partially supported，但未把定性证据伪装成完全复现。",
+          "score": 3,
+          "evidence_files": ["scientist1/science/interplm/REPORT.md"]
+        }
+      },
+      "C5": {
+        "claim": "The extracted feature dictionary is practically useful: it supports filling in missing Swiss-Prot annotations and steering ESM-2 sequence generation toward a target property.",
+        "method": {
+          "justification": "注释补全部分用 SAE top 特征上的 logistic 头预测概念隶属，方法与论文匹配。但 steering 部分未实现，因此对完整 claim 只覆盖了一半的机理路径。",
+          "score": 4,
+          "evidence_files": ["scientist1/science/interplm/annot_fill.py", "scientist1/science/interplm/REPORT.md"]
+        },
+        "experiment": {
+          "justification": "在留出蛋白上用 16 个 SAE 特征训练 logistic 头、4 个概念、报告 P/R/F1 与 class prior 对照。设计合理但有短板：(1)top-16 特征选自覆盖全语料(含测试)的 F1，存在特征预选泄漏；(2)single-feature baseline 存值有 bug；(3)仅 4 个概念、除 class prior 外无更强 baseline(如随机方向)；(4)steering 半边未跑；(5)未记录实际 train/test 数量。属诚实但欠充分。",
+          "score": 3,
+          "evidence_files": ["scientist1/science/interplm/annot_fill.py", "scientist1/science/interplm/results/annot_fill_layer24.json"]
+        },
+        "result": {
+          "justification": "SAE 字典可用于注释补全，与论文一致。steering 如实标注为未做/超预算。",
+          "score": 4,
+          "evidence_files": ["scientist1/science/interplm/results/annot_fill_layer24.json", "scientist1/science/interplm/REPORT.md"]
+        }
+      }
+    }
+  }
+}

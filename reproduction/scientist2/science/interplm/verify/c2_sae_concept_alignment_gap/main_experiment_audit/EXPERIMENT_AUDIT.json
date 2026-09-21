@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4 via dmxapi.cn)",
+  "claim_id": "c2",
+  "linked_milestones": ["M2"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Swiss-Prot per-residue annotations from full 700MB UniProt dat.gz, independently downloaded. Not derived from model outputs."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "F1 = 2*P*R/(P+R) from binary masks; no self-normalization."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "runs/m2/coverage.json matches EXPERIMENT_RESULTS.md exactly (SAE=15, neurons=0 at primary; SAE=65 at τ=0.3). Tracker row done."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All M2 output files present: coverage.json, sensitivity.json, per_concept_best_F1.parquet, best_layer.json, unaligned_features.json."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "1500/10k sequences (~15%), concept universe 400 fine-grained sub-types (more granular than ~143 reference target). Claim uses 'up to ~143'. Subsample and concept-granularity difference honestly disclosed. Direction strongly supported (SAE>>neurons). WARN not FAIL."
+    },
+    "eval_type": "real_gt"
+  }
+}

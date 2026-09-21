@@ -1,0 +1,14 @@
+variant: dataset-swap-heldout-proteins
+claim: C2
+dimension: dataset
+frozen_claim: "fast sequence-based SS->%H metric agrees with experimental-DSSP %H at Pearson r>=0.7"
+swap:
+  from: "E1 held-out eval set (proteins.json heldout[:200])"
+  to:   "fresh DEDUPLICATED disjoint set (proteins.json heldout[200:], unseen in E1)"
+held_fixed:
+  method: "ESM2-650M frozen embeddings + linear probe (assets/ss_probe.pkl) -- the EXACT trained probe from E1"
+  reference: "experimental-PDB DSSP %H (p['pctH']) -- unchanged"
+  protocol: "protein-level %H, Pearson r -- identical to run_E1.py"
+redundancy_control: "drop near-duplicate chains by aa[:60] key, incl. vs E1-used set"
+success_criterion: "Pearson r >= 0.7 AND positive"
+gpu: 1 (ESM2-650M inference on ~300 proteins)

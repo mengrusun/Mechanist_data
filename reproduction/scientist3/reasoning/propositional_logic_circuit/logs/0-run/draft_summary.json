@@ -1,0 +1,59 @@
+{
+  "Experiment_description": "Baseline zero-shot evaluation of Mistral-7B on a synthetic propositional-logic reasoning task (forward chaining with facts and if-then rules) to establish infrastructure for downstream mechanistic circuit analysis. In addition to accuracy measurement, the pipeline includes preliminary counterfactual (corrupted prompt) evaluation, logit-lens layer analysis, single-head attention knockouts, and activation patching across residual/attention/MLP components.",
+  "Significance": "This seed experiment establishes an end-to-end pipeline for mechanistic interpretability on propositional logic reasoning. It reveals several important methodological concerns (weak corruption signal, distributed representations resistant to single-head/single-layer interventions) that must be addressed before circuit discovery can succeed. The layer-wise logit lens localization suggests answer formation happens in late layers (~25-32), giving a useful scope narrowing for future patching work.",
+  "Description": "A small balanced True/False dataset of propositional-logic problems (k facts + rules requiring forward chaining) was synthesized. Mistral-7B was loaded locally with pad_token=eos and left padding, and True/False token variants (' True'/'True' and ' False'/'False') were mapped using max-logit across variants. The pipeline (1) evaluates zero-shot accuracy, (2) computes logit differences under clean vs. corrupted prompts across chain lengths 1 and 2, (3) applies a logit lens at every layer to track answer-token probabilities, (4) ablates each of the 32\u00d732 attention heads and measures accuracy drop, and (5) performs activation patching by transplanting clean activations into corrupted runs at each layer for residual stream, attention output, and MLP output.",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_b86fb5c0fd5c43d7928a18fb9413bb37_proc_3265112/prop_logic_synth_metrics_summary.png",
+      "description": "Logit differences between correct and incorrect tokens for Clean vs Corrupted prompts across chain lengths 1 and 2. Clean prompts yield ~7 (chain 1) and ~6 (chain 2), corrupted ~4 and ~5.",
+      "analysis": "Logit difference is more sensitive than top-1 accuracy and shows the corruption has measurable causal impact even when both conditions score 100% accuracy. However, the residual positive gap under corruption suggests the counterfactual is too weak to fully flip predictions, undermining classical activation-patching setups that require behavioral divergence."
+    },
+    {
+      "path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_b86fb5c0fd5c43d7928a18fb9413bb37_proc_3265112/prop_logic_synth_confusion_matrix.png",
+      "description": "Layer-wise logit lens for Mistral-7B (32 layers). Correct answer probability stays near zero through early/middle layers, rises sharply from ~layer 25 to ~0.85 by layer 32. Incorrect probability remains near zero throughout.",
+      "analysis": "Classic late-layer answer-emergence signature. Localizes the readout/decision stage to layers ~25-32, providing a principled scope reduction for later circuit discovery. Confirms Mistral-7B commits to the correct token late, consistent with prior mechanistic interpretability findings on other transformers."
+    },
+    {
+      "path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_b86fb5c0fd5c43d7928a18fb9413bb37_proc_3265112/prop_logic_synth_logit_scatter.png",
+      "description": "Attention-head knockout heatmap (32 layers \u00d7 32 heads) showing accuracy drop from baseline per individual head ablation. Nearly all values are ~0.",
+      "analysis": "No single head is causally necessary in isolation. Indicates either high redundancy across heads, that the task is too easy for many pathways to solve it, or that the circuit is distributed such that joint/path-patching interventions will be required to reveal it. Motivates moving beyond single-head ablation."
+    },
+    {
+      "path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_b86fb5c0fd5c43d7928a18fb9413bb37_proc_3265112/prop_logic_synth_logit_gap_histogram.png",
+      "description": "Activation patching recovery across 32 layers for residual stream, attention output, and MLP output components. All three curves hover near zero recovery.",
+      "analysis": "Near-zero recovery across all layers and components indicates the corruption is not producing a meaningful behavioral counterfactual, so there is nothing to 'recover' by patching. The corruption design must be revised (e.g., swap fact polarity or rule antecedent) to produce answer flips before activation patching can localize the circuit."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 0.8529,
+      "description": "Zero-shot task accuracy of Mistral-7B on the synthetic propositional-logic held-out set",
+      "analysis": "Establishes a solid baseline (~85%) showing Mistral-7B can perform forward-chaining reasoning on short synthetic problems well above chance, making it a viable model for circuit discovery on this task."
+    },
+    {
+      "result": 0.5591,
+      "description": "Validation loss on the propositional-logic synthetic set",
+      "analysis": "Provides a scalar reference for future comparisons when varying prompt formats or ablation conditions."
+    },
+    {
+      "result": 7.0,
+      "description": "Approximate logit difference (correct - incorrect) for clean prompts at chain length 1",
+      "analysis": "Strong margin between correct and incorrect tokens on clean prompts, confirming confident predictions and providing a useful signal for interventions."
+    },
+    {
+      "result": 4.0,
+      "description": "Approximate logit difference for corrupted prompts at chain length 1",
+      "analysis": "Corruption reduces but does not eliminate the correct-token margin, showing partial but insufficient causal disruption\u2014key reason activation patching yields negligible recovery."
+    },
+    {
+      "result": 0.85,
+      "description": "Correct-token probability at the final layer via logit lens",
+      "analysis": "Matches overall accuracy and confirms late-layer answer emergence around layers 25-32."
+    },
+    {
+      "result": 0.0,
+      "description": "Approximate accuracy drop from single-head knockout across all 32\u00d732 attention heads",
+      "analysis": "No individual head is necessary; strongly suggests distributed/redundant circuit implementation and motivates joint or path-patching approaches."
+    }
+  ]
+}

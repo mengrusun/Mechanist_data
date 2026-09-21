@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal gives a directional, refutable prediction: “a mechanistic model should give A_int > 0,” so A_int <= 0 is an immediately decidable negative result, while “CAS is high for directed pairs and near-zero for symmetric-null pairs” supplies an additional comparison, albeit without numeric CAS or AUROC thresholds. The read-and-intervene procedure broadly addresses the hypothesis, but crucial details remain ambiguous: “measure the induced change in the model's predicted effect” does not specify whether this prediction comes from the fitted probe, a native model head, or another decoder, and the formula for combining interventional and predictive asymmetry into CAS is unstated. More fundamentally, unequal bidirectional decodability or steering sensitivity does not uniquely identify causal representation, so the proposed metrics can establish representational asymmetry but require stronger logic to support the claimed distinction between “mechanistic versus correlational encoding.”",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is the bidirectional intervention—“steer along the cause direction and measure the induced change in the model's predicted effect; then steer along the effect direction and measure induced change in predicted cause”—which is implementable with probes and activation hooks but needs custom, model-specific output definitions rather than being fully specified as a standard operation. The named dependencies, including “ESM-2 (8M-650M),” “ChemBERTa/MolFormer,” MegaScale, FireProtDB, and Materials Project, exist and are supported by standard probing, CKA, steering, and activation-patching tooling, although “a public physics/atmospheric FM” is left unspecified. Resources receive partial concrete specification through “~10 directed pairs,” named datasets, model families and scales, and evaluation “at all layers,” but per-dataset sample counts are absent; nevertheless, random-model, random-direction, symmetric-null, standardized-steering, and real-input patching controls make a negative result runnable.",
+      "score": 7
+    }
+  }
+}

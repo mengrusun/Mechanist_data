@@ -1,0 +1,73 @@
+[2026-07-13T23:25:49] M3: loading M1 artifacts
+[2026-07-13T23:25:49] M3: loading model + SEV split
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.24s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.38it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.25it/s]
+[2026-07-13T23:25:54] M3: |val|=120, |eval|=120, emotions=['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust']
+[2026-07-13T23:25:54] M3: collecting per-emotion neuron activations on eval events (for sign/std)
+[2026-07-13T23:26:05] M3: computing baseline logprobs on val and eval per emotion
+[2026-07-13T23:26:12] M3 Arm A: val sweep (9 configs per emotion)
+[2026-07-13T23:26:12] M3 Arm A: K_H_neigh=[5, 12, 24], K_N_neigh=[200, 500, 2000], alphas=[0.05, 0.1, 0.3]
+[2026-07-13T23:26:30]   emo=joy arm A best: k_h=5, k_n=500, α=0.1, gain=+0.0818
+[2026-07-13T23:26:48]   emo=sadness arm A best: k_h=12, k_n=2000, α=0.3, gain=+0.1434
+[2026-07-13T23:27:05]   emo=anger arm A best: k_h=24, k_n=2000, α=0.3, gain=+1.7240
+[2026-07-13T23:27:22]   emo=fear arm A best: k_h=24, k_n=2000, α=0.3, gain=+0.4702
+[2026-07-13T23:27:39]   emo=surprise arm A best: k_h=12, k_n=200, α=0.3, gain=+1.8175
+[2026-07-13T23:27:57]   emo=disgust arm A best: k_h=12, k_n=500, α=0.3, gain=+1.5015
+[2026-07-13T23:27:57] M3 Arm B: val sweep (9 configs per emotion)
+[2026-07-13T23:28:03]   emo=joy arm B best: T0+suffix, gain=+9.6233
+[2026-07-13T23:28:08]   emo=sadness arm B best: T0+suffix, gain=+9.8912
+[2026-07-13T23:28:14]   emo=anger arm B best: T1+prefix, gain=+10.5221
+[2026-07-13T23:28:20]   emo=fear arm B best: T1+prefix, gain=+10.2766
+[2026-07-13T23:28:26]   emo=surprise arm B best: T1+prefix, gain=+11.8919
+[2026-07-13T23:28:33]   emo=disgust arm B best: T1+prefix, gain=+10.7512
+[2026-07-13T23:28:33] M3 Arm C: val sweep (9 configs per emotion)
+[2026-07-13T23:28:41]   emo=joy arm C best: L=4, α=2.0, gain=+1.4253
+[2026-07-13T23:28:47]   emo=sadness arm C best: L=4, α=2.0, gain=+1.0309
+[2026-07-13T23:28:54]   emo=anger arm C best: L=3, α=2.0, gain=+1.0958
+[2026-07-13T23:29:00]   emo=fear arm C best: L=4, α=2.0, gain=+0.9770
+[2026-07-13T23:29:07]   emo=surprise arm C best: L=2, α=2.0, gain=+0.4630
+[2026-07-13T23:29:13]   emo=disgust arm C best: L=23, α=2.0, gain=+6.0770
+[2026-07-13T23:29:13] M3 eval: greedy generation on eval stems
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+[2026-07-13T23:30:51]   emo=joy arm A eval done (120 continuations)
+[2026-07-13T23:32:36]   emo=joy arm B eval done
+[2026-07-13T23:34:33]   emo=joy arm C eval done
+[2026-07-13T23:37:00]   emo=sadness arm A eval done (120 continuations)
+[2026-07-13T23:38:44]   emo=sadness arm B eval done
+[2026-07-13T23:40:27]   emo=sadness arm C eval done
+[2026-07-13T23:42:11]   emo=anger arm A eval done (120 continuations)
+[2026-07-13T23:43:55]   emo=anger arm B eval done
+[2026-07-13T23:45:37]   emo=anger arm C eval done
+[2026-07-13T23:47:12]   emo=fear arm A eval done (120 continuations)
+[2026-07-13T23:48:57]   emo=fear arm B eval done
+[2026-07-13T23:51:06]   emo=fear arm C eval done
+[2026-07-13T23:53:19]   emo=surprise arm A eval done (120 continuations)
+[2026-07-13T23:55:13]   emo=surprise arm B eval done
+[2026-07-13T23:56:55]   emo=surprise arm C eval done
+[2026-07-13T23:58:37]   emo=disgust arm A eval done (120 continuations)
+[2026-07-14T00:00:20]   emo=disgust arm B eval done
+[2026-07-14T00:02:06]   emo=disgust arm C eval done
+[2026-07-14T00:02:06] M3: running gpt-5.4 judge on all eval continuations
+[2026-07-14T00:02:06] M3: 2160 judge calls
+[2026-07-14T00:02:29]   judged 100/2160
+[2026-07-14T00:02:50]   judged 200/2160
+[2026-07-14T00:03:11]   judged 300/2160
+[2026-07-14T00:03:31]   judged 400/2160
+[2026-07-14T00:03:52]   judged 500/2160
+[2026-07-14T00:04:12]   judged 600/2160
+[2026-07-14T00:04:33]   judged 700/2160
+[2026-07-14T00:04:56]   judged 800/2160
+[2026-07-14T00:05:21]   judged 900/2160
+[2026-07-14T00:05:47]   judged 1000/2160
+[2026-07-14T00:06:12]   judged 1100/2160
+[2026-07-14T00:06:35]   judged 1200/2160
+[2026-07-14T00:06:56]   judged 1300/2160
+[2026-07-14T00:07:18]   judged 1400/2160
+[2026-07-14T00:07:40]   judged 1500/2160
+[2026-07-14T00:08:00]   judged 1600/2160
+[2026-07-14T00:08:21]   judged 1700/2160
+[2026-07-14T00:08:41]   judged 1800/2160
+[2026-07-14T00:09:01]   judged 1900/2160
+[2026-07-14T00:09:24]   judged 2000/2160
+[2026-07-14T00:09:44]   judged 2100/2160
+[2026-07-14T00:09:56] M3: DONE. Verdict = not-supported. A>B: 0/6, A>C: 0/6. Macro: A=0.139, B=0.663, C=0.354

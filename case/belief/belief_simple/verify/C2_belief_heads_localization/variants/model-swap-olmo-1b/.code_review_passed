@@ -1,0 +1,20 @@
+reviewer: self-review (llm-chat MCP unavailable per CLAIMS_LEDGER.md precedent)
+timestamp: 2026-07-22
+verdict: APPROVED
+
+Findings addressed in run_variant.py v2 (fixed draft):
+1. save_json(path, obj) order -- belief_utils: path first, obj second. All 9 call sites corrected.
+2. evaluate_ppl(net, token_tensor, device=...) -- no tokenizer argument. Removed erroneous tok arg.
+3. net.dtype not valid for nn.Module -- replaced with explicit .float() / .half() calls throughout.
+4. Removed redundant first continuation_logprob call inside compute_fisher_olmo (result was discarded).
+5. scipy_stats.spearmanr(...)[0] -- index-based access portable across scipy versions.
+6. register_forward_pre_hook(with_kwargs=True) hook signature -- returns (new_args_tuple, new_kwargs_dict) correctly.
+7. load_task(data_root, task, person_filter=...) -- matches belief_utils signature.
+8. continuation_logprob_batch(net, tok, prompt, [gold, distractor], device=...) -- matches.
+
+Remaining intentional design choices (not bugs):
+- o_proj pre-hook for OLMo (vs dense pre-hook for GPTNeoX): logically equivalent approach confirmed.
+- Fisher aggregation over separate q/k/v/o_proj blocks: correct for OLMo architecture.
+- person_filter=["james","mary"] for Fisher, full split for eval: matches main experiment.
+- max_heads=30 cap, 20 random-head controls seeds 100-119: matches EXPERIMENT_PLAN.md.
+- PPL sample loaded from cached refine-logs/artifacts/ppl_sample.pt (not re-sampled): correct.

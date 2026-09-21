@@ -1,0 +1,33 @@
+{
+  "date": "2026-07-20",
+  "auditor": "executor-self-review (graceful-degradation: llm-chat MCP unavailable)",
+  "claim_id": "C1",
+  "variant": "method-swap-binary-judge",
+  "dimension": "method",
+  "linked_milestones": ["M0"],
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "No external GT used. P(banana_binary)=count(yes)/N over existing PNGs. Proxy evaluation by design. No synthetic GT derived from model outputs."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Denominator is sample size N=160 (fixed), not model output statistics. Values range 0.46-0.58 for teacher arms and 0-0.025 for control arms — plausible range, no suspiciously perfect scores."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "result.json and cost.json exist non-empty. Numbers match run.log: teacher_seed42 80/160=0.5 ✓, gap=0.5023 ✓, residue 5/154=0.0325 ✓, n_api_calls=2874 ✓."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All functions (judge_binary_one, judge_binary_batch, score_arm, main) called in execution chain."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "2720 eval PNGs (17 arms × 160), 154 teacher channel images — full datasets, no subsetting. All 8 seeds covered."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

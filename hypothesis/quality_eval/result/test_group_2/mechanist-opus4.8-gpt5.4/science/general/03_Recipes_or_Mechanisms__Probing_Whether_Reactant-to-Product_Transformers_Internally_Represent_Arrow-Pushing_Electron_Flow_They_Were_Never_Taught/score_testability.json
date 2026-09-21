@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The experiments directly address the hypothesis by separately testing decodability, directionality, causal use, and behavioral prediction, with strong controls such as the “matched reaction-center baseline,” “reactivity-shuffled control,” and “matched-norm random-direction control.” Falsifiability is unusually explicit: examples include “F1 ≥ 0.75,” donor-versus-acceptor “accuracy ≥ 0.75,” “M ≥ 3,” and hallucination-detection “AUROC ≥ 0.75,” alongside clear negative outcomes such as “M ≈ 1 means directions are decodable but not causal.” However, the causal metric leaves “effect_true direction,” “mechanistically-predicted product change,” and how a donor or bond-breaking intervention uniquely determines that change insufficiently defined, while “electron-flow strength = probe confidence / SAE feature coherence” does not specify a single reproducible calculation. The proposal is therefore strongly aligned and decidably falsifiable, but an implementer would need clarification about these central measurements and about avoiding product-label leakage when using “decoder cross-attention” activations.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is the causal test that will “add ±α·(unit direction) to the atom's activations” and score whether decoding follows a “mechanistically-predicted product change”; activation steering itself is a standard hooked-forward-pass operation, but mapping its diverse decoded products to that underdefined mechanistic effect requires custom logic rather than being fully turnkey. The named Molecular Transformer and Chemformer models exist, and linear probes, SAEs, activation hooks, CKA, fingerprints, atom mapping, and SMILES decoding all have established tooling; the proposed bond-electron labels are also constructible from the named mechanism records and mappings. Resources are concretely specified through “8,000 high-confidence” reactions, a “1,000 reactions” intervention set, “5 folds, 3 seeds,” an SAE “dictionary 8,192, L1 1e-3,” and the explicit alpha grid, although the exact OOD split and atom/bond-to-token activation alignment remain underspecified. The refuting branch is runnable because shuffled labels, fingerprints, reaction-center conditioning, random and unrelated latent directions, validity checks, confidence baselines, and shuffled-pair model brackets can all yield the stated negative outcomes rather than forcing supportive evidence.",
+      "score": 7
+    }
+  }
+}

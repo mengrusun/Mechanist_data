@@ -1,0 +1,54 @@
+{
+  "direction": "Disentangling Language and Reasoning in LLM Internal Representations: identify a language-specific subspace and test whether inference-time suppression improves multilingual reasoning.",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "Hidden representations of a reasoning-tuned LLM (Qwen-3-4B-Thinking) decompose into a language-specific subspace V_lang and an approximately orthogonal language-agnostic residual, and suppressing V_lang at inference time via null-space projection or signed steering α·Π_lang·h improves multilingual reasoning accuracy while preserving output-language fidelity.",
+      "status": "conditional",
+      "behavior_conclusion": "V_lang IS identifiable from a small multilingual probe set (rank ≤ 11 subspace via language-mean-difference SVD reaches 96.8% held-out language-classifier accuracy at n_probe=250 on layer_group=early), and IS specifically language-related (matched random-subspace α-sweep preserves ~0.74 baseline where V_lang collapses to 0.05, so the direction is not generic). BUT the phenomenon's positive-prediction leg does NOT hold as stated: (a) the orthogonal complement retains 33–49% language-classifier accuracy — the 'orthogonal decomposition' is only approximate, not clean; (b) null-space projection at α=−1 uniformly degrades MGSM macro-accuracy by 50–73 pp across every screened (rank, k_top, layer_group) on Qwen-3-4B-Thinking, with English generations showing arithmetic breakdown — reasoning is entangled with V_lang, not orthogonal to it; (c) the signed dose-response diagnostic A(−1) > A(0) > A(+1) is refuted, since A(0)=0.744 ≫ A(−1)=0.051, and this non-monotone pattern reproduces on DeepSeek-R1-Distill-LLaMA-8B (cross-model robust). The behavior holds only in the narrowed sense: 'V_lang is a specifically language-related low-dimensional direction whose ablation destroys reasoning', not 'ablating V_lang isolates language identity from reasoning'.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention → Tuning & Editing",
+          "family": "Representation and Parameter Analysis / Steering Vectors",
+          "headline": "Located V_lang via mean-difference SVD (96.8% held-out language classifier at n=250, r=16, layer_group=early, complement fails to collapse to chance — retains 33–49%); causally tested via signed α-sweep h ← h + α·Π_lang·h at winning M2 site (mid, k_top=12, r=2) with matched random-subspace control; V_lang causes 50–73 pp accuracy collapse where random subspace preserves 74% baseline (α<0), quantitatively confirming V_lang's language specificity but simultaneously refuting the plan's monotone-decrease and 'suppression improves' predictions; LoRA-SFT baseline (r=32, α=32, q/k/v/o, lr=2e-4, 5001 examples, 1 epoch) degraded MGSM by 20.4 pp, leaving the training-free-vs-SFT accuracy-match comparison moot; cross-model variant on DeepSeek-R1-Distill-LLaMA-8B reproduces the non-monotone pattern A(-1)=0.391 < A(0)=0.447 (robustness=1.0 for the refutation).",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "Hidden representations of Qwen-3-4B-Thinking decompose into a language-specific subspace V_lang (identifiable from a small multilingual probe set via SVD/mean-difference) and an approximately orthogonal language-agnostic residual.",
+              "method": "Language-mean-difference SVD across 3 layer groups × 6 rank_r × 5 n_probe × 3 seed (270 fits) on FLORES-200 dev + MGSM held-out; predicates: V_lang classifier ≥ 0.90 with 'small' n_probe ≤ 250, orthogonal-complement classifier ≤ 0.20, median principal-angle cosine vs content probe ≤ 0.20.",
+              "conclusion": "V_lang identifiability leg supported (0.968 classifier accuracy at n_probe=250, rank_r=16, layer_group=early, ≥0.90 threshold) but orthogonal-decomposition leg falsified — complement classifier retains 33–49% language-classifier accuracy at every layer group, well above the ≤0.20 threshold and above chance (~0.091). Language information is distributed, not confined to the rank-r SVD subspace. Audit passed, swap-test deferred (cap) — swap-test upgrade command surfaced (/auto-verify C1 -- resume: true)."
+            },
+            {
+              "id": "C2",
+              "statement": "Suppressing the language-specific subspace at inference time via null-space projection at non-upper layers raises MGSM mean accuracy by ≥ 3 pp with GlotLID output-language fidelity drop ≤ 5 pp when the top-k layers are left intact. [Narrowed via iteration ③ to: null-space projection uniformly degrades reasoning across (rank, k_top) on layer_group=mid, and reasoning is therefore entangled with V_lang.]",
+              "method": "Null-space projection h ← h − Π_lang·h at 3 rank × 3 k_top × 1 layer_group=mid (9 configs) at α=−1 on MGSM 25/lang × 11 langs, with α=0 baseline; verify Stage-B killed after screen showed uniform collapse.",
+              "conclusion": "Original positive-gain claim refuted — every screened (rank, k_top) on layer_group=mid drops macro-accuracy by 50–73 pp vs baseline 0.762 (off-plan gate G2 fires). Narrowed claim supported by construction: reasoning is entangled with, not orthogonal to, V_lang; English generations under intervention show systematic arithmetic breakdown (2 + = 2.5, 3 * = 72), indicating suppression destroys general reasoning rather than isolating language identity."
+            },
+            {
+              "id": "C3",
+              "statement": "The steering coefficient α in h ← h + α·Π_lang·h produces MGSM accuracy monotone-decreasing in α over the signed sweep α ∈ [−1.5, +1.5] with A(−1) > A(0) > A(+1).",
+              "method": "Signed α ∈ {−1.5,…,+1.5} at winning M2 site (mid, k_top=12, rank_r=2) × 50/lang × 11 langs, seed=42, with matched random-subspace α-sweep as negative control; variant on DeepSeek-R1-Distill-LLaMA-8B same grid.",
+              "conclusion": "Monotone leg refuted robustly across model families: A(−1)=0.051 ≪ A(0)=0.744 on main and A(−1)=0.391 < A(0)=0.447 on variant — the baseline peaks and any intervention degrades. Specificity leg supported: matched random subspace preserves ~0.74 at α ∈ [−1.5, −0.25] while V_lang collapses (Δ = −0.44 to −0.72), so V_lang is specifically language-related. Cross-model consistency of the non-monotone pattern (robustness=1.0) is what makes the *refutation* rather than the original claim the PASS-worthy finding."
+            },
+            {
+              "id": "C4",
+              "statement": "The training-free subspace suppression intervention matches or exceeds multilingual LoRA-SFT post-training on MGSM 11-language mean accuracy at compute ratio κ ≤ 0.10, and RL post-training when budget permits. [Narrowed via iteration ③ to: LoRA-SFT at the tested configuration degrades baseline, so the accuracy-match comparison is untestable until a positive-baseline SFT recipe exists.]",
+              "method": "LoRA-SFT (r=32, α=32, targets={q,k,v,o}_proj, lr=2e-4, batch 2 × grad_accum 8, bf16, cosine, 1 epoch on 5001 MGSM8KInstruct_Parallel examples, ~15% of a full epoch) vs training-free edit at winning M2 site; report κ = edit-compute / SFT-compute; M4b (GRPO) not run.",
+              "conclusion": "LoRA-SFT drops MGSM macro-accuracy from 0.762 to 0.558 (−20.4 pp, worst on Zh −0.30 and Ja −0.28); training-free edit at α=−1 drops it to 0.03–0.07. The original accuracy-match predicate is untestable because both arms underperform the untuned baseline. Compute-ratio leg passes (κ ≈ 0.04 ≤ 0.10) but is moot. Full-scale SFT (73k examples, n=250/lang eval) + M4b (RL) are needed to re-open the comparison — surfaced as future work."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": ["Formation Tracing", "Unit Interpretation", "Decision Auditing"]
+    }
+  ],
+  "untried_behavior_directions": []
+}

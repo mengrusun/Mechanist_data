@@ -1,0 +1,69 @@
+{
+  "claim_id": "C1",
+  "audit_type": "mechanism",
+  "phase": 2,
+  "date": "2026-07-15",
+  "mechanism_family": "Causal Attribution / Patching",
+  "overall_severity": "WARN",
+  "overall_verdict": "PASS",
+  "admission_decision": "ADMITTED",
+  "findings": [
+    {
+      "id": "M-C1-01",
+      "category": "causal_paradigm",
+      "severity": "PASS",
+      "description": "Activation patching implements necessity test correctly: clean/corrupted paradigm with block-input pre-hook replacement of s at target residues"
+    },
+    {
+      "id": "M-C1-02",
+      "category": "donor_confounding",
+      "severity": "PASS",
+      "description": "Donors verified as non-hairpin at corresponding target residue positions in native DSSP — valid corrupted-state source"
+    },
+    {
+      "id": "M-C1-03",
+      "category": "hypothesis_direction",
+      "severity": "PASS",
+      "description": "Predicted direction (early s-patch drops hairpin rate ≥0.2pp) confirmed: Δ=-0.862 in correct direction"
+    },
+    {
+      "id": "M-C1-04",
+      "category": "specificity_controls",
+      "severity": "PASS",
+      "description": "Three controls (z-patch, matched-ctrl, late-window) all show <10% of early s-patch effect, ruling out non-selective perturbation artifacts"
+    },
+    {
+      "id": "M-C1-05",
+      "category": "family_routing",
+      "severity": "PASS",
+      "description": "Family = Causal Attribution / Patching per MECHANISM_ROUTING.md; implementation uses block-input activation patching submethod exactly"
+    },
+    {
+      "id": "M-C1-06",
+      "category": "block_specific_patching",
+      "severity": "PASS",
+      "description": "Block-specific donor tensors used (one per block k via pre-hook capture); not averaged across blocks"
+    },
+    {
+      "id": "M-C1-07",
+      "category": "donor_distribution_shift",
+      "severity": "WARN",
+      "description": "Donor s tensors come from different sequence distribution — intrinsic limitation of activation patching. Mitigated by N=197 random pairings and three specificity controls."
+    },
+    {
+      "id": "M-C1-08",
+      "category": "baseline_confirmed",
+      "severity": "PASS",
+      "description": "Baseline condition run per chain; baseline_rate=100% confirms hairpin present before intervention"
+    },
+    {
+      "id": "M-C1-09",
+      "category": "hook_cleanup",
+      "severity": "PASS",
+      "description": "Context manager with handle.remove() ensures no hook leakage across chain iterations"
+    }
+  ],
+  "n_pass": 1,
+  "n_warn": 1,
+  "n_fail": 0
+}

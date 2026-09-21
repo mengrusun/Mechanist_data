@@ -1,0 +1,54 @@
+{
+  "novelty": {
+    "score": 7,
+    "reasoning": "The broad phenomenon that irrelevant context hurts reasoning is already well established, so the main finding is not new at the top level. The proposal's potentially novel claims are: (1) benign, plausible surrounding context increases reasoning compute/tokens for the exact same embedded target at roughly matched accuracy; novelty lives in the phenomenon framing and realistic setting rather than the basic effect of irrelevant context; (2) the inflation is mediated by contamination of a pre-generation difficulty representation, reusing the known difficulty direction/heads from prior work; novelty lives in the mechanism/explanation; (3) the effect is visible at the prompt boundary before generation and scales with context complexity independent of target difficulty and raw length; novelty lives in a specific causal account, not just a new dataset; (4) a training-free difficulty-reset intervention can causally cancel much of the excess compute without hurting accuracy; novelty lives in the intervention. Relative to related work, this is a non-trivial delta if the mechanistic attribution and causal reset hold. Closest prior families are irrelevant-context/distractor/context-rot papers and the 2025 difficulty-perception work; the actual delta is shifting from accuracy degradation under distractors to compute-tax under benign context, plus tying that tax to a specific pre-generation difficulty code.",
+    "revision_notes": [
+      "State the 3-4 core novelty claims explicitly and separate clearly what is known already versus what is new here.",
+      "Narrow any 'first to' language to the compute-tax + difficulty-contamination + causal reset combination.",
+      "Define what counts as 'benign' and 'plausible' operationally, and distinguish it crisply from distractors/adversarial context.",
+      "Add a stronger comparison to generic attention-diversion/entrainment mechanisms so the mechanistic novelty is not overstated."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "The problem is wasted reasoning compute caused by messy but normal surrounding context, not merely lower task accuracy. People who care include efficient-reasoning researchers, RAG practitioners, model serving teams, and interpretability researchers studying compute allocation. If the claim holds, it could change how reasoning benchmarks are constructed, how RAG prompts are sanitized, and how inference-time controls or internal steering are used to reduce cost without harming answers. The strongest case is: ordinary benign context can make models spend substantially more thinking tokens on the same question because they internally misread it as harder. This passes the 'so what?' test better than a pure interpretability result because it points to a deployable efficiency failure mode, though the real-world reach depends on effect size in stronger RL-tuned models and whether the reset is robust. It is meaningful but unlikely by itself to redirect the field unless the intervention generalizes strongly.",
+    "revision_notes": [
+      "Quantify why the claimed token savings matter in deployment terms: latency, cost, throughput, or context-window pressure.",
+      "Clarify the primary beneficiary: RAG systems, chat assistants, or reasoning-model training/eval pipelines.",
+      "Add a stronger statement of downstream change if validated, e.g., benchmark protocol, prompt sanitation, or inference-time controller design.",
+      "Discuss expected effect size and prevalence in production-style prompts to support real-world significance."
+    ]
+  },
+  "review": {
+    "score": 8,
+    "reasoning": "This is unusually well scoped and experimentally concrete for a proposal. The hypothesis is falsifiable: identical targets embedded in varying benign context should increase reasoning tokens, elevate a pre-generation difficulty readout, and be reducible via patching/reset while preserving accuracy. The experimental plan includes useful controls: within-target matching, length-matched padding, mixed-effects, reverse/random/off-target controls, and specificity tests. The biggest logical risks are mechanistic overclaiming and construct validity: the 'difficulty' signal may partially confound with generic prompt complexity, attention diversion, or verbosity priors; the truncation-based 'wasted vs genuine' metric may be noisier than implied; and LLM-judged irrelevance could leak subtle cues. Related work is fairly specific, but the proposal should engage more directly with alternative mechanisms and expected failure modes in RL-tuned models. Overall this is near workshop/strong conference-quality proposal design if executed cleanly, but the causal interpretation needs especially careful restraint.",
+    "revision_notes": [
+      "Pre-register the exact success criteria and negative-result criteria for each major claim, especially the mechanistic ones.",
+      "Tighten the definition and measurement of 'wasted reasoning tokens'; include multiple operationalizations beyond truncate-and-resume.",
+      "Add stronger controls for covert cueing in 'benign' context, including human-authored neutral wrappers and semantic-scrambled but style-matched variants.",
+      "Include explicit baselines for generic complexity/verbosity/attention-diversion mechanisms, not only difficulty-head probes.",
+      "Report calibration of the difficulty probe under distribution shift from isolated problems to embedded prompts.",
+      "Specify sample sizes, power expectations, and how many prompt variants per target are needed for mixed-effects reliability.",
+      "Be careful about causal language: patching/steering should be framed as evidence for involvement of the representation, not automatically sole mechanism.",
+      "Add one stronger realistic deployment experiment on naturally occurring email/chat/RAG prompts rather than mostly synthetic wrappers."
+    ]
+  },
+  "revision_notes": [
+    "State the 3-4 core novelty claims explicitly and separate clearly what is known already versus what is new here.",
+    "Narrow any 'first to' language to the compute-tax + difficulty-contamination + causal reset combination.",
+    "Define what counts as 'benign' and 'plausible' operationally, and distinguish it crisply from distractors/adversarial context.",
+    "Add a stronger comparison to generic attention-diversion/entrainment mechanisms so the mechanistic novelty is not overstated.",
+    "Quantify why the claimed token savings matter in deployment terms: latency, cost, throughput, or context-window pressure.",
+    "Clarify the primary beneficiary: RAG systems, chat assistants, or reasoning-model training/eval pipelines.",
+    "Add a stronger statement of downstream change if validated, e.g., benchmark protocol, prompt sanitation, or inference-time controller design.",
+    "Discuss expected effect size and prevalence in production-style prompts to support real-world significance.",
+    "Pre-register the exact success criteria and negative-result criteria for each major claim, especially the mechanistic ones.",
+    "Tighten the definition and measurement of 'wasted reasoning tokens'; include multiple operationalizations beyond truncate-and-resume.",
+    "Add stronger controls for covert cueing in 'benign' context, including human-authored neutral wrappers and semantic-scrambled but style-matched variants.",
+    "Include explicit baselines for generic complexity/verbosity/attention-diversion mechanisms, not only difficulty-head probes.",
+    "Report calibration of the difficulty probe under distribution shift from isolated problems to embedded prompts.",
+    "Specify sample sizes, power expectations, and how many prompt variants per target are needed for mixed-effects reliability.",
+    "Be careful about causal language: patching/steering should be framed as evidence for involvement of the representation, not automatically sole mechanism.",
+    "Add one stronger realistic deployment experiment on naturally occurring email/chat/RAG prompts rather than mostly synthetic wrappers."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-14",
+  "auditor": "executor (Claude Sonnet 4.6) + evidence review",
+  "claim_id": "CM",
+  "linked_milestones": ["M5", "M6"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "M5: emotion labels from human-authored prefixes.json (not model output). M6: GSM8K gold from dataset load_gsm8k() (real_gt). No model output used as GT.",
+      "evidence": ["scripts/probe_location.py:119", "scripts/mechanism_causal.py:302", "scripts/run_prefix_eval.py:34-43"]
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "M5: sklearn clf.score = proportion_correct / n_test_items. M6: accuracy = n_correct / n_valid. Neither uses model-derived denominator.",
+      "evidence": ["scripts/probe_location.py:52", "scripts/mechanism_causal.py:336"]
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "M5: reports/M5_location.json and reports/M5_directions.pt exist; probe acc=1.00 at layers 4-36, null=0.28. M6: 9/13 planned runs exist in runs/M6/. MISSING: M6_patch_filler_L4, M6_patch_filler_L8, M6_steer_medqa_L8_ap1, M6_steer_L20_null_ap1 (4 descoped specificity/null controls). Only happiness_2_human tested (1/12 planned emotional prefixes). Significant scope gaps but no phantom results — all tracker rows accurately reflect run status.",
+      "evidence": ["refine-logs/EXPERIMENT_TRACKER.md (M6 rows)", "runs/M6/*.json (9 files)", "refine-logs/EXPERIMENT_RESULTS.md:148-181"]
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "probe_location.py and mechanism_causal.py have no dead metric functions. All defined functions called in main(). mechanism_causal_batch.py is an alternate dispatch wrapper, not dead code.",
+      "evidence": ["scripts/probe_location.py", "scripts/mechanism_causal.py"]
+    },
+    "scope": {
+      "status": "warn",
+      "details": "M5: 200 items × 24 conditions × 10 layers, 3 seeds — adequate. M6: 50 items (vs 200 planned), 1 emotion (vs 12), 0/3 specificity controls, 1 dose-response missing point (α=+0.25). CM causal sub-claim significantly under-powered. Scope gaps explicitly documented in tracker and EXPERIMENT_RESULTS. No overclaim in language — EXPERIMENT_RESULTS marks CM as 'partially-supported' with explicit caveats.",
+      "evidence": ["refine-logs/EXPERIMENT_TRACKER.md (M6 descoped rows)", "refine-logs/EXPERIMENT_RESULTS.md:148-181"]
+    },
+    "eval_type": "M5: intrinsic probe evaluation (human-authored emotion labels); M6: real_gt (GSM8K dataset)"
+  }
+}

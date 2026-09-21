@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly addresses the hypothesis by testing whether a \"magnitude probe trained on one form generalizes to all others,\" comparing manifolds with \"Procrustes/PCA,\" and measuring \"arithmetic accuracy under shared-subspace ablation vs random.\" The predictions are directional—\"cross-form probe generalization near ceiling\" and ablation that \"disrupts arithmetic in all languages equally\"—so poor transfer, low manifold overlap, or no selective ablation effect would refute them, but terms such as \"near ceiling,\" \"form-invariant,\" and \"equally\" have no decision thresholds. Important implementation choices are also ambiguous, including the model and layer, pooling for multi-token numerals, how the shared subspace is identified, and how geometry across representation spaces is aligned; moreover, idioms are not a closely matched control for numeral magnitude.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "Linear probes, PCA/Procrustes analysis, activation extraction, and random-versus-targeted ablation are established operations with standard ML and interpretability tooling, and the proposed collection is partly quantified as \"0-100 and round numbers\" in \"12 languages plus digits.\" The hardest step is to \"ablate shared magnitude subspace\": this is implementable in principle, but the claim does not define how that subspace is estimated, which activations are altered, or how equivalent ablation magnitude is enforced, so it requires substantial custom specification rather than being runnable as written. The random-ablation comparison and cross-form evaluations make a negative result possible, but no model, layers, language list, prompt count, arithmetic range, or repeat structure is named, and the proposed number-word resource must be collected rather than relying on a specified existing dataset.",
+      "score": 5
+    }
+  }
+}

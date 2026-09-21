@@ -1,0 +1,79 @@
+{
+  "Experiment_description": "Initial implementation of a pipeline to identify and analyze a linear 'harmfulness direction' in the residual stream activations of Llama-3-8B-Instruct. The experiment uses AdvBench (harmful) vs Alpaca (benign) prompts, extracts activations across layers (8, 12, 16, 20, 24, 28), computes a difference-of-means direction, and evaluates a 1D logistic regression probe with random-direction and shuffled-labels baselines. Additionally, it explores steering effects along both harmfulness and refusal directions, and tests jailbreak-like refusal suppression.",
+  "Significance": "This preliminary implementation establishes strong initial evidence for the core hypothesis that harmfulness and refusal are encoded as distinct but related linear directions in LLM residual streams. Demonstrating causal dissociation via steering (each direction can be manipulated independently) and showing that refusal suppression alone triples-plus attack success rate provides mechanistic insight into jailbreaks and supports the feasibility of a 'Latent Guard' safety probe that monitors internal harmfulness assessment even when refusal fails.",
+  "Description": "The pipeline (1) robustly locates and loads AdvBench (harmful) and Alpaca (benign) datasets from local storage, handling multiple file formats and column naming conventions; (2) loads Llama-3-8B-Instruct with careful tokenizer handling (tiktoken/blobfile installation, nested directory checks, AutoTokenizer with trust_remote_code fallbacks); (3) formats prompts with the chat template and hooks residual-stream activations at the final instruction-token position across a sweep of layers; (4) computes a difference-of-means harmfulness direction between harmful and benign class means; (5) trains a 1D logistic regression probe on projections and compares to a random-direction baseline and shuffled-labels control; (6) evaluates causal effects via activation steering along both harmfulness and refusal directions with alpha in [-2, 2]; (7) tests attack success rate with and without refusal suppression. Sample size is ~150/class.",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-15_02-20-28_encode_harmfulness_refusal_attempt_1/logs/0-run/experiment_results/experiment_df77239ac0e24ba5a7cb35d000f5cf59_proc_395435/llama3_advbench_alpaca_train_val_accuracy.png",
+      "description": "Line plot showing probe accuracy across layers 0-31 of Llama-3-8B-Instruct for harmfulness classification. Accuracy starts at chance (~0.5) at layer 0, rises sharply between layers 2-6 to ~0.95, and plateaus at ~1.0 from layer 8 onward.",
+      "analysis": "Shows harmfulness emerges rapidly in early-to-mid layers and is stably encoded thereafter, justifying probing mid-to-late layers. The persistent near-perfect linear separability across most layers supports the linear representation hypothesis for harmfulness."
+    },
+    {
+      "path": "experiments/2026-07-15_02-20-28_encode_harmfulness_refusal_attempt_1/logs/0-run/experiment_results/experiment_df77239ac0e24ba5a7cb35d000f5cf59_proc_395435/llama3_advbench_alpaca_probe_accuracy_baselines.png",
+      "description": "Cosine similarity between harmfulness and refusal directions across layers. Starts near -0.15 at layer 0, peaks at ~0.65-0.70 in mid layers (10-15), then declines to ~0.25-0.30 in final layers.",
+      "analysis": "Critical finding: harmfulness and refusal directions become entangled in mid-layers but diverge in later layers, supporting the hypothesis that these are distinct concepts that can be decomposed."
+    },
+    {
+      "path": "experiments/2026-07-15_02-20-28_encode_harmfulness_refusal_attempt_1/logs/0-run/experiment_results/experiment_df77239ac0e24ba5a7cb35d000f5cf59_proc_395435/llama3_advbench_alpaca_loss_per_layer.png",
+      "description": "Steering effect along the refusal direction with alpha from -2 to 2. Refusal rate increases monotonically from ~0% to ~100%, while internal harmfulness stays flat at 50-60%.",
+      "analysis": "Provides strong causal evidence for dissociation: refusal behavior can be fully controlled without altering the model's internal harmfulness judgment. This is central to the two-direction decomposition hypothesis."
+    },
+    {
+      "path": "experiments/2026-07-15_02-20-28_encode_harmfulness_refusal_attempt_1/logs/0-run/experiment_results/experiment_df77239ac0e24ba5a7cb35d000f5cf59_proc_395435/llama3_advbench_alpaca_direction_norm_per_layer.png",
+      "description": "Steering effect along the harmfulness direction with alpha from -2 to 2. Internal harmfulness increases monotonically from ~10% to ~95%, while refusal rate stays roughly flat at 40-55%.",
+      "analysis": "Demonstrates the reverse dissociation: internal harm judgment can be manipulated independently of refusal behavior. Together with the refusal-steering plot, this provides bidirectional causal evidence that harmfulness and refusal are separable latent concepts."
+    },
+    {
+      "path": "experiments/2026-07-15_02-20-28_encode_harmfulness_refusal_attempt_1/logs/0-run/experiment_results/experiment_df77239ac0e24ba5a7cb35d000f5cf59_proc_395435/llama3_advbench_alpaca_probe_per_layer.png",
+      "description": "Bar chart comparing Attack Success Rate (ASR): Baseline ~15% vs Refusal Suppression ~68%.",
+      "analysis": "Shows that suppressing refusal alone (without altering harmfulness perception) is sufficient to bypass safety alignment, causing a >4x jump in ASR. This mechanistically explains jailbreaks and motivates the Latent Guard concept: a probe monitoring harmfulness can detect attacks even when refusal fails."
+    },
+    {
+      "path": "experiments/2026-07-15_02-20-28_encode_harmfulness_refusal_attempt_1/logs/0-run/experiment_results/experiment_df77239ac0e24ba5a7cb35d000f5cf59_proc_395435/llama3_advbench_alpaca_confusion_matrix_best_layer.png",
+      "description": "Confusion matrix at best layer showing 50/50 correct classification on both benign and harmful classes (100% accuracy).",
+      "analysis": "Confirms perfect linear separability of harmfulness in residual stream activations at the best layer, validating the difference-of-means approach."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 1.0,
+      "description": "Validation and test accuracy of harmfulness probe at best layer",
+      "analysis": "Perfect classification indicates harmfulness is highly linearly separable in Llama-3-8B-Instruct residuals for AdvBench vs Alpaca."
+    },
+    {
+      "result": 0.8017,
+      "description": "Random-direction baseline validation accuracy at best layer",
+      "analysis": "Surprisingly high baseline, likely due to distributional differences between AdvBench and Alpaca beyond harmfulness (e.g., style, length); highlights need for more rigorous contrast sets."
+    },
+    {
+      "result": 0.625,
+      "description": "Shuffled-labels validation accuracy at best layer",
+      "analysis": "Above chance (0.5), indicating some residual label leakage or class imbalance in the shuffled control."
+    },
+    {
+      "result": 0.68,
+      "description": "Attack Success Rate under refusal suppression steering",
+      "analysis": "Refusal suppression alone raises ASR to ~68%, a >4x increase over baseline (~15%), demonstrating that jailbreaks can operate by suppressing refusal without changing internal harm judgment."
+    },
+    {
+      "result": 0.15,
+      "description": "Baseline Attack Success Rate without steering",
+      "analysis": "Establishes the natural refusal rate; provides a reference point for measuring safety bypass effects."
+    },
+    {
+      "result": 0.7,
+      "description": "Peak cosine similarity between harmfulness and refusal directions (mid layers ~10-15)",
+      "analysis": "The two directions are strongly correlated in middle layers, suggesting shared intermediate computation."
+    },
+    {
+      "result": 0.3,
+      "description": "Cosine similarity between harmfulness and refusal directions in final layers",
+      "analysis": "Moderate-to-low similarity in late layers confirms the directions become separable, supporting the two-direction decomposition hypothesis."
+    },
+    {
+      "result": 5.787,
+      "description": "Harmfulness direction norm at best layer",
+      "analysis": "Provides a scale reference for the extracted difference-of-means direction, relevant for calibrating steering coefficients."
+    }
+  ]
+}

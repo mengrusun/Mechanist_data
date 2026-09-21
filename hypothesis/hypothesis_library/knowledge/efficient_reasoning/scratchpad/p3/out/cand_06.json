@@ -1,0 +1,46 @@
+{
+  "novelty": {
+    "score": 5,
+    "reasoning": "Core claim is a mechanistic reinterpretation of existing test-time compute allocation: early hidden-state entropy as a branch-worthiness signal to predict when parallel sampling helps. The search summary indicates close prior work already predicts per-problem sample budget from hidden states / early decoding, including T2, OSCA/OptScale, and self-estimating BoN. The genuine delta is narrower: tying the predictor to an internal candidate-answer distribution in middle layers and adding causal steering/localization. That is more than a heuristic tweak, but it still sits within a crowded family and may reduce to a difficulty proxy.",
+    "revision_notes": [
+      "Make the exact delta explicit against T2/OSCA/SCALE/DORA: what can your entropy signal predict that their latent/uncertainty signals cannot?",
+      "Add a strongest-possible baseline using the same short greedy prefix and probe family, not just black-box confidence.",
+      "Pre-register whether the claim is mechanistic explanation, better predictor, or causal control; these are different novelty bars."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "If true, this targets a real pain point: parallel test-time sampling is expensive, so better per-problem budget allocation can save substantial compute at fixed accuracy. The proposal's potential impact is strongest for inference-efficiency and reasoning-scaling researchers, especially on extractive reasoning tasks and model families where early branch-worthiness is stable. However, the practical gain may be modest if it only matches existing allocators, transfers poorly, or works only on curated tasks.",
+    "revision_notes": [
+      "Quantify savings in wall-clock and total tokens, not only sample count.",
+      "State the downstream setting where this would change practice: serving, agentic reasoning, or offline evals.",
+      "Include a cost/benefit curve showing where entropy-based allocation beats uniform and existing allocators across budgets."
+    ]
+  },
+  "review": {
+    "score": 5,
+    "reasoning": "The proposal is coherent and testable, with good attention to controls, causality, and ablations. Main weaknesses are related-work specificity, falsifiability of the mechanistic story, and risk of the core signal collapsing into generic difficulty. The experiments are plausible but ambitious: patch localization, causal steering, and allocator benchmarking all in one package may be too broad, and some thresholds look somewhat arbitrary. Stronger venue potential if the causal/mechanistic part is decisive; otherwise it may read as another allocator paper with an interpretability wrapper.",
+    "revision_notes": [
+      "Tighten falsifiable hypotheses: if entropy only tracks difficulty, what result would still support the mechanistic claim?",
+      "Add ablations separating entropy from difficulty, confidence, length, and early-logit margin with matched calibration.",
+      "Specify exact datasets, task types, and compute budgets; clarify whether the signal works for open-ended generation or only extractive tasks.",
+      "Include a negative-control steering experiment to rule out trivial diversity inflation.",
+      "Reduce scope or stage experiments: first validate readout/localization, then causal steering, then allocation.",
+      "Benchmark against the closest prior family using identical model/dataset settings and report statistical uncertainty for all gains."
+    ]
+  },
+  "revision_notes": [
+    "Make the exact delta explicit against T2/OSCA/SCALE/DORA: what can your entropy signal predict that their latent/uncertainty signals cannot?",
+    "Add a strongest-possible baseline using the same short greedy prefix and probe family, not just black-box confidence.",
+    "Pre-register whether the claim is mechanistic explanation, better predictor, or causal control; these are different novelty bars.",
+    "Quantify savings in wall-clock and total tokens, not only sample count.",
+    "State the downstream setting where this would change practice: serving, agentic reasoning, or offline evals.",
+    "Include a cost/benefit curve showing where entropy-based allocation beats uniform and existing allocators across budgets.",
+    "Tighten falsifiable hypotheses: if entropy only tracks difficulty, what result would still support the mechanistic claim?",
+    "Add ablations separating entropy from difficulty, confidence, length, and early-logit margin with matched calibration.",
+    "Specify exact datasets, task types, and compute budgets; clarify whether the signal works for open-ended generation or only extractive tasks.",
+    "Include a negative-control steering experiment to rule out trivial diversity inflation.",
+    "Reduce scope or stage experiments: first validate readout/localization, then causal steering, then allocation.",
+    "Benchmark against the closest prior family using identical model/dataset settings and report statistical uncertainty for all gains."
+  ]
+}

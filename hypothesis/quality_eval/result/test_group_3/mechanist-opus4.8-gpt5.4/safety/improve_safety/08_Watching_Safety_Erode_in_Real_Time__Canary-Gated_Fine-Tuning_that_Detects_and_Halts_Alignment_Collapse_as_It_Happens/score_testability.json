@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan tightly aligns its tests with the two hypotheses: it measures whether \"the canary alarm precedes behavioral collapse by >=50 optimizer steps on average with predictor AUROC >=0.85\" and whether CGFT preserves ASR and task accuracy relative to named defenses. Falsifiability is unusually strong, with explicit negative outcomes such as \"lead-time <=0\" for H1 and \"ASR >15 points above the aligned baseline ... or a task drop >5 points\" for H2, plus clearly prioritized metrics and control comparisons. The main remaining ambiguities are how the projection and refusal confidence are normalized and combined, how \"safety-relevant response tokens\" are selected, and the exact layer, geometry, coefficient, and threshold-calibration procedure for the activation nudge. These prevent implementation without a few clarifications but do not undermine the directional, quantified, and decidable claims.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is implementing and calibrating the conditional \"KL-anchor loss ... restricted to safety-relevant response tokens\" plus \"an activation nudge pulling canary representations toward their pre-fine-tuning geometry\"; this is custom but implementable with standard forward hooks, differentiable auxiliary losses, and autograd rather than an undefined magic step, although the exact token and layer choices remain unspecified. The named model and evaluation artifacts—including \"Llama-3-8B-Instruct, Qwen2.5-7B-Instruct, Gemma-2-9B-IT,\" HarmBench, GCG, AutoDAN, MMLU, GSM8K, HumanEval, XSTest, MT-Bench, and AlpacaEval—exist and are supported by normal fine-tuning and interpretability tooling; the loosely specified \"a medical or code SFT corpus\" and \"Self-Inf-N style\" set require a concrete selection, while some specialized defense baselines may require reconstruction from their published methods. Resources are exceptionally well quantified, including 5,000-example corpora, 100 canaries, three seeds, explicit LoRA settings, learning rates, epochs, and evaluation-set sizes. The refuting branch is runnable because the design includes no-defense and static-defense baselines, random and periodic triggers, always-on interventions, random probes, held-out harm categories, component ablations, and a canary-aware adaptive attack.",
+      "score": 8
+    }
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "_note_readme": "Human expert review for verbal_confidence.",
+  "meta": {
+    "expert_name": "Haoming_Xu",
+    "paper_title": "How do LLMs Compute Verbal Confidence?",
+    "agent": "scientist1",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "Scores follow human_reliablity_judge_zh.md.",
+  "_note_evidence": "Evidence files are relative to scientist1/belief/verbal_confidence/.",
+  "dimension_1_data_split_hygiene": {
+    "justification": "The probe uses 5-fold cross-validation, but the same 250 generated examples are also used for layer/position exploration and final reporting, with no separate held-out set for final confirmation.",
+    "score": 4,
+    "evidence_files": [
+      "code/probe.py",
+      "results/probe_gemma.json",
+      "results/probe_qwen.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The confidence label matches the paper because it is parsed from the model's own verbalized confidence. The caveat is that this run uses a simpler prompt and the confidence values collapse to only a few options, so the label is narrower than the paper's controlled categorical/numeric confidence setup.",
+    "score": 4,
+    "evidence_files": [
+      "artifacts/generations_gemma.csv",
+      "artifacts/generations_qwen.csv",
+      "results/REPORT.md",
+      "code/prompt_utils.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The run uses the requested Gemma-3-27B-pt model on TriviaQA, with 250 generated examples. Qwen2.5-7B is used only as an additional model check, not as a replacement.",
+    "score": 5,
+    "evidence_files": [
+      "task.md",
+      "results/probe_gemma.json",
+      "artifacts/generations_gemma.csv",
+      "results/probe_qwen.json"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The probe evidence uses N=250 per model, which is enough for a preliminary signal. The causal patching evidence is smaller: Gemma uses 20 high/low pairs and Qwen uses 15 pairs. Because the claim is causal, the small patching N and limited layer ranges leave some uncertainty.",
+    "score": 3,
+    "evidence_files": [
+      "results/probe_gemma.json",
+      "results/probe_qwen.json",
+      "results/patch_gemma_L20-45.json",
+      "results/patch_gemma_L30-58.json",
+      "results/patch_qwen_L10-24.json",
+      "results/REPORT.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The probe uses 5-fold CV and reports R2/Spearman across layers. However, there are no confidence intervals or independent seeds. Patching reports clear effect sizes and flip counts, but also lacks uncertainty intervals or significance tests.",
+    "score": 3,
+    "evidence_files": [
+      "code/probe.py",
+      "results/probe_gemma.json",
+      "results/patch_gemma_L30-58.json",
+      "results/patch_qwen_L10-24.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The run performs real activation patching at semantic positions such as pre, answer, newline, and post. Gemma shows weak answer-site effects but strong post-site effects, while Qwen shows strong joint answer+newline effects. This is relevant causal evidence, though the patching N and layer ranges are limited.",
+    "score": 4,
+    "evidence_files": [
+      "code/patch.py",
+      "results/patch_gemma_L30-58.json",
+      "results/patch_qwen_L10-24.json",
+      "results/REPORT.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "The headline numbers in results/REPORT.md are traceable to saved JSON files. Gemma probe results are in results/probe_gemma.json, Qwen probe results are in results/probe_qwen.json, and the patching deltas are directly supported by the Gemma and Qwen patch JSON files.",
+    "score": 5,
+    "evidence_files": [
+      "results/REPORT.md",
+      "results/probe_gemma.json",
+      "results/probe_qwen.json",
+      "results/patch_gemma_L30-58.json",
+      "results/patch_qwen_L10-24.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The report matches the artifacts: Gemma has strong probe decodability, weak answer-site patching, and strong post-site patching; Qwen has stronger joint answer+newline patching. I did not find contradictory PASS/FAIL statements.",
+    "score": 5,
+    "evidence_files": [
+      "results/REPORT.md",
+      "results/probe_gemma.json",
+      "results/probe_qwen.json",
+      "results/patch_gemma_L30-58.json",
+      "results/patch_qwen_L10-24.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "Single claim from task.md.",
+    "_note_subscore": "method / experiment / result scored independently.",
+    "per_claim": {
+      "C1": {
+        "claim": "When an LLM is asked to verbalize confidence after answering, the confidence value is cached in post-answer hidden states and later retrieved, rather than computed on demand at verbalization.",
+        "method": {
+                    "justification": "The method fits the claim: it combines ridge probes at key positions with causal residual patching at semantic positions to test a cache-vs-readout mechanism.",
+          "score": 5,
+          "evidence_files": [
+            "code/probe.py",
+            "code/patch.py"
+          ]
+        },
+        "experiment": {
+                    "justification": "The experiment includes the required Gemma model, a Qwen check, pre-position controls, answer/post positions, and positive-control post patching. The limits are N=250 for probes, only 15-20 patch pairs, no multi-seed runs, and only a few layer ranges.",
+          "score": 4,
+          "evidence_files": [
+            "results/probe_gemma.json",
+            "results/probe_qwen.json",
+            "results/patch_gemma_L30-58.json",
+            "results/patch_qwen_L10-24.json"
+          ]
+        },
+        "result": {
+                    "justification": "The result is faithful to the evidence. Gemma does not support a strict answer-site cache, because answer-site patching is weak while post-site patching is strong. Qwen supports a more distributed post-answer cache. The final architecture-dependent conclusion matches the run's results.",
+          "score": 5,
+          "evidence_files": [
+            "results/REPORT.md",
+            "results/patch_gemma_L30-58.json",
+            "results/patch_qwen_L10-24.json"
+          ]
+        }
+      }
+    }
+  }
+}

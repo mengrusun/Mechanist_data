@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the hypothesis by holding facts fixed across “4 matched forms,” measuring cross-form probe transfer, causal circuit similarity, selective head knockout, and intervention-based repair. The mechanisms are mostly operationalized, including “clean vs corrupted entity” activation patching, cosine similarity of “head-contribution vectors,” and a form-transfer intervention that adds a residual direction at “the layer of peak retrieval.” The router prediction is directional and partly quantified—“a small set of heads (<10) account for the majority of form-specific breakage”—so finding no such selective heads or no majority contribution would refute it; likewise, failure to outperform the named baselines or elevated false positives would undermine the repair claim. However, “high storage invariance,” “partially distinct internal pathways,” and “low false-positive rate” lack decision thresholds, while the exact probe task and the difference-of-means groups used to define the retrieval direction remain underspecified.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is to “run causal activation patching (clean vs corrupted entity) to get per-layer/per-head recovery profiles” across differently aligned forms; this requires custom alignment and batching but is a standard operation supported by forward hooks and established interpretability tooling rather than a magic step. CounterFact, T-REx, Pythia, Qwen2.5, and Llama-3 exist, and logit-lens analysis, linear probes, activation patching, attention knockout, and residual-stream injection are all implementable with mature PyTorch-based tooling. Resources are usefully quantified as “~4k facts,” four forms, and six named model configurations spanning 0.5B–8B, although annotation effort and the number of corruptions or intervention-alpha settings are unstated. The refuting branch is runnable because the plan includes “no intervention,” “generic random-direction injection,” genuinely not-stored facts, unrelated-query side-effect tests, token-length-matched paraphrases, and held-out facts/relations, allowing null selectivity, failed repair, or adverse false positives to emerge.",
+      "score": 8
+    }
+  }
+}

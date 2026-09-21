@@ -1,0 +1,23 @@
+{
+  "claim": "C2a",
+  "milestone": "M3+M4",
+  "audit_scope": "code/eval_student_similarity.py + runs/M3_aligned_dinov2/eval_things_multilevel.json + runs/M4_unaligned_dinov2/eval_things_multilevel.json",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "note": "Human pairwise similarity from THINGS training triplets (real behavioral data); triplet accuracy from THINGS heldout human labels. No model-derived GT."
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "note": "Spearman on raw cosine sim vs human co-selection fraction; no model-specific normalization"
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "note": "M3 spearman_aggregate=0.5554 (cited 0.555), M4=0.1891 (cited 0.189); Δ=0.366 verified on-disk; non-overlapping CI95 confirmed"
+    },
+    "D_dead_code": {"verdict": "pass", "note": "All eval functions called in main()"},
+    "E_scope": {"verdict": "pass", "note": "Claim language precise; 15,640 triplets; cost-aware compression documented"},
+    "F_eval_type": {"verdict": "pass", "note": "real_gt — THINGS human behavioral triplet data"}
+  },
+  "overall_verdict": "pass"
+}

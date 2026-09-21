@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The goal and method align: the claim predicts that productive tokens have “higher downstream causal influence and information gain,” then proposes activation patching, changes in answer decodability, online probing, and an “accuracy vs compression” pruning evaluation. The prediction is directional and refutable—chance-level AUC, failure of local activations to predict productivity, or pruning that does not improve compression at fixed accuracy would count against it—but no numeric decision thresholds are supplied. Some implementation-defining choices remain ambiguous, especially what activation or layer constitutes a token’s “contribution,” how “patch token contribution to mean/pad” is performed, and whether productivity labels refer to step usefulness, token usefulness, or the internally constructed signature.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to “compute per-token causal influence (patch token contribution to mean/pad),” which is a standard activation-patching operation supported by ordinary interpretability hooks, although the intervention site and reference distribution require custom specification rather than a magic capability. Math-Shepherd exists, while activation patching, probes, AUC evaluation, and attribution/perplexity baselines have mature tooling; the human-label and PRM comparisons plus fixed-accuracy pruning curves make a negative result runnable. Resource specification is weak: the plan names Math-Shepherd and a “small human-labeled subset” but gives no model, sample size, number of annotators, trace count, model scale, or other concrete figures.",
+      "score": 6
+    }
+  }
+}

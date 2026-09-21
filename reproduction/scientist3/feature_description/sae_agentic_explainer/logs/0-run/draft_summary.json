@@ -1,0 +1,54 @@
+{
+  "Experiment_description": "Initial implementation of a minimal SAGE (SAE-Guided Explanation) pipeline that iteratively refines SAE feature explanations via a propose\u2192probe\u2192revise loop using an LLM agent, benchmarked against Neuronpedia baseline explanations. The pipeline uses Gemma-2-2B with the GemmaScope 16k residual SAE (layer 12), evaluates a small set of features, and measures 'generative accuracy' by having a writer produce probe sentences from each candidate explanation, passing them through Gemma+SAE, and checking whether target feature activation exceeds a calibrated threshold.",
+  "Significance": "This preliminary experiment establishes an end-to-end working pipeline for iteratively improving mechanistic interpretability explanations of SAE features and provides an initial signal that agentic refinement can outperform one-shot LLM labeling (Neuronpedia). Even if the observed advantage is small and not statistically significant at this scale, the infrastructure and evaluation methodology it provides are prerequisites for larger studies that could impact automated interpretability of large language models.",
+  "Description": "The pipeline (1) loads Gemma-2-2B and a GemmaScope SAE with local-first, HF-mirror fallback; (2) selects a small set of SAE features on layer 12; (3) obtains Neuronpedia baseline explanations (local cache \u2192 API \u2192 synthetic fallback); (4) runs an iterative propose\u2192probe\u2192revise loop using an LLM agent (2 iterations \u00d7 5 probes); (5) computes generative accuracy by generating probe sentences from each candidate explanation, feeding them through Gemma+SAE, and thresholding target feature activation against a calibrated reference; (6) logs per-feature metrics for both baseline and SAGE and produces summary plots. Reported per-feature metrics are for features 7395, 14511, and 16166; aggregate plots reference a broader set of ~20 features.",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-14_09-16-36_sae_agentic_explainer_attempt_3/logs/0-run/experiment_results/experiment_593e10342e12481789d990ad18bf20c5_proc_3987024/gemma2_2b_mean_gen_accuracy_bar.png",
+      "description": "Bar chart comparing mean recall between SAGE (Prompt) and Neuronpedia across n=20 features, with SAGE achieving approximately 0.75 and Neuronpedia approximately 0.70. Error bars overlap substantially.",
+      "analysis": "Shows a small positive margin (~0.05) in favor of SAGE, directionally consistent with the hypothesis that iterative agentic refinement improves feature explanations. However, overlapping error bars and small n prevent statistical significance claims \u2014 motivates scaling up features and probes."
+    },
+    {
+      "path": "experiments/2026-07-14_09-16-36_sae_agentic_explainer_attempt_3/logs/0-run/experiment_results/experiment_593e10342e12481789d990ad18bf20c5_proc_3987024/gemma2_2b_per_probe_activation_heatmap.png",
+      "description": "Heatmap visualizing per-feature recall for SAGE (top row) and Neuronpedia (bottom row) across 20 features. Values are binary (0 or 1).",
+      "analysis": "Reveals that the aggregate advantage of SAGE is driven by a small subset of features where SAGE succeeds and Neuronpedia fails, rather than a broad uniform improvement. Also exposes the binary nature of the current metric \u2014 suggesting a continuous metric (e.g., activation correlation) would provide finer discrimination."
+    },
+    {
+      "path": "experiments/2026-07-14_09-16-36_sae_agentic_explainer_attempt_3/logs/0-run/experiment_results/experiment_593e10342e12481789d990ad18bf20c5_proc_3987024/sage_vs_neuronpedia_gemma2_2b_L12.png",
+      "description": "Grouped bar chart showing per-feature recall side-by-side for SAGE (blue) and Neuronpedia (orange) across 20 features. Most features show both methods at recall=1.0 or both at 0.0; only a small subset differ.",
+      "analysis": "Confirms that differential performance is concentrated in a few features \u2014 the SAGE advantage is not broad. Highlights the need for a more granular evaluation and larger feature samples to properly characterize when iterative refinement helps."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 0.4667,
+      "description": "SAGE final generative accuracy (mean across evaluated features) on Gemma-2-2B GemmaScope 16k residual SAE",
+      "analysis": "The overall SAGE performance after 2 iterations, exceeding the Neuronpedia baseline by ~6.7 percentage points."
+    },
+    {
+      "result": 0.4,
+      "description": "Neuronpedia baseline generative accuracy (mean) on the same feature set",
+      "analysis": "Serves as the one-shot LLM-labeling baseline against which agentic refinement is compared."
+    },
+    {
+      "result": 0.5333,
+      "description": "SAGE best generative accuracy across iterations",
+      "analysis": "Suggests that the best-of-iterations selection strategy could yield larger gains (~13 points) than the final-iteration value, indicating value in oracle iteration selection or better stopping criteria."
+    },
+    {
+      "result": 0.0667,
+      "description": "Delta (SAGE final - Neuronpedia) in generative accuracy",
+      "analysis": "Small positive effect in favor of SAGE, consistent with the hypothesis but not statistically established given small sample size and binary per-feature outcomes."
+    },
+    {
+      "result": 0.6,
+      "description": "SAGE best generative accuracy for feature 14511 vs 0.2 Neuronpedia baseline",
+      "analysis": "Largest per-feature improvement observed (+0.4), demonstrating that iterative refinement can substantially help on features where the initial Neuronpedia explanation is weak."
+    },
+    {
+      "result": 0.0,
+      "description": "Both SAGE and Neuronpedia generative accuracy for feature 16166",
+      "analysis": "A hard-failure case where neither method produces successful probes \u2014 indicates some features may require different probing/threshold strategies or may be inherently ambiguous."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal has strong goal-method alignment: it explicitly compares \"burst-injection\" against a \"length-matched control\" and a \"decomposition control\" to test whether compression, rather than difficulty or extra computation, causes errors. Its causal prediction is directional and quantitatively decidable: a convincing result requires the burst condition to be \"at least 5 percentage points below the length-matched control,\" while a gap \"<= 0\" collapses the causal claim; the AUROC, accuracy, and steering thresholds similarly make the secondary claims falsifiable. Some operational ambiguity remains in \"forcing one target multi-inference step to be compressed into a single dense token span,\" in the definition combining \"mean token surprisal\" with a \"bits-per-inference measure,\" and in how the target hard step is selected, so an expert would still need protocol-level clarification.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is the proposed \"burst-injection\" that forces a multi-inference step into a \"single dense token span\" while preserving content; this is custom prompt/intervention engineering rather than a magic step, because the plan includes compliance verification, entailment checks, exact-operation checks, and worst-case sensitivity analysis. The named Qwen, Llama, Mistral, and Gemma models, GSM8K, MATH, 2WikiMultiHopQA, MedQA, PyTorch-style hidden-state extraction, linear probes, mixed-effects models, bootstrapping, and activation-direction steering are implementable with existing artifacts and standard tooling, although the exact Gwak et al. metric implementation and reliable prompt-level compression procedure would need to be reproduced or built. Resources are unusually concrete—\"1,800 items total,\" \"five frozen open-weight models,\" three sampling seeds, 1,000 bootstrap resamples, and a stated \"single-GPU-week budget\"—and the design includes runnable negative-result controls such as length matching, random decomposition, no intervention, random-direction steering, and entropy baselines.",
+      "score": 8
+    }
+  }
+}

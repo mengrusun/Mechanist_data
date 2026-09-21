@@ -1,0 +1,137 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Mechanistic Understanding of Large AI Models with SemanticLens",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The pipeline structurally has no fitting/training/selection process that could leak: it extracts ResNet-50 layer4 activations (post-GAP), selects top-k maximally-activating probe images per channel, embeds them with a frozen CLIP image tower, and computes mean pairwise cosine similarity vs a random baseline. No probe/classifier/threshold is fitted and evaluated on overlapping data. Confirmed in the seed/baseline code (stage_1_initial_implementation_1_preliminary/best_solution_55a6f89bd70449e79e7b98478982b6b4.py: activations -> argsort top-k -> cosine sim; SEED=0, no learned parameters) and in the N_PROBE/TOP_K sweep code (stage_2 best_solution / research_summary.json). 'Best N_PROBE'/'best TOP_K' are reported as hyperparameter summaries, not held-out generalization claims. n/a — no fitting/selection process that admits train/test leakage.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_55a6f89bd70449e79e7b98478982b6b4.py",
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_7454962ce9c7442d9e0d2876a83263be.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "There is no annotated ground truth. The operationalization of 'concept-faithful' is a 'concept consistency score' = mean pairwise cosine similarity of CLIP embeddings of a channel's top-k activating images, compared to a matched-size random-image baseline (draft_summary.json Key_numerical_results; code in stage_1 best_solution.py mean_pairwise_cos). This is a reasonable directional proxy — coherent top-k images in CLIP space is a necessary signature of a faithful concept summary, and the random baseline controls for CLIP's base similarity structure — but it has an obvious, undocumented gap: internal image-set coherence does NOT establish that the coherent concept matches what the channel actually encodes (no external concept labels, no class-purity check on the top-k images). There is also mild circularity in that CLIP is used both to define the metric and to build v_c. The direction is credible but the label under-validates the 'faithfulness' the claim asserts.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_55a6f89bd70449e79e7b98478982b6b4.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment uses exactly the specified baseline resources: inspected model = ResNet-50 (microsoft/resnet-50 via find_dir), probe dataset = ImageNet validation parquet (DATA_DIR/imagenet-val/data), foundation encoder = frozen CLIP image tower (clip-vit-base-patch32; config 'foundation':'clip-vit-base-patch32' in every experiment_data.npy). No model was downgraded or swapped. Deviations are subsets, not swaps: only 64 of 2048 layer4 channels are inspected (N_CHANNELS=64, disclosed in config and idea.md 'subset of 2048') and only up to 16000 of ~50000 val images are used as probes (N_PROBE sweep). The optional verify-stage variants (ViT-B/16, VGG-16, EfficientNet-B0) were never run — grep for vit/vgg/efficientnet returns only CLIP-directory candidate strings, no alternate inspected-model runs — but the task explicitly marks these 'use as needed, not necessarily all', so their absence is not a fidelity violation. Minor deduction for the heavy channel/data subsetting relative to the 'every component' framing.",
+    "score": 4,
+    "evidence_files": [
+      "idea.md",
+      "logs/0-run/experiment_results/experiment_7454962ce9c7442d9e0d2876a83263be_proc_1122355/experiment_data.npy",
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_55a6f89bd70449e79e7b98478982b6b4.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "used_n: 64 channels (>40, above the tiny-sample threshold), a single layer (layer4), top_k=8, probe pool up to 16000 images. This adequately supports the narrow statement 'top-k images of these 64 layer4 channels are more coherent than random' (C1) but is thin/narrow relative to the claim's 'for every component c in a trained vision model' (only 64/2048 channels of one layer of one model). Critically, claim C2 ('pooling yields v_c placing c in the joint image-text semantic space') has essentially no validating experiment: v_c vectors are computed and saved (per_n_probe['v_c'], per_top_k['v_c']) but never evaluated — no text query, retrieval, or labeling test. So C2's conclusion is stated without running the experiment that would support it. The draft_summary does flag the C1 effect as 'modest magnitude ... room for improvement', a partial caveat.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_7454962ce9c7442d9e0d2876a83263be.py"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "All runs are single-seed (SEED=0 fixed in every experiment_code.py; random baseline uses fixed RandomState(123)/RandomState(42)). No seed variation, no error bars or significance test on the headline delta. The 'seed_aggregation_*' directories are misnamed: aggregation_plotting_code.py loads experiment_data_path_list with a single path, i.e. it aggregates one run (dispersion is across the 64 channels, not across seeds). The reported concept-vs-random delta (~0.053 at N_PROBE=2000, rising to ~0.098 at 16000; ~0.038 at TOP_K=8) is a point estimate with no confidence interval, so whether the ~0.05 gap exceeds run-to-run noise is unverified — though the monotone-ish N_PROBE trend and the consistent per-channel scatter above the diagonal give weak circumstantial robustness. Point estimates only, single seed.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/seed_aggregation_491d0574c0914184811845f2bbabadcc/aggregation_plotting_code.py",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_55a6f89bd70449e79e7b98478982b6b4.py"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a — no causal claim. Both claims are descriptive/representational: C1 says top-k reference inputs are a faithful summary of what a component encodes; C2 says embedding+pooling places the component in a semantic space. Neither asserts a causal mechanism requiring intervention (ablation/patching/steering), and the reproduction correctly uses observational/correlational methods (top-k activation selection, cosine similarity of embeddings) without dressing them as causal. The paper itself (SemanticLens) uses CRP for relevance but the two reproduced claims are the embedding mappings, which are non-interventional.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number traces to a concrete on-disk product and agrees with it. draft_summary.json's 0.6588 / 0.6413 / 0.6056 / 0.0532 (mean/median/random/delta) match the N_PROBE=2000 row loaded from experiment_9ca9a381.../experiment_data.npy and experiment_7454962c.../experiment_data.npy (verified by loading the .npy: N_PROBE=2000 concept_mean=0.65879, median=0.64129, random=0.60563, delta=0.05316). The N_PROBE sweep in research_summary.json (0.6588/0.6750/0.6677/0.6776) and the TOP_K sweep in ablation_summary.json (deltas 0.0516/0.0376/0.0362/0.0275) match experiment_7454962c and experiment_15c348a2 .npy files exactly. stage_progress.json echoes the same values. No sourceless or back-filled numbers found.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/experiment_results/experiment_7454962ce9c7442d9e0d2876a83263be_proc_1122355/experiment_data.npy",
+      "logs/0-run/experiment_results/experiment_15c348a200fc4eaa9da81f4a7396513c_proc_1176445/experiment_data.npy",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Numeric records are self-consistent: draft_summary.json, research_summary.json, ablation_summary.json, stage_progress.json, and the underlying experiment_data.npy files all carry identical metric values (e.g. N_PROBE=2000 delta 0.0532 everywhere; TOP_K=8 concept_mean 0.6677 in ablation_summary and the .npy). No metric mismatch or contradicted number was found. The one weakness is loose adjudication rather than contradiction: report.md's per-claim table gives only placeholder verdicts ('See overall verdict (claim 1/2)') and an automated heuristic 'Partially or fully supported', which reads more favorably than the actual evidence supports (C2 has no validating experiment; C1 delta is modest). This is bookkeeping vagueness / a mildly over-optimistic heuristic verdict, not a numeric inconsistency, so no verdict is materially contradicted.",
+    "score": 4,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/ablation_summary.json",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "For every component c in a trained vision model, a small set of reference inputs that strongly drive c is a concept-faithful summary of what c encodes.",
+        "method": {
+          "justification": "9a: The method — collect per-channel top-k maximally-activating probe images (ResNet-50 layer4 post-GAP) and quantify their coherence via mean pairwise CLIP cosine similarity against a random-image baseline — is well matched to the claim's mechanism category and mirrors the paper's '(1) components -> concept examples = maximally activating images' mapping. Using CLIP-space coherence as a faithfulness proxy is a defensible interpretive choice supported by the CLIP-Dissect line of work the paper cites. Deductions: it inspects only whole-image GAP-top-k (not CRP-cropped patches as the paper does) and never links coherence to an external notion of the channel's concept, so the interpretive assumption (coherent => concept-faithful) is left unverified.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_55a6f89bd70449e79e7b98478982b6b4.py",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: Reasonable design with a genuine control (matched-size random baseline) and two hyperparameter sweeps (N_PROBE in {2000,4000,8000,16000}; TOP_K in {4,8,16,32}), so the effect is probed across the natural knobs. Weaknesses: single seed; the judgment metric captures only one facet (internal CLIP coherence) with no external concept-purity or human-label check, so it cannot distinguish 'faithful concept' from 'merely visually similar images'; coverage is 64/2048 channels of a single layer of a single model. Honest but under-powered and narrow.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/research_summary.json",
+            "logs/0-run/ablation_summary.json",
+            "logs/0-run/experiment_results/experiment_15c348a200fc4eaa9da81f4a7396513c_proc_1176445/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "9c: The result — concept consistency exceeds the random baseline by a positive delta at every setting (delta 0.053 at N_PROBE=2000 up to 0.098 at 16000; 0.038 at the ablation TOP_K=8), with per-channel scatter mostly above the diagonal — qualitatively agrees with the paper's premise that maximally-activating examples form coherent, interpretable concepts. The analysis honestly flags the magnitude as 'modest'. Directionally consistent with the paper and not overstated. Deduction for the small, single-seed effect with no significance testing (see D5) leaving robustness partly unestablished.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Embedding those reference inputs with a frozen multi-modal foundation model and pooling the embeddings yields a single vector v_c placing c in the foundation model's joint image-text semantic space.",
+        "method": {
+          "justification": "9a: The mechanical half is done correctly — top-k images are embedded with a frozen CLIP image tower and mean-pooled then L2-normalized into a per-channel vector v_c (v_c array saved in per_n_probe / per_top_k). But the crux of the claim is placement in the JOINT IMAGE-TEXT space, and only the CLIP image tower is ever used: grep across all experiment code shows no get_text_features / tokenizer / text query / retrieval anywhere. The method therefore exercises image-side pooling only and cannot demonstrate the joint image-text property the claim asserts, so it is only half-aligned with the claim's mechanism.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_55a6f89bd70449e79e7b98478982b6b4.py",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: There is effectively no experiment that tests C2. v_c is computed and persisted but never evaluated for its semantic-space property — no text-to-neuron search, no nearest-concept labeling, no cross-model comparison, no retrieval accuracy. The only metric run (concept consistency) pertains to C1's coherence, not to whether v_c meaningfully locates a component in a queryable image-text space. The design does not include any judgment metric strictly corresponding to C2.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_7454962ce9c7442d9e0d2876a83263be.py"
+          ]
+        },
+        "result": {
+          "justification": "9c: The summaries assert the joint-space conclusion — draft_summary.json's Significance states the pipeline 'link[s] CNN internal components to a shared vision-language embedding space' — but no evidence involving text or the joint space is produced; the only support offered is the C1 image-coherence delta. This leaves C2's surface conclusion dangling: asserted rather than demonstrated. It is not fabricated or goalpost-tuned (v_c really is computed and saved), but the joint image-text placement is claimed without a validating result, an overclaim relative to what was run.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

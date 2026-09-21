@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal aligns its central prediction with a concrete comparison: it tests whether \"InterferenceLoad predicts per-example recall success\" using held-out-relation AUROC and an incremental comparison against a \"difficulty-only baseline,\" while causal suppression is compared with \"suppressing a random direction.\" The predictions are directional and refutable—higher interference should predict retrieval failure, intrusions should preferentially match high-proximity competitors, and suppressing the competitor direction should restore the correct token—but no effect-size or decision thresholds are specified. Important operational details remain ambiguous, especially how the \"mid/late-layer residual difference-of-means that best decodes each answer token\" is selected and what quantitative criterion makes an answer \"decodable,\" so an expert would need clarifications before implementation.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is estimating and selectively suppressing each competitor's \"answer-position retrieval direction\"; activation extraction, logit-lens probing, directional ablation, and residual-stream interventions are supported by standard interpretability tooling, but the proposed difference-of-means selection rule needs custom implementation and is not fully defined. The named artifacts—\"CounterFact/T-REx,\" Pythia, Qwen2.5, and Llama-3—exist, and their architectures support the required forward hooks and activation interventions. Resources are usefully quantified as \"~4k target facts\" and explicit model scales from 410M through 8B, although prompt counts, competitor-set sizes, and annotation quantities are unstated. The negative branch is runnable because the plan includes a difficulty baseline, random-direction ablation, \"no-competitor facts,\" unrelated correctly answered queries, and no-intervention and CoT baselines, allowing null predictive effects, failed restoration, or harmful false-positive and side-effect results to emerge.",
+      "score": 7
+    }
+  }
+}

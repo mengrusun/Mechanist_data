@@ -1,0 +1,48 @@
+{
+  "score": 9,
+  "verdict": "pivot_now",
+  "weaknesses": [
+    "C2 and C4 are not merely unresolved; the current RR objective appears directionally wrong for safety, producing materially worse harmful compliance and harmful tool use than base.",
+    "The observed mechanism-behavior mismatch is best explained by a design error in the reconstructed objective: suppressing the early harmfulness-detection direction likely disables downstream refusal circuitry.",
+    "With only two iterations left, purely mechanistic retargeting without direct behavioral supervision is too risky; you need an intervention that can directly reduce ASR within remaining budget."
+  ],
+  "action_type": "\u2461",
+  "fix_axis": "add_direct_refusal_supervision",
+  "fix_spec": {
+    "run": "Option C: train a new adapter with the existing RR loss plus a harmful-only refusal-token CE term; then evaluate on M5 and, if time permits, M7.",
+    "cli_flags": [
+      "Start from base model, not RR-iter2 checkpoint, to avoid inheriting the harmful-compliance pathology",
+      "Keep current C1 probe/site setup for the RR term initially to preserve comparability",
+      "Add harmful-only refusal CE loss toward a small set of canonical refusals with prompt paraphrase augmentation",
+      "No refusal CE on benign prompts",
+      "Retain benign anchor / control preservation terms from current objective",
+      "Use signed_hinge m=0.30 or current best C1 variant as auxiliary regularizer, but downweight relative to refusal CE",
+      "Tune only the refusal CE weight on a very small sweep if needed; do not spend budget on another site sweep first",
+      "Run M5: HarmBench ASR base vs B1 vs new adapter",
+      "Run MT-Bench and MMLU for utility regression checks",
+      "If HarmBench improves below base, run M7 harmful_tool_use_rate and BFCL"
+    ],
+    "code_diffs": [
+      "Modify M3 training objective to L = L_retention + lambda_rr * L_rr + lambda_refuse * CE(refusal target on harmful inputs).",
+      "Implement a small bank of refusal target templates and randomize across batches to reduce overfitting to one string.",
+      "Mask CE loss to assistant continuation tokens only.",
+      "Keep evaluation code unchanged.",
+      "Do not chain a second late-layer adapter yet; first test whether direct behavioral supervision plus RR fixes the sign of the effect."
+    ],
+    "hyperparams": {
+      "priority": "behavior first, mechanism second",
+      "suggested_lambda_rr": "lower than iter-2 effective weight; treat RR as regularizer, not primary driver",
+      "suggested_lambda_refuse": "dominant term; choose the smallest value that yields clear refusal on a harmful validation slice",
+      "training_budget": "single main run, optional micro-sweep over refusal weight only"
+    }
+  },
+  "rationale": "Option C is the highest expected-value move under the new evidence. The key update from iter-4 is not that your adapter needs minor retuning; it is that the current objective likely destroys the model's harmfulness-recognition signal and therefore anti-aligns with the desired behavior. That makes option A too speculative: moving sites later could help, but it is still a pure mechanistic guess and requires fresh localization work plus retraining, with no guarantee of actually reducing ASR within two iterations. Option B is mechanistically plausible and intellectually interesting, but it is also highly uncertain and could just as easily intensify harmful generation rather than refusal if the assumed downstream circuitry story is incomplete. Option D is safer than A/B in spirit, but with only two iterations left it adds unnecessary composition complexity; if refusal supervision alone can recover behavior, a second adapter is overhead. Option E is the clean scientific response, but it spends claim-stage budget when the practical next experiment is already obvious from the failure mode.\n\nDirect refusal supervision is the one option that squarely targets the metric that failed. It also provides the most diagnostic information. If adding harmful-only refusal CE immediately pushes HarmBench below base while keeping MT-Bench/BFCL acceptable, then you have learned that RR by itself is insufficient and must be behaviorally grounded. If it fails even then, that is a strong signal that the RR term is actively harmful and should be dropped or inverted in the final iteration. Importantly, starting from base rather than RR-iter2 isolates whether the combined objective can produce safe behavior without inheriting the bad basin found in iter-2.\n\nGiven your stated goal\u2014move HarmBench ASR below B0 in the remaining budget\u2014the intervention with the highest near-term probability is the one that optimizes refusal behavior directly. Treat the RR term as a secondary mechanistic regularizer, not the main driver.",
+  "expected_signal": "Best case: HarmBench ASR drops substantially below 0.333, likely far below RR-iter2 and plausibly toward B1, while MT-Bench remains much closer to base than B1. M7 harmful_tool_use_rate should also fall sharply if the refusal behavior generalizes into agent settings. Mixed case: HarmBench improves but utility regresses modestly, indicating the refusal CE weight is too high. Negative but informative case: refusal CE does not rescue ASR, implying the RR term is actively counterproductive and should be removed or sign-flipped in the final iteration.",
+  "budget_gpu_hours": 3.2,
+  "still_unresolved_after_fix": [
+    "C1 remains mechanistically ambiguous because the original harmful-direction interpretation now appears unsafe or incomplete.",
+    "Even if C2 improves, you will still not know whether RR helps beyond what refusal supervision alone would achieve.",
+    "C3 remains unresolved.",
+    "If M7 is skipped due to budget, C4 remains unresolved until the final iteration."
+  ]
+}

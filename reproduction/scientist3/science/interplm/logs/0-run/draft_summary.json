@@ -1,0 +1,69 @@
+{
+  "Experiment_description": "Baseline comparison of InterPLM Sparse Autoencoder (SAE) features against raw ESM-2-8M neurons for detecting protein biological concepts (BINDING, ACT_SITE, MOTIF, DOMAIN, MOD_RES annotations) at the residue level using a Swiss-Prot subset (~200 proteins).",
+  "Significance": "This is the seed baseline establishing whether SAE features learned on top of a protein language model provide better interpretability (via concept alignment) than raw neuron activations. Results here justify subsequent SAE-focused interpretability work by showing SAE features recover substantially more biological concepts than raw neurons, mirroring findings from InterPLM at a smaller scale (ESM-2-8M).",
+  "Description": "The experiment loads ESM-2-8M and an InterPLM SAE layer, obtains Swiss-Prot annotations (parsing UniProt FT lines for BINDING/ACT_SITE/MOTIF/DOMAIN/MOD_RES) with local-first and REST fallback strategy, extracts residue-level activations for both raw neurons and SAE features on ~200 proteins, and computes per-neuron/per-feature F1 scores by thresholding activations at an optimized per-feature percentile on training residues. Concepts are counted as 'recovered' at F1 >= 0.5. Diagnostic plots evaluate SAE health (activation distribution, sparsity, dead features, reconstruction MSE).",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-15_02-20-28_interplm_attempt_1/logs/0-run/experiment_results/experiment_e7e6c90713a44b17b9a5c55dcba6a77b_proc_395414/swissprot_esm2_8m_top_concepts.png",
+      "description": "Bar chart of feature activation frequency categories (Dead, Very Rare, Rare, Common, Very Common) on log-scale y-axis.",
+      "analysis": "Shows SAE health: very few dead features and few very-common features, with most in Rare/Common bins. Indicates the SAE dictionary is well-utilized with sparse and specialized features, supporting downstream interpretability claims."
+    },
+    {
+      "path": "experiments/2026-07-15_02-20-28_interplm_attempt_1/logs/0-run/experiment_results/experiment_e7e6c90713a44b17b9a5c55dcba6a77b_proc_395414/swissprot_esm2_8m_f1_scatter.png",
+      "description": "Histogram of L0 norm (number of active features per token) with mean ~136 active features.",
+      "analysis": "With a dictionary width of ~2548, an average of 136 active features/token corresponds to ~5% sparsity. The narrow distribution suggests consistent sparsity behavior \u2014 an important diagnostic before interpreting individual features."
+    },
+    {
+      "path": "experiments/2026-07-15_02-20-28_interplm_attempt_1/logs/0-run/experiment_results/experiment_e7e6c90713a44b17b9a5c55dcba6a77b_proc_395414/swissprot_esm2_8m_f1_vs_size.png",
+      "description": "Distribution of reconstruction MSE between SAE-reconstructed and original ESM-2 activations, right-skewed with mean ~0.577.",
+      "analysis": "Reconstruction quality is reasonable but imperfect with some hard-to-reconstruct tokens in the tail. Without normalization context, absolute MSE magnitude is hard to interpret, but the shape suggests non-catastrophic reconstruction that supports interpretability analysis."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 7.0,
+      "description": "Number of concepts recovered at F1 >= 0.5 by SAE features",
+      "analysis": "SAE features recover 7x more concepts than raw neurons, demonstrating that sparse dictionary features are substantially more aligned with biologically annotated concepts than raw model neurons."
+    },
+    {
+      "result": 1.0,
+      "description": "Number of concepts recovered at F1 >= 0.5 by raw ESM-2-8M neurons",
+      "analysis": "Raw neurons alone barely recover any concept at the F1>=0.5 threshold, consistent with polysemanticity/superposition in dense neural representations."
+    },
+    {
+      "result": 0.7548,
+      "description": "Best per-concept F1 score achieved by SAE features",
+      "analysis": "Some SAE features achieve strong alignment (F1 ~0.75) with specific biological concepts, indicating high-quality concept-selective features exist."
+    },
+    {
+      "result": 0.5439,
+      "description": "Best per-concept F1 score achieved by raw neurons",
+      "analysis": "The best raw neuron reaches F1=0.54, showing some concept information exists in individual neurons but is much weaker than in SAE features."
+    },
+    {
+      "result": 0.2183,
+      "description": "Mean per-concept F1 (SAE features)",
+      "analysis": "Mean alignment is ~3x that of raw neurons, showing the effect is not driven by a single concept but is systemic across evaluated concepts."
+    },
+    {
+      "result": 0.0715,
+      "description": "Mean per-concept F1 (raw neurons)",
+      "analysis": "Low mean F1 for raw neurons confirms most concepts have no single strongly aligned neuron."
+    },
+    {
+      "result": 65.0,
+      "description": "Number of concepts evaluated",
+      "analysis": "Provides the denominator for the concept recovery counts; a modest but non-trivial evaluation scope for a baseline."
+    },
+    {
+      "result": 136.0,
+      "description": "Mean L0 norm (active features per token) in the SAE",
+      "analysis": "Corresponds to ~5% sparsity relative to dictionary width, an acceptable sparsity regime for interpretability."
+    },
+    {
+      "result": 0.577,
+      "description": "Mean reconstruction MSE of SAE",
+      "analysis": "Provides a quantitative measure of how faithfully the SAE captures the ESM-2 residual stream; useful baseline for later SAE improvements."
+    }
+  ]
+}

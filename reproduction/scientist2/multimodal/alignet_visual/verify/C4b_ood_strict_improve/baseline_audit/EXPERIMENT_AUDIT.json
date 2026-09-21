@@ -1,0 +1,23 @@
+{
+  "claim": "C4b",
+  "milestone": "M8",
+  "audit_scope": "code/eval_downstream.py + runs/M8_ood/results.json",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "warn",
+      "note": "Real labels for substitute splits; BREEDS super13/26 are researcher-constructed subpopulation-shift OOD (not standard BREEDS benchmarks); other 3 splits are in-distribution. Named panel (entity13/living17/non-living26/entity30/ImageNet-A) not tested."
+    },
+    "B_score_normalization": {"verdict": "pass", "note": "Top-1 accuracy not normalized by model max/mean"},
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "note": "All 5-split results verified on-disk; Δ values match citations"
+    },
+    "D_dead_code": {"verdict": "pass", "note": "All (student x split) cells exercised by eval_downstream.py"},
+    "E_scope": {
+      "verdict": "warn",
+      "note": "Claim names BREEDS entity13/living17/non-living26/entity30 + ImageNet-A — none tested; substitute panel used including 3 non-OOD splits"
+    },
+    "F_eval_type": {"verdict": "pass", "note": "real_gt for tested splits; OOD-ness of non-BREEDS substitutes is limited"}
+  },
+  "overall_verdict": "warn"
+}

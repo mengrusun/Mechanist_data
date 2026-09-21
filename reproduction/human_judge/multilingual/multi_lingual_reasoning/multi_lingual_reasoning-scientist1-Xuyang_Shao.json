@@ -1,0 +1,129 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Xuyang_Shao",
+    "paper_title": "When Less Language is More: Language-Reasoning Disentanglement Makes LLMs Better Multilingual Reasoners",
+    "agent": "scientist1",
+    "review_date": "2026-07-16"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "scientist1/multilingual/multi_lingual_reasoning",
+  "dimension_1_data_split_hygiene": {
+    "justification": "代码确实把子空间探针与生成评估分开：cache/probe_meta.json 固定 probe indices=0..63，code/generate_mgsm.py 又从 start=64 取评估样本；因此二者无直接样本重叠。但 results/final_report.md 在同一份 indices 64..123 的评估集上比较 suppress_early、suppress_early_a05、suppress_wide 等配置并选出“best config”，随后仍用这批数据报告 +1.8pp，缺少独立 validation/test；C1 的 lang-id 诊断还在构造语言均值的同一批 probe 上做最近均值分类（code/build_subspace.py），存在自包含评估。故主结果有明显选择集复用风险。",
+    "score": 2,
+    "evidence_files": ["cache/probe_meta.json", "code/generate_mgsm.py", "code/build_subspace.py", "results/final_report.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "MGSM 的 answer_number 与 code/generate_mgsm.py 的 numeric equality 能合理操作化数学正确性，但 C2 的语言保真标签有实质缺口：task.md 指定 GlotLID，code/fidelity.py 却使用 langdetect + Unicode-script heuristic，并明言 Telugu 不可靠；code/common.py 的 build_prompt(lang) 没有使用 lang，所有语言都附加英文指令且未要求用目标语言作答，code/generate_mgsm.py 又只保存 gen[:2000] 后再做语言识别。C1 还把跨语言同题均值方差当作 reasoning-content proxy，未直接验证推理语义。因此数学标签有效，但语言保真与 content 标签仅是偏弱且未校准的代理。",
+    "score": 3,
+    "evidence_files": ["task.md", "code/common.py", "code/generate_mgsm.py", "code/fidelity.py", "code/build_subspace.py", "results/main_baseline.json", "results/final_report.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "task.md 指定 Qwen-3-4B-Thinking、MGSM、11 语言及 always-used GlotLID。code/common.py 的 /data/zhenqian/models/Qwen3-4B 是可通过 chat template 切换 thinking 的同一 Qwen3 checkpoint，实际偏差是 code/run_main.sh 默认 THINK=0，且 results/main_baseline.json 等所有主结果都明确记录 enable_thinking=false；主评估也只用 60/语言，语言识别器则被换成 langdetect/Unicode heuristic。MGSM 与 11 种语言得到使用，但指定运行模式和必用识别资源未被遵守。task.md 将跨模型/跨任务项目列为 verify candidates 且写明 not necessarily all，因此未跑这些可选验证不计为资源违规。",
+    "score": 1,
+    "evidence_files": ["task.md", "code/common.py", "code/run_main.sh", "code/generate_mgsm.py", "code/fidelity.py", "results/main_baseline.json", "results/final_report.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "C1 的 64×11=704 个表示实际来自 64 道平行题，C2/C3 每条件的 60×11=660 个输出也只有 60 道独立题；这些样本足以作单模型 MGSM 的探索性比较，却不足以支撑 task/论文所述跨模型、语言、任务的一致性。case 只覆盖一个关闭 Thinking 的模型与 MGSM，C4 完全没有 SFT/RL head-to-head，results/final_report.md 也承认“Direct head-to-head ... was not run”。报告把 C2/C4 标为 PARTIALLY SUPPORTED，虽有 caveat，但其结论覆盖仍明显强于证据。",
+    "score": 3,
+    "evidence_files": ["cache/probe_meta.json", "results/main_baseline.json", "results/main_suppress_early.json", "results/final_report.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "生成采用 greedy decoding，results/main_*.json 都是单次点估计；code/generate_mgsm.py 虽接受 --seed，但没有多 seed 汇总、bootstrap CI 或配对显著性检验。C2 的 +1.4pp/+1.8pp 很小，且 α=0.5 配置是在同一 indices 64..123 评估集上追加并选为 best。code/lang_strength_corr.py 把 11 种语言的平行翻译当作 660 个独立观测计算 Pearson p 值，没有按仅 60 道独立题聚类，也未校正多层、多指标比较；例如 final_report.md 的 layer 8 r=-0.125, p=0.0013 因而偏乐观。微小主效应建立在单次、无不确定性且选择集复用的结果上。",
+    "score": 1,
+    "evidence_files": ["code/generate_mgsm.py", "code/lang_strength_corr.py", "results/lang_strength_corr.json", "results/final_report.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C2/C3 确有 forward-hook 干预：code/generate_mgsm.py 对中心化隐藏状态实施 suppression/amplification，而非只做相关性。但 hook 在 prefill 时修改全部 prompt token、生成时继续修改生成 token；case 又没有 matched random subspace、sham intervention 或细粒度安全剂量。α=1/2 的 amplification 直接把输出打成重复/乱码并令准确率约为 0，更像通用能力破坏。尤其 results/main_suppress_wide.json 的实际 blocks 4..23 已保留 top 12 blocks 24..35，fidelity 仍从 0.82 降到 0.16；这反驳而不是支持“保留上层即可维持 fidelity”的机制解释。",
+    "score": 3,
+    "evidence_files": ["code/generate_mgsm.py", "results/main_baseline.json", "results/main_suppress_early.json", "results/main_amplify_early_a1.json", "results/main_suppress_wide.json", "results/final_report.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "主要准确率可逐项回查 results/main_*.json，C1/C3 汇总可回查 subspace_stats.json、subspace_robustness.json 与 lang_strength_corr.json。但 cache 中只有 probe_meta.json，缺少代码声称产生的 hidden_states.npz/subspace.npz，整个 case 也没有运行日志；code/generate_mgsm.py 只保留 gen[:2000]，无法还原大量被截断的 amplification 原始输出。更严重的是 results/final_report.md 所称约 90 秒 probe extraction、<1 秒 SVD、每 token 几十分之一毫秒及 10^4–10^5 compute ratio 都由 code/summarize.py 硬编码，没有 timer/cost 产物，论文也未给其所称的 GPU-hour 数。故行为数字大多可追溯，但一手表示、完整输出和 compute 结论不可核验。",
+    "score": 4,
+    "evidence_files": ["cache/probe_meta.json", "code/generate_mgsm.py", "code/summarize.py", "results/main_baseline.json", "results/main_suppress_early_a05.json", "results/subspace_stats.json", "results/subspace_robustness.json", "results/lang_strength_corr.json", "results/final_report.md"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "results/final_report.md 与底层 JSON 的主要数值一致：baseline 0.684848≈0.685、suppress_early_a05 0.703、suppress_early 0.698，且各语言 n=60；C1/C3 表也可回查相应 JSON。真实的不一致在文字与自身表格之间：report 将 blocks 4..23、top 12 intact 时 fidelity=0.16 解释为“matching”上层 caveat，方向恰好相反；又称 α=0.5 时所有高资源语言及 Swahili fidelity mostly preserved，但表中 Japanese 0.82→0.65、Swahili 仅 0.27，Summary 只列 th/te/bn 为失败。数值记账尚一致，但这些措辞明显美化了 C2 的 fidelity leg。",
+    "score": 3,
+    "evidence_files": ["results/final_report.md", "results/main_baseline.json", "results/main_suppress_early.json", "results/main_suppress_early_a05.json", "results/main_suppress_wide.json", "results/subspace_stats.json", "results/lang_strength_corr.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "四条 claim 取自 task.md。论文对照来自 paper.pdf：逐层语言均值 SVD/逐层投影；Qwen-3-4B-Thinking MGSM 79.56→80.04；附录使用 7,500 条多语 MATH 并搜索 λ。",
+    "_note_subscore": "method / experiment / result 独立评分。",
+    "per_claim": {
+      "C1": {
+        "claim": "隐藏表示可分为语言特定子空间与近似正交的语言无关子空间，并可由小型多语 probe 识别。",
+        "method": {
+          "justification": "code/build_subspace.py 对每层语言均值中心化后做一次 SVD，属于论文 paper.pdf §2.1/Appendix C Algorithm 1 的方法族；但论文还有第二次 SVD 以强制 M_a 与 M_s 正交，case 未实现该步骤，并直接取 K=10=L−1 的满秩语言均值空间，再把同题跨语言均值方差称为 reasoning content。方法类别相符，但正交性构造与解释假设均不完整。",
+          "score": 4,
+          "evidence_files": ["code/build_subspace.py", "results/subspace_stats.json", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "probe 仅含 64 道题/语言并做了 2/4/8/16/32 子样本稳定性；然而 K=10 恰等于 11 个中心化语言均值的最大秩，最近均值 lang-id 又在拟合这些均值的同一批 probe 上评分。移除满秩均值空间后各语言均值按构造趋同，降到 chance 不是 held-out 验证；content proxy 也无独立语义标签。",
+          "score": 1,
+          "evidence_files": ["cache/probe_meta.json", "code/build_subspace.py", "code/subspace_robustness.py", "results/subspace_robustness.json"]
+        },
+        "result": {
+          "justification": "results/subspace_stats.json 的 full lang-id≈1.00、移除后≈0.09 表面上与 paper.pdf 的语言子空间方向一致，但该变化主要由 K=L−1 和同集最近均值评估构造出来，不能证明论文所述近似正交分解；results/final_report.md 仍写“Claim 1 is supported”，分析明显过强。",
+          "score": 3,
+          "evidence_files": ["results/subspace_stats.json", "results/final_report.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      },
+      "C2": {
+        "claim": "推理时抑制语言特定子空间会跨模型/语言/任务一致提升准确率，并在保留上层时维持可接受语言保真度。",
+        "method": {
+          "justification": "forward-hook 投影抑制与 paper.pdf Eq.3 同属 activation ablation，并按层加载各自 P；但 case 投影中心化的 (h−c)，在实际 blocks 2..9 上作用于 prompt 与生成 token，且关闭 Thinking。paper.pdf Appendix F/Table 4 对 Qwen-3-4B-Thinking 使用逐层 M_s、仅 prompt token、中层 12–26 的 λ∈[0,0.4] 与高层 27–35 的 λ∈[−0.4,0] 再注入。多项关键实现均失配。",
+          "score": 2,
+          "evidence_files": ["code/generate_mgsm.py", "results/main_suppress_early_a05.json", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "有 baseline、α=0.5/1 与两个层范围、11 语言；但配置均在同一 60/语言集上选择并报告，α=0.5 还不在主运行脚本中且无运行日志。实验无 random control、CI、GlotLID或目标语言输出指令，只覆盖一个关闭 Thinking 的模型和 MGSM。主体干预存在，但不足以判定跨模型/任务的一致性。",
+          "score": 3,
+          "evidence_files": ["code/run_main.sh", "code/common.py", "code/generate_mgsm.py", "results/main_baseline.json", "results/main_suppress_early.json", "results/main_suppress_early_a05.json", "results/main_suppress_wide.json", "code/fidelity.py"]
+        },
+        "result": {
+          "justification": "最佳 overall 0.685→0.703 与 paper.pdf Table 1 的 Qwen-3-4B-Thinking 79.56→80.04 方向相同，但 α=0.5 的低资源组反而 −2.5pp，fidelity 0.82→0.72。更关键的是 wide 条件实际干预 blocks 4..23、保留 top 12 blocks 后 fidelity 仍降至 0.16，反驳而非符合上层 caveat。results/final_report.md 虽标 PARTIALLY SUPPORTED，却对 fidelity 作了相反解释。",
+          "score": 2,
+          "evidence_files": ["results/final_report.md", "results/main_baseline.json", "results/main_suppress_early_a05.json", "results/main_suppress_wide.json", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      },
+      "C3": {
+        "claim": "语言特定激活强度与推理准确率负相关：放大会损害，去除会改善。",
+        "method": {
+          "justification": "code/generate_mgsm.py 在同一类语言子空间上做 suppress/amplify 符号干预，并由 code/lang_strength_corr.py 补充 within-language correlation，方法类别与 paper.pdf §4.1 的 strength analysis 大致匹配；但干预只用 top-1 方向，相关诊断默认 K=10，两者并非完全相同的子空间，且沿用中心化、全 token hook。",
+          "score": 3,
+          "evidence_files": ["code/generate_mgsm.py", "code/lang_strength_corr.py", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "只有 α=0.5/1 suppression 与 α=1/2 amplification，缺少 paper.pdf Appendix F 的 −0.4..0.4 安全范围内细粒度剂量和 random-direction control；α=1 已使输出大面积重复/乱码并令模型整体崩溃，难区分语言机制与通用扰动。",
+          "score": 2,
+          "evidence_files": ["results/main_suppress_early_a05.json", "results/main_suppress_early.json", "results/main_amplify_early_a1.json", "results/main_amplify_early.json", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "result": {
+          "justification": "放大后约 0% 表面上与“放大有害”同向，去除后只有在同一评估集选出的 +1.4/+1.8pp；results/lang_strength_corr.json 的 r 多数很小、部分层不显著，且 p 值未按平行题聚类。灾难性乱码不是 paper.pdf 所示的平滑负相关，results/final_report.md 仍称 confirms Claim 3，因果解释明显过强。",
+          "score": 2,
+          "evidence_files": ["results/lang_strength_corr.json", "results/main_amplify_early_a1.json", "results/final_report.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      },
+      "C4": {
+        "claim": "训练免费干预以小部分算力达到或超过多语 SFT/RL。",
+        "method": {
+          "justification": "case 没有实现任何 SFT/RL 对照，仅把自身 probe/SVD 时间与论文训练预算作文字比较，不能测试 accuracy match/exceed。",
+          "score": 1,
+          "evidence_files": ["results/final_report.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "没有 matched checkpoint、训练数据、训练日志或 head-to-head 评估；论文 Table 3 的核心对照未复现。",
+          "score": 1,
+          "evidence_files": ["results/final_report.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "result": {
+          "justification": "results/final_report.md 承认 SFT/RL head-to-head 未运行，却仍以 PARTIALLY SUPPORTED 汇总 C4；其 90 秒、10²–10³ GPU-hours 和 10^4–10^5 ratio 来自 code/summarize.py 的硬编码，既无落盘 cost/timer，也不是 paper.pdf Table 3 报告的 GPU-hour 数。准确率 match/exceed 完全未测，compute 结论也无依据。",
+          "score": 1,
+          "evidence_files": ["code/summarize.py", "results/final_report.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      }
+    }
+  }
+}

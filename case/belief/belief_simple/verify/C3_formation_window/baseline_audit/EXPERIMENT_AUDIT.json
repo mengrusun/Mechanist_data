@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-22",
+  "auditor": "self-review (llm-chat MCP unavailable)",
+  "claim_id": "C3",
+  "linked_milestones": ["M3"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Dataset-provided GT (same as M1/M2). H* head indices fixed from M2, not derived from model output."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Accuracy = binary fraction; delta = raw accuracy difference. No self-normalization."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "formation/summary.json verified: windows [13000,13000] and [0,33000] confirmed; trajectory values match EXPERIMENT_RESULTS.md (step 2000 personal=0.043, attributed=0.971; step 13000 personal=0.633 >0.60; step 33000 attributed delta=0.250 >0.20)."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "9 measurements per checkpoint computed; m3_aggregate.py outputs confirmed on disk."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "24 of 154 planned pythia-1b checkpoints available on disk (native log-spaced subset). Emergence windows are clearly distinct at this resolution but coarser than planned. Documented as environmental gap, not downscale. Claim language appropriately hedged."
+    },
+    "eval_type": "real_gt"
+  }
+}

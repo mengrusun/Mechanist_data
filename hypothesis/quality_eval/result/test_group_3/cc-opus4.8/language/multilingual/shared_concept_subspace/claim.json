@@ -1,0 +1,22 @@
+{
+  "Name": "shared_concept_subspace",
+  "Title": "A Language-Agnostic Concept Subspace in the Middle Layers of Multilingual Transformers",
+  "Short Hypothesis": "Multilingual LMs represent semantic concepts (e.g., 'dog', 'freedom') in a shared, largely language-independent subspace in the middle layers, while early and late layers carry language-specific surface information; the shared subspace can be isolated with a language-invariance objective and used to read/write concepts regardless of input language.",
+  "Related Work": "Prior work (Wendler et al. 2024 'Do Llamas Work in English?', muLo probing, Conneau et al. cross-lingual alignment) shows hidden states cluster semantically across languages, but treats this as a whole-representation property. We instead isolate an explicit concept subspace via a language-invariance projection and test causal read/write, distinguishing a specific low-dimensional shared manifold rather than global similarity, and quantify how much variance is language-specific per layer.",
+  "Abstract": "Multilingual language models achieve strong cross-lingual transfer, suggesting they compute over concepts rather than surface forms, yet the geometry of this shared computation is poorly characterized. We hypothesize the existence of a compact, language-agnostic concept subspace concentrated in the middle transformer layers. Using parallel sentences across 10 typologically diverse languages, we fit a projection that maximizes cross-language agreement for matched concepts while minimizing within-language variance, isolating a candidate shared subspace at each layer. We measure (i) the dimensionality and layer profile of this subspace, (ii) the fraction of representational variance that is language-specific vs shared, and (iii) causal sufficiency by projecting hidden states onto the subspace and reading concepts with a shared probe, and causal necessity by ablating the subspace and measuring cross-lingual task degradation. We further test writing: injecting a concept vector estimated in one language and reading it out in another. We predict the shared subspace peaks in relative variance around the middle third of layers, that concept probes trained in one language generalize to others only through this subspace, and that ablating it collapses cross-lingual transfer far more than an equal-norm random ablation. If confirmed, this pinpoints where and how multilingual models abstract away from language, providing a controllable interface for cross-lingual concept editing and clarifying the boundary between universal and language-bound computation.",
+  "Experiments": [
+    "Assemble parallel sentence sets (FLORES-200) across 10 languages spanning 5 families; extract residual-stream activations at each layer for concept-bearing tokens.",
+    "Fit a linear projection P per layer maximizing cross-language cosine agreement for matched concepts minus within-language variance (a supervised contrastive / LDA-style objective); report subspace rank via retained variance.",
+    "Compute language-specific vs shared variance decomposition per layer (variance explained by language label vs by concept label).",
+    "Causal necessity: mean-ablate the shared subspace and measure drop on cross-lingual retrieval (translate-word probe) vs matched random-subspace ablation.",
+    "Causal sufficiency/write: estimate a concept vector in language A, add it to a neutral prompt in language B, measure concept elicitation via logit and probe.",
+    "Compare middle-layer vs early/late-layer subspaces; plot layer profile of shared-variance fraction.",
+    "Controls: shuffled concept labels, monolingual baseline model, and script-matched vs script-mismatched language pairs."
+  ],
+  "Risk Factors and Limitations": [
+    "The isolated subspace may be linear-probe artifact rather than causally used; mitigated by ablation controls but linear methods can miss nonlinear sharing.",
+    "'Concept' operationalization via translation pairs conflates lexical and conceptual identity for polysemous words.",
+    "Findings may depend on tokenization; multi-token concepts complicate token-level extraction.",
+    "Results may not generalize across model scales or instruction-tuned vs base models."
+  ]
+}

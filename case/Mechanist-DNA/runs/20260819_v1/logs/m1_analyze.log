@@ -1,0 +1,20 @@
+[m1a] loaded shard 0: (295005, 32768)
+[m1a] loaded shard 1: (299025, 32768)
+[m1a] loaded shard 2: (290759, 32768)
+[m1a] loaded shard 3: (292517, 32768)
+[m1a] merged Z (1177306, 32768) in 880s
+[m1a] codons train=821826 val=181568 test=173912 helix_frac train=0.459
+[m1a] train helix AUROC + gene-blocked permutation null ...
+Traceback (most recent call last):
+  File "/data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260819_v1/code/m1_analyze.py", line 153, in <module>
+    main()
+  File "/data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260819_v1/code/m1_analyze.py", line 46, in main
+    obs_tr, pval = auroc_and_null(Z[tr], helix[tr], gid[tr], dev, n_perm=args.n_perm)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260819_v1/code/m1_feature_select.py", line 131, in auroc_and_null
+    ranks = midrank_columns(Zc)                         # (n,C)
+            ^^^^^^^^^^^^^^^^^^^
+  File "/data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260819_v1/code/m1_feature_select.py", line 76, in midrank_columns
+    ro = Zc.argsort(dim=0).argsort(dim=0).float() + 1.0     # ordinal ranks 1..n
+         ^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 18.81 GiB. GPU 0 has a total capacity of 79.25 GiB of which 15.42 GiB is free. Including non-PyTorch memory, this process has 63.82 GiB memory in use. Of the allocated memory 63.32 GiB is allocated by PyTorch, and 22.80 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)

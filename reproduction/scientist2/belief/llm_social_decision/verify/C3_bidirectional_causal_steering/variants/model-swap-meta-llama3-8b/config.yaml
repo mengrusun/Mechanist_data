@@ -1,0 +1,24 @@
+# Variant config — model-swap-meta-llama3-8b
+# Diff from main experiment: model only
+
+model: /data/zhenqian/models/Meta-Llama-3-8B-Instruct
+data: data/dg1000_prompts.jsonl
+out_dir: runs/verify_C3_variant_model_swap_v1/
+seed: 42
+
+# Extraction (M2-equivalent)
+batch_size: 32
+every_k_layer: 2          # sample every 2nd layer (16 layers + embedding = 17 points, 0-indexed)
+bf16: true
+
+# α-grid for steering (M4-supp-equivalent)
+alpha_grid: [-2, -1, 0, 1, 2]    # multipliers of sigma_proj
+layers_to_eval: [picked, 16]      # 'picked' = argmax probe cv_acc; 16 = fixed mid-layer
+
+# Evaluation
+n_held_baseline: 200
+max_new_tokens: 8
+coherence_k: 10
+
+# GPU
+cuda_visible_devices: "1,2,3,5,6"

@@ -1,0 +1,412 @@
+{
+  "feature_idx": 100,
+  "max_act_ref": 23.847557067871094,
+  "trigger_threshold": 4.769511413574219,
+  "sage": {
+    "candidates": [
+      "More specifically, the feature prefers metric distance/mass units written in full after Arabic numerals, with strongest support for forms like 'X meters', 'X meter', 'X grams', and 'X kilograms'; abbreviated units ('g', 'km', 'mm') and written-out numbers are weaker or inconsistent.",
+      "Explicit Arabic numeral + spelled-out metric unit expressions, especially distance and mass units such as '12 meters', '250 grams', and '3 kilograms', often in technical/scientific measurement wording. The activation is likely on the unit token immediately following the number.",
+      "The feature may have a secondary technical-measurement context component: quantitative scientific prose containing numeric measurements can weakly activate it, but this appears subordinate to the main trigger of digit + spelled-out metric unit."
+    ],
+    "top": "More specifically, the feature prefers metric distance/mass units written in full after Arabic numerals, with strongest support for forms like 'X meters', 'X meter', 'X grams', and 'X kilograms'; abbreviated units ('g', 'km', 'mm') and written-out numbers are weaker or inconsistent.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature fires on pluralized measurement units immediately following a numeral, especially metric distance or mass units like \u201cmeters\u201d and \u201cgrams.\u201d",
+            "positive_probes": [
+              "The wire stretches 12 meters across the yard.",
+              "She measured 45 grams of powdered sugar.",
+              "They hiked 8 kilometers before sunset yesterday.",
+              "Add 300 milliliters of water to the flask.",
+              "The package weighs 25 kilograms with packaging."
+            ],
+            "positive_acts": [
+              21.135055541992188,
+              17.896373748779297,
+              15.645817756652832,
+              14.385470390319824,
+              19.20187759399414
+            ],
+            "distractor_probes": [
+              "The wire stretches several meters across the yard.",
+              "She measured 45 gram samples for comparison.",
+              "They hiked 8 miles before sunset yesterday."
+            ],
+            "distractor_acts": [
+              15.465132713317871,
+              16.71508026123047,
+              12.756294250488281
+            ],
+            "score": 2.6740832646687824
+          },
+          {
+            "hypothesis": "The feature detects quantity expressions where an approximate or ranged number is paired with a unit or informal currency amount, such as \u201caround 200 bucks\u201d or \u201c20 to 25 meters.\u201d",
+            "positive_probes": [
+              "Roughly 300 bucks should cover dinner.",
+              "The trail stretches about 20 to 25 miles.",
+              "She paid nearly 40 euros for the ticket.",
+              "Expect around 8 to 10 hours of work.",
+              "The package weighs approximately 2 kilograms."
+            ],
+            "positive_acts": [
+              18.51779556274414,
+              13.395649909973145,
+              17.034149169921875,
+              10.339348793029785,
+              19.312435150146484
+            ],
+            "distractor_probes": [
+              "She paid exactly 40 euros for the ticket.",
+              "The trail stretches across twenty scenic miles.",
+              "Roughly three hundred people attended dinner."
+            ],
+            "distractor_acts": [
+              17.522327423095703,
+              10.811627388000488,
+              10.29797649383545
+            ],
+            "score": 2.8425652821858733
+          },
+          {
+            "hypothesis": "The feature activates on noun tokens that serve as units of measure after medium-sized numeric values in technical or geographic prose, particularly at the number\u2013unit boundary.",
+            "positive_probes": [
+              "The trench extends 240 km across the basin.",
+              "Average rainfall reached 175 mm in April.",
+              "Transmission peaked at 320 MHz during testing.",
+              "The plateau rises 480 m above sea level.",
+              "Sediment cores were taken at 260 cm depth."
+            ],
+            "positive_acts": [
+              10.33934497833252,
+              10.33934497833252,
+              10.33934497833252,
+              10.33934497833252,
+              10.33934497833252
+            ],
+            "distractor_probes": [
+              "The trench extends across the basin for hundreds of kilometers.",
+              "Average rainfall reached extreme levels in April.",
+              "Transmission peaked during testing at the calibrated frequency."
+            ],
+            "distractor_acts": [
+              11.875992774963379,
+              10.29797649383545,
+              10.29797649383545
+            ],
+            "score": -0.4846369425455723
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature fires on explicit numeral + measurement-unit expressions, especially metric units written in full or abbreviated (e.g. meters, grams, kilograms, km, mm), with the activation centered on the unit token immediately after the number.",
+            "positive_probes": [
+              "The cable stretches 12 meters across the courtyard.",
+              "She bought 250 grams of fresh coffee beans.",
+              "The trail continues for 8 km along the ridge.",
+              "Add 5 mm to the panel width.",
+              "The package weighs exactly 3 kilograms today."
+            ],
+            "positive_acts": [
+              20.134002685546875,
+              17.528766632080078,
+              10.33934497833252,
+              10.33934497833252,
+              19.0301513671875
+            ],
+            "distractor_probes": [
+              "The cable stretches across the courtyard for a while.",
+              "She bought fresh coffee beans by the bag.",
+              "The trail continues for several miles along the ridge."
+            ],
+            "distractor_acts": [
+              10.29797649383545,
+              10.29797649383545,
+              10.29797649383545
+            ],
+            "score": 5.17634563446045
+          },
+          {
+            "hypothesis": "The feature is especially strong for metric distance and mass units after Arabic numerals, particularly forms like 'X meters', 'X grams', 'X kilograms', and nearby scientific measurement phrasing.",
+            "positive_probes": [
+              "The rod measures 12 meters exactly.",
+              "Add 250 grams of sodium chloride.",
+              "The package weighs 3 kilograms total.",
+              "Light traveled 8 meters through vacuum.",
+              "Record the sample mass as 15 grams."
+            ],
+            "positive_acts": [
+              21.539569854736328,
+              16.39687728881836,
+              19.320934295654297,
+              22.65111541748047,
+              19.803691864013672
+            ],
+            "distractor_probes": [
+              "The rod is twelve feet long.",
+              "Add 250 g of sodium chloride.",
+              "The package weighs three kilograms total."
+            ],
+            "distractor_acts": [
+              13.118906021118164,
+              10.29797649383545,
+              16.444683074951172
+            ],
+            "score": 6.655249214172365
+          },
+          {
+            "hypothesis": "The feature may also respond to quantitative measurement phrases in technical/scientific prose more generally, including abbreviated units and ranges/approximations, but those are likely secondary rather than defining triggers.",
+            "positive_probes": [
+              "The sample weighed 3.2 mg after drying.",
+              "Reaction temperature remained near 78 \u0000b1 2 \u0000b0C.",
+              "Voltage increased from 1.2 to 4.8 V.",
+              "Peak absorbance occurred at approximately 540 nm.",
+              "Flow rate stayed within 10-12 mL/min."
+            ],
+            "positive_acts": [
+              10.314784049987793,
+              10.314784049987793,
+              10.314784049987793,
+              10.314784049987793,
+              10.314784049987793
+            ],
+            "distractor_probes": [
+              "The sample seemed heavy after drying overnight.",
+              "Reaction conditions stayed stable throughout the trial.",
+              "Voltage increased steadily during the experiment."
+            ],
+            "distractor_acts": [
+              10.313668251037598,
+              10.313668251037598,
+              10.313668251037598
+            ],
+            "score": 0.0011157989501953125
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Explicit Arabic numeral + spelled-out metric unit expressions, especially distance and mass units such as '12 meters', '250 grams', and '3 kilograms', often in technical/scientific measurement wording. The activation is likely on the unit token immediately following the number.",
+            "positive_probes": [
+              "The sample weighed 250 grams after drying.",
+              "The robot advanced exactly 12 meters forward.",
+              "Add 3 kilograms of sand to the mixture.",
+              "The cable spans 18 meters across the trench.",
+              "Each pellet contains 5 grams of sodium chloride."
+            ],
+            "positive_acts": [
+              18.493389129638672,
+              16.214107513427734,
+              17.145057678222656,
+              19.755016326904297,
+              17.843074798583984
+            ],
+            "distractor_probes": [
+              "The sample weighed a quarter kilogram after drying.",
+              "The robot advanced exactly twelve meters forward.",
+              "Add 3 kg of sand to the mixture."
+            ],
+            "distractor_acts": [
+              10.910147666931152,
+              15.040450096130371,
+              10.29797649383545
+            ],
+            "score": 5.8072710037231445
+          },
+          {
+            "hypothesis": "More specifically, the feature prefers metric distance/mass units written in full after Arabic numerals, with strongest support for forms like 'X meters', 'X meter', 'X grams', and 'X kilograms'; abbreviated units ('g', 'km', 'mm') and written-out numbers are weaker or inconsistent.",
+            "positive_probes": [
+              "The rope measured 12 meters exactly.",
+              "She bought 5 kilograms of flour.",
+              "This sample weighs 250 grams total.",
+              "The hallway is 8 meter long.",
+              "They carried 3 kilograms uphill."
+            ],
+            "positive_acts": [
+              22.610244750976562,
+              17.680858612060547,
+              17.14212417602539,
+              17.55099105834961,
+              14.764050483703613
+            ],
+            "distractor_probes": [
+              "The rope measured 12 km exactly.",
+              "She bought five kilograms of flour.",
+              "This sample weighs 250 g total."
+            ],
+            "distractor_acts": [
+              10.29797649383545,
+              15.82247257232666,
+              10.29797649383545
+            ],
+            "score": 5.81017862955729
+          },
+          {
+            "hypothesis": "The feature may have a secondary technical-measurement context component: quantitative scientific prose containing numeric measurements can weakly activate it, but this appears subordinate to the main trigger of digit + spelled-out metric unit.",
+            "positive_probes": [
+              "The rod measured 7 meters long.",
+              "Add 12 kilograms of ballast.",
+              "They recorded 3 liters of rainfall.",
+              "A gap of 5 centimeters remained.",
+              "The crate weighs 9 pounds exactly."
+            ],
+            "positive_acts": [
+              22.725753784179688,
+              17.76238250732422,
+              13.044225692749023,
+              19.71639633178711,
+              18.37657928466797
+            ],
+            "distractor_probes": [
+              "The rod measured seven meters long.",
+              "Add 12 kg of ballast.",
+              "They recorded 3 units during testing."
+            ],
+            "distractor_acts": [
+              19.608356475830078,
+              10.313668251037598,
+              10.313668251037598
+            ],
+            "score": 4.913169860839844
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "I see now. I can get the Amazon app for free on my Nexus tablet. And, I wonder if 50 dollars (the difference between the new Fire and the Nexus) is going to be that compelling if the only thing Amazon is really selling",
+    "blades. According to the U.S. Department of Energy, if you stand 750 feet (229 meters) away from a wind farm of multiple turbines, the noise would be no more than that of a working kitchen refrigerator. These",
+    "Small pebbles crunched under his boots on the path.",
+    "A soft breeze moved the curtains at dawn.",
+    "The company announced quarterly earnings yesterday afternoon.",
+    "for exceeding the current state of the art gas generant formulation gas yield of about three moles of gas per 100 grams of gas generant formulation. In particular, ammonium nitrate is relatively inexpensive and, when burned with guanidine nitrate fuel, generally",
+    "The mountain trail wound past three small lakes.",
+    "within which measures are required to avoid adverse impacts on its conservation interests. This \u2018buffer zone\u2019 extends from 400 metres to 5 km from the perimeter of the SPA and covers most of the built-up area of Farnham.\n\nThe",
+    "A single cloud drifted over the harbor.",
+    "The senator refused to comment before the hearing.",
+    "ref027]\\].\n\nRegional elevation ranges from 1,500 to 3,000 meters",
+    "% of their diet for nine months (Table [3](#T3){ref-type=\"table\"}). While \u22651 gram/day of *T. versicolor*glucan products were safely consumed by cancer patients for up to 10 years"
+  ],
+  "heldout_true_acts": [
+    20.41202163696289,
+    20.17334747314453,
+    10.338841438293457,
+    10.338841438293457,
+    10.338841438293457,
+    19.013999938964844,
+    10.338841438293457,
+    21.128326416015625,
+    10.253169059753418,
+    10.253169059753418,
+    19.51825714111328,
+    20.120441436767578
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "quantities and measurements related to distance, weight, and currency",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 15.808681964874268,
+        "sentences": [
+          "The trail is 12 miles long.",
+          "She weighs 68 kilograms today.",
+          "I paid 45 dollars for lunch.",
+          "The package measured 30 centimeters wide.",
+          "Gas costs 3 euros per liter.",
+          "His backpack weighs 9 pounds.",
+          "They drove 200 kilometers yesterday.",
+          "The ring sold for 500 yen."
+        ],
+        "activations": [
+          13.061715126037598,
+          16.584529876708984,
+          21.611400604248047,
+          17.325668334960938,
+          18.007335662841797,
+          16.103397369384766,
+          13.375983238220215,
+          10.399425506591797
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9936515400854918,
+        "spearman": 0.8407788596944448,
+        "preds": [
+          9.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          9.0,
+          10.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "More specifically, the feature prefers metric distance/mass units written in full after Arabic numerals, with strongest support for forms like 'X meters', 'X meter', 'X grams', and 'X kilograms'; abbreviated units ('g', 'km', 'mm') and written-out numbers are weaker or inconsistent.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 18.17248785495758,
+        "sentences": [
+          "The rope measures 12 meters exactly.",
+          "She carried 5 kilograms upstairs.",
+          "This sample weighs 8 grams total.",
+          "A 1 meter gap remained.",
+          "They hiked 20 meters downhill.",
+          "The parcel was 3 kilograms yesterday.",
+          "He added 4 grams carefully.",
+          "We need 7 meters of wire."
+        ],
+        "activations": [
+          22.457149505615234,
+          15.30132007598877,
+          18.27587890625,
+          23.05164337158203,
+          16.34515380859375,
+          16.888397216796875,
+          16.231815338134766,
+          16.82854461669922
+        ]
+      },
+      "predictive": {
+        "pearson": 0.7627978527619569,
+        "spearman": 0.6017178003305343,
+        "preds": [
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          9.0,
+          0.0,
+          4.0,
+          0.0,
+          0.0,
+          8.0,
+          8.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 73.43610644340515,
+  "layer": 6,
+  "sae_info": {
+    "layer": 6,
+    "width": "16k",
+    "l0": 70,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_6/width_16k/average_l0_70/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "quantities and measurements related to distance, weight, and currency"
+}

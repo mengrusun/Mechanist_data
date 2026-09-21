@@ -1,0 +1,61 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(//data/zhenqian/**)",
+      "Read(//data/wmr/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA/**)",
+      "Read(//data/wanghaoxiong/mechanist_frontend/**)",
+      "Read(//data/wanghaoxiong/claude-backups/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/docs/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/early_try_v4/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/mguide_20260817/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/mguide_20260818_v1/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/mguide_20260818_v2/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/mguide_20260818_v3/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/mguide_20260818_v4/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/mguide_20260818_v5/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260813/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260814/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260815/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260816/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260819_v1/**)",
+      "Read(//data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260819_v2/**)",
+      "Read(~/.claude/projects/**)",
+      "Read(~/.claude/history.jsonl)",
+      "Read(~/.claude/file-history/**)",
+      "Read(~/.claude/backups/**)",
+      "Bash(*/data/zhenqian/*)",
+      "Bash(*/data/wmr/*)",
+      "Bash(*/data/wanghaoxiong/Mechanist-DNA/*)",
+      "Bash(*/data/wanghaoxiong/mechanist_frontend/*)",
+      "Bash(*/data/wanghaoxiong/claude-backups/*)",
+      "Bash(*/data/wanghaoxiong/Mechanist-DNA-experiment/docs/*)",
+      "Bash(*/early_try_v4/*)",
+      "Bash(*/mguide_20260817/*)",
+      "Bash(*/mguide_20260818_v1/*)",
+      "Bash(*/mguide_20260818_v2/*)",
+      "Bash(*/mguide_20260818_v3/*)",
+      "Bash(*/mguide_20260818_v4/*)",
+      "Bash(*/mguide_20260818_v5/*)",
+      "Bash(*/simple_20260813/*)",
+      "Bash(*/simple_20260814/*)",
+      "Bash(*/simple_20260815/*)",
+      "Bash(*/simple_20260816/*)",
+      "Bash(*/simple_20260819_v1/*)",
+      "Bash(*/simple_20260819_v2/*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|NotebookEdit|Glob|Grep|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260819_v4/.claude/hooks/guard_paths.py"
+          }
+        ]
+      }
+    ]
+  }
+}

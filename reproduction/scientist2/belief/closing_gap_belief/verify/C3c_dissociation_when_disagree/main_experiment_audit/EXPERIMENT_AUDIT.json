@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-14",
+  "auditor": "llm-chat (gpt-5.4, cross-model)",
+  "claim_id": "C3c",
+  "linked_milestones": ["M4"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Uses real TriviaQA correctness GT (y_correct from alias-based exact-match). No GT-from-model-output fraud."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Accuracy computed as fraction in each cell. No normalization by model output statistics."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "dissociation.json exists and accurately reports: z=1.35, p_one_sided=0.91, n=4 in load-bearing cell, passes=false. Honest null result."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "Dissociation analysis called in step6_analyses.py; output in dissociation.json."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "Load-bearing cell (probe_low, verbal_low) has n=4/2000 (base rate 2/1000). Test is under-powered for the planned comparison. Explicitly tagged [suspected under-power] in results. Not fabrication -- honest null."
+    },
+    "eval_type": "real_gt"
+  }
+}

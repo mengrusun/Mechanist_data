@@ -1,0 +1,159 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "changdao chen",
+    "paper_title": "LASA: Language-Agnostic Semantic Alignment at the Semantic Bottleneck for LLM Safety",
+    "agent": "scientist1",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "Claim1的probe用交叉验证；Claim2有重叠风险：refusal direction用MultiJail英文前100条，ASR又评估MultiJail前40条。",
+    "score": 3,
+    "evidence_files": [
+      "exp/02_analyze_bottleneck.py",
+      "exp/04_refusal_direction.py",
+      "exp/06_run_all_conditions.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "ASR judge标REFUSED/HARMFUL/AMBIGUOUS，MMLU用标准答案，标签基本有效。但task.md要GPT-4o+人工校准，实际用gpt-5.4。",
+    "score": 4,
+    "evidence_files": [
+      "exp/08_llm_judge.py",
+      "exp/09_mmlu_capability.py",
+      "task.md",
+      "exp/02_analyze_bottleneck.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "模型LLaMA-3.1-8B-Instruct和MultiJail符合task.md；但没有使用PKU-SafeRLHF多语训练+UltraFeedback做alignment，只改为lightweight steering proxy，ASR judge也非GPT-4o+人工校准。",
+    "score": 3,
+    "evidence_files": [
+      "task.md",
+      "report.md",
+      "exp/04_refusal_direction.py",
+      "exp/06_run_all_conditions.py",
+      "exp/08_llm_judge.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Claim1有200 prompts × 10 languages × 33 layers；Claim2有8 conditions × 400 generations。证据量可用，但ASR每语言n=40、MMLU n=200，支撑强claim偏薄。",
+    "score": 4,
+    "evidence_files": [
+      "report.md",
+      "results/claim1_layerwise.json",
+      "results/claim1_centered.json",
+      "results/claim2_agg_judge.csv"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Claim1 probe有5-fold CV，但结果只报点估计；Claim2 ASR/MMLU无多seed、CI或显著性检验。",
+    "score": 3,
+    "evidence_files": [
+      "exp/02_analyze_bottleneck.py",
+      "results/claim2_agg_judge.csv",
+      "results/mmlu_capability.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "ResidualSteer是真实干预，并有bottleneck/surface/baseline对照；但只是steering proxy，不是完整alignment training，也缺random-direction control。",
+    "score": 4,
+    "evidence_files": [
+      "exp/06_run_all_conditions.py",
+      "report.md",
+      "task.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字可追到claim1_layerwise/centered、claim2_agg_judge、main_sweep_judged和MMLU json，未见无来源数字。",
+    "score": 5,
+    "evidence_files": [
+      "report.md",
+      "results/claim1_layerwise.json",
+      "results/claim1_centered.json",
+      "results/claim2_agg_judge.csv",
+      "cache/main_sweep_judged.jsonl"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "主要数字在report.md与结果文件间一致；小问题是report称centered retrieval layer 8-24都above 0.4，但json中layer23/24略低于0.4。",
+    "score": 4,
+    "evidence_files": [
+      "report.md",
+      "results/claim1_centered.json",
+      "results/claim2_agg_judge.csv"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "There exists an intermediate semantic bottleneck layer dominated by shared meaning rather than language identity.",
+        "method": {
+          "justification": "language probe + parallel retrieval能测语言身份与跨语言语义对齐，方法适合C1；但仍是proxy。",
+          "score": 4,
+          "evidence_files": [
+            "report.md",
+            "exp/02_analyze_bottleneck.py",
+            "results/claim1_layerwise.json",
+            "results/claim1_centered.json"
+          ]
+        },
+        "experiment": {
+          "justification": "200 parallel MultiJail prompts × 10 languages，覆盖embedding+32 layers，并比较raw/centered。",
+          "score": 5,
+          "evidence_files": [
+            "report.md",
+            "results/claim1_centered.json",
+            "results/claim1_layerwise.json"
+          ]
+        },
+        "result": {
+          "justification": "raw retrieval peak layer9=0.3728，centered peak layer16=0.4418，方向支持bottleneck。",
+          "score": 5,
+          "evidence_files": [
+            "report.md",
+            "results/claim1_layerwise.json",
+            "results/claim1_centered.json"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Safety alignment at the bottleneck lowers cross-lingual ASR while preserving capability.",
+        "method": {
+          "justification": "用English refusal direction做residual steering，可测方向性causal effect；但不是完整multilingual DPO/RLHF alignment。",
+          "score": 3,
+          "evidence_files": [
+            "report.md",
+            "exp/04_refusal_direction.py",
+            "exp/06_run_all_conditions.py"
+          ]
+        },
+        "experiment": {
+          "justification": "有baseline、L9/L14 bottleneck、L28 surface和多个alpha；但每语言n=40，且direction构造与评估prompts/intents重叠。",
+          "score": 3,
+          "evidence_files": [
+            "task.md",
+            "exp/04_refusal_direction.py",
+            "exp/06_run_all_conditions.py",
+            "exp/08_llm_judge.py",
+            "results/claim2_agg_judge.csv"
+          ]
+        },
+        "result": {
+          "justification": "bottleneck steering降低ASR（如L14 α=5为1.50% vs baseline 5.75%），但强steering损害能力，且非完整alignment复现。",
+          "score": 4,
+          "evidence_files": [
+            "results/claim2_agg_judge.csv",
+            "results/mmlu_capability.json",
+            "results/mmlu_capability_extra.json",
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

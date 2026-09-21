@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-18",
+  "auditor": "gpt-5.4 (external LLM reviewer)",
+  "claim_id": "C1",
+  "variant_tag": "method-swap-rule-based-scorer",
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Gold from QA_I parquet 'Correct Answer' column via load_gold_from_parquet(). Dataset GT, not model-produced."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Acc = n_correct / 133 fixed denominator. No model-self normalization."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "result.json exists with all_seeds_pass=true, per_seed {42,123,2026} entries, internally consistent values."
+    },
+    "dead_code": {
+      "status": "warn",
+      "details": "Non-blocking: no explicit call graph provided, but code review approved and run log confirms execution."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "3 seeds, 133 items (n==133 asserted), 3 arms. Gap criterion identical to main experiment."
+    },
+    "eval_type": "real_gt"
+  }
+}

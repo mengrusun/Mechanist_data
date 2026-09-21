@@ -1,0 +1,23 @@
+{
+  "claim_id": "C2a",
+  "claim_text": "Aligned DINOv2 ViT-B improves aggregate Spearman correlation with human THINGS-triplet similarity judgments compared to unaligned DINOv2 ViT-B (delta_rho >= 0.05).",
+  "variant_tag": "model-swap-dinov2-vits",
+  "dimension": "model",
+  "swap_description": "Student changed from DINOv2 ViT-B (768-dim, 86M params) to DINOv2 ViT-S (384-dim, 21M params). Teacher (SigLIP-So400m) and all hyperparameters unchanged.",
+  "main_experiment_verdict": "supported",
+  "variant_result": {
+    "aligned_spearman_aggregate": 0.5397,
+    "unaligned_spearman_aggregate": 0.2157,
+    "delta_rho": 0.3240,
+    "threshold": 0.05,
+    "threshold_satisfied": true,
+    "aligned_triplet_accuracy": 0.5589,
+    "unaligned_triplet_accuracy": 0.4448,
+    "delta_triplet_acc": 0.1141
+  },
+  "variant_verdict": "supported",
+  "consistent_with_main_experiment": "pass",
+  "reasoning": "C2a claims delta_rho >= 0.05 (aligned vs unaligned Spearman). With DINOv2 ViT-S student: aligned=0.5397, unaligned=0.2157, delta_rho=+0.324 — 6.5x the required threshold. Direction and magnitude are both consistent with the main experiment (ViT-B delta_rho=+0.366). The alignment improvement is robust to student model size change (86M -> 21M params, 768-dim -> 384-dim). Verdict: supported, consistent_with_main_experiment=pass.",
+  "phase": 8,
+  "judged_at": "2026-07-15T03:05:00Z"
+}

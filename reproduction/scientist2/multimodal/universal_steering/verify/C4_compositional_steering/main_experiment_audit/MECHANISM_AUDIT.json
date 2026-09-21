@@ -1,0 +1,23 @@
+{
+  "claim_id": "C4",
+  "claim_dir": "C4_compositional_steering",
+  "overall_verdict": "warn",
+  "checks": {
+    "A_steering_coefficient_sweep": {
+      "verdict": "warn",
+      "alpha_grid": "3x3 joint sweep (alpha1, alpha2 in {1,2,3}) on 5 dev prompts per combo",
+      "alpha_locked": "alpha_star=(1.0,1.0) for both combos — chosen by argmax(sum rubric) on 5 dev prompts (extremely noisy)",
+      "random_direction_control": "MISSING — plan's cross-claim controls require matched-random-direction control for C4; not present in C4b_pin_block14 or C4_compositional run",
+      "block_vectors": "combo1: honesty block=15, refusal_neg block=14 (different blocks); combo2: both block=14",
+      "warn_reason": "Missing random-direction control (required by plan). Alpha selection on 5 dev prompts is very noisy. However, ceiling effect at rubric=5.0 is the dominant explanation for the not-supported verdict, not missing control."
+    },
+    "B_direction_extraction_quality": {"verdict": "not_implemented"},
+    "C_site_layer_choice": {"verdict": "not_implemented"},
+    "D_n_effective_sufficiency": {"verdict": "not_implemented"},
+    "E_probe_vs_causal_disentanglement": {"verdict": "not_implemented"},
+    "F_intervention_scope": {"verdict": "not_implemented"}
+  },
+  "milestones_audited": ["M9_C4_second_pair", "M10_C4_combo_sweep", "M11_C4_holdout"],
+  "runs_audited": ["B5_pin_block14", "C4b_pin_block14"],
+  "audited_at": "2026-07-15"
+}

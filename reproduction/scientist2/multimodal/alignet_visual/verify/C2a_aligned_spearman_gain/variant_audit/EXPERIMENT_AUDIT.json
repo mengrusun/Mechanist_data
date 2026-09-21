@@ -1,0 +1,43 @@
+{
+  "claim_id": "C2a",
+  "variant_tag": "model-swap-dinov2-vits",
+  "audit_type": "experiment",
+  "phase": 9,
+  "findings": [
+    {
+      "check": "ground_truth_authenticity",
+      "severity": "pass",
+      "note": "THINGS testset1.txt — real human triplet judgments, unchanged from main experiment"
+    },
+    {
+      "check": "score_normalization",
+      "severity": "pass",
+      "note": "spearmanr on cosine pairwise similarities; same code path as main experiment via shared imports"
+    },
+    {
+      "check": "phantom_results",
+      "severity": "pass",
+      "note": "All JSON outputs confirmed on disk with plausible values; train_summary.json confirms genuine training"
+    },
+    {
+      "check": "dead_metric_code",
+      "severity": "pass",
+      "note": "spearman_aggregate is primary and active; spearman_fine=NaN is a pre-existing data limitation (0 fine pairs in heldout), not variant-specific"
+    },
+    {
+      "check": "scope_overclaim",
+      "severity": "pass",
+      "note": "Variant scope matches claim; no overclaim beyond what data supports"
+    },
+    {
+      "check": "architecture_correctness",
+      "severity": "pass",
+      "note": "ViT-S backbone used consistently in both training (align_student.py) and eval (eval_student_similarity_vits.py)"
+    }
+  ],
+  "overall_verdict": "pass",
+  "n_critical": 0,
+  "n_major": 0,
+  "n_minor": 0,
+  "n_info": 1
+}

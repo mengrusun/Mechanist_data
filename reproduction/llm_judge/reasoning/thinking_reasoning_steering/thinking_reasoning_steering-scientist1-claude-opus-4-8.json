@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Understanding Reasoning in Thinking LMs via Steering Vectors",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "A genuine fitting/selection process exists (mean-difference direction fit + threshold), so this dimension applies. The split is honored in code: src/extract_activations.py shuffles each behaviour's pairs with random.Random(seed=0) and holds out int(len*0.2) as validation ('[backtracking] train=49 val=12' in logs/extract.log), storing train_present/absent and val_present/absent separately. src/probe_and_direction.py computes the direction ONLY from train (dirs = tp.mean(0) - ta.mean(0)) and sets the threshold at the midpoint of TRAIN projections (mean_pos/mean_neg over tp/ta), then scores val_present/val_absent separately — the reported val_acc (results/probe_accuracy.json, e.g. uncertainty layer 9 val_acc 1.0) is truly held out from fitting. The steering evaluation uses an entirely separate set (data/eval_problems_small.json, 8 problems) disjoint from the contrastive pairs. The only mild optimism is that the steering layer is picked by val_acc (pick_best_layer over layers 8-20 in src/steer_generate.py) and that same val_acc is also cited as C1 evidence, but the full per-layer table is reported (many layers hit 1.0) so this is layer selection, not a fitting-set/eval-set overlap. No leakage path found.",
+    "score": 5,
+    "evidence_files": ["src/extract_activations.py", "src/probe_and_direction.py", "logs/extract.log", "results/probe_accuracy.json", "data/eval_problems_small.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Labels are the contrastive 'present' vs 'absent' continuations synthesised by GPT-5.4 (src/gen_contrastive_pairs.py: BEHAVIOUR_INSTRUCTIONS force hedging phrases for uncertainty, concrete small cases for example_generation, and 'wait, that's wrong'-style switches for backtracking), and the steering-effect metric is a GPT-5.4 intensity judge (src/judge_behaviour.py, BEHAVIOUR_DESCRIPTIONS keyed to the same surface markers). The behaviours are well-defined linguistic phenomena and the operationalization is documented, so it is a reasonable proxy. But two gaps lower validity: (1) the labels are driven by surface lexical markers (hedging words, 'let me try n=3', 'wait') rather than the deeper reasoning behaviour, and are engineered contrasts rather than the paper's annotations of real DeepSeek-R1 chains; (2) partial circularity — the same model family (gpt-5.4) both defines/generates the contrastive continuations that build the direction and judges the steered outputs, so the same lexical prior is on both ends of the pipeline. This is a plausible but under-validated proxy-to-behaviour link.",
+    "score": 3,
+    "evidence_files": ["src/gen_contrastive_pairs.py", "src/judge_behaviour.py", "data/contrastive_pairs.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "Model fidelity is exact: MODEL_PATH = /data/zhenqian/models/DeepSeek-R1-Distill-Llama-8B in src/extract_activations.py, src/steer_generate.py, src/prompt_baseline.py, and logs/steer.log shows the real 291-shard weight load and 32-layer model — precisely the user-specified lead model. Judge model gpt-5.4 matches the task.md MODEL field. Dataset fidelity is weak, however: task.md specifies a custom 500-task reasoning benchmark across 10 categories as the primary substrate, plus an auxiliary ~100 R1-chain + ~100 GPT-4o contrast set for deriving contrastive pairs. The run used NEITHER — it generated only ~50 GPT-5.4 problems yielding 61/60/61 synthetic contrastive pairs (data/contrastive_pairs.json) and only 8 steering-eval problems (data/eval_problems_small.json, of 15 generated). This is both a large scale downgrade (500 → ~50/8) and a methodological substitution (engineered synthetic contrast pairs instead of annotated real R1 chains). It is disclosed in REPORT.md caveats ('Steering eval uses 8 problems for cost'; cross-model 'not run'), so not silent, but it is a material deviation from the specified resources, not a minor one.",
+    "score": 2,
+    "evidence_files": ["src/steer_generate.py", "logs/steer.log", "data/contrastive_pairs.json", "data/eval_problems_small.json", "task.md", "REPORT.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Probe evidence (C1/C2) rests on 61/60/61 contrastive pairs per behaviour (train 49 / val 12), which is modest but adequate for a linear-separability claim. The central steering, prompt-baseline, and accuracy claims (C3/C5) rest on only n=8 eval problems per condition (results/steered_judgments.json = 168 = 8×7 alphas×3 behaviours; results/prompt_judgments.json = 72 = 8×3×3), far under the 40-item threshold. The dose response is 7 alpha points averaged over 8 problems each. REPORT.md caveats do flag this ('Steering eval uses 8 problems for cost'; 'range on example-generation (1.5 pts) is smaller'), yet the TL;DR still labels all claims 'Supported', which is stronger than n=8 warrants. Direction is credible but the reporting slightly overstates confidence relative to the sample scale.",
+    "score": 3,
+    "evidence_files": ["results/steered_judgments.json", "results/prompt_judgments.json", "REPORT.md", "logs/extract.log"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Every generation/extraction step uses a single fixed seed=0 (src/steer_generate.py, src/extract_activations.py, src/prompt_baseline.py) with no repeated runs, no error bars, and no variance/CI on any reported mean in results/analysis.json. Spearman coefficients are reported (0.6429 / 0.6071 / 0.7857) but without p-values or confidence intervals. The largest effect (uncertainty intensity 0.0→4.625 at alpha=6) clearly exceeds noise, but the smaller effects (example_generation range 1.5; all suppression/negative-alpha values near the ~0 floor) are well within plausible sampling noise for n=8 with no dispersion reported, so robustness to randomness is unverified. Single-seed point estimates throughout.",
+    "score": 2,
+    "evidence_files": ["results/analysis.json", "src/steer_generate.py", "src/extract_activations.py"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The steering claims (C3/C5) are causal and are backed by a genuine intervention: an additive residual-stream forward hook injecting alpha*unit_direction at the chosen layer (src/steer_generate.py, SteerHook), with a scalar coefficient sweep over 7 values {-6,-3,-1,0,1,3,6}, plus a prompt-engineering baseline as an alternative-manipulation control (src/prompt_baseline.py). This is a real intervention with a dose sweep, not correlational evidence dressed up. However, a key control named by the rubric is missing: there is NO random-direction baseline, so the possibility that any comparable-norm perturbation (not the specific behaviour direction) would inflate the judged behaviour — especially at alpha=6 where coherence collapses to 1.75-3.0 (results/analysis.json) — is not ruled out. Intervention + sweep present but the random-direction control and the coherence confound temper the causal rigor.",
+    "score": 3,
+    "evidence_files": ["src/steer_generate.py", "src/prompt_baseline.py", "results/analysis.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Provenance is excellent and end-to-end verifiable. Every REPORT.md number traces to a concrete product: per-layer probe accuracies (uncertainty layer 9 val 1.00, example_generation best 0.9583, backtracking best 0.9583) match results/probe_accuracy.json exactly; dose-response numbers (Spearman 0.6429/0.6071/0.7857, slopes 0.3098/0.0897/0.2486, intensity ranges 4.625/1.5/3.625) match results/analysis.json exactly. I independently re-aggregated results/steered_judgments.json (168 rows) and reproduced the exact means (uncertainty alpha=6 -> 4.625, backtracking alpha=6 -> 3.625, example_generation alpha=6 -> 1.625, uncertainty alpha=0 -> 0.0, all n=8), and the raw generations exist with matching steer_layers {9,10,11} and alphas. logs/steer.log and logs/extract.log show the real model load and per-item generation. No sourceless or back-filled numbers found.",
+    "score": 5,
+    "evidence_files": ["results/probe_accuracy.json", "results/analysis.json", "results/steered_judgments.json", "results/steered_generations.json", "logs/steer.log"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline's records are internally self-consistent. REPORT.md TL;DR and per-behaviour tables match results/analysis.json and results/probe_accuracy.json (e.g. dose-response Spearman +0.64/+0.61/+0.79, intensity range 4.625/1.5/3.625, per-alpha intensity/correct%/coherence rows all reproduce the JSON). The stated steering layers (best 9/10/11) are consistent between REPORT.md, results/steered_generations.json steer_layers, and the pick_best_layer logic over probe_accuracy.json. Verdicts (C1/C2 'Supported', C3 'Supported for +direction with a floor', C4 'Supported' with cross-model 'not run' caveat) agree with their own numbers, including the honest note that prompt directives give 0->0. No metric mismatch, contradicted prose, or unpropagated integrity flag was found.",
+    "score": 5,
+    "evidence_files": ["REPORT.md", "results/analysis.json", "results/probe_accuracy.json", "results/steered_generations.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Distinct reasoning behaviours in thinking LLMs (expressing uncertainty, generating validation examples, backtracking) each map onto an approximately linear direction in the residual stream of the reasoning model.",
+        "method": {
+          "justification": "9a: The mechanistic method — a difference-of-means direction (src/probe_and_direction.py: dirs = tp.mean(0) - ta.mean(0)) tested by 1-D projection onto that single direction — is exactly the right tool for asking whether a behaviour is encoded along a single linear direction, and matches the paper's Difference-of-Means formulation (Section 2.2). Interpretive assumptions (linear separability = linear direction) hold and are literature-supported.",
+          "score": 5,
+          "evidence_files": ["src/probe_and_direction.py"]
+        },
+        "experiment": {
+          "justification": "9b: Per-layer probe across all 33 residual layers on a held-out val split, with layer 0 giving 0.50 as an implicit random floor, is a clean design (results/probe_accuracy.json). Weaknesses: single seed, val n=12 per behaviour, and the contrast is engineered synthetic text so surface lexical cues may inflate separability relative to the paper's real-chain annotations. Solid but slightly optimistic.",
+          "score": 4,
+          "evidence_files": ["src/probe_and_direction.py", "results/probe_accuracy.json", "logs/extract.log"]
+        },
+        "result": {
+          "justification": "9c: Held-out val accuracy peaks at 1.00 (uncertainty, layer 9), 0.9583 (example_generation), 0.9583 (backtracking) vs 0.50 random, with a smooth rise from layer ~4 and mid-layer saturation — strong, correctly-interpreted evidence that behaviour presence is a single linear direction. Qualitatively agrees with the paper's core linear-mediation finding.",
+          "score": 5,
+          "evidence_files": ["results/probe_accuracy.json", "REPORT.md"]
+        }
+      },
+      "C2": {
+        "claim": "Each behaviour direction can be pulled out from a small pool of contrastive activation pairs (behaviour present vs. absent in the chain-of-thought), using standard difference-of-means / logistic-regression style probes.",
+        "method": {
+          "justification": "9a: Difference-of-means over a small contrastive pool is precisely the paper's extraction method and the method the claim names; no coefficient fitting is done (mean-difference only), which is the cleaner of the two options the claim allows. Correct method choice.",
+          "score": 5,
+          "evidence_files": ["src/probe_and_direction.py", "src/gen_contrastive_pairs.py"]
+        },
+        "experiment": {
+          "justification": "9b: The design demonstrates that ~49 train pairs per behaviour yield >0.95 val separability across many mid layers (results/probe_accuracy.json), directly testing 'small pool suffices.' Limitation: the pool is GPT-5.4-generated engineered contrasts rather than the paper's ~100 R1-chain + ~100 GPT-4o annotated set, so 'small pool suffices' is shown on an easier, purpose-built contrast; no logistic-regression variant or robustness-to-pool-size sweep was run.",
+          "score": 4,
+          "evidence_files": ["src/gen_contrastive_pairs.py", "data/contrastive_pairs.json", "results/probe_accuracy.json"]
+        },
+        "result": {
+          "justification": "9c: From ~49 pairs the direction separates held-out activations at >0.95 for all three behaviours, and separability is stable across many layers (not one lucky layer). This qualitatively agrees with the paper's claim that a compact contrastive set is enough to recover the direction.",
+          "score": 4,
+          "evidence_files": ["results/probe_accuracy.json", "REPORT.md"]
+        }
+      },
+      "C3": {
+        "claim": "Adding or subtracting the extracted steering vector at inference time amplifies or suppresses the corresponding behaviour in the generated chain, in a dose-dependent manner controllable by a single scalar coefficient.",
+        "method": {
+          "justification": "9a: Additive residual-stream steering via a forward hook (src/steer_generate.py SteerHook, apatched = a + alpha*unit_dir) with a single scalar alpha is exactly the paper's steering intervention and the correct causal method for the claim.",
+          "score": 5,
+          "evidence_files": ["src/steer_generate.py"]
+        },
+        "experiment": {
+          "justification": "9b: A 7-point coefficient sweep {-6,-3,-1,0,1,3,6} with a GPT-5.4 intensity judge is a reasonable dose-response design, but has real gaps: no random-direction control; n=8 problems; and — critically — the eval problems are easy math where the baseline (alpha=0) behaviour intensity is already ~0 (results/analysis.json), so the suppression half of 'amplifies or suppresses' cannot be tested (a floor artefact of problem selection, not a null). Coherence also collapses at alpha=6 (1.75), confounding intensity gain with degradation. Honest but under-powered on the negative direction; steering coefficient was swept but the operating regime was not tuned to expose suppression.",
+          "score": 3,
+          "evidence_files": ["src/steer_generate.py", "results/analysis.json", "data/eval_problems_small.json"]
+        },
+        "result": {
+          "justification": "9c: Positive steering clearly amplifies (uncertainty 0.0->4.625, backtracking 0.0->3.625, example_generation to 1.625; Spearman 0.64/0.61/0.79), which agrees with the paper's amplification direction. But 'dose-dependent' is only weakly borne out — intensity stays ~0 for alpha in [-6,+3] then jumps at alpha=6, more threshold than graded — and suppression is not demonstrated (floor). The report honestly discloses the asymmetry rather than disguising it, so this is a partial, honestly-caveated reproduction (amplification yes, dose-gradation and suppression not established).",
+          "score": 3,
+          "evidence_files": ["results/analysis.json", "REPORT.md"]
+        }
+      },
+      "C4": {
+        "claim": "The same behaviour directions transfer across model sizes and distillation targets inside the DeepSeek-R1-Distill family, indicating a shared behavioural geometry rather than a size-specific artefact.",
+        "method": {
+          "justification": "9a: No cross-model method was applied. Only DeepSeek-R1-Distill-Llama-8B was ever loaded (single MODEL_PATH across all scripts; logs/steer.log); no extraction or direction-transfer/cosine-similarity procedure across Qwen-1.5B/14B exists in src/. The claim's required mechanistic apparatus (multi-model direction comparison) is absent.",
+          "score": 1,
+          "evidence_files": ["src/steer_generate.py", "src/extract_activations.py"]
+        },
+        "experiment": {
+          "justification": "9b: The transfer experiment was not run at all. REPORT.md states 'Only DeepSeek-R1-Distill-Llama-8B tested; cross-backbone generalisation to Qwen distills ... was not run in this compute budget.' No data, split, or metric exists for this claim.",
+          "score": 1,
+          "evidence_files": ["REPORT.md"]
+        },
+        "result": {
+          "justification": "9c: There is no result and none is claimed — the omission is honestly disclosed with no fabrication or goalpost-tuning. However, the claim is left entirely unvalidated (neither reproduced nor an evidence-based non-reproduction), so it dangles. Credit for honesty, but no reproduction fidelity to speak of.",
+          "score": 2,
+          "evidence_files": ["REPORT.md"]
+        }
+      },
+      "C5": {
+        "claim": "This steering-vector control is finer-grained than prompt engineering while preserving downstream reasoning accuracy on the evaluation benchmark.",
+        "method": {
+          "justification": "9a: The method — head-to-head comparison of vector steering against a natural-language prompt-directive baseline (src/prompt_baseline.py) on the same problems/judge, plus tracking judge-assessed answer correctness — is an appropriate way to test 'finer-grained than prompting' and 'accuracy preserved.'",
+          "score": 4,
+          "evidence_files": ["src/prompt_baseline.py", "src/judge_behaviour.py"]
+        },
+        "experiment": {
+          "justification": "9b: Prompt baseline covers amplify/suppress/none over 3 behaviours x 8 problems (results/prompt_judgments.json, 72 rows) and accuracy is tracked via correct_frac. Weaknesses: the prompt baseline uses a single fixed system-prompt directive with no exploration, so the finding that prompting yields 0->0 intensity for uncertainty/backtracking may partly reflect weak prompt engineering rather than a true prompting ceiling; and 'accuracy preserved' rests on n=8 where steered accuracy drops to 62% at alpha=3 vs 75-88% baseline — within-noise and not clearly 'preserved.' Under-powered comparison.",
+          "score": 3,
+          "evidence_files": ["src/prompt_baseline.py", "results/analysis.json", "results/prompt_judgments.json"]
+        },
+        "result": {
+          "justification": "9c: Directionally the result supports the claim — prompt directives leave uncertainty/backtracking intensity at 0 while steering swings intensity to 4.6/3.6, and accuracy is roughly retained at moderate |alpha| and collapses only at |alpha|=6 (results/analysis.json). This qualitatively agrees with the paper's framing of steering as a fine-grained control knob. But the 'finer-grained' conclusion leans on prompting failing completely, which is under-validated, and 'accuracy preserved' is noisy at n=8, so agreement is real but soft.",
+          "score": 3,
+          "evidence_files": ["results/analysis.json", "REPORT.md"]
+        }
+      }
+    }
+  }
+}

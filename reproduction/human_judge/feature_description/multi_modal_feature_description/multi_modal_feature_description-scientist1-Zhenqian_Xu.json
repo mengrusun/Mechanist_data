@@ -1,0 +1,129 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Zhenqian_Xu",
+    "paper_title":         "SemanticLens: Mapping vision-model components into a multi-modal semantic space",
+    "agent":         "scientist1",
+    "review_date":         "2026-07-15"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "label的挑选池、CLIP图像嵌入池、文本查询词表都是同一批 ImageNet-val / ImageNet-1k 类名——从未做 held-out concept（非 ImageNet 词表）或 held-out image 的泛化验证。虽然没有划分，但是选取相同的数据集对结论影响小，同样可根据component的代表图像是否集聚、是否符合文本标签来判断。这个疏忽可以忍受，打3分",
+    "score": 3,
+    "evidence_files": [
+      "code/build_component_vectors.py",
+      "code/claim1_faithfulness.py",
+      "code/claim2_queryability.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "使用ImageNet-1k的类别名作为标签。文本标签范围够广，也有真实性。",
+    "score": 5,
+    "evidence_files": [
+      "code/claim1_faithfulness.py",
+      "code/claim2_queryability.py",
+      "code/common.py",
+      "outputs/claim1_results.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "数据侧用了 10K 的 val 子集，虽然数量不少，但是没忠实履行task.md的要求，而且确实影响到了实验结果。",
+    "score": 3,
+    "evidence_files": [
+      "task.md",
+      "results.md",
+      "code/extract_features.py",
+      "models/"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "样本规模足够撑起两条 claim.但是ViT的text query查询成功率不到10%明显太低，report只考虑相对对照组翻了80倍，但没考虑成功率绝对值太低的事实。",
+    "score": 4,
+    "evidence_files": [
+      "outputs/claim1_results.json",
+      "outputs/claim2_results.json",
+      "logs/extract.log",
+      "results.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "claim1 上给了 bootstrap 95% CI（claim1_faithfulness.py 第 56-60 行），random baseline 用 500 次重采样、也带 CI；",
+    "score": 5,
+    "evidence_files": [
+      "code/claim1_faithfulness.py",
+      "code/claim2_queryability.py",
+      "outputs/claim1_results.json",
+      "outputs/claim2_results.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a —— 无因果性claim。",
+    "score": "n/a",
+    "evidence_files": [
+      "task.md",
+      "results.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification":   "所有报告数字均可回溯到具体 JSON 落盘产物且数值一致。不存在捏造数据，事后回填情况。",
+    "score": 5,
+    "evidence_files": [
+      "results.md",
+      "outputs/claim1_results.json",
+      "outputs/claim2_results.json",
+      "outputs/qualitative_examples.md",
+      "outputs/components/resnet50_layer4.npz",
+      "logs/claim1.log",
+      "logs/claim2.log",
+      "logs/extract.log"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "三份 log（extract/claim1/claim2）里的数字、outputs/*.json、results.md 之间彼此一致——claim1.log 逐行贴出的 result dict 与 claim1_results.json 完全相同，claim2.log 打的 topM_frac / chance / lift 也和 claim2_results.json、results.md 的表格对得上。文字结论（『Claim 1 is supported』『Claim 2 is supported』）与其自身数字方向一致，ViT 效应更弱的描述与实际数值相符（0.515/0.520 vs 0.555，0.069/0.085 vs 0.360），没有把数字往论文靠。没发现任何某处 PASS 另一处 FAIL 的传播错乱。",
+    "score": 5,
+    "evidence_files": [
+      "logs/claim1.log",
+      "logs/claim2.log",
+      "outputs/claim1_results.json",
+      "outputs/claim2_results.json",
+      "results.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "For every component c in a trained vision model, a small set of reference inputs that strongly drive c is a concept-faithful summary of what c encodes.Embedding those reference inputs with a frozen multi-modal foundation model and pooling the embeddings yields a single vector v_c placing c in the foundation model's joint image–text semantic space.(task.md的C1,C2本质在做一个claim，基于同样的实验，故这里合并评估)",
+        "method": {
+          "justification": "实验方法合理。在 ImageNet val 的 10K 子集上前向传播一次。每个组件挑激活最高的 K=9 张图（top-K argsort），对这 9 张图的 CLIP嵌入取均值再归一化，得到组件向量。有图片预处理，但没有CRP裁剪出图片的重要区域，但经评审的额外实验验证，CRP影响不大",
+          "score": 4,
+          "evidence_files": [
+            "code/extract_features.py",
+            "code/build_component_vectors.py",
+            "code/claim1_faithfulness.py"
+          ]
+        },
+        "experiment": {
+          "justification": "设计了同一component代表图片集合的集聚性实验，用标签类名查询componet的实验，但没有涉及变化图片数量，看small set图片是否能代表component的实验，未抓住claim中的关键词。",
+          "score": 4,
+          "evidence_files": [
+            "code/claim1_faithfulness.py",
+            "outputs/claim1_results.json",
+            "results.md"
+          ]
+        },
+        "result": {
+          "justification": "ResNet-50 单个类名 top-1 检索命中率 36.0%（chance 0.07%，lift ≈507×），ViT top-1 6.9%-8.5%（lift ≈80×）,这个命中率scientist1认为够高，但与论文的claim和scientist2的差距仍很明显。且ViT的命中率小于10%，明显标签打的不好。text query = human face时杂项很多。",
+          "score": 2,
+          "evidence_files": [
+            "outputs/claim1_results.json",
+            "results.md",
+            "outputs/qualitative_examples.md"
+          ]
+        }
+      }
+    }
+  }
+}

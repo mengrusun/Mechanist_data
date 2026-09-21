@@ -1,0 +1,34 @@
+{
+  "C1": {
+    "claim": "SAGE generative accuracy significantly exceeds the reference single-pass GPT-5 baseline (generative accuracy metric on probes conditioned on Gemma-2-2B + JumpReLU SAE features)",
+    "main_experiment_verdict": "partial-support",
+    "binary_verdict": "supported",
+    "milestones": ["M1"],
+    "evidence": "Wilcoxon p=0.0455 (two-tailed), n=44 features, n_eff=4 (non-zero differences), delta_gen_acc=+0.018, CI=[0.005,0.036]. Technically significant but extremely low effective sample size.",
+    "note": "Phase 2 WARN: n_eff=4, 90.9% zero differences, fragile result"
+  },
+  "C2": {
+    "claim": "SAGE predictive accuracy (Pearson r on held-out Neuronpedia activations) significantly exceeds the reference baselines on the main pair (Gemma-2-2B + JumpReLU SAE)",
+    "main_experiment_verdict": "not-supported",
+    "binary_verdict": "not-supported",
+    "milestones": ["M1"],
+    "evidence": "delta_pearson=-0.018, CI includes 0, negative direction. SAGE-lite does not outperform Neuronpedia reference.",
+    "note": "Phase 2 PASS"
+  },
+  "C3": {
+    "claim": "SAGE performance advantage generalizes across early, middle, and late layers (L4, L12, L20 of Gemma-2-2B)",
+    "main_experiment_verdict": "not-supported",
+    "binary_verdict": "not-supported",
+    "milestones": ["M1"],
+    "evidence": "Gen acc: L20 all-zero differences; layers show inconsistent advantage. Pred acc: all negative deltas. No layer-stratified significance.",
+    "note": "Phase 2 WARN: Bonferroni not coded, per-layer n=14-15"
+  },
+  "C4": {
+    "claim": "SAGE explanations consistently outperform reference baselines across architecturally distinct model+SAE pairs (cross-pair generalization)",
+    "main_experiment_verdict": "inconclusive-positive-trend",
+    "binary_verdict": "not-supported",
+    "milestones": ["M2"],
+    "evidence": "M2 (Qwen3-4B + transcoder-hp): SAGE-lite delta_pearson=+0.153, CI=[-0.039,+0.391] — positive but not significant. Only 2/3 planned depths tested (L28 absent).",
+    "note": "Phase 2 WARN: L28 missing, scope narrowed"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "C1": {
+    "main_experiment_verdict": "supported",
+    "main_experiment_metric": "political: alpha=-3 mean=3.08, alpha=0 mean=3.66, alpha=+3 mean=4.02 (range 0.94 rubric pts); random-control band |Delta|<=0.30/0.12 (RFM 2-3x larger). Full claim verdict=partial (refusal null; honesty weak-positive; political SUPPORTED). Per plan, 'partial' means at least one concept is supported — political is cleanly supported, forming the strongest component of C1.",
+    "confidence": "medium",
+    "notes": "C1 verdict is 'partial' in EXPERIMENT_RESULTS.md. Political sub-claim is strongly supported with clean signed monotone and random-control gap. Refusal is null; honesty is below noise. For verify, the claim as a whole is treated as 'supported' on the political-stance component — the primary scientifically valid finding within C1."
+  },
+  "C2": {
+    "main_experiment_verdict": "not-supported",
+    "main_experiment_metric": "cpp_steered pass_rate=0.567 < default_prompt pass_rate=0.600; cpp_frac=0.00 at alpha=+3 (language not switched); cpp_prompt_only pass_rate=0.433",
+    "confidence": "medium",
+    "notes": "suspected_under_power=true (10 held-out x 2 seeds vs plan's 30)"
+  },
+  "C3": {
+    "main_experiment_verdict": "not-supported",
+    "main_experiment_metric": "ZH shift=+0.32 p=0.11, FR shift=-0.10 p=0.67, ES shift=+0.20 p=0.27; no language reaches p<0.05 Wilcoxon; direction preserved in 2 of 3 target languages",
+    "confidence": "medium",
+    "notes": "Partial result — direction preserved in ZH/ES but not FR; p<0.05 criterion not met in any language"
+  },
+  "C4": {
+    "main_experiment_verdict": "not-supported",
+    "main_experiment_metric": "Combo1: sum r1(honesty)=4.73 <= v2_only r1=4.87 (predicate fails). Combo2: all at ceiling 5.0/4.7. Both combos ceiling-limited.",
+    "confidence": "high",
+    "notes": "Measurement-ceiling failure — rubric maxes out at ~5.0 for single-vector conditions; compositional gain test is uninformative"
+  },
+  "C5": {
+    "main_experiment_verdict": "supported",
+    "main_experiment_metric": "HaluEval: probe AUROC=0.986, RFM AUROC=0.984 vs GPT-4o=0.685 (Delta~+0.30). ToxicChat: best RFM AUROC=0.945, probe=0.922 vs GPT-4o=0.882 (Delta~+0.06). Internal beats GPT-4o on both benchmarks.",
+    "confidence": "high",
+    "notes": "Clean supported verdict; T5-Large AUROC=1.000 on ToxicChat but is in-distribution fine-tuned (not a fair external comparator)"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "Name": "same_base_detector",
+  "Title": "Detectable Only to Kin: Auditing Hidden Trait Payloads with a Same-Base Reference Model",
+  "Short Hypothesis": "Subliminal payloads are undetectable to humans and generic LLM judges precisely because detectability requires the same initialization: a reference model sharing the teacher's base can score neutral data for hidden trait content (via gradient alignment or a probe on the reference's activations) far above chance, whereas a different-base detector cannot. We hypothesize a practical auditor built from a same-base reference model flags trait-laden distillation corpora with high AUC, and its performance degrades predictably as the reference model diverges from the base, mirroring the transmission law and turning the paper's negative detectability result into a positive detection method.",
+  "Related Work": "Cloud et al. (2025) show humans and LLM classifiers fail to detect the payload and that transmission needs shared init, but do not invert this into a detector. Data-poisoning and backdoor detection methods (e.g., spectral signatures, activation clustering) target explicit triggers, not shared-init covert channels. Membership/provenance and watermark detection assume known keys. We contribute the insight that the same shared-init geometry that enables transmission also enables detection, and build/evaluate an auditor exploiting it, characterizing the detectability-vs-divergence curve.",
+  "Abstract": "The subliminal learning paper reports that neither humans nor LLM judges can tell trait-laden data from clean data, framing covert trait transfer as undetectable. We argue detectability is not impossible—it is kin-specific. Because the payload is only meaningful in the base model's parameter geometry, a reference model sharing that base can reveal it. We build an auditor that, given a candidate distillation corpus, scores each example using a same-base reference: either the alignment of the example's finetuning gradient with a bank of trait directions, or the output of a lightweight probe on the reference's activations trained to separate trait vs non-trait generations. We predict this auditor achieves high AUC in flagging trait-laden corpora and in identifying which trait, while a different-base auditor performs near chance—matching the transmission asymmetry. We further predict a graceful degradation law: as the reference diverges from the true base (via increasing unrelated finetuning), detection AUC falls in tandem with transmission strength, evidencing a shared mechanism. We evaluate across benign traits and misalignment, include adaptive-teacher stress tests, and quantify the false-positive rate on genuinely clean data. The result converts a striking negative into a deployable auditing tool for distillation and synthetic-data pipelines, and provides mechanistic evidence that transmission and detection are two faces of the same shared-init geometry.",
+  "Experiments": [
+    "Assemble corpora: neutral data from trait teachers (multiple traits + misalignment) and matched clean data.",
+    "Gradient-alignment auditor: score each example by max cosine of its reference-model gradient with a bank of trait directions; report ROC/AUC for trait-laden vs clean and top-1 trait identification.",
+    "Probe auditor: train a linear probe on same-base reference activations to classify trait vs non-trait generations; evaluate on held-out teachers.",
+    "Different-base control: run both auditors with a mismatched reference model; expect near-chance AUC.",
+    "Degradation law: use references at graded distances from the base; plot detection AUC vs reference divergence and overlay transmission strength.",
+    "False-positive analysis on diverse genuinely-clean corpora; report FPR at fixed TPR.",
+    "Adaptive teacher: teacher optimized to reduce gradient-alignment score; measure remaining detectability and any transmission cost to the teacher."
+  ],
+  "Risk Factors and Limitations": [
+    "Requires access to (or a good approximation of) the teacher's base model as reference; unknown-provenance corpora may lack this.",
+    "Adaptive teachers may evade gradient-alignment detection, and the arms race is open-ended.",
+    "Probe-based detection may overfit to specific teachers/traits and generalize poorly.",
+    "High false-positive rates could make the auditor impractical on messy real corpora.",
+    "Detection AUC may depend on data format and volume, complicating a clean degradation law."
+  ]
+}

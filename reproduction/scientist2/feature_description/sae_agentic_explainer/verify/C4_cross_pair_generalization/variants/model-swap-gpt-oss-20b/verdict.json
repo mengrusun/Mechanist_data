@@ -1,0 +1,36 @@
+{
+  "variant": "model-swap-gpt-oss-20b",
+  "claim": "C4",
+  "claim_text": "SAGE explanations consistently outperform reference baselines (Neuronpedia, single-pass GPT-5) across architecturally distinct model+SAE pairs on predictive accuracy (Pearson r on held-out Neuronpedia activations)",
+  "target_pair": "gpt-oss-20b + resid-post-aa",
+  "layers": [
+    3,
+    11,
+    19
+  ],
+  "n_features": 45,
+  "n_heldout": 10,
+  "evaluation_metric": "pred_pearson",
+  "results": {
+    "sage_lite_mean_pearson": 0.1365,
+    "neuronpedia_mean_pearson": 0.1817,
+    "gpt5_1shot_mean_pearson": 0.1112,
+    "sage_lite_vs_neuronpedia": {
+      "mean_delta": -0.0451,
+      "ci_low": -0.2097,
+      "ci_high": 0.1146,
+      "significant": false
+    },
+    "sage_lite_vs_gpt5_1shot": {
+      "mean_delta": 0.0254,
+      "ci_low": -0.0698,
+      "ci_high": 0.1189,
+      "significant": false
+    }
+  },
+  "claim_supported": false,
+  "main_experiment_verdict": "not-supported",
+  "consistent_with_main_experiment": true,
+  "variant_verdict": "pass",
+  "reasoning": "C4 claims SAGE-lite outperforms reference baselines across novel model/SAE pairs. Main experiment (M2: Qwen3-4B + transcoder-hp): delta_pearson=+0.153 CI=[-0.039,0.391] \u2014 positive trend but not significant, verdict=not-supported. This variant (GPT-OSS-20B + resid-post-aa): delta_pearson=-0.045 CI=[-0.210,0.115] \u2014 negative delta, spans zero, also not-supported. Both the main experiment and this variant independently fail to show significant improvement; they agree in the direction of \"not-supported\". Variant verdict: PASS (consistent with main experiment verdict)."
+}

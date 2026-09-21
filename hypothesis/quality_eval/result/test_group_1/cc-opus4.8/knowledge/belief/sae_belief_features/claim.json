@@ -1,0 +1,21 @@
+{
+  "Name": "sae_belief_features",
+  "Title": "Monosemantic Belief: Sparse Features for Attribution vs Assertion",
+  "Short Hypothesis": "Sparse autoencoders trained on LLM activations recover distinct, monosemantic, causally-steerable features for 'a proposition is attributed as believed' versus 'a proposition is asserted as fact', and steering these features independently modulates belief-attribution and factual-assertion behavior.",
+  "Related Work": "SAE interpretability (Bricken et al. 2023; Cunningham et al. 2023; Templeton et al. 2024) finds interpretable features but has not targeted epistemic belief/attribution features specifically. Truth-probe work is linear-probe-based, not dictionary-based. We connect SAE features to the belief/knowledge/fact distinction and test independent steerability.",
+  "Abstract": "Sparse autoencoders decompose LLM activations into interpretable, often monosemantic features. We ask whether the belief/knowledge/fact distinctions the source paper shows models blur correspond to separable SAE features. We train (or use pretrained) SAEs on a mid layer and search for features that activate specifically on (a) attributed-belief contexts ('X believes P'), (b) factual-assertion contexts ('P', 'it is a fact that P'), and (c) knowledge contexts ('X knows P'). We validate monosemanticity via activation exemplars and specificity tests, then test causal independence: clamping the belief-attribution feature should change how the model reports an agent's belief without changing its factual answer, and vice versa. The key hypothesis is that these features are largely disjoint in a competent model, and that their *entanglement*—a single feature firing across belief and fact contexts—predicts behavioral conflation on epistemic benchmarks. We compare feature disentanglement across model sizes and instruction-tuning stages. This offers a dictionary-level account of epistemic representation and a targeted lever to reduce belief/fact conflation by steering the responsible features.",
+  "Experiments": [
+    "Obtain/train SAEs on a mid layer of a target model; assemble contrast corpora for belief-attribution, factual-assertion, and knowledge contexts.",
+    "Rank SAE features by differential activation across the three context types; select candidate belief/fact/knowledge features.",
+    "Validate specificity with max-activating exemplars and negative controls.",
+    "Causal steering: clamp each candidate feature and measure independent effects on belief-attribution answers vs factual answers.",
+    "Entanglement metric: quantify feature overlap across contexts and correlate with model's behavioral belief/fact conflation rate.",
+    "Compare disentanglement across sizes and base-vs-instruct checkpoints."
+  ],
+  "Risk Factors and Limitations": [
+    "SAEs may not isolate clean belief features; features can be split or absorbed.",
+    "Steering effects can be diffuse and hard to attribute solely to epistemics.",
+    "Pretrained SAEs may not exist for the chosen model/layer.",
+    "Feature interpretation is partly subjective."
+  ]
+}

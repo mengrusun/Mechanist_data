@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the binding-error hypothesis by varying “N=1..4 similar entities,” item similarity, order, and context length, then measuring “binding leakage,” behavioral binding-error rate, prediction AUC, and causal patch effects. The predictions are directional and refutable: mis-binding should predict behavioral errors better than “truth-direction confidence,” binding errors should grow with similarity and context length, and “patch the truth-value subspace vs. the item-binding subspace” should produce a double dissociation; failure of those comparisons would count against the claim. However, “the truth-value the model assigns,” “which item the truth-value is bound to,” and the derivation of an “item-binding subspace” from difference-of-means need sharper operational definitions, and no numeric decision thresholds are supplied.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is recovering and separately intervening on “the item-binding subspace” and “the truth-value subspace” using “difference-of-means between clean single-item and ambiguous multi-item states”; this is custom and somewhat underspecified, but activation extraction, linear/MLP probes, subspace patching, attention-head analysis, and attention re-routing are implementable with standard interpretability tooling rather than requiring a magic operation. The named artifacts—“Llama-3-8B, Qwen2.5-7B, Gemma-2-9B,” MMLU, and TriviaQA—exist, while the proposed synthetic scenarios can be built using the stated templates and randomizations. Resources are usefully quantified as “N=1..4,” “~2-3k items,” three model families at no more than 9B parameters, and base-versus-chat comparisons. The negative branch is runnable because the design includes a single-item baseline, multiple control constructions, entity/order/position randomization, a truth-confidence predictor, truth-versus-binding patching, and factual-QA retention controls, although cleaner specification of how examples are matched for patching would be needed before implementation.",
+      "score": 7
+    }
+  }
+}

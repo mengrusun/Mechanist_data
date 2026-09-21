@@ -1,0 +1,21 @@
+{
+  "Name": "clinical_comorbidity_pathophysiology",
+  "Title": "Do Clinical Language Models Encode Comorbidity Structure That Matches Pathophysiology?",
+  "Short Hypothesis": "Clinical foundation models encode disease-disease relationships in a latent geometry, and we hypothesize this geometry reflects shared pathophysiological mechanism (shared organ systems, pathways, risk factors) beyond mere billing co-occurrence, such that mechanistically linked diseases are closer than diseases that merely co-occur due to demographics or coding artifacts.",
+  "Related Work": "Med-BERT, ClinicalBERT (Alsentzer et al., 2019), and EHR foundation models learn disease/code embeddings; prior analyses show clustering by clinical specialty. Cui et al. and others map comorbidity networks epidemiologically. Prior interpretability rarely separates mechanistic relatedness from co-occurrence/demographic confounds. We test whether model geometry tracks pathophysiological mechanism specifically, using curated mechanism-vs-cooccurrence dissociation pairs.",
+  "Abstract": "Clinical foundation models are used to represent patients and diseases, but whether their internal disease geometry reflects biological mechanism or administrative co-occurrence is unclear and clinically consequential. We probe disease-code embeddings from clinical LLMs and EHR foundation models to test whether inter-disease distances encode shared pathophysiology. We curate three disease-pair sets: (a) mechanistically linked pairs sharing a pathway/organ system but with low billing co-occurrence, (b) high-co-occurrence pairs linked mainly by shared demographics or coding artifacts rather than mechanism, and (c) matched controls. If the model encodes mechanism, set (a) pairs will be closer than set (b) after controlling for co-occurrence frequency. We build a co-occurrence-only PMI embedding baseline and test whether the foundation model adds mechanism-aligned structure beyond it. We further align embedding neighborhoods to curated pathway/ontology relationships (e.g., shared Reactome pathways, shared organ system) and compute a mechanism-alignment score. Finally, we test whether steering a patient representation along a disease-mechanism direction shifts predicted risks for mechanistically downstream conditions in the clinically expected direction. We predict partial mechanism encoding that exceeds co-occurrence but remains contaminated by coding structure. Results indicate whether clinical models capture pathophysiological mechanism, informing their trustworthiness for risk prediction and for surfacing non-obvious but mechanistically grounded comorbidities.",
+  "Experiments": [
+    "Curate disease-pair sets (mechanism-linked/low-cooccurrence, high-cooccurrence/low-mechanism, controls) using Reactome, organ-system ontologies, and EHR co-occurrence statistics.",
+    "Extract disease-code embeddings from a clinical LLM and an EHR foundation model.",
+    "Compare embedding distances across pair sets after regressing out co-occurrence frequency; test whether mechanism pairs are closer.",
+    "Build a PMI co-occurrence baseline embedding and measure incremental mechanism-alignment of the foundation model.",
+    "Neighborhood alignment: compute overlap of embedding nearest neighbors with shared-pathway/organ-system sets; report a mechanism-alignment score.",
+    "Steering test: move patient representation along a disease-mechanism direction and measure induced change in predicted risk for mechanistically downstream conditions vs unrelated conditions."
+  ],
+  "Risk Factors and Limitations": [
+    "Ground-truth 'mechanistic linkage' is partly subjective and ontology-dependent.",
+    "Co-occurrence and mechanism are strongly entangled in EHR data.",
+    "Access to clinical models/data may be restricted, limiting reproducibility.",
+    "Coding artifacts and demographic confounds are hard to fully remove."
+  ]
+}

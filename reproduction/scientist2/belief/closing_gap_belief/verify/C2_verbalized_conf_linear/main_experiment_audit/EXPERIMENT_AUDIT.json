@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-14",
+  "auditor": "llm-chat (gpt-5.4, cross-model)",
+  "claim_id": "C2",
+  "linked_milestones": ["M1", "M1.5", "M5"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Probe target is model's own verbalized confidence c (by design — C2 claims pre-encoding of verbalization). Disclosed explicitly. WARN not FAIL because design is transparent and appropriate for the research question."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "No normalization by model prediction statistics. AUROC, ordinal accuracy, macro-F1 are standard metrics not normalized by model output."
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "Files exist, core numbers match. Two concerns: (1) bootstrap CI [0.913, 0.940] does not contain point estimate 0.948 (normal artifact, not fabrication); (2) paraphrase Delta AUC P1=-0.11 exceeds planned tolerance of <=0.10, honestly reported. AUC above 0.70 floor maintained."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All metric functions called; outputs in probe_metrics.json and paraphrase.json."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "Single model, single dataset. Paraphrase exceedance disclosed. No scope over-claim detected."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

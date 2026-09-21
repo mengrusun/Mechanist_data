@@ -1,0 +1,198 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "Detecting Multi-Agent Collusion Through Multi-Agent Interpretability (NARCBench)",
+    "agent": "scientist2",
+    "review_date": "2026-07-16"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "train/test/val划分干净。",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/multi-agent_safety/multi_agent/scripts/train_probe.py",
+      "scientist2/multi-agent_safety/multi_agent/scripts/apply_probe_zero_shot.py",
+      "scientist2/multi-agent_safety/multi_agent/runs/M1/probe_best.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "label 是 scenario 生成时嵌入的设计属性 condition ∈ {collusive, honest}，模型自身生成的较合理。",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/multi-agent_safety/multi_agent/scripts/gen_scenarios.py",
+      "scientist2/multi-agent_safety/multi_agent/scripts/extract_activations.py",
+      "scientist2/multi-agent_safety/multi_agent/verify/C1_probe_existence_signal/main_experiment_audit/EXPERIMENT_AUDIT.md",
+      "source_code/multi-agent_safety/multi_agent/narcbench/README.md"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主模型完全正确、数据自建合规，未完全到task.md规模但每域16场能接受（相比原文50场）。",
+    "score": 4,
+    "evidence_files": [
+      "scientist2/multi-agent_safety/multi_agent/task.md",
+      "scientist2/multi-agent_safety/multi_agent/scripts/extract_activations.py",
+      "scientist2/multi-agent_safety/multi_agent/refine-logs/EXPERIMENT_TRACKER.md",
+      "scientist2/multi-agent_safety/multi_agent/runs/M1/text_only_judge.json",
+      "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "used_n：core 282 valid / test 49 scenario / dev 33 scenario；多agent的场景数还算合理，相对原文略少。",
+    "score": 4,
+    "evidence_files": [
+      "scientist2/multi-agent_safety/multi_agent/refine-logs/EXPERIMENT_RESULTS.md",
+      "scientist2/multi-agent_safety/multi_agent/CLAIMS_LEDGER.md",
+      "scientist2/multi-agent_safety/multi_agent/runs/M1/probe_best.json",
+      "scientist2/multi-agent_safety/multi_agent/runs/M3/verdict.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "全流程单一种子 seed=42，未做多种子/自举方差、也未做统计显著性检验。",
+    "score": 2,
+    "evidence_files": [
+      "scientist2/multi-agent_safety/multi_agent/scripts/train_probe.py",
+      "scientist2/multi-agent_safety/multi_agent/runs/M1/probe_best.json",
+      "scientist2/multi-agent_safety/multi_agent/refine-logs/EXPERIMENT_RESULTS.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a —— 无因果主张。",
+    "score":"n/a",
+    "evidence_files": [
+      "scientist2/multi-agent_safety/multi_agent/refine-logs/MECHANISM_ROUTING.md",
+      "scientist2/multi-agent_safety/multi_agent/refine-logs/EXPERIMENT_PLAN.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字可原样溯源到落盘产物。",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/multi-agent_safety/multi_agent/CLAIMS_LEDGER.md",
+      "scientist2/multi-agent_safety/multi_agent/runs/M1/verdict.json",
+      "scientist2/multi-agent_safety/multi_agent/runs/M2/verdict.json",
+      "scientist2/multi-agent_safety/multi_agent/runs/M3/verdict.json",
+      "scientist2/multi-agent_safety/multi_agent/runs/M1/probe_best.json",
+      "scientist2/multi-agent_safety/multi_agent/verify/C1_probe_existence_signal/main_experiment_audit/EXPERIMENT_AUDIT.md"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "跨产物核对高度一致。",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/multi-agent_safety/multi_agent/refine-logs/main-experiment-verdicts.json",
+      "scientist2/multi-agent_safety/multi_agent/verify/INTEGRITY_AUDIT.md",
+      "scientist2/multi-agent_safety/multi_agent/verify/VERIFY_REPORT.md",
+      "scientist2/multi-agent_safety/multi_agent/CLAIMS_LEDGER.md",
+      "scientist2/multi-agent_safety/multi_agent/review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Model internals carry a collusion signal that text-level monitoring misses; lightweight probes on per-agent residual-stream activations can recover it.",
+        "method": {
+          "justification": "机理家族选择正确：Probing / Residual Stream States + 线性 logistic 探针。但原文对每个 agent 在整段 discussion 阶段的 activations 取平均，本复现直接取最后 assistant token 的 hidden state，这属于选取的位置不太合适，考虑到实验设计中用约定词体现串通，，直接去取最后一个不利于捕捉生成约定词时的activation。",
+          "score": 3,
+          "evidence_files": [
+            "scientist2/multi-agent_safety/multi_agent/refine-logs/MECHANISM_ROUTING.md",
+            "scientist2/multi-agent_safety/multi_agent/scripts/train_probe.py",
+            "scientist2/multi-agent_safety/multi_agent/scripts/extract_activations.py",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        },
+        "experiment": {
+          "justification": "1.委员会串通的场景较为合理，不是简单给个prompt声明要“串通”，而是给定了具体的方法，比如写好约定词。但没有部分agent串通、部分没串通的场景，只有全部串通和全部正常的场景。2. max_new_tokens=60 造成 transcript 严重截断. 还没投票就结束。3. 层搜索空间 {27,37,48,59} 跨度较大，这点是好的。4.伪造多agent，实际上是单轮agent独立独白。",
+          "score": 2,
+          "evidence_files": [
+            "scientist2/multi-agent_safety/multi_agent/scripts/train_probe.py",
+            "scientist2/multi-agent_safety/multi_agent/scripts/text_only_judge.py",
+            "scientist2/multi-agent_safety/multi_agent/refine-logs/EXPERIMENT_RESULTS.md",
+            "scientist2/multi-agent_safety/multi_agent/review-stage/AUTO_ITERATION_FINAL_REPORT.md",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        },
+        "result": {
+          "justification": "reproduction 诚实地把差距归因于max_new_tokens=60发生截断的原因。但没有继续迭代。在少数场景下activation probe优于text-only judge，导致缩小claim，因为截断让 judge 71% 弃答，probe vs judge 比较根本就是不公平的，所以他们把 predicate从击败降到具竞争性，避开这个比较。",
+          "score": 4,
+          "evidence_files": [
+            "scientist2/multi-agent_safety/multi_agent/CLAIMS_LEDGER.md",
+            "scientist2/multi-agent_safety/multi_agent/runs/M1/verdict.json",
+            "scientist2/multi-agent_safety/multi_agent/review-stage/AUTO_ITERATION_FINAL_REPORT.md",
+            "paper/multi-agent_safety/multi_agent/paper.pdf",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Detection requires aggregating signals across agents — group-aggregated probes outperform any single-agent probe and the text-only judge — and no single aggregation technique dominates across collusion types, motivating a family of complementary multi-agent probes.",
+        "method": {
+          "justification": "使用多种aggregation方法，mean-pool / max-pool / attention-pool / concat-MLP / best-of-N，较为合理。",
+          "score": 4,
+          "evidence_files": [
+            "scientist2/multi-agent_safety/multi_agent/scripts/train_aggregation.py",
+            "scientist2/multi-agent_safety/multi_agent/runs/M2/agg_best-of-N.json",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        },
+        "experiment": {
+          "justification": "1.比较了聚合probe和mean pool probe聚合, 但没比较text judge和聚合probe, 单agent probe和聚合probe。。",
+          "score": 1,
+          "evidence_files": [
+            "scientist2/multi-agent_safety/multi_agent/scripts/train_aggregation.py",
+            "scientist2/multi-agent_safety/multi_agent/runs/M2/verdict.json",
+            "scientist2/multi-agent_safety/multi_agent/runs/M2/diversity.json",
+            "scientist2/multi-agent_safety/multi_agent/verify/C2_aggregation_diversity/main_experiment_audit/EXPERIMENT_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "定性结果的方向对齐部分正确：predicate‑b（no single aggregation dominates: attention-pool 8/16, best-of-N 5, max/mean/concat 1）与论文结论一致；但没做multi-agent和单agent的比较。",
+          "score": 3,
+          "evidence_files": [
+            "scientist2/multi-agent_safety/multi_agent/CLAIMS_LEDGER.md",
+            "scientist2/multi-agent_safety/multi_agent/runs/M2/verdict.json",
+            "scientist2/multi-agent_safety/multi_agent/review-stage/AUTO_ITERATION_FINAL_REPORT.md",
+            "paper/multi-agent_safety/multi_agent/paper.pdf"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Activation probes transfer zero-shot, without retraining, to structurally different multi-agent scenarios (different channel, different domain), showing the learned signal is not tied to one collusion form.",
+        "method": {
+          "justification": "方法与原论文完全对齐：冻结 M1 layer-48 probe（scaler + LogisticRegression）+ 冻结 M2 best aggregation，不在 transfer 集重训。采用了zero-shot的征求方式。",
+          "score": 5,
+          "evidence_files": [
+            "scientist2/multi-agent_safety/multi_agent/scripts/apply_probe_zero_shot.py",
+            "scientist2/multi-agent_safety/multi_agent/runs/M3/transfer_results.json",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        },
+        "experiment": {
+          "justification": "同C2",
+          "score": 1,
+          "evidence_files": [
+            "scientist2/multi-agent_safety/multi_agent/scripts/apply_probe_zero_shot.py",
+            "scientist2/multi-agent_safety/multi_agent/runs/M3/verdict.json",
+            "scientist2/multi-agent_safety/multi_agent/runs/M3/verdict_mean.json",
+            "scientist2/multi-agent_safety/multi_agent/runs/M3/verdict_attention.json",
+            "scientist2/multi-agent_safety/multi_agent/verify/C3_zero_shot_transfer/main_experiment_audit/EXPERIMENT_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "由于实验方法错误，结果不可信。但分析比较详细。",
+          "score": 2,
+          "evidence_files": [
+            "scientist2/multi-agent_safety/multi_agent/runs/M3/verdict.json",
+            "scientist2/multi-agent_safety/multi_agent/runs/M3/transfer_results.json",
+            "scientist2/multi-agent_safety/multi_agent/CLAIMS_LEDGER.md",
+            "paper/multi-agent_safety/multi_agent/paper.pdf",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        }
+      }
+    }
+  }
+}

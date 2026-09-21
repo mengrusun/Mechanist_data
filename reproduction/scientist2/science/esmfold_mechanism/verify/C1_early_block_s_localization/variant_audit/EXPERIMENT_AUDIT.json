@@ -1,0 +1,73 @@
+{
+  "claim_id": "C1",
+  "audit_type": "variant_experiment",
+  "phase": 9,
+  "date": "2026-07-15",
+  "variants": [
+    {
+      "variant_name": "dataset_cath_strat",
+      "dimension": "dataset",
+      "execution_status": "COMPLETED",
+      "overall_severity": "WARN",
+      "integrity_verdict": "PASS",
+      "eligible": true,
+      "findings": [
+        {
+          "id": "VE-C1-DS-01",
+          "severity": "PASS",
+          "description": "DSSP ground truth preserved: uses existing M1 is_hairpin values, no re-computation"
+        },
+        {
+          "id": "VE-C1-DS-02",
+          "severity": "PASS",
+          "description": "Aggregation logic correct: Wilcoxon paired test consistent with M1"
+        },
+        {
+          "id": "VE-C1-DS-03",
+          "severity": "WARN",
+          "description": "CATH stratification degrades to single group (cath_null) since all 197 chains have null CATH labels"
+        },
+        {
+          "id": "VE-C1-DS-04",
+          "severity": "PASS",
+          "description": "Statistics: N=197, delta=-0.862, p=2.25e-36, bootstrap 95% CI ~[-0.91,-0.82]"
+        }
+      ],
+      "predicate_checks": {
+        "early_effect_>=0.2pp": true,
+        "early_p_<0.05": true,
+        "late_window_<50pct": true,
+        "z_same_window_<50pct": true,
+        "matched_ctrl_<50pct": true
+      },
+      "variant_verdict": "supported"
+    },
+    {
+      "variant_name": "method_mean_ablation",
+      "dimension": "method",
+      "execution_status": "NOT_RUN",
+      "execution_blocked_reason": "auto-mode classifier blocked script execution in project directory",
+      "code_review_verdict": "PASS",
+      "integrity_verdict": "EXCLUDED",
+      "eligible": false,
+      "exclusion_reason": "not_executed_permission_block",
+      "findings": [
+        {
+          "id": "VE-C1-ME-01",
+          "severity": "FAIL",
+          "description": "Script not executed due to auto-mode permission block. Cannot assess runtime integrity."
+        },
+        {
+          "id": "VE-C1-ME-02",
+          "severity": "PASS",
+          "description": "Code review passed: hook signature correct, clone before modify, cleanup on exit, DSSP ground truth preserved in design"
+        }
+      ],
+      "variant_verdict": "NOT_RUN"
+    }
+  ],
+  "n_run": 2,
+  "n_eligible": 1,
+  "n_excluded": 1,
+  "eligible_variants": ["dataset_cath_strat"]
+}

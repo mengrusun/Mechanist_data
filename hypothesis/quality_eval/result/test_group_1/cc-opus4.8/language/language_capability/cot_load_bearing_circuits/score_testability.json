@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the language–intelligence hypothesis by combining a probe timeline, “per-token attention knock-out,” and a “Value-corruption test” that asks whether the final answer follows an inserted wrong intermediate value. The prediction is directional and refutable: the proposal expects “a sparse set of ‘result-carrying’ tokens whose corruption flips the answer,” so finding no such tokens, no attention-necessity effect, or no increase with depth and scale would contradict its stated claims. However, “drop > threshold,” “earliest reliable decoding point,” and “sparse set” are not numerically defined, and the steering method is unspecified, leaving several decision rules to be fixed before implementation.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is the “Value-corruption test: overwrite an intermediate numeric result token with a wrong value” while determining whether the downstream answer changes consistently; this requires custom intervention logic but is a standard teacher-forced generation and activation-hook experiment rather than a magic step. Llama-3-8B and Qwen2.5-7B exist, and logit-lens probing, attention masking, forward hooks, and token-level corruption are supported by established PyTorch and transformer interpretability tooling. Resources are usefully quantified as “500 multi-hop arithmetic and symbolic reasoning problems” and two named model scales, although the dataset construction, probe training splits, and reliability criterion remain underspecified. The filler-token control makes a negative result runnable, but stronger matched-token and probe-leakage controls are absent despite the stated risks that attention knock-out may have “off-target effects” and logit-lens results may reflect “probe leakage.”",
+      "score": 7
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "direction": "LASA — Language-Agnostic Semantic Alignment at the Semantic Bottleneck for LLM Safety",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "In multilingual LLMs, an intermediate layer's residual-stream geometry is dominated by shared meaning across languages rather than by language identity, and safety alignment anchored at that layer transfers cross-lingually.",
+      "status": "conditional",
+      "behavior_conclusion": "The geometric half of the phenomenon holds on LLaMA-3.1-8B-Instruct — a per-layer semantic-vs-language ratio R(l)=Sem(l)/Lang(l) exhibits a dome-shaped interior maximum at L*=10 (R_max=1.371, 95% CI [1.349, 1.395]), refuting the monotonic-R falsifier and consistent with prior work on multilingual bottleneck geometry (Wendler 2024, Wu 2024). The causal half is weaker: cross-lingual activation patching at L*=10 outperforms a late-layer control (A > C, +0.28 semantic cosine) but the matched-control specificity test fails (A ≈ D, 0.738 vs 0.755) — the last-token intervention at L* encodes a language-generic affordance rather than content-specific meaning. The applied cross-lingual safety-transfer prediction only conditionally holds: on LLaMA-3.1-8B-Instruct, adding a bottleneck-anchored regularizer to LoRA-DPO cut unseen-language MultiJail ASR by -42.2% relative to surface DPO, but the same recipe on Qwen2.5-7B-Instruct produced only -1.95% (essentially no cross-lingual benefit) alongside a -1.07 pt MT-Bench capability regression. Behavior is conditional on the LLaMA-family architecture and this specific recipe; the strong reading — architecture-agnostic semantic-bottleneck safety transfer — is not supported.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention → Tuning & Editing",
+          "family": "Representation and Parameter Analysis / representation-engineering (M1+M3) + Causal Attribution / patching (M2)",
+          "headline": "Located an interior semantic-vs-language ratio maximum at L*=10 on LLaMA-3.1-8B-Instruct (R_max=1.371, dome shape); cross-lingual activation patching at L* beats late-layer control by +0.28 semantic cosine but fails matched-control specificity (A ≈ D), so L*=10 is a diagnostic operating point, not a causally-content-specific bottleneck. Anchoring LoRA-DPO at L*=10 delivers -42.2% relative unseen-language MultiJail ASR reduction on LLaMA — but the same recipe on Qwen2.5-7B produces only -1.95% (with -1.07 pt MT-Bench regression), so the transfer is architecture-specific rather than architecture-agnostic.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "On LLaMA-3.1-8B-Instruct, a diagnostic per-layer R(l)=Sem(l)/Lang(l) identifies an interior maximum at L*=10, and cross-lingual activation patching at L*=10 is expected to preserve meaning better than surface controls and better than an unrelated-English matched-control patch.",
+              "method": "Compute Sem(l) as mean pairwise cosine of last-token residual states across 10 languages on 315 parallel MultiJail prompt groups; Lang(l) as mean cosine of same-language different-meaning pairs. Confirm causal specificity by patching residual state at L* with same-meaning-English (A), surface-layer controls l=2 (B) and l=30 (C), and unrelated-English at L* (D); accept only if A > B, A > C, and A > D at 95% paired bootstrap CI.",
+              "conclusion": "The dome-shaped R(l) with interior maximum at L*=10 (R_max=1.371, CI [1.349, 1.395]) supports the geometric half of the claim; the A > C contrast is strong (+0.28 semantic cosine) but the matched-control specificity test fails (A=0.738 ≈ D=0.755), so L*=10 is a diagnostic argmax rather than a content-specific causal bottleneck. Per-language Sem^lang tapers for low-resource languages (jv 0.47, bn 0.57), further weakening the 'language-agnostic' framing. Audit passed, swap-test deferred (max_verify_claims cap) — the mechanism holds only in the narrowed 'diagnostic operating point' sense."
+            },
+            {
+              "id": "C2",
+              "statement": "Adding an L*-anchored representation-space invariance regularizer to LoRA-DPO reduces MultiJail unseen-language ASR by ≥ 20 pp relative to surface-space DPO on identical data, with worst-language ASR non-inferior and general-capability retention within 2 pp — architecture-agnostically across multilingual base models.",
+              "method": "Train two identical LoRA-DPO variants (β=0.1, r=16 α=32, lr=1e-5, 3000 steps) on 5000 EN PKU-SafeRLHF pairs + 2000 UltraFeedback pairs — Method adds L_bottleneck = λ·[1 − cos(h_L*(prompt, lang_A), h_L*(prompt, lang_B))] over EN/ZH/KO parallel prompt triples; Baseline pure DPO. Evaluate on MultiJail per-language ASR (GPT-4o judge), MMLU, MGSM, MT-Bench; accept only if unseen-lang ASR delta ≥ 20 pp relative, worst-lang non-inferior, and capability retention within 2 pp on every metric. Verify by rerunning the identical recipe on Qwen2.5-7B-Instruct (model-swap variant).",
+              "conclusion": "On LLaMA-3.1-8B-Instruct the safety headline lands (-42.2% relative unseen-language ASR reduction, exceeding the 20 pp target), but the strong claim as stated is falsified: the same recipe on Qwen2.5-7B-Instruct produces essentially no unseen-language benefit (-1.95% relative, -0.28 pp absolute) alongside a -1.07 pt MT-Bench capability regression and -4 pp MGSM-sw. The finding replicates as robustly not-supported at the 20 pp bar across the two architectures (verify PASS, robustness=1.00). Iteration ⓪ narrowed the claim to a LLaMA-family case study; capability preservation characterized as mixed rather than established; Qwen non-replication elevated to headline."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Formation Tracing",
+        "Unit Interpretation",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

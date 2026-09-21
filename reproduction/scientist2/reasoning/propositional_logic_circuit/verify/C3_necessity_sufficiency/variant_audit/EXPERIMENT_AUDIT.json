@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-15",
+  "auditor": "gpt-5.4 (external LLM reviewer, dmxapi/llm-chat-equivalent)",
+  "claim_id": "C3",
+  "variant": "model-swap-gemma2-9b",
+  "reused_from": "results/M5_gemma9b.json",
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "GT loaded from same synthetic dataset JSONL as main experiment (k3_chain2_natural, build_propositional_dataset.py). Not derived from model output. cross_family_verify.py uses prop_circuit_lib.compute_metrics with GT from JSONL."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Necessity: (patch_ld - corr_ld) / (clean_ld - corr_ld). Sufficiency: (reinsert_ld - ablated_ld) / (clean_ld - ablated_ld). Same formulas as M2/M3. Denominators are delta quantities, not model max/mean. No normalization fraud."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "results/M5_gemma9b.json exists. necessity_recovery.LD=1.0178, PD=1.0116; sufficiency_recovery.LD=0.0190, PD=0.0049; n_pairs=500; cell=k3_chain2_natural; anchor_accuracy=0.96; timing.total_s=2397.2 (0.666 GPU-h). Model=/data/zhenqian/models/LLM-Research/gemma-2-9b (confirmed). All values consistent with EXPERIMENT_RESULTS.md §M5."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "cross_family_verify.py calls attribution screen, necessity patch, sufficiency reinsertion — all produce populated output fields in M5_gemma9b.json. No dead metric code."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "n_pairs=500 (same as main), anchor cell identical, shortlist at 15% cap (107 components vs 158 for Mistral — expected size difference from different L*H total; same selection method). Batch size 2 adapted for Gemma memory. No scope overclaim. C3 judgment uses full 107-component shortlist for necessity/sufficiency — correct."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

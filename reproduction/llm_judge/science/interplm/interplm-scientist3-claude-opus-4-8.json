@@ -1,0 +1,213 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "InterPLM: Interpretable Features in Protein Language Models",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "There IS a fitting/selection process and it leaks. In experiment_code.py the function best_f1_per_unit (line 635) scans ALL units of a representation, and for each tries four thresholds (k_mult in [0.5,1.0,1.5,2.0]), then returns the maximum F1 over units x thresholds. That maximized value is then thresholded at F1>=0.5 to count 'recovered' concepts, and reported directly as the headline metric (concept_counts sae=7, neuron=1 in experiment_data.npy). There is NO train/validation/test split anywhere: unit selection, threshold selection, and final evaluation all happen on the same residue set (~200 proteins). This is textbook selection-on-test. It is also asymmetric: the SAE has feature_dim=10240 units (config.json) versus 320 raw neurons, so maximizing over 32x more units mechanically inflates the SAE's best-F1 and hence the SAE-vs-neuron gap that Claims 1-3 depend on. The reference paper (paper.pdf Sec 5.2.3) explicitly selects the feature on a validation set and reports F1 on a disjoint test set; the run honors neither. The main conclusion's metric is contaminated by a real leakage path visible in code.",
+    "score": 1,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py",
+      "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_data.npy"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Ground truth is genuine Swiss-Prot/UniProt FT annotations parsed at residue level into BINDING/ACT_SITE/MOTIF/DOMAIN/MOD_RES (parse_uniprot_dat / extract_features_json in experiment_code.py). These are expert-curated, independent of the SAE under test (non-circular), and are exactly the concept vocabulary the paper uses, so the label validly operationalizes 'biological concept alignment'. Gaps: (a) subtypes are collapsed by a heuristic norm_subtype() and concepts require only >=3 proteins / >=5 positive residues, so the resulting 65 'concepts' are a coarse, noisy proxy for the paper's curated 135-concept set; (b) the paper distinguishes per-amino-acid precision from per-domain recall to make the label meaningful at the concept level, whereas the run flattens everything to per-residue membership. The label source is valid and non-circular but the operationalization is coarsened.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The canonical task.md fixes the experiment-stage lead model as ESM-2-650M ('the lead PLM on which the SAE-vs-neuron interpretability comparison is run'), with ESM-2-8M listed only as a VERIFY-stage scale-generalisation candidate, and the dataset as Swiss-Prot. The run used ONLY ESM-2-8M: experiment_code.py loads esm_path = MODEL_DIR/'esm2_t6_8M_UR50D' (line 41, fallback facebook/esm2_t6_8M_UR50D) and SAE dir InterPLM-esm2-8m/layer_4 (line 59). The 650M model and its SAEs (layers 1,9,18,24,30,33) were never touched. The dataset was reduced to ~200 proteins fetched live from the UniProt REST API (target_n=300, actual entries ~200) yielding only 65 concepts, versus the paper's 50,000-protein / 135-concept evaluation. Only a single layer (SAE_LAYER=4) of 6 was run. This is a silent downgrade of both the mandated lead model (650M -> smallest 8M verify model) and the dataset (full Swiss-Prot -> ~200 proteins), with no disclosure or justification in the report. The reported result does not reflect the resource the task asked to test.",
+    "score": 1,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py",
+      "logs/0-run/draft_summary.json",
+      "idea.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Evidence is thin and, for most claims, absent. What was run (Claims 1-2 in reduced form) rests on ~200 proteins, a single layer, and 65 concepts, producing tiny integer outcomes (SAE recovers 7 concepts, neurons 1). Claim 1's headline quantity ('~2,548 interpretable features per layer') was never measured — the run counts recovered concepts, not interpretable features. Claim 3 (superposition) is only inferred from the 7-vs-1 gap, not directly tested. Claims 4 (LLM auto-interpretation of novel features) and 5 (annotation-filling + generation steering) were NOT run at all: all four BFTS stages share an identical best_solution (same md5 54ca4f5b...) and the ablation_summary.json is empty ([]). So 3 of 5 claims have conclusions carried in the ledger with no supporting experiment, and the two that were run use samples far below adequate scale. Claim strength substantially exceeds evidence strength.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/ablation_summary.json",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json",
+      "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_data.npy",
+      "report.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "No genuine uncertainty quantification. Five experiment_* directories all report the identical outcome {sae:7, neuron:1, total:65}, confirming determinism, not robustness. The four seed_aggregation_* directories are mislabeled: each aggregation_plotting_code.py loads a single-element experiment_data_path_list (one run), so no across-seed variance was ever computed. The concept-alignment counts (7 vs 1) are bare point estimates of small integers with no error bars, no significance test, and no repeated data subsampling. Given the selection-on-test bias favoring the 10240-unit SAE over 320 neurons (Dim 1), a gap of 7 vs 1 could plausibly be within selection noise, yet it is treated as a real effect. Single effective run, no uncertainty reported.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/seed_aggregation_1ab68a22eea24f02aa783bbb43c497bc/aggregation_plotting_code.py",
+      "logs/0-run/experiment_results/experiment_6b67405e6ad443afbb04484cdf70c2a4_proc_1677598/experiment_data.npy",
+      "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_data.npy"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "Causal/mechanistic claims exist (C3: the SAE-vs-neuron gap is 'direct evidence' of superposition; C5: 'steering ESM-2 sequence generation'), so this dimension applies. Neither is supported by an intervention. C3 rests purely on an observational F1 gap between representations — correlational evidence presented as 'direct evidence'. The paper establishes superposition additionally via a randomized-weight control (SAEs on shuffled ESM-2 extract zero biological concepts, paper.pdf Sec 3.3/4.1); the run implements no such control and no ablation/patching. C5's steering is a genuine causal manipulation but was never executed (no steering code, no results). Thus every causal claim in this run relies on correlational or absent evidence with no controlled intervention.",
+    "score": 1,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py",
+      "logs/0-run/ablation_summary.json",
+      "report.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "The headline metrics are well grounded: sae=7, neuron=1, total=65, best-F1 SAE=0.7548, best-F1 neuron=0.5439, mean-F1 0.2183/0.0715 all appear identically in experiment_data.npy, draft_summary.json, research_summary.json, baseline_summary.json and stage_progress.json, and I recomputed 7 and 1 directly from the per_concept_f1 arrays in experiment_data.npy — they agree. One provenance defect: draft_summary.json states 'a dictionary width of ~2548' and derives '~5% sparsity' from it, but the actual SAE config.json is feature_dim=10240 (esm_dim 320 x expansion 32). The 2548 figure is sourceless — it appears to be a confabulation conflated with the paper's '2,548 features per layer' claim, not any product of this run. The auxiliary descriptors L0~136 and MSE~0.577 also lack a located numeric product (only referenced in plot captions). The core experimental numbers are traceable; a secondary interpretive number is fabricated.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_data.npy",
+      "logs/0-run/baseline_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The numeric metrics are internally self-consistent: draft_summary, research_summary, baseline_summary, stage_progress (all four stages) and experiment_data.npy carry identical values (7 / 1 / 65 / 0.7548 / 0.5439). But there are consistency defects that reveal loose bookkeeping: (1) draft_summary's 'dictionary width ~2548' contradicts the SAE config feature_dim=10240 (an artifact-vs-artifact mismatch); (2) the pipeline advertises four completed stages including 'creative_research' and 'ablation_studies', yet all stages share the byte-identical best_solution (md5 54ca4f5b...) and ablation_summary.json is an empty list, so 'completed ablations' were not actually performed; (3) report.md renders no per-claim verdict ('See overall verdict (claim n/5)' for all five) and marks the run 'Requires human review', so no claim-level integrity state is propagated at all. No headline metric contradicts another, but the descriptor mismatch and the empty-ablation-vs-'completed' gap are real inconsistencies.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/ablation_summary.json",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json",
+      "report.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "SAEs trained on the residual-stream activations of ESM-2 layers surface up to ~2,548 interpretable latent features per layer — orders of magnitude more concepts than can be pulled out of individual neurons.",
+        "method": {
+          "justification": "9a: Using a pretrained InterPLM SAE and comparing feature-level to neuron-level concept alignment is the correct method family for this claim, matching the paper. However, C1 specifically asserts a COUNT of interpretable latent features per layer (~2,548); the run's method never enumerates interpretable features — it only computes a per-concept best-F1 over units. So the SAE tool is right but the measured quantity does not match the claim's target quantity.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: One layer (4) of 6, ~200 proteins, 65 concepts, no train/val/test split (selection-on-test, Dim 1), no randomized-weight control, single deterministic run. The design cannot produce a 'features per layer' count and is under-powered and leakage-contaminated for even the directional comparison. No hyperparameter/layer exploration despite an 8-hour GPU budget.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py",
+            "logs/0-run/ablation_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "9c: Direction is qualitatively consistent with the paper (SAE recovers more concepts, 7, than neurons, 1). But the '~2,548 features/layer' magnitude was never obtained, and the summary confabulated 2548 as a dictionary width (actual 10240). The observed gap is confounded by selection-on-test favoring the 10240-unit SAE, so the result does not reliably validate the claim; it is reported honestly (no forced agreement) but on a flawed measurement.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_data.npy",
+            "logs/0-run/draft_summary.json"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "These SAE features align with up to ~143 distinct Swiss-Prot biological concepts (binding sites, active sites, sequence motifs, structural / functional domains), whereas raw ESM-2 neurons align with only ~46 concepts on the same evaluation, of which only ~15 are cleanly recovered.",
+        "method": {
+          "justification": "9a: Scoring feature-concept and neuron-concept alignment with Swiss-Prot F1 is exactly the paper's method (paper.pdf Sec 5.2.2), and both the raw-neuron identity-SAE and the trained SAE are put through the identical scoring path, which is the correct comparison design. Method family is well matched to the claim.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: The judgment metric deviates from the paper: recall is computed per-residue (tp/n_pos) rather than the paper's domain-adjusted recall (recall = domains-with-a-true-positive / total-domains), which the paper introduced precisely because features and concepts live at different granularities. Combined with no val/test split, no shuffled-weight baseline, a single layer, and only 65 of the paper's 135 concepts on ~200 proteins, the design is under-powered and the metric only partially aligned with the claim.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py"
+          ]
+        },
+        "result": {
+          "justification": "9c: The run reports SAE 7 vs neuron 1 concepts at F1>=0.5 out of 65 — far from the paper's 143 vs 46 (15 clean), but directionally the same ordering (SAE >> neurons). The run does not disguise this as a full reproduction; the report flags 'requires human review' and the VLM summary explicitly notes the large gap 'is not yet clearly demonstrated'. So it is an honest, directionally-consistent partial result, weakened by the leakage-driven inflation of the very gap being reported.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_data.npy",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "The gap between SAE features and raw neurons is direct evidence that PLMs encode biological concepts in superposition rather than in single units.",
+        "method": {
+          "justification": "9a: The run supports superposition only by an observational F1 gap — a correlational method presented as 'direct evidence'. The paper's decisive method for this claim is the randomized-weight control (SAEs on shuffled ESM-2 recover zero biological concepts), which is the mechanistic discriminator; the run implements no control and no intervention, so the method is under-powered for a causal/mechanistic conclusion.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No control experiment and no intervention were run — the shuffled-weight baseline that the paper (and this reproduction's own Figure-3 reference) uses to rule out data-distribution artifacts is absent, and the ablation stage is empty. The gap is additionally confounded by the selection-on-test asymmetry (10240 SAE units vs 320 neurons). There is no design element that isolates 'superposition' as the cause of the gap.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/ablation_summary.json",
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py"
+          ]
+        },
+        "result": {
+          "justification": "9c: The run observes a gap (7 vs 1) in the same direction the paper interprets as superposition, but 'direct evidence' overreaches an uncontrolled, leakage-inflated correlational gap. No explicit superposition conclusion is defended in the report, so it neither fabricates agreement nor supplies a rigorous basis; the claim's mechanistic content is left effectively untested.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_data.npy",
+            "report.md"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "A subset of the SAE features corresponds to coherent biological concepts that are absent from existing annotation dictionaries; these can be surfaced by using an external LLM as an auto-interpreter over top-activating protein contexts.",
+        "method": {
+          "justification": "9a: The task provides an auto-interpretation LLM (dmxapi gpt-5.4) and the paper's method (Claude over top-activating protein contexts) is well defined, but the run selected/applied NO method for this claim — no LLM auto-interpretation code exists in any stage's best_solution. A suitable method family is available but was not instantiated.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_79cc3c848d9e47c697f58a8613b72e34.py",
+            "idea.md"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment was run for C4. There is no LLM-annotation pipeline, no top-activating-context extraction for interpretation, and no evaluation of 'features absent from annotation dictionaries'. Complete absence of the required evidence.",
+          "score": 0,
+          "evidence_files": [
+            "logs/0-run/ablation_summary.json",
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py"
+          ]
+        },
+        "result": {
+          "justification": "9c: No result exists for C4; report.md carries only the placeholder 'See overall verdict (claim 4/5)'. Nothing to compare against the paper. Total absence.",
+          "score": 0,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      },
+      "C5": {
+        "claim": "The extracted feature dictionary is practically useful: it supports filling in missing Swiss-Prot annotations and steering ESM-2 sequence generation toward a target biological property.",
+        "method": {
+          "justification": "9a: The claim requires two interventions (annotation-filling via feature activations, and steering by clamping feature values during generation). The paper's methods are well specified, and steering is a genuine causal method, but the run applied neither — no steering and no annotation-completion method was chosen or coded in any stage. A fitting method exists but is unused.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_79cc3c848d9e47c697f58a8613b72e34.py",
+            "idea.md"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment for C5 was run — there is no feature-steering of ESM-2 generation and no missing-annotation-recovery evaluation anywhere in the artifacts. Complete absence of the required design.",
+          "score": 0,
+          "evidence_files": [
+            "logs/0-run/ablation_summary.json",
+            "logs/0-run/experiment_results/experiment_79cc3c848d9e47c697f58a8613b72e34_proc_395414/experiment_code.py"
+          ]
+        },
+        "result": {
+          "justification": "9c: No result exists for C5; report.md shows only 'See overall verdict (claim 5/5)'. Nothing produced to compare with the paper's steering/annotation-filling demonstrations. Total absence.",
+          "score": 0,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

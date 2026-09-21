@@ -1,0 +1,412 @@
+{
+  "feature_idx": 900,
+  "max_act_ref": 20.257572174072266,
+  "trigger_threshold": 4.051514434814453,
+  "sage": {
+    "candidates": [
+      "Possible LaTeX-specific subfeature: opening parenthesis introduced by TeX-style constructs such as \\left( or after decorated symbols/macros, rather than plain prose use of parentheses.",
+      "More specifically, it may respond to parenthesized arguments or qualifiers attached to a preceding math object\u2014function/application syntax, matrix/operator arguments, or notation like H_0:(\\mu=0), P(A|B), K(x,y).",
+      "The token is primarily detecting an opening parenthesis in math/LaTeX notation, especially immediately after a symbol or expression: f(x), R_i(R_j), K^{\\rm ph}(T_c^{\\rm ph}), \\langle l|(, and \\left( ..."
+    ],
+    "top": "Possible LaTeX-specific subfeature: opening parenthesis introduced by TeX-style constructs such as \\left( or after decorated symbols/macros, rather than plain prose use of parentheses.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on an opening parenthesis immediately following a math identifier or function-like symbol, especially in LaTeX expressions such as \\left( or variable names like R_i (R_j).",
+            "positive_probes": [
+              "Evaluate f(x)+g(y) over the interval.",
+              "Consider R_i(R_j) in the product space.",
+              "Write \\left(x+y\\right)^2 and simplify.",
+              "Differentiate h(t) at t=0 carefully.",
+              "Assume T_n(T_m) commutes for all indices."
+            ],
+            "positive_acts": [
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383
+            ],
+            "distractor_probes": [
+              "Evaluate f + g over the interval.",
+              "Consider R_i and R_j in the product space.",
+              "Write x+y in parentheses and simplify."
+            ],
+            "distractor_acts": [
+              11.978767395019531,
+              11.978767395019531,
+              11.978767395019531
+            ],
+            "score": 0.016046524047851562
+          },
+          {
+            "hypothesis": "The feature detects parenthetical argument lists or qualifiers appended to symbols/names, including mathematical notation like K^{rm ph}(T_c^{rm ph}) and code strings like mediaType+\" (\"+e+\")\".",
+            "positive_probes": [
+              "Use F(x, y) for the parameterized curve.",
+              "The symbol A(beta) denotes temperature-dependent amplitude.",
+              "Compute K^{rm ph}(T_c^{rm ph}) near equilibrium.",
+              "Append mediaType+\" (\"+e+\")\" to the label.",
+              "We referenced delta(v) in the derivation."
+            ],
+            "positive_acts": [
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383,
+              13.999565124511719,
+              11.994813919067383
+            ],
+            "distractor_probes": [
+              "Use parentheses sparingly in descriptive prose.",
+              "The symbol changed after the temperature dropped.",
+              "Append the label to the media type string."
+            ],
+            "distractor_acts": [
+              12.004423141479492,
+              12.004423141479492,
+              12.004423141479492
+            ],
+            "score": 0.3913410186767585
+          },
+          {
+            "hypothesis": "The feature responds specifically to opening delimiters represented in markup-heavy text, particularly tokens that begin a grouped span in LaTeX or mixed escaped/code contexts rather than plain prose parentheses.",
+            "positive_probes": [
+              "Use \\left( x+y \\right) inside the equation.",
+              "Inline code starts with <span class=\"math\"> here.",
+              "Escaped markup shows \\( a^2+b^2 \\) clearly.",
+              "Template begins {{ expression }} in mixed markdown.",
+              "The macro opens {\\bf bold text} abruptly."
+            ],
+            "positive_acts": [
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383
+            ],
+            "distractor_probes": [
+              "The note in parentheses feels purely conversational.",
+              "She opened the door, then paused thoughtfully.",
+              "Angle brackets compare values in plain prose."
+            ],
+            "distractor_acts": [
+              12.004423141479492,
+              12.004423141479492,
+              12.004423141479492
+            ],
+            "score": -0.009609222412109375
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "Opening parenthesis immediately following a math symbol/expression, especially function-call or qualifier notation like f(x), R_i(R_j), K^{\\rm ph}(T_c^{\\rm ph}), or \\left( ...",
+            "positive_probes": [
+              "Evaluate f(x) near the boundary.",
+              "Compose R_i(R_j) before simplification.",
+              "Differentiate K^{\\rm ph}(T_c^{\\rm ph}) carefully.",
+              "Use \\left( x+y \\right) in the derivation.",
+              "Apply g(t) after normalizing inputs."
+            ],
+            "positive_acts": [
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383
+            ],
+            "distractor_probes": [
+              "Evaluate f of x near the boundary.",
+              "Compose R_i with R_j before simplification.",
+              "Use brackets [x+y] in the derivation."
+            ],
+            "distractor_acts": [
+              11.978767395019531,
+              11.978767395019531,
+              11.978767395019531
+            ],
+            "score": 0.016046524047851562
+          },
+          {
+            "hypothesis": "Math/technical opening delimiter token '(', particularly in notation-heavy contexts where a symbol is immediately qualified by parenthesized arguments or conditions.",
+            "positive_probes": [
+              "Let f(x) denote the observed response curve.",
+              "Assume g(t,s) remains bounded for all t.",
+              "We define P(A|B) using conditional probability notation.",
+              "Consider H_0:(mu=0) under the null hypothesis.",
+              "The kernel K(x,y) satisfies symmetry by construction."
+            ],
+            "positive_acts": [
+              11.994821548461914,
+              11.994821548461914,
+              11.994821548461914,
+              11.994821548461914,
+              11.994821548461914
+            ],
+            "distractor_probes": [
+              "Parentheses often improve clarity in technical writing.",
+              "The function was evaluated over several input values.",
+              "Conditional probability relates events given prior information."
+            ],
+            "distractor_acts": [
+              12.004423141479492,
+              12.004423141479492,
+              12.004423141479492
+            ],
+            "score": -0.009601593017578125
+          },
+          {
+            "hypothesis": "LaTeX/markup-style grouped opening delimiter, including forms like \\left( and parenthesized clauses attached to formulas.",
+            "positive_probes": [
+              "We rewrite the term as \\left( x+y \\right)^2.",
+              "Consider f(x) \\left( a+b \\right) in the derivation.",
+              "The condition \\left( n>1 \\right) ensures convergence.",
+              "Evaluate \\left( \\frac{a}{b} \\right)^{-1} carefully.",
+              "A parenthesized clause follows: (for x>0) the bound holds."
+            ],
+            "positive_acts": [
+              11.957935333251953,
+              11.957935333251953,
+              11.957935333251953,
+              11.957935333251953,
+              11.957935333251953
+            ],
+            "distractor_probes": [
+              "We rewrite the term as x plus y squared.",
+              "Consider the derivation for f of x.",
+              "The condition n greater than one ensures convergence."
+            ],
+            "distractor_acts": [
+              11.978767395019531,
+              11.978767395019531,
+              11.978767395019531
+            ],
+            "score": -0.020832061767578125
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "The token is primarily detecting an opening parenthesis in math/LaTeX notation, especially immediately after a symbol or expression: f(x), R_i(R_j), K^{\\rm ph}(T_c^{\\rm ph}), \\langle l|(, and \\left( ...",
+            "positive_probes": [
+              "The function f(x) is smooth everywhere.",
+              "Consider the composition R_i(R_j) in this derivation.",
+              "We measure K^{\\rm ph}(T_c^{\\rm ph}) near equilibrium.",
+              "Use the bra-ket term \\langle l|( carefully here.",
+              "Rewrite the integral with \\left( a+b \\right)."
+            ],
+            "positive_acts": [
+              11.957935333251953,
+              11.957935333251953,
+              11.957935333251953,
+              11.957935333251953,
+              11.957935333251953
+            ],
+            "distractor_probes": [
+              "The function value at x is smooth everywhere.",
+              "Consider the composition of R_i and R_j.",
+              "Rewrite the integral using brackets [ a+b ]."
+            ],
+            "distractor_acts": [
+              11.978767395019531,
+              11.978767395019531,
+              11.978767395019531
+            ],
+            "score": -0.020832061767578125
+          },
+          {
+            "hypothesis": "More specifically, it may respond to parenthesized arguments or qualifiers attached to a preceding math object\u2014function/application syntax, matrix/operator arguments, or notation like H_0:(\\mu=0), P(A|B), K(x,y).",
+            "positive_probes": [
+              "Consider the likelihood L(\\theta) under the null model.",
+              "We write P(A\\mid B) for conditional probability.",
+              "The kernel K(x,y) is symmetric and positive.",
+              "Test H_0:(\\mu=0) against the alternative hypothesis.",
+              "Apply the operator T(f) to each basis vector."
+            ],
+            "positive_acts": [
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383,
+              11.994813919067383
+            ],
+            "distractor_probes": [
+              "The null hypothesis says the mean equals zero.",
+              "Conditional probability depends on prior information.",
+              "The kernel matrix is symmetric and positive definite."
+            ],
+            "distractor_acts": [
+              12.004423141479492,
+              12.004423141479492,
+              12.004423141479492
+            ],
+            "score": -0.009609222412109375
+          },
+          {
+            "hypothesis": "Possible LaTeX-specific subfeature: opening parenthesis introduced by TeX-style constructs such as \\left( or after decorated symbols/macros, rather than plain prose use of parentheses.",
+            "positive_probes": [
+              "We write \\left( x+y \\right) for clarity.",
+              "Consider \\alpha_i\\left( t \\right) near zero.",
+              "The term \\hat f\\left( x \\right) remains bounded.",
+              "Now evaluate \\sqrt{x}\\left( 1+x \\right) carefully.",
+              "Define \\mathbf{v}\\left( \\theta \\right) componentwise."
+            ],
+            "positive_acts": [
+              11.957935333251953,
+              14.067964553833008,
+              13.791627883911133,
+              13.16465950012207,
+              14.17662239074707
+            ],
+            "distractor_probes": [
+              "We write (x+y) for clarity.",
+              "Consider alpha_i at time t near zero.",
+              "The term \\hat f(x) remains bounded."
+            ],
+            "distractor_acts": [
+              11.978767395019531,
+              11.978767395019531,
+              11.978767395019531
+            ],
+            "score": 1.452994537353515
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "$. With all the plasmon frequencies given, the extrema condition $\\frac{\\partial S}{\\partial a_{i}}=0$ ($i=1$, . . . , $N_{\\rm p}$) reads $$\\begin{aligned}\n\\begin{",
+    "N\\mu - N_{H}\\mu_{H}} \\right\\},$$\n\nwhere $E_{\\text{tot}}\\left( {N,N_{\\text{H}},\\left\\{ R_{i} \\right\\}} \\right)$ is the total",
+    "The bakery opened at seven every morning.",
+    "The train from Milan arrived twenty minutes late.",
+    "A single cloud drifted over the harbor.",
+    "times 4$ ($10$ \u201cup\" triangles or $30$ bonds per sub-net)\\\n            ${p_3=",
+    "Rain drummed on the tin roof through the night.",
+    "}^k Q_l$ with $Q_0$ a constant, $Q_l$ ($1\\leq l \\leq k$) an $l-$homogeneous polynomial and $Q_k \\neq 0$ .",
+    "Two children played chess on a wooden bench.",
+    "The mountain trail wound past three small lakes.",
+    "label{joint}$$ where $a,b \\in \\{-1,+1\\}$ and $\\phi_{A_i}$ ($\\phi_{B_j}$) is the phase setting corresponding to $A_i$ ($B_j$).\n\nThe Bell",
+    "three disjoint events and $x=P(X)$, $y=P(Y)$, $z=P(Z)$ ($x,y,z \\geq 0$). \nThen:\n$$P(A)=x+y\\\\P"
+  ],
+  "heldout_true_acts": [
+    15.604267120361328,
+    15.768918991088867,
+    12.001974105834961,
+    12.001974105834961,
+    12.001974105834961,
+    17.50670051574707,
+    12.001974105834961,
+    17.994007110595703,
+    11.909313201904297,
+    11.909313201904297,
+    17.179218292236328,
+    16.141231536865234
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "the presence of mathematical notation and symbols",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 11.98826789855957,
+        "sentences": [
+          "Solve x^2 + 5x + 6 = 0.",
+          "If a \u2260 b, then a^2 \u2260 b^2.",
+          "The integral \u222b_0^1 x dx equals 1/2.",
+          "Let f(x)=sin(x)+cos(x).",
+          "Matrix A = [[1,2],[3,4]] has det(A) = -2.",
+          "Probability: P(A\u2229B)=P(A)P(B) when independent.",
+          "For n \u2265 2, n! = n\u00b7(n\u22121)!",
+          "The limit lim_{x\u21920} (e^x\u22121)/x = 1."
+        ],
+        "activations": [
+          11.98826789855957,
+          11.98826789855957,
+          11.98826789855957,
+          11.98826789855957,
+          11.98826789855957,
+          11.98826789855957,
+          11.98826789855957,
+          11.98826789855957
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9480558532486791,
+        "spearman": 0.8212927868881895,
+        "preds": [
+          10.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          8.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          10.0,
+          10.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Possible LaTeX-specific subfeature: opening parenthesis introduced by TeX-style constructs such as \\left( or after decorated symbols/macros, rather than plain prose use of parentheses.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 12.646732807159424,
+        "sentences": [
+          "We write \\left( x+y \\right) for grouping.",
+          "Consider \\alpha_{n}\\left( t \\right) on [0,1].",
+          "The norm is \\left\\| v \\right\\|, not plain bars.",
+          "Define f\\left( x \\right)=x^2+1.",
+          "Now evaluate \\sin\\left( \\theta \\right) exactly.",
+          "Use \\hat{x}\\left( t \\right) as the estimate.",
+          "Set A=\\left(\\begin{smallmatrix}1&0\\\\0&1\\end{smallmatrix}\\right).",
+          "Then \\Phi'\\left( 0 \\right) vanishes immediately."
+        ],
+        "activations": [
+          11.909313201904297,
+          14.759841918945312,
+          11.909313201904297,
+          11.909313201904297,
+          11.909313201904297,
+          14.958141326904297,
+          11.909313201904297,
+          11.909313201904297
+        ]
+      },
+      "predictive": {
+        "pearson": 0.5159773337855553,
+        "spearman": 0.7681217044860269,
+        "preds": [
+          3.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          3.0,
+          0.0,
+          0.0,
+          2.0,
+          2.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 56.9479706287384,
+  "layer": 6,
+  "sae_info": {
+    "layer": 6,
+    "width": "16k",
+    "l0": 70,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_6/width_16k/average_l0_70/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "the presence of mathematical notation and symbols"
+}

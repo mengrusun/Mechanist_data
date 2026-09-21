@@ -1,0 +1,408 @@
+{
+  "feature_idx": 1300,
+  "max_act_ref": 29.922239303588867,
+  "trigger_threshold": 5.984447860717774,
+  "sage": {
+    "candidates": [
+      "The feature fires on punctuation immediately before LaTeX/math content, especially colon or comma right before a `$...$` span or a TeX control sequence.",
+      "The feature detects boundary formatting around highly symbolic tokens: punctuation such as comma/colon placed directly before TeX/math expressions, and more weakly before other symbolic literals like hex constants.",
+      "A narrower subfeature may fire on delimiter tokens themselves at the start or edge of symbolic spans, especially `$` and punctuation+backslash sequences like `,\\\\`."
+    ],
+    "top": "The feature fires on punctuation immediately before LaTeX/math content, especially colon or comma right before a `$...$` span or a TeX control sequence.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature fires on punctuation or spacing immediately adjacent to LaTeX/math-mode delimiters, especially the opening `$` or a comma before a TeX line break like `,\\\\`.",
+            "positive_probes": [
+              "Compute,$x+y$ then simplify the result.",
+              "Notice the space before $x^2$ disappears here.",
+              "Matrix entry,\\\\ follows the first term exactly.",
+              "Write hello,$\\alpha+\\beta$ without any separating space.",
+              "A comma,\\\\ starts the next TeX line break."
+            ],
+            "positive_acts": [
+              11.643994331359863,
+              3.601149797439575,
+              0.0,
+              3.9787418842315674,
+              3.2322330474853516
+            ],
+            "distractor_probes": [
+              "Compute $x+y$ and then simplify normally.",
+              "Notice the space after the equation $x^2$ here.",
+              "A comma precedes a normal line break, not TeX."
+            ],
+            "distractor_acts": [
+              11.4541015625,
+              6.897985458374023,
+              3.2240068912506104
+            ],
+            "score": -2.7008074919382734
+          },
+          {
+            "hypothesis": "The feature detects separators introducing hexadecimal literals or low-level constants, such as a comma/space/equals sign directly before `0x...` values or symbolic flags.",
+            "positive_probes": [
+              "mask = 0xFF for the low byte.",
+              "Flags, 0x20 enables the interrupt.",
+              "Use opcode 0x90 in this routine.",
+              "Register, FLAG_CARRY indicates an overflow state.",
+              "Set value = 0xDEADBEEF before jumping."
+            ],
+            "positive_acts": [
+              3.420907735824585,
+              3.405468225479126,
+              4.075815200805664,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "The hexagon pattern covers the floor tiles.",
+              "Version x0.9 was mentioned in the draft.",
+              "Flags waved above the old stone tower."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 2.180438232421875
+          },
+          {
+            "hypothesis": "The feature responds to formatting artifacts where a token is followed by an unusual run of whitespace or control-style markup, such as aligned columns, tabs, or newline-escaped sequences.",
+            "positive_probes": [
+              "Name\t\tScore\t\tRank appears in aligned columns.",
+              "Path C:\\temp\\nlogs contains newline-escaped text.",
+              "Key:\t\tValue uses repeated tab-style spacing.",
+              "Header    Item    Price shows unusual whitespace runs.",
+              "Token\\n\\nNext includes literal escaped line breaks."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              3.7255117893218994,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "The table lists names, scores, and ranks clearly.",
+              "The path points to temporary logs on disk.",
+              "Header item price appears in a simple list."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.7451023578643798
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature fires on text immediately adjacent to LaTeX/math markup delimiters, especially punctuation or no-space context around `$...$` and possibly punctuation before TeX control sequences like `,\\\\`.",
+            "positive_probes": [
+              "He wrote,$x^2+1$,then stopped abruptly.",
+              "Compute $a+b$,$c+d$,and compare results.",
+              "The note ended with $E=mc^2$,period.",
+              "She typed,$\\alpha+\\beta$,without spaces.",
+              "Notice,\\\\alpha appears after a comma."
+            ],
+            "positive_acts": [
+              9.5137300491333,
+              10.563178062438965,
+              5.181872367858887,
+              3.357300043106079,
+              0.0
+            ],
+            "distractor_probes": [
+              "He wrote the equation x^2 + 1, then stopped.",
+              "Compute $a+b$ and $c+d$ and compare.",
+              "Notice alpha appears after a comma."
+            ],
+            "distractor_acts": [
+              5.755541801452637,
+              10.511324882507324,
+              0.0
+            ],
+            "score": 0.3009272098541258
+          },
+          {
+            "hypothesis": "The feature may also respond to separators immediately before hexadecimal literals like `, 0x...` or similar low-level constant formatting.",
+            "positive_probes": [
+              "Mask bits, 0xFF, then compare the result.",
+              "Load eax, 0x10 before the loop.",
+              "Store value, 0xDEADBEEF, into the register.",
+              "Return error code, 0x80004005, on failure.",
+              "Append delimiter, 0x2C, to the buffer."
+            ],
+            "positive_acts": [
+              0.0,
+              4.066347122192383,
+              3.2515928745269775,
+              4.307737350463867,
+              0.0
+            ],
+            "distractor_probes": [
+              "Mask bits to hexadecimal FF before comparing.",
+              "Load eax with sixteen before the loop.",
+              "Return error code 80004005 on failure."
+            ],
+            "distractor_acts": [
+              0.0,
+              4.2006731033325195,
+              0.0
+            ],
+            "score": 0.9249111016591389
+          },
+          {
+            "hypothesis": "More generally, the feature may detect punctuation-plus-boundary formatting before a highly symbolic token, such as comma/colon/space directly preceding TeX commands, math expressions, or hex literals.",
+            "positive_probes": [
+              "Use the identity, \\alpha+\\beta=\\gamma, in proofs.",
+              "Then: $E=mc^2$ explains mass-energy equivalence.",
+              "Set x, 0xDEADBEEF, as the test value.",
+              "We derive: \\int_0^1 x^2\\,dx = 1/3.",
+              "Insert here, $\\sum_{n=1}^\\infty 2^{-n}=1$, please."
+            ],
+            "positive_acts": [
+              5.151856422424316,
+              7.677480697631836,
+              3.7320311069488525,
+              8.58725357055664,
+              6.010768890380859
+            ],
+            "distractor_probes": [
+              "The command \\alpha starts the macro name.",
+              "Hex literal 0xDEADBEEF appears without preceding punctuation.",
+              "We discuss math expression syntax in general terms."
+            ],
+            "distractor_acts": [
+              0.0,
+              3.6432764530181885,
+              0.0
+            ],
+            "score": 5.017452653249104
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "The feature fires on punctuation immediately before LaTeX/math content, especially colon or comma right before a `$...$` span or a TeX control sequence.",
+            "positive_probes": [
+              "We define energy: $E=mc^2$ for reference.",
+              "Use the identity, $a^2+b^2=c^2$, here.",
+              "Consider divergence: \\nabla\\cdot \\mathbf{F} = 0.",
+              "The coefficient, \\alpha, remains constant throughout.",
+              "Rewrite the expression: $\\int_0^1 x\\,dx = 1/2$."
+            ],
+            "positive_acts": [
+              7.181267261505127,
+              5.1867475509643555,
+              5.475811004638672,
+              4.56463623046875,
+              10.974875450134277
+            ],
+            "distractor_probes": [
+              "We define energy as E=mc^2 for reference.",
+              "Use the identity $a^2+b^2=c^2$ here.",
+              "Consider divergence in vector calculus carefully."
+            ],
+            "distractor_acts": [
+              5.0553297996521,
+              5.172153472900391,
+              3.1945436000823975
+            ],
+            "score": 2.2026585419972733
+          },
+          {
+            "hypothesis": "The feature detects boundary formatting around highly symbolic tokens: punctuation such as comma/colon placed directly before TeX/math expressions, and more weakly before other symbolic literals like hex constants.",
+            "positive_probes": [
+              "We derived, $E=mc^2$, from first principles.",
+              "Note: \\alpha+\\beta=\\gamma under these assumptions.",
+              "Compute, x_{n+1}=x_n^2+c, for each iteration.",
+              "The invariant: \\int_0^1 f(x)\\,dx = 0.",
+              "Memory value: 0xDEADBEEF caused the fault."
+            ],
+            "positive_acts": [
+              5.077676773071289,
+              3.7572333812713623,
+              10.022612571716309,
+              6.0609822273254395,
+              3.5376288890838623
+            ],
+            "distractor_probes": [
+              "We derived $E=mc^2$ from first principles.",
+              "Note that alpha plus beta equals gamma here.",
+              "Memory value 0xDEADBEEF caused the fault."
+            ],
+            "distractor_acts": [
+              5.506002426147461,
+              3.8934457302093506,
+              3.5678365230560303
+            ],
+            "score": 1.368798542022705
+          },
+          {
+            "hypothesis": "A narrower subfeature may fire on delimiter tokens themselves at the start or edge of symbolic spans, especially `$` and punctuation+backslash sequences like `,\\\\`.",
+            "positive_probes": [
+              "The equation starts with $x+y$ today.",
+              "List items,\\\\ then continue the sentence.",
+              "Notice $ at the span boundary here.",
+              "Prefix the symbol with ,\\\\ before parsing.",
+              "A math fragment begins: $E=mc^2$ now."
+            ],
+            "positive_acts": [
+              5.209272384643555,
+              4.139969825744629,
+              0.0,
+              0.0,
+              3.947920083999634
+            ],
+            "distractor_probes": [
+              "The equation uses x plus y today.",
+              "List items, then continue the sentence.",
+              "A math fragment begins with parentheses instead."
+            ],
+            "distractor_acts": [
+              3.6531355381011963,
+              5.298341751098633,
+              3.2795791625976562
+            ],
+            "score": -1.4175863583882649
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "= 0x1022\n\tSO_NOTIFYCONFLICT                 = 0x1026\n\tSO_",
+    "The engine cooled after the long climb.",
+    "= 0x40047301\n\tSIOCGIFADDR                       = 0xc020",
+    "The lawyer objected on procedural grounds.",
+    "= 0x1\n\tNOTE_EXEC                         = 0x20000000\n\tNOTE_",
+    "The senator refused to comment before the hearing.",
+    "= 0x4\n\tO_ACCMODE                         = 0x3\n\tO_ALERT                           = 0",
+    "The train from Milan arrived twenty minutes late.",
+    "The recipe called for a pinch of saffron.",
+    "The old library sat quietly at the edge of the park.",
+    "= 0x7f\n\tIPPROTO_3PC                       = 0x22\n\tIPPROTO_ADFS"
+  ],
+  "heldout_true_acts": [
+    25.957935333251953,
+    0.0,
+    25.957935333251953,
+    0.0,
+    25.957935333251953,
+    0.0,
+    25.957935333251953,
+    0.0,
+    0.0,
+    0.0,
+    25.850990295410156
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "special characters and punctuation in a document",
+      "generative": {
+        "trigger_rate": 0.125,
+        "mean_max": 1.875294417142868,
+        "sentences": [
+          "Wow!!! This page is full of #, %, and @.",
+          "Use brackets [like this], plus slashes / and backslashes \\\\.",
+          "The memo includes dashes\u2014ellipses...and odd symbols \u00a7 \u00b6.",
+          "Why so many marks?! Even the title says \"Alert!!!\".",
+          "Contact us at support@example.com; bring ID #42.",
+          "Math notes show x+y=z, then {a,b,c} -> \u221e.",
+          "The form asks: Name*, Date?, Signature; weird, right?",
+          "Prices read $9.99, \u20ac12, and \u00a55000\u2014punctuation everywhere."
+        ],
+        "activations": [
+          4.57572078704834,
+          3.277323007583618,
+          0.0,
+          0.0,
+          0.0,
+          7.149311542510986,
+          0.0,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 0.999997506400035,
+        "spearman": 0.9710083124552245,
+        "preds": [
+          10.0,
+          0.0,
+          10.0,
+          0.0,
+          10.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "The feature fires on punctuation immediately before LaTeX/math content, especially colon or comma right before a `$...$` span or a TeX control sequence.",
+      "generative": {
+        "trigger_rate": 0.5,
+        "mean_max": 6.010495841503143,
+        "sentences": [
+          "Key equation: $E=mc^2$ explains mass-energy equivalence.",
+          "Compute the area, $A=\\pi r^2$, before proceeding.",
+          "In physics: \\alpha denotes angular acceleration here.",
+          "The result, $x^2+y^2=z^2$, is well known.",
+          "For vectors: \\vec{v}=\\langle 1,2\\rangle in this basis.",
+          "Remember, $f'(x)=2x$ for this simple function.",
+          "By definition: \\sum_{i=1}^n i = n(n+1)/2.",
+          "Final answer, $p=\\frac{1}{2}$, matches expectations."
+        ],
+        "activations": [
+          5.403953552246094,
+          11.471868515014648,
+          0.0,
+          7.042311668395996,
+          5.722642421722412,
+          4.940947532653809,
+          6.53155517578125,
+          6.9706878662109375
+        ]
+      },
+      "predictive": {
+        "pearson": 0.0,
+        "spearman": 0.0,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 72.4671561717987,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "special characters and punctuation in a document"
+}

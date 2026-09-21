@@ -1,0 +1,21 @@
+{
+  "Name": "periodic_table_element_manifold",
+  "Title": "An Emergent Periodic Table: Element Embeddings in Materials Foundation Models",
+  "Short Hypothesis": "The learned element embeddings inside materials foundation models (crystal graph networks and composition transformers) organize into a low-dimensional manifold that recovers periodic-table structure (group and period), and the axes of this manifold align with fundamental atomic properties (electronegativity, atomic radius, valence) rather than mere co-occurrence frequency.",
+  "Related Work": "Composition-based models like Roost (Goodall & Lee, 2020) and CGCNN (Xie & Grattarola, 2018) learn element embeddings; some visualizations hint at chemical grouping. Word-embedding analogies in materials (Tshitoyan et al., 2019, 'unsupervised word embeddings capture latent knowledge') suggested chemistry emerges from text. We go further by testing whether embedding geometry causally reflects physical atomic properties and by dissociating property structure from dataset co-occurrence statistics.",
+  "Abstract": "Do materials models rediscover the periodic table? We analyze element embeddings from several pretrained materials foundation models (Roost, CGCNN, and a composition transformer trained on the Materials Project) to test whether their geometry encodes established periodic structure. We apply dimensionality reduction and, more rigorously, fit linear directions predicting group number, period, electronegativity, atomic radius, ionization energy, and valence electron count; we report the variance of each property explained by low-dimensional embedding subspaces. To distinguish genuine periodic structure from training-set co-occurrence, we build a co-occurrence-only baseline embedding (PMI factorization over compositions) and test whether the foundation model encodes property structure beyond what co-occurrence alone provides. We quantify periodicity via a group-neighborhood consistency score: chemically analogous elements (same group) should be nearest neighbors even when they rarely co-occur. We further test causality by substituting an element's embedding with that of its group neighbor during property prediction and measuring whether predicted properties shift toward the neighbor's true values in a chemically consistent way. We predict a two-to-three-dimensional manifold recovering group/period, with principal axes aligning to electronegativity and size, and residual structure exceeding the co-occurrence baseline. This clarifies whether materials models internalize the physical organization of matter or merely memorize compositional statistics, informing their reliability for extrapolative discovery to under-sampled chemistries.",
+  "Experiments": [
+    "Extract element embedding matrices from Roost, CGCNN, and a trained composition transformer.",
+    "Fit linear regressions from embeddings to tabulated atomic properties (Pauling electronegativity, covalent radius, ionization energy, valence); report R^2 per property and per subspace dimension.",
+    "Build a PMI co-occurrence embedding baseline from the same composition corpus and compare property-encoding R^2.",
+    "Compute group-neighborhood consistency: fraction of each element's k nearest neighbors sharing its periodic group, controlling for co-occurrence frequency.",
+    "Manifold analysis: PCA/UMAP colored by group and period; measure intrinsic dimensionality.",
+    "Causal swap: replace an element embedding with its group neighbor and measure directional correctness of predicted formation energy / band gap shifts across many host compositions."
+  ],
+  "Risk Factors and Limitations": [
+    "Embeddings may reflect dataset composition frequency more than physics, and disentangling is imperfect.",
+    "Rare elements have few training examples, producing noisy, uninformative embeddings.",
+    "Linear property-encoding metrics may miss nonlinear but real structure.",
+    "Different models may organize elements differently, complicating a single 'emergent periodic table' claim."
+  ]
+}

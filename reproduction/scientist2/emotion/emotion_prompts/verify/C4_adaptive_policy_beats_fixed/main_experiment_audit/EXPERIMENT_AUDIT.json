@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-14",
+  "auditor": "executor (Claude Sonnet 4.6)",
+  "claim_id": "C4",
+  "linked_milestones": ["M7"],
+  "overall_verdict": "fail",
+  "integrity_status": "fail",
+  "checks": {
+    "gt_provenance": {
+      "status": "fail",
+      "details": "M7 descoped entirely. No experiment ran. No GT was used or could be audited. Tracker shows all M7 rows as 'descoped / not run'.",
+      "evidence": ["refine-logs/EXPERIMENT_TRACKER.md (M7 rows)", "refine-logs/EXPERIMENT_RESULTS.md:183-187"]
+    },
+    "score_normalization": {
+      "status": "fail",
+      "details": "No experiment ran; no scores computed.",
+      "evidence": ["refine-logs/EXPERIMENT_TRACKER.md (M7 rows)"]
+    },
+    "result_existence": {
+      "status": "fail",
+      "details": "Zero result files exist for M7: runs/M7a/reward_table.parquet NOT present; runs/M7b/policy_sft_seed*.pt NOT present; runs/M7c/policy_rl_seed*.pt NOT present; runs/M7d/eval_seed*.json NOT present. All M7 milestones descoped.",
+      "evidence": ["refine-logs/EXPERIMENT_TRACKER.md (M7a-M7d rows all 'descoped')"]
+    },
+    "dead_code": {
+      "status": "fail",
+      "details": "scripts/build_reward_table.py, scripts/train_emotionrl.py, scripts/eval_emotionrl.py exist but were never invoked. Entire C4 milestone's scripts are dead relative to actual experiment execution.",
+      "evidence": ["refine-logs/EXPERIMENT_TRACKER.md (M7 rows show 'not run')"]
+    },
+    "scope": {
+      "status": "fail",
+      "details": "0 items evaluated. 0 seeds run. Required: 2000 train items × 13 prefixes, 3 seeds, 500 held-out items × 3 seeds. Nothing was run.",
+      "evidence": ["refine-logs/EXPERIMENT_RESULTS.md:183-187"]
+    },
+    "eval_type": "n/a (no evaluation performed)"
+  }
+}

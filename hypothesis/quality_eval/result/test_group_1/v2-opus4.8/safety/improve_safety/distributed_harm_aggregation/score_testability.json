@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the stated read-out hypothesis by comparing “the per-position harm projection at the original harm-bearing tokens” with “the harm projection at the final decision position,” with the directional prediction that the former “stays high while (b) collapses.” The monitoring claim is also evaluated with appropriate metrics and comparators—“AUROC, TPR@1%FPR, and benign false-positive rate”—and the proposal identifies refuting outcomes, including harm being “erased at ALL positions,” no meaningful single-versus-multi-position difference, or excessive firing on XSTest/OR-Bench. However, “aggregation gap,” “fraction of total harm evidence,” and how “harm-bearing tokens” are operationally identified are not precisely defined, and no numeric success threshold distinguishes a substantively large improvement from a negligible one.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is the causal test to “patch the harm-bearing-position activations into the jailbroken final position and measure whether refusal is restored”; activation patching is a supported standard interpretability operation, although the layer selection and exact source-to-target patch construction require custom specification rather than an undefined magic step. The named models, benchmarks, attacks, probes, and guardrails—including “Llama-3-8B, Qwen2.5-7B, Gemma-2-9B,” AdvBench/HarmBench/StrongREJECT, GCG, XSTest, OR-Bench, and Llama-Guard—exist, and standard activation-hooking, linear-probing, and patching tooling supports the plan. Resources are partly quantified through three named model scales, five jailbreak families, three harmful-prompt benchmarks, and “TPR@1%FPR,” but dataset sample counts and run-level resource figures are unstated. The negative branch is runnable because the design includes single-position and mean-pooled baselines, benign over-refusal sets, paraphrase/cross-category tests, leave-one-attack-out evaluation, and “matched-norm and placebo-position controls.”",
+      "score": 8
+    }
+  }
+}

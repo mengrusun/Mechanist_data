@@ -1,0 +1,15 @@
+{
+  "picked_claims": ["C2"],
+  "picked_rationale": {
+    "C2": "C2 directly operationalizes the core SemanticLens capability — placing components in the CLIP joint image-text semantic space so that they are text-queryable (P2a MRR=0.898). The method-swap dimension was selected: within the Multi-Modal / CLIP-Dissect family, the only genuine within-family swap is CRP-compose (adding Zennit LRP-epsilon relevance cropping before CLIP embedding), as activation-weighted mean pooling was already run in the main experiment (M3/M4, MRR=0.898 — same result as mean pool, not a genuine swap). CRP-compose tests whether the high MRR is robust when background/scene correlations are removed by component-conditioned relevance crops. C2 was selected over C1 by importance: it is the more scientifically central claim (C2 operationalizes the mechanism; C1 audits a downstream evaluation property) and the method-swap axis is directly applicable to C2's core metric (text-query MRR)."
+  },
+  "admitted_pool": ["C1", "C2"],
+  "stage2_deferred": ["C1"],
+  "rejected_pool": [],
+  "cap_source": "MAX_VERIFY_CLAIMS=1",
+  "variant_selected": {
+    "C2": "method-swap-crp-compose",
+    "dimension": "method",
+    "swap_description": "CLIP-Dissect plain mean-pool → CLIP-Dissect + Zennit-CRP compose (LRP-epsilon crop before CLIP embedding)"
+  }
+}

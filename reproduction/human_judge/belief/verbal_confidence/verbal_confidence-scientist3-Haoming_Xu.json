@@ -1,0 +1,116 @@
+{
+  "_note_readme": "Human expert review for verbal_confidence.",
+  "meta": {
+    "expert_name": "Haoming_Xu",
+    "paper_title": "How do LLMs Compute Verbal Confidence?",
+    "agent": "scientist3",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "Scores follow human_reliablity_judge_zh.md.",
+  "_note_evidence": "Evidence files are relative to scientist3/belief/verbal_confidence/.",
+  "dimension_1_data_split_hygiene": {
+    "justification": "The code uses train_test_split, so there is a nominal train/test split. The problem is that the run is exploratory and repeatedly selects best layers/probes, without showing a clean final held-out evaluation after selection.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The label does not really match the task. It uses expected confidence from digit-token logits instead of a generated verbal confidence string. ",
+    "score": 1,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "report.md"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The run uses Gemma-3-27B-pt and TriviaQA, but only N=200 in the best-node code. But no Qwen verify run is included.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/experiment_results/experiment_2d0947357395450d8631ff1e46644350_proc_329916/experiment_code.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The evidence is too weak for the causal cache claim. The run uses N=200, the usable result is mainly probing, and draft_summary.json reports degenerate outputs and pipeline bugs. report.md also marks the support as requiring human review.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "report.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The run reports point estimates, such as post-answer probe accuracy 0.6167 and pre-answer control 0.6333, but no confidence intervals or reliable multi-seed table. The draft summary also flags zero/degenerate plots, so the statistics are not robust.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The task claim is causal, but the usable evidence is mainly probing. The reported patching effects are exactly 0.0 across layers and are described as likely a stub or bug. So the causal cache/retrieval claim is not validly tested.",
+    "score": 1,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "report.md",
+      "logs/0-run/experiment_results/experiment_ad2777dd214144869b53e6a79b6970a2_proc_329916/triviaqa_gemma3_27b_pt_probe_accuracy.png"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Key numbers are traceable at the summary level in draft_summary.json and research_summary.json. The weakness is that the referenced experiment_data.npy and other numeric result files are not retained, so the numbers cannot be independently recomputed from raw outputs.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The files do not give a clean story. draft_summary.json says some plots/results are likely broken, while research_summary.json still reports usable probe accuracies. Because bugged outputs and partial results are mixed together, the reported claim cannot be checked consistently.",
+    "score": 2,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "Single claim from task.md.",
+    "_note_subscore": "method / experiment / result scored independently.",
+    "per_claim": {
+      "C1": {
+        "claim": "When an LLM is asked to verbalize confidence after answering, the confidence value is cached in post-answer hidden states and later retrieved, rather than computed on demand at verbalization.",
+        "method": {
+                    "justification": "The method only partly matches the claim. It mainly uses probing, but the claim needs a working causal intervention. The patching output appears broken, and the target is logit-derived confidence instead of emitted verbal confidence.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "experiment": {
+                    "justification": "The experiment cannot test the claim cleanly. It uses only N=200, the post-answer probe is worse than the pre-answer control, the correctness probe is near the majority baseline, and patching does not work.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/research_summary.json",
+            "logs/0-run/draft_summary.json",
+            "report.md"
+          ]
+        },
+        "result": {
+                    "justification": "The result does not support the claim. The agent's own summary says the pre-answer control matches the post-answer result and that bugs must be fixed before drawing conclusions.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

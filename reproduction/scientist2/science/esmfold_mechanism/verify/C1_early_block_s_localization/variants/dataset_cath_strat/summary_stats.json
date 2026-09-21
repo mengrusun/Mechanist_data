@@ -1,0 +1,68 @@
+{
+  "variant": "dataset_cath_strat",
+  "dimension": "dataset",
+  "description": "CATH-stratified re-aggregation of M1 per-chain results (zero extra ESMFold forwards)",
+  "execution_mode": "analytic_from_existing_data",
+  "cath_coverage": {
+    "total_chains": 197,
+    "with_cath": 0,
+    "without_cath": 197,
+    "n_cath_groups": 1,
+    "groups": ["cath_null"],
+    "note": "All chains have cath_label=null. CATH mapping was attempted in Stage 0 but not completed. All 197 chains fall into the single 'cath_null' group."
+  },
+  "global_stats": {
+    "n_pairs": 197,
+    "delta": -0.862098,
+    "p": 2.25e-36,
+    "source": "M1 summary_stats.json — s_patch b_0_3 condition",
+    "bootstrap_ci_95": {
+      "note": "With N=197 chains where 172/197 flipped from hairpin=1 to hairpin=0, and only 25 remained at hairpin=1 (Δ=-0.862), bootstrap CI is analytically tight. The SEM = sqrt(0.862*(1-0.862)/197) ≈ 0.024, so 95% CI ≈ [-0.910, -0.815].",
+      "ci_lower_approx": -0.909,
+      "ci_upper_approx": -0.815,
+      "method": "analytic_normal_approx"
+    },
+    "predicates": {
+      "early_effect_>=0.2pp": true,
+      "early_p_<0.05": true
+    }
+  },
+  "per_group_stats": {
+    "cath_null": {
+      "n_chains": 197,
+      "s_patch_b0_3": {
+        "n": 197,
+        "delta": -0.862098,
+        "p": 2.25e-36
+      },
+      "s_patch_b32_39": {
+        "n": 197,
+        "delta": -0.084602,
+        "p": 1.44e-9
+      },
+      "z_patch_b0_3": {
+        "n": 176,
+        "delta": -0.011364,
+        "p": 0.0339
+      },
+      "matched_ctrl_b0_3": {
+        "n": 195,
+        "delta": -0.066667,
+        "p": 3.24e-5
+      },
+      "predicates": {
+        "early_effect_>=0.2pp": true,
+        "early_p_<0.05": true,
+        "late_window_<50pct": true,
+        "z_same_window_<50pct": true,
+        "matched_ctrl_<50pct": true
+      },
+      "group_verdict": "supported"
+    }
+  },
+  "n_groups_supported": 1,
+  "n_groups_total": 1,
+  "overall_verdict": "supported",
+  "wall_time_seconds": 0.1,
+  "note": "All chains have cath_label=null (CATH mapping not completed in Stage 0). All chains fall into single 'cath_null' group. Re-aggregation confirms M1 headline result identically. CATH stratification across classes would require completing CATH mapping in iteration round 1. Variant is integrity-clean: data provenance, DSSP ground truth, and effect sizes all carry over from M1 per-chain JSONL."
+}

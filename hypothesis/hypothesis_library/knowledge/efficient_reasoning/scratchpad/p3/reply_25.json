@@ -1,0 +1,33 @@
+{
+  "novelty": {
+    "score": 3,
+    "reasoning": "Core claims that would need to be novel: (1) test/evaluation framing changes reasoning effort (thinking-token count / self-verification) on identical problems; (2) this effect is decoupled from difficulty and not just answer accuracy/compliance; (3) the effect is mediated by the already-known evaluation-awareness direction and can be causally steered into longer/shorter reasoning; (4) the effect is robust across open reasoning models and benchmark tasks; (5) a specific counterintuitive possibility: deployment framing could reduce effort or reverse the effect. Against novelty, the search summary says the main phenomenon, the linear-probe setup, and steering intervention are already present in almost identical prior work. So the proposal's real delta is narrow: using reasoning length/effort as the dependent variable and trying to separate it from difficulty/format confounds. That is a modest extension rather than a genuinely new theory or mechanism. Closest prior work family: evaluation-awareness / Hawthorne-effect papers probing and steering test awareness. Actual delta: effort allocation instead of correctness/compliance, plus an explicit difficulty-control claim.",
+    "revision_notes": [
+      "State the contribution as a narrow new dependent variable/phenomenon (reasoning effort), not a new evaluation-awareness mechanism.",
+      "Clarify what is genuinely different from the prior Hawthorne/test-awareness paper: same prompts, same probes/steering, but a new outcome variable and a stronger causal claim about compute allocation.",
+      "Add a sharper, falsifiable hypothesis about when effort changes (e.g., only for multi-step problems, only above a difficulty threshold).",
+      "Explicitly address the format-confound critique and explain how the work distinguishes awareness from prompt-format sensitivity."
+    ]
+  },
+  "impact": {
+    "score": 5,
+    "reasoning": "Problem: whether benchmark/test framing changes how much reasoning compute models spend on the same task, which affects evaluation validity and possibly real-user behavior. Who cares: AI eval researchers, AI safety researchers concerned with gaming/sandbagging, and possibly teams measuring efficiency or deploying reasoning models. If true, it would imply benchmark results are partially contaminated by test-awareness and that deployment prompts may elicit less careful reasoning than benchmark prompts. Strongest one-line case: 'Models may think harder when they know they are being judged, so benchmark effort and deployment effort are not comparable.' This is important but still fairly niche and primarily relevant to evaluation methodology rather than broad downstream user impact. Uptake/citation potential is moderate because it sits near an active, contentious eval-awareness line; direction-shifting value is limited by the prior art overlap; real-world reach is plausible but not clearly large.",
+    "revision_notes": [
+      "Make the user-facing consequence concrete: what benchmark conclusions become invalid, and for which classes of tasks/models.",
+      "Distinguish measurement validity impact from general deployment impact; right now the latter is asserted more strongly than demonstrated.",
+      "Quantify what would change if the effect exists: e.g., how much benchmark rankings, token cost, or reliability estimates shift.",
+      "Frame the audience explicitly as eval-validity and reasoning-efficiency researchers, not the whole ML community."
+    ]
+  },
+  "review": {
+    "score": 4,
+    "reasoning": "The hypothesis is directionally clear but still somewhat overstuffed and vulnerable to confounds. Main logical gap: if test framing changes token length, it may be because of instruction/style/format differences rather than a latent 'evaluation-awareness' variable; the proposal knows this risk, but the proposed controls may not fully exclude it. Another gap: more tokens does not necessarily mean more effective reasoning or more 'thinking hard'; accuracy/self-verification measures need careful operationalization. The causal story is also not fully pinned down: patching/steering along an evaluation-awareness direction could affect many behaviors, so showing length changes alone does not prove compute allocation. Experiments are feasible, but several are under-specified or noisy: lexical cues, reflection classifiers, 'wasted vs genuine' tokens, and mixed-effects thresholds need stronger definitions; the proposed 12%/0.05 R2/30deg cutoffs feel arbitrary. Related work citation is strong but the narrative should be more honest that this is an extension of a known evaluation-awareness line, not a cleanly new mechanism. Minimum viable edits: tighten the claim to a pre-registered, scoped effect on reasoning length under carefully matched prompts; add stronger format-matched controls; include manual annotation of verification steps on a subset; and add an experiment showing the effect persists when superficial formatting is held constant.",
+    "revision_notes": [
+      "Pre-register a single primary endpoint (e.g., total thinking tokens or verified self-checks) and a single primary comparison (test vs deployment with length-matched prompts).",
+      "Add a stronger confound suite: identical wording with only one evaluation cue token, swapped order, and human-rated format similarity.",
+      "Define 'verification' and 'wasted tokens' operationally, and validate them with manual annotation on a held-out sample.",
+      "Include controls against generic verbosity/instruction-following (e.g., neutral task framing, non-evaluation social framing, and a prompt-length-only baseline).",
+      "Tone down claims about 'causal evaluation-awareness mechanism' unless the intervention clearly survives format-matched controls and alternative latent directions."
+    ]
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Aligning Machine and Human Visual Representations",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "There are genuine fitting/selection steps (teacher alignment head, student distillation, downstream probes), so the dimension applies. The splits are honored in code: (a) the teacher head is fit on an 85% concept split and the primary Claim-1 numbers are reported on a held-out 15% concept split (code/fit_teacher.py lines 106-133 build `tr_idx`/`val_idx` via a seeded permutation; `eval_state()` prints held-out rho=0.477/OOO=0.567 vs train). (b) The student is distilled on 20k ImageNet-val images (code/distill_dinov2b.py, `train40k` split) and then evaluated on THINGS concept images — a disjoint image domain, so no THINGS eval image was seen in training. (c) Downstream probes use a seeded 80/20 split of eval10k (code/downstream_eval.py lines 147-150) and the OOD subpopulation test trains on source leaves and tests on disjoint target leaves (lines 183-201), which is a properly disjoint class split. The one blemish: the headline all-concept teacher numbers (rho 0.879 / triplet 0.810 in results/things_eval_with_aligned.json and results/summary.md) are computed on the full 1842 concepts, which includes the 85% the head was fit on; summary.md discloses this as 'all 1842 concepts (mixed train/val)' and keeps the held-out 0.477 as the primary figure, so it is a disclosed auxiliary-metric mixing rather than a leaked main result. No test-label-into-training leakage path exists in the main pipeline.",
+    "score": 4,
+    "evidence_files": ["code/fit_teacher.py", "code/distill_dinov2b.py", "code/downstream_eval.py", "results/things_eval_with_aligned.json", "results/summary.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The ground truth for EVERY claim is the THINGS 'sensevec' semantic embedding (paths.py THINGS_SENSEVEC = semantic-embedding_sensevec-augmented-with-wordvec_things.csv), not the human triplet odd-one-out judgments the task and paper are about. code/baseline_things_eval.py line 128 derives triplet OOO 'ground-truth' labels FROM the sensevec RSM (`triplet_ooo_labels(sensevec_rsm, ...)`), and code/hierarchical_eval.py lines 194-209 defines the 'human' behaviour/uncertainty reference as sensevec-derived soft probabilities (`h_probs = triplet_pred_and_probs(sv_rsm,...)`). This is a proxy with two documented gaps: (1) for the teacher (C1) it is partly circular — the head is trained to match sensevec (fit_teacher.py `soft_triplet_ce` on sensevec targets) and then scored against sensevec (mitigated only by the held-out concept split); (2) for C3 the claim asserts reproduction of *human* behavioural patterns/uncertainty, yet nothing human is measured — the paper correlates model uncertainty with human response times, whereas here 'human' is a fixed embedding. summary.md 'Notes on scope' honestly discloses that raw THINGS triplet judgments are absent locally and sensevec is a stand-in; I confirmed no raw triplet/OOO file exists under /data/zhenqian/data/things_ooo_root (only sensevec/wordvec embeddings and property/size/arousal trial tables). Sensevec is derived from human semantic-property data so it is a *reasonable* semantic proxy, but it materially under-specifies the human behavioural target of C1 and especially C3.",
+    "score": 2,
+    "evidence_files": ["code/baseline_things_eval.py", "code/hierarchical_eval.py", "code/fit_teacher.py", "code/paths.py", "results/summary.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The experiment-stage resources are honored: student = DINOv2-B (paths.py DINOV2_BASE = models/dinov2-base; distill_dinov2b.py loads facebook/dinov2-base), teacher = SigLIP-So400m (paths.py SIGLIP_PATH = siglip-so400m-patch14-384, matching the fixed teacher in task.md), and THINGS 1852 concepts (1842 after excluding 10 all-zero sensevec rows). The consequential deviation is the human-judgment component of the specified dataset: task.md requires 'THINGS ... + associated human triplet odd-one-out judgments', but the run substitutes sensevec because the raw triplets are not on disk (verified) — disclosed in summary.md, and the task does say to download missing resources (the THINGS behavioural triplets are publicly downloadable but were not fetched). Additionally, distillation uses only a 20k image subset of ImageNet-*val* over 3 epochs (distill_dinov2b.py defaults), far smaller than the paper's ImageNet-scale AligNet generation; ImageNet is a verify-stage resource so this is less binding, but it is a real down-scaling. Verify-stage models (ViT-L, contrastive) and datasets (Levels, Peterson/King/Cichy, ImageNet-A, real BREEDS source/target) are 'use as needed' candidates and their omission is not a fidelity failure. Net: main models/dataset correct; the human-judgment reference and distillation scale are disclosed downgrades.",
+    "score": 3,
+    "evidence_files": ["code/paths.py", "code/distill_dinov2b.py", "results/summary.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Core THINGS evidence is at adequate scale: 1842 concepts, 20000 sampled triplets for the baseline OOO metric (baseline_things_eval.py line 127), and 8000 triplets per level for the hierarchical/behaviour metrics (hierarchical_eval.py `n_per_level=8000`). However coverage is thin in two places relative to claim strength. (1) C2 asserts distillation improves 'DINOv2, supervised ViT-L, contrastive image-text models', but only DINOv2-B was actually aligned; summary.md 'Model coverage' admits verify-stage students were 'only benchmarked in their baseline form', so the multi-model breadth of C2 rests on a single aligned model. (2) The C4 few-shot metrics run on a 2k test split of which only ~1% falls in the 10-class imagenette subset (~20 test images), which is why linear_top1_imagenette10 = 1.000 for nearly every model in downstream_eval.json — a value too thin to support a utility claim. The thinness is partly flagged (model coverage is disclosed; the tiny imagenette test is not). Direction is credible but somewhat over-broad for C2 and over-precise for C4.",
+    "score": 3,
+    "evidence_files": ["code/baseline_things_eval.py", "code/hierarchical_eval.py", "code/downstream_eval.py", "results/downstream_eval.json", "results/summary.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "All experiments run on a single seed (fit_teacher.py/distill_dinov2b.py/baseline_things_eval.py/hierarchical_eval.py/downstream_eval.py all default seed=0) with no multiple runs, no error bars, no confidence intervals, and no significance tests — in contrast to the paper, which reports all improvements significant at alpha=0.05. The largest effects (e.g. rho_sensevec 0.119->0.424, acc_coarse 0.599->0.870 in results/things_eval_with_aligned.json and results/hierarchical_eval.json) are large enough to be clearly beyond plausible sampling noise, so the headline direction is robust. But several reported gains are small and are nonetheless presented as real effects with zero uncertainty: fine-level triplet accuracy 0.349->0.391 (+0.04), aligned-CLS 1000-way kNN 0.509->0.512 (+0.003), and OOD subpop knn 0.783->0.799 (+0.016) in results/downstream_eval.json. Without any variance estimate these small deltas cannot be distinguished from noise, and no seed-sweep is provided to rule out cherry-picking.",
+    "score": 2,
+    "evidence_files": ["code/fit_teacher.py", "code/downstream_eval.py", "results/things_eval_with_aligned.json", "results/hierarchical_eval.json", "results/downstream_eval.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The central claims (C2/C3/C4) are of the form 'the alignment fine-tuning improves X', which the run tests as a genuine intervention: it fine-tunes DINOv2-B with an alignment+RSM+preservation loss (code/distill_dinov2b.py) and compares the SAME backbone before vs. after, giving a proper unaligned-baseline control (dinov2-base vs dinov2-base-aligned-proj/cls across all results JSONs). That is an actual intervention, not correlation dressed up as cause. What is missing to fully attribute the effect to *human-structure* specifically: there is no placebo/control condition (e.g. distilling toward a random or shuffled teacher target, or a preservation-loss-only run) to show the gains come from the aligned teacher rather than from any fine-tuning, and only a single hyperparameter setting is used (no loss-weight or coefficient sweep). The teacher claim (C1) is inherently correlational (fit + measure) and is honestly presented as such. Intervention present with baseline control but lacking the specificity controls.",
+    "score": 3,
+    "evidence_files": ["code/distill_dinov2b.py", "results/things_eval_with_aligned.json", "results/hierarchical_eval.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Traceability of the THINGS-based numbers is strong: every value in the results/summary.md Claim-1/2/2b/3 tables matches the on-disk metric JSONs exactly — e.g. teacher rho 0.879/triplet 0.810 and dinov2 aligned-proj rho 0.424 in results/things_eval_with_aligned.json; coarse/mid/fine 0.870/0.756/0.391 and entropy_pearson 0.489, KL 0.200 in results/hierarchical_eval.json; and all C4 numbers (1000-way 0.459/0.5115/0.5085, OOD linear 0.861/0.712/0.691) in results/downstream_eval.json. The upstream THINGS feature products (cache/things_feats_*.npz, things_teacher_aligned.npz) are present, confirmed shape (1852,512)/(1842,512). Two gaps keep this short of excellent: (a) the primary Claim-1 held-out numbers (rho 0.228->0.477, triplet 0.452->0.567) exist only as fit_teacher.py stdout and are saved to no results JSON — no logs/ directory was produced; (b) the downstream feature-input npz files (imagenet eval10k / teacher-on-imagenet) are not retained on disk, so the C4 numbers trace to the metric JSON but their feature inputs cannot be re-verified. No number was found that contradicts its product or appears fabricated.",
+    "score": 4,
+    "evidence_files": ["results/summary.md", "results/things_eval_with_aligned.json", "results/hierarchical_eval.json", "results/downstream_eval.json", "cache/things_teacher_aligned.npz"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline's records are largely self-consistent. summary.md prose verdicts ('supported' x4) agree with the underlying numbers, and its tables reproduce results/things_eval_with_aligned.json, results/hierarchical_eval.json, and results/downstream_eval.json to the reported precision (spot-checked baseline dinov2 rho 0.119, aligned 0.424; coarse 0.599/0.870; OOD linear 0.691/0.712/0.861 — all match). There is no separate tracker/ledger/verification report, so there is limited surface for contradiction. The only minor discrepancy: baseline_things_eval.json lists dinov2-base triplet_ooo=0.400 while things_eval_with_aligned.json lists 0.3931 for the same model — a small drift from re-sampled random triplets across two runs of the same metric; summary.md cites the latter and never mixes them, so no verdict is affected. No case of a claim passing in one artifact while flagged broken in another.",
+    "score": 4,
+    "evidence_files": ["results/summary.md", "results/baseline_things_eval.json", "results/things_eval_with_aligned.json", "results/downstream_eval.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "A teacher model fitted to human triplet-similarity judgments on THINGS captures human similarity structure well enough that, when applied to a large unlabelled image corpus (ImageNet), it can synthesise a large body of human-like similarity judgments spanning multiple abstraction levels.",
+        "method": {
+          "justification": "9a: The run fits a 3-layer MLP+residual alignment head on frozen SigLIP-So400m features to match the reference similarity structure, then applies that head to ImageNet SigLIP features (code/fit_teacher.py AlignHead; code/apply_teacher_to_imagenet.py). This mirrors the paper's 'linearly align a foundation-model teacher on THINGS then apply to ImageNet' recipe (paper uses an affine transform + uncertainty distillation; here a nonlinear MLP with a zero-init residual — a richer but same-family transform). The method category (fit a transform to human-similarity structure, generate pseudo-labels) is well matched to the claim. The one interpretive weakness is that the target it fits is the sensevec embedding rather than raw human triplet judgments, so it aligns to a proxy of the human structure.",
+          "score": 4,
+          "evidence_files": ["code/fit_teacher.py", "code/apply_teacher_to_imagenet.py"]
+        },
+        "experiment": {
+          "justification": "9b: Good design element — an 85/15 concept split with generalization reported on held-out concepts (fit_teacher.py eval_state), giving rho 0.228->0.477 and triplet 0.452->0.567 vs the raw SigLIP baseline. Weaknesses: (i) evaluation is against sensevec, so there is no comparison to a human noise ceiling as in the paper (teacher 61.7% vs 66.67%); (ii) single seed, no uncertainty; (iii) the claim's second half — that the teacher applied to ImageNet 'synthesises a large body of human-like judgments spanning multiple abstraction levels' — is not directly evaluated; the ImageNet teacher features are only consumed downstream by distillation, and their abstraction-level quality is never independently assessed.",
+          "score": 3,
+          "evidence_files": ["code/fit_teacher.py", "results/things_eval_with_aligned.json", "results/summary.md"]
+        },
+        "result": {
+          "justification": "9c: Directionally the teacher does capture the reference structure — held-out rho 0.23->0.48 and all-concept rho 0.23->0.88 / triplet 0.46->0.81 (results/things_eval_with_aligned.json), qualitatively consistent with the paper's finding that the teacher achieves strong human alignment. The agreement is honest and not goalpost-tuned, but it is agreement with a sensevec proxy rather than human triplet behaviour, and the 'synthesise human-like judgments across abstraction levels on ImageNet' portion is asserted via downstream distillation success rather than shown. Reliable but proxy-limited partial reproduction.",
+          "score": 3,
+          "evidence_files": ["results/things_eval_with_aligned.json", "results/summary.md"]
+        }
+      },
+      "C2": {
+        "claim": "Distilling this human-like similarity structure into pretrained vision foundation models (DINOv2, supervised ViT-L, contrastive image–text models) via a dedicated alignment loss substantially improves their Spearman correlation with human similarity judgments at multiple abstraction levels.",
+        "method": {
+          "justification": "9a: The distillation objective (code/distill_dinov2b.py) combines per-image cosine alignment to the teacher feature, batch RSM-MSE matching, and a preservation loss against the frozen backbone — a sound similarity-space distillation in the spirit of the paper's approach (the paper's exact loss is KL-divergence on teacher soft-labels; here cosine+RSM-MSE, a reasonable substitute in the same mechanism category). Evaluating alignment via cosine-RSM Spearman vs the reference and via across/within-category rho is appropriate for a 'Spearman correlation at multiple levels' claim. Method is well matched.",
+          "score": 4,
+          "evidence_files": ["code/distill_dinov2b.py", "code/baseline_things_eval.py"]
+        },
+        "experiment": {
+          "justification": "9b: Strong same-backbone before/after comparison with a proper unaligned baseline and multiple stratified metrics (full-RSM rho, within-cat fine rho, across-cat coarse rho, coarse gap, plus 3-level hierarchical triplet accuracy). Limitations: only DINOv2-B was actually aligned, so the claim's breadth over 'DINOv2, supervised ViT-L, contrastive' is tested on one of three families (disclosed in summary.md); distillation is 20k images / 3 epochs with a single hyperparameter setting and no sweep; single seed; and no random-teacher control to attribute the gain to the human structure specifically. Honest but under-powered on model coverage and hyperparameter exploration.",
+          "score": 3,
+          "evidence_files": ["code/distill_dinov2b.py", "results/things_eval_with_aligned.json", "results/summary.md"]
+        },
+        "result": {
+          "justification": "9c: For DINOv2-B the result strongly and honestly matches the paper's direction: rho_sensevec 0.119->0.424 (+0.305), fine-within 0.216->0.561, coarse-across 0.106->0.400, and hierarchical accuracy coarse 0.599->0.870, mid 0.561->0.756, fine 0.349->0.391 (results/things_eval_with_aligned.json, results/hierarchical_eval.json). The pattern (largest gains at coarse/mid, fine hardest to inject) reproduces the paper's core qualitative finding. The only caveat is that this qualitative agreement is demonstrated on a single model, not the full model set the claim names.",
+          "score": 4,
+          "evidence_files": ["results/things_eval_with_aligned.json", "results/hierarchical_eval.json"]
+        }
+      },
+      "C3": {
+        "claim": "After alignment, the fine-tuned student models more accurately reproduce human behavioural patterns and uncertainty on similarity tasks than their unaligned counterparts.",
+        "method": {
+          "justification": "9a: The run operationalizes 'behaviour + uncertainty' as soft odd-one-out probability distributions (temperature softmax over pair similarities), then measures OOO-argmax agreement, per-triplet entropy Pearson correlation, and KL between model and reference distributions (code/hierarchical_eval.py triplet_pred_and_probs/entropy/kl). This is a reasonable uncertainty-matching design and matches the paper's idea of modelling uncertainty as entropy of triplet similarities. The core mismatch: the 'human' reference is the sensevec-derived distribution, not human responses/response-times — so the method measures agreement-with-a-proxy, whereas the claim is about human behaviour.",
+          "score": 3,
+          "evidence_files": ["code/hierarchical_eval.py"]
+        },
+        "experiment": {
+          "justification": "9b: Metrics computed over 24k triplets (3 levels x 8k) give adequate scale, and the before/after student contrast is genuine. But there is no human behavioural data at all (paper correlates model uncertainty with human RTs; here the reference is the same sensevec used to fit the teacher, making the teacher's own 0.898 entropy-Pearson near-tautological), single seed, and no significance test. For the student the comparison is honest, but it is under-validated as a test of *human* behaviour reproduction.",
+          "score": 3,
+          "evidence_files": ["code/hierarchical_eval.py", "results/hierarchical_eval.json"]
+        },
+        "result": {
+          "justification": "9c: The aligned student clearly improves on the proxy: OOO agreement 0.509->0.678, entropy Pearson 0.109->0.489, mean KL 0.353->0.200 (results/hierarchical_eval.json) — directionally consistent with the paper's claim that aligned models better track human uncertainty. Honestly reported and not goalpost-tuned, but because the reference is a semantic embedding rather than human behaviour, the reproduction of 'human behavioural patterns' is shown only against a proxy, leaving the human-facing conclusion partially validated.",
+          "score": 3,
+          "evidence_files": ["results/hierarchical_eval.json", "results/summary.md"]
+        }
+      },
+      "C4": {
+        "claim": "Alignment is not at odds with utility: aligned student models match or exceed the originals on diverse downstream tasks and improve out-of-distribution robustness.",
+        "method": {
+          "justification": "9a: Utility is probed with kNN-20 and linear probes on 1000-way ImageNet, a 10-class imagenette subset, and a BREEDS-animal super-class grouping; OOD robustness is a source/target subpopulation split of each super-class's leaf classes (code/downstream_eval.py). These are reasonable proxies for the paper's few-shot + distribution-shift evaluations, but they are reduced/home-grown: the real BREEDS source/target benchmark and ImageNet-A (both named in task.md) are not used, and BREEDS super-classes are reconstructed heuristically from the class hierarchy. Method broadly fits the utility/OOD question but is a proxy of the paper's protocol.",
+          "score": 3,
+          "evidence_files": ["code/downstream_eval.py"]
+        },
+        "experiment": {
+          "justification": "9b: Three-way comparison (baseline / aligned-CLS / aligned-proj) across several tasks with a seeded 80/20 split is a sensible design and honestly surfaces a mixed picture. But it is under-powered: single seed; the imagenette test set is ~20 images (linear_top1=1.000 for nearly all models in results/downstream_eval.json), which cannot support a utility conclusion; the OOD metric is the reconstructed proxy rather than the paper's benchmark; and the downstream feature-input npz products are not retained on disk, so the numbers cannot be re-derived. The design does, to its credit, report the aligned-proj utility drop rather than hiding it.",
+          "score": 3,
+          "evidence_files": ["code/downstream_eval.py", "results/downstream_eval.json"]
+        },
+        "result": {
+          "justification": "9c: The result only partially matches the paper's clean 'utility improves' story, and the run reports this honestly rather than forcing agreement. Aligned-CLS matches/slightly beats baseline in-distribution (1000-way 0.509->0.512, BREEDS super 0.983->0.985) and improves OOD subpop (knn +0.016, linear +0.021), supporting 'not at odds with utility' for the native CLS space. But aligned-proj (512-d) clearly *degrades* utility (1000-way kNN 0.509->0.459, imagenette 0.826->0.652), which the paper's framing does not predict; the run attributes this to dimensionality reduction and steers the conclusion to the CLS space. The improvements are small and single-seed, far from the paper's up-to-123% relative gains. Directionally partial and qualified, but transparently disclosed rather than fabricated.",
+          "score": 3,
+          "evidence_files": ["results/downstream_eval.json", "results/summary.md"]
+        }
+      }
+    }
+  }
+}

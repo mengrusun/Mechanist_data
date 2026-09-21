@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "Do LLMs Feel? Emotion Circuits Discovery and Control",
+    "agent":         "scientist1",
+    "review_date":         "2026-07-20"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "sev.jsonl(160 scenario) 与 test_set.jsonl(160 scenario) 划分不重叠。",
+    "score": 5,
+    "evidence_files": ["data/sev.jsonl", "data/test_set.jsonl", "outputs/stats/test_circuit_scale05.json", "outputs/stats/test_circuit_scale06.json", "outputs/report.md", "code/steer_generate.py"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签由外部 gpt-5.4 分类器给出，与被测 Llama-3.2-3B 无关，非循环，system prompt 含六类情绪的细粒度定义与区分规则，操作化合理。扣分处：全程无任何人工/gold 一致性校验。",
+    "score": 3,
+    "evidence_files": ["code/gpt_label.py", "outputs/report.md", "outputs/stats/test_circuit.json", "outputs/stats/test_circuit_v2.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主模型为 task.md 指定的 Llama-3.2-3B-Instruct，无降配。数据按论文规格自建。评测每方法 n=2880 全量，无静默取子集。",
+    "score": 5,
+    "evidence_files": ["task.md", "data/sev.jsonl", "data/test_set.jsonl", "code/prompt_generate.py", "outputs/stats/testcircuit_v2.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "三种方法各 2880 条，每情绪 480、每主题 360，规模充分。",
+    "score": 5,
+    "evidence_files": ["outputs/stats/test_prompt_v2.json", "outputs/stats/test_steer_v2.json", "outputs/stats/test_circuit_v2.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "全程 greedy decoding 单次运行，未报告任何方差/置信区间/显著性。",
+    "score": 3,
+    "evidence_files": ["outputs/report.md", "outputs/stats/test_circuit_v2.json", "outputs/stats/test_steer_v2.json", "code/circuit_generate.py"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "对选中神经元与注意力头做加性注入，属于因果性而非相关性证据。扣分处：控制条件缺失严重，未进行任何 ablation、随机神经元/随机头对照、随机方向 baseline，也无论文的 top-k 扫描曲线，无法排除同量级任意扰动即可产生该效果。",
+    "score": 3,
+    "evidence_files": ["code/circuit_generate.py", "code/build_circuit.py", "code/analyze_circuits.py", "outputs/report.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "逐一核对通过。",
+    "score": 5,
+    "evidence_files": ["outputs/report.md", "outputs/stats/test_prompt_v2.json", "outputs/stats/test_steer_v2.json", "outputs/stats/test_circuit_v2.json", "outputs/stats/circuit_analysis.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "逐一核对通过。",
+    "score": 5,
+    "evidence_files": ["outputs/report.md", "outputs/stats/test_circuit.json", "outputs/stats/test_circuit_v2.json", "outputs/labeled/test_circuit_v2.jsonl"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "通过整合情绪方向抽取、组件识别与全局电路整合的系统框架，识别情绪特异的全局电路。",
+        "method": {
+          "justification": "三阶段方法族正确（方向抽取→组件打分→电路组装），但方法质量弱于原论文：方向用 mean(emo)−mean(neutral) 而非论文的组内六情绪均值扣除；神经元与注意力头均只用启发式 Δactivation·projection 打分，未实现论文的 W_d^T·v_e 解析分解与逐头零消融因果排序；电路组装退化为全局 top-K。",
+          "score": 3,
+          "evidence_files": ["code/analyze_directions.py", "code/build_circuit.py", "outputs/report.md"]
+        },
+        "experiment": {
+          "justification": "实验规模合理，但方法质量弱于原论文。扣分处：判定“情绪特异”只用跨情绪 Jaccard 与方向 cosine 两个描述性指标，无置换零假设或随机电路对照，无法判断 0.29–0.42 的 Jaccard 是否显著低于随机基线。",
+          "score": 3,
+          "evidence_files": ["code/build_circuit.py", "code/build_circuit_disc.py", "code/build_circuit_signed.py", "outputs/stats/circuit_analysis.json"]
+        },
+        "result": {
+          "justification": "“每个情绪都能抽出跨约 25 层的电路”与论文同向。扣分处：实验数字效力较弱，解读偏乐观。",
+          "score": 3,
+          "evidence_files": ["outputs/report.md", "outputs/stats/circuit_analysis.json"]
+        }
+      },
+      "C2": {
+        "claim": "提供机制性证据：情绪生成由可追溯的电路支撑，且跨场景、跨情绪稳定。",
+        "method": {
+          "justification": "仅用“电路调制后的生成准确率按主题拆分”来论证机制与稳定性，远远弱于原论文的论证方法：必要性+ 充分性 + 随机对照的 k 扫描曲线。",
+          "score": 3,
+          "evidence_files": ["code/circuit_generate.py", "code/summarize.py", "outputs/report.md"]
+        },
+        "experiment": {
+          "justification": "样本拆分设计合理。扣分处：稳定性判据单一，只有跨主题 std，无随机电路对照、无置换检验、无跨情绪稳定性判据。",
+          "score": 3,
+          "evidence_files": ["outputs/stats/test_circuit_v2.json", "outputs/report.md"]
+        },
+        "result": {
+          "justification": "跨场景稳定的子结论与论文同向且自洽。扣分处：claim 要求跨情绪也稳定，而 circuit 的 per-emotion 从 surprise 60.0% 到 happiness 97.5% 相差 37.5pp，这一与结论直接相悖的数字在 Claim 2 段落中未被讨论。",
+          "score": 3,
+          "evidence_files": ["outputs/report.md", "outputs/stats/test_circuit_v2.json"]
+        }
+      },
+      "C3": {
+        "claim": "基于电路的控制方法可在任意输入上无需显式指令诱发目标情绪，且在情绪表达准确率上优于 prompting 与 direction steering。",
+        "method": {
+          "justification": "prompting / direction-steering / circuit 三臂同数据、同 judge、同解码设置对照，方法族与论文完全对应。",
+          "score": 5,
+          "evidence_files": ["code/prompt_generate.py", "code/steer_generate.py", "code/circuit_generate.py", "outputs/report.md"]
+        },
+        "experiment": {
+          "justification": "三臂各 n=2880、统一 judge，主体可靠。扣分处：(a) steering 基线用 layers 8-27、scale=1.0 且未做任何 scale 扫描，而 circuit 臂扫了四档取最优，调参力度不对等，直接影响比较；(b) 未做论文范围内的 per-emotion 系数调优（作者自述可能因此产生差距却未尝试）。",
+          "score": 3,
+          "evidence_files": ["code/steer_generate.py", "code/circuit_generate.py", "outputs/stats/test_circuit_scale05.json", "outputs/report.md"]
+        },
+        "result": {
+          "justification": "如实报告 circuit(88.89%) 低于 prompt(97.71%) 的负结果并给出两条具体原因（缺 sublayer 因果重要性、朴素 top-K），诚实度好。扣分处：与论文核心结论定性不一致，对负结果过度补救式解读。",
+          "score": 3,
+          "evidence_files": ["outputs/report.md", "outputs/stats/test_circuit_v2.json", "outputs/stats/test_steer_v2.json", "outputs/stats/test_prompt_v2.json"]
+        }
+      }
+    }
+  }
+}

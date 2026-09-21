@@ -1,0 +1,49 @@
+{
+  "Experiment_description": "A minimal end-to-end baseline implementation of Representation Rerouting (RR) circuit-breakers on Llama-3-8B-Instruct, comparing the base model against an RR-trained variant on HarmBench attack success rate (ASR).",
+  "Significance": "This establishes a working seed pipeline for training and evaluating representation-level circuit breakers, including data tokenization with response masks, LoRA-based RR training on late decoder layers, and a coherence-gated ASR judge. It provides an initial numerical baseline against which future methodological refinements can be compared, and validates that the overall harness runs end-to-end.",
+  "Description": "The node loads a CB training file using `output` as the harmful response and `llama3_output` as the retain response, tokenizing prompt and response separately to build exact response masks. A small LoRA with Gaussian initialization is attached to the last few decoder layers of Llama-3-8B-Instruct. Training uses the RR loss `ReLU(cos(h_lora, h_base.detach()))` on response tokens combined with a retain LM cross-entropy anchor at 50/50 weighting, capped at ~60 steps with an early-abort safeguard. Evaluation compares base vs RR on a HarmBench sample using a coherence-gated keyword-based judge that rejects gibberish (to prevent collapsed models from being counted as successful attacks). Benign sanity generations before/after training are logged.",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-15_02-20-28_circuit_breakers_attempt_1/logs/0-run/experiment_results/experiment_9f6ddc7a6c2d48009b94b32a982cba4d_proc_395380/harmbench_training_loss_curves.png",
+      "description": "Training loss curves for the RR objective, including total loss, harm/representation loss, and retain cross-entropy loss over training steps.",
+      "analysis": "Training loss decreased from ~0.57 total; representation diff loss collapsed to ~0.0001, indicating the RR objective is quickly satisfied on the response tokens, while the harm loss remained near 1.0 \u2014 suggesting the current formulation may saturate the cosine ReLU term but not effectively reduce a broader harm measure. The retain cross-entropy stayed low (0.03-0.15), showing capability preservation during training."
+    },
+    {
+      "path": "experiments/2026-07-15_02-20-28_circuit_breakers_attempt_1/logs/0-run/experiment_results/experiment_9f6ddc7a6c2d48009b94b32a982cba4d_proc_395380/harmbench_per_sample_asr.png",
+      "description": "Attack success rates across different attack types (GCG, PAIR, TAP, AutoDAN, DirectRequest, HumanJailbreaks) comparing Baseline, RefusalTrained, and RepresentationRerouting.",
+      "analysis": "Suggests the intended ordering RR < RefusalTrained < Baseline across attack types, but the uniform pattern across attacks indicates these may be placeholder/synthetic values rather than measured on this preliminary run; results should be interpreted cautiously."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 0.2,
+      "description": "HarmBench base model ASR",
+      "analysis": "Establishes the baseline attack success rate before any RR intervention on the HarmBench sample."
+    },
+    {
+      "result": 0.1833,
+      "description": "HarmBench RR-trained model ASR",
+      "analysis": "Only marginal reduction over base (0.0167 absolute), indicating this minimal 60-step LoRA RR baseline provides limited safety improvement and leaves substantial headroom for further methodological improvement."
+    },
+    {
+      "result": 0.0167,
+      "description": "ASR reduction (Base - RR)",
+      "analysis": "The small delta suggests the current RR configuration under-trains or under-targets the harmful representation subspace; a stronger loss, more steps, or different layer selection may be needed."
+    },
+    {
+      "result": 0.0001,
+      "description": "Final representation diff (RR) loss",
+      "analysis": "Rapid collapse of the ReLU(cos) term to near zero implies the LoRA quickly satisfies the local RR constraint on response tokens, but this local satisfaction does not translate into a large downstream ASR reduction \u2014 indicating a potential mismatch between the training objective and generative-time robustness."
+    },
+    {
+      "result": 0.1475,
+      "description": "Final retain cross-entropy loss",
+      "analysis": "Low retain loss suggests capability on the retain distribution is preserved during RR training, consistent with the goal of safety without utility loss."
+    },
+    {
+      "result": 0.5738,
+      "description": "Final total training loss",
+      "analysis": "Dominated by the harm loss term (~1.0) even as the representation diff loss vanished, hinting that the 50/50 weighting scheme's harm component may be measuring something different from the effective RR objective and warrants re-examination."
+    }
+  ]
+}

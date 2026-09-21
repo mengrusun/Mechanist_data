@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The main test is logically aligned and directional: the proposal predicts that “adding negative multiples of the vector shortens subsequent generation; positive multiples lengthen it,” then measures “generated tokens and exact-match accuracy” against prompt and token-budget baselines. However, central claims such as a “low-dimensional” subspace, accuracy preservation over a “wide range,” and a “‘free lunch’ shortening regime” have no dimensionality test or quantitative decision thresholds, while “matched problem pairs” is not defined precisely enough to rule out content or difficulty confounding. A shorter-versus-not-shorter result can refute the steering prediction, but the stronger preservation and mechanistic claims remain only partly decidable because “verification-token frequency” and “commit-vector timing” are not operationally defined.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The core operations—“compute difference-in-means length vector at each layer,” select using “probe AUC,” sweep steering coefficients, and record tokens and exact-match accuracy—are standard activation-hook, probing, and generation procedures supported by established ML and interpretability tooling; GSM8K, MATH, and BBH are existing datasets. The hardest step is “measure change in verification-token frequency and commit-vector timing,” which is presently a custom or potentially magic step because neither the token taxonomy nor the construction and measurement of the commit vector is specified, although this does not block the primary length-steering experiment. The coefficient sweep, prompt instruction, hard-cap, and budget-forcing baselines make negative results runnable, but resources are poorly specified: the claim names datasets yet gives no target model, model scale, sample count, number of generations, coefficient grid, or other concrete figures.",
+      "score": 6
+    }
+  }
+}

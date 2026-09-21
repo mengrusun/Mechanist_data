@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "expert_name":         "Zhenqian_Xu",
+    "paper_title":         "Mechanistic Understanding of Large AI Models with SemanticLens",
+    "agent":               "scientist2",
+    "review_date":         "2026-07-14"
+  },
+
+  "_note_score":       "可打：1/2/3/4/5；reliability_judge.md提供1/3/5的标准。若介于1/3/5之间，打2/4分。",
+  "_note_evidence":    "所有维度 evidence_files的相对路径。",
+
+  "dimension_1_data_split_hygiene": {
+    "justification":  "label的挑选池、CLIP图像嵌入池、文本查询词表都是同一批 ImageNet-val / ImageNet-1k 类名——从未做 held-out concept（非 ImageNet 词表）或 held-out image 的泛化验证。虽然没有划分，但是选取相同的数据集对结论影响小，同样可根据component的代表图像是否集聚、是否符合文本标签来判断。这个疏忽可以忍受，打3分",
+    "score":          3,
+    "evidence_files": [
+      "verify/C1_concept_faithful_summary/main_experiment_audit/EXPERIMENT_AUDIT.md",
+      "verify/C2_clip_joint_semantic_space/main_experiment_audit/EXPERIMENT_AUDIT.md",
+      "refine-logs/EXPERIMENT_PLAN.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "runs/M6_C1_last_layer/purity__k16__mean.json",
+      "runs/M8_C2_queryability/mrr__k16__mean.json",
+      "runs/M9_C2_stability/stability__hk16__mean.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification":  "使用ImageNet-1k的类别名作为标签。文本标签范围够广，也有真实性。",
+    "score":          5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "verify/C2_clip_joint_semantic_space/main_experiment_audit/EXPERIMENT_AUDIT.md",
+      "verify/C1_concept_faithful_summary/main_experiment_audit/EXPERIMENT_AUDIT.md",
+      "runs/M10_C2_separation/sep__k16__mean.json",
+      "runs/M5_text_embeddings/text_embeddings.h5"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification":  "task.md 指定 Experiment 阶段使用 ResNet-50 (ImageNet-pretrained) + 完整 ImageNet；实际运行使用 `torchvision.models.ResNet50_Weights.IMAGENET1K_V2` 与 HuggingFace `mrm8488/ImageNet1K-val` 全部 50000 张（100%），checksums 落盘在 `runs/M0_setup/checksums.json`，未见静默降配或子采样。冻结基础编码器 CLIP ViT-B/32（openai）与 task.md『CLIP image tower (default)』一致。",
+    "score":          5,
+    "evidence_files": [
+      "task.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "refine-logs/EXPERIMENT_TRACKER.md",
+      "runs/M0_setup/checksums.json"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification":  "样本量充足，未出现数据使用量很低但结论成立的过度宣称情况。used_n 与 claim 强度相配。P1a 1000 fc 组件 × 1000 类别文本查询；P1b 500 layer4 + 500 layer3 组件 × 1203 概念；P2a 1000×1000 MRR 网格；P2b 2000 组件 × 32 图像；P2c 每 pool 10000 随机对；k-sweep 覆盖 k ∈ {1,4,16,64,256}；pool ablation 覆盖 4 种算子。所有样本量均远超 40 条阈值。",
+    "score":          5,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "refine-logs/EXPERIMENT_TRACKER.md",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification":  "所有主要判定都附有统计不确定性：例如：P1a McNemar p≈1.9e-270、P1b bootstrap 95% CI [0.01841, 0.02190]、P2a 1000 次置换基线 95% 上界 0.0097（MRR=0.898 ≈ 92× 基线）、P2b bootstrap CI [0.969, 0.971]、P2c Cohen's d=1.96 且 p≈0。效应量绝大部分远大于噪声。无 cherry-picking 迹象。",
+    "score":          5,
+    "evidence_files": [
+      "runs/M6_C1_last_layer/purity__k16__mean.json",
+      "runs/M7_C1_hidden/sep__k16__mean.json",
+      "runs/M8_C2_queryability/mrr__k16__mean.json",
+      "runs/M9_C2_stability/stability__hk16__mean.json",
+      "runs/M10_C2_separation/sep__k16__mean.json",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification":  "n/a —— 无因果性claim。",
+    "score":          "n/a",
+    "evidence_files": [
+      "refine-logs/FINAL_PROPOSAL.md",
+      "refine-logs/EXPERIMENT_PLAN.md",
+      "verify/C1_concept_faithful_summary/main_experiment_audit/MECHANISM_AUDIT.md",
+      "verify/C2_clip_joint_semantic_space/main_experiment_audit/MECHANISM_AUDIT.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification":  "所有报告数字均可回溯到具体 JSON 落盘产物且数值一致。不存在捏造数据，事后回填情况。",
+    "score":          5,
+    "evidence_files": [
+      "runs/M6_C1_last_layer/purity__k16__mean.json",
+      "runs/M7_C1_hidden/sep__k16__mean.json",
+      "runs/M8_C2_queryability/mrr__k16__mean.json",
+      "runs/M9_C2_stability/stability__hk16__mean.json",
+      "runs/M10_C2_separation/sep__k16__mean.json",
+      "verify/C2_clip_joint_semantic_space/variants/method-swap-crp-compose/result.json",
+      "verify/C2_clip_joint_semantic_space/main_experiment_audit/EXPERIMENT_AUDIT.md"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification":  "EXPERIMENT_TRACKER、EXPERIMENT_RESULTS、CLAIMS_LEDGER、VERIFY_REPORT、INTEGRITY_AUDIT、AUTO_ITERATION_FINAL_REPORT 六份产物在数字与判定上一致。",
+    "score":          5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_TRACKER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md",
+      "verify/VERIFY_REPORT.md",
+      "verify/INTEGRITY_AUDIT.md",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim":       "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore":        "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim":  "For every component c in a trained vision model, a small set of reference inputs that strongly drive c is a concept-faithful summary of what c encodes.Embedding those reference inputs with a frozen multi-modal foundation model and pooling the embeddings yields a single vector v_c placing c in the foundation model's joint image–text semantic space.(task.md的C1,C2本质在做一个claim，基于同样的实验，故这里合并评估)",
+        "method": {
+          "justification":  "选用 Multi-Modal Feature Description / CLIP-Dissect 家族，选取top-k activation reference input ，冻结 CLIP 图像塔嵌入池化，cosine to CLIP text』。该方法受 SemanticLens 论文 Collect+Embed 支持。图片预处理时正确使用预裁剪。虽然没按照原论文方法使用CRP裁剪出图片的重要区域，但是经评审的额外实验验证，CRP影响不大",
+          "score":          4,
+          "evidence_files": [
+            "refine-logs/FINAL_PROPOSAL.md",
+            "refine-logs/MECHANISM_ROUTING.md",
+            "refine-logs/EXPERIMENT_PLAN.md"
+          ]
+        },
+        "experiment": {
+          "justification":  "实验设计合理，对 ResNet-50 的 fc 层 1000 个组件，每个取 top-k 激活的 ImageNet 图像，与1000个ImageNet类名文本embedding做余弦相似度，取top-1预测概念和组件真实类名做比较，得到二者相等的比例。有效抓住了claim的关键词small set,增加了验证small set of figures能否代表component，改变代表图片数量的实验，观察小样本能否刻画概念。设计方法变换验证，用Zennit-CR替代CLIP-Dissect, 结果保持稳定。",
+          "score":          5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_PLAN.md",
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "runs/M6_C1_last_layer/purity__k16__mean.json",
+            "runs/M7_C1_hidden/sep__k16__mean.json",
+            "runs/M11_layer_granularity/layer_summary.json",
+            "verify/C1_concept_faithful_summary/main_experiment_audit/EXPERIMENT_AUDIT.md",
+            "verify/C1_concept_faithful_summary/ROBUSTNESS.md"
+          ]
+        },
+        "result": {
+          "justification":  "把 v_c 拿去和 1000 个 ImageNet 类名的 embedding 做 top-1 余弦匹配，结果和随机 baseline 相比差距非常明显：在k=16、mean pooling 的设置下，fc 层组件的 top-1 concept-purity 达到 0.898，而随机 baseline 只有 0.001，说明v_c和ImageNet类名embedding的top-1余弦匹配结果非常准确。结果分析是合理的。美中不足的是，由于class name已经是最合适的标签，该scientist本来就是在所有class name里挑选最合适的，竟然还有10%的概率没有选中原有的标签，错配率还是偏高。而且如果用ImageNet标签之外的text query(例如human face),找到的component有杂项，比如混入了猩猩的脸，但总体找的较准",
+          "score":          4,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "runs/M6_C1_last_layer/purity__k16__mean.json",
+            "runs/M7_C1_hidden/sep__k16__mean.json",
+            "runs/M11_layer_granularity/layer_summary.json",
+            "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+          ]
+        }
+      
+      }
+    }
+  }
+}

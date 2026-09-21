@@ -1,0 +1,38 @@
+{
+  "c1": {
+    "main_experiment_verdict": "not-supported",
+    "main_experiment_metric": "best_layer=L9: SAE_interp=1480 (target ≥2000), ratio=19.3× (target ≥10×) — ratio criterion met but absolute count falls short (~40%); PARTIAL",
+    "confidence": "high",
+    "verdict_note": "PARTIAL in EXPERIMENT_RESULTS.md; binary scheme maps partial to not-supported. Ratio ≥10× MET; absolute ≥2000 NOT MET. Direction strongly supported."
+  },
+  "c2": {
+    "main_experiment_verdict": "not-supported",
+    "main_experiment_metric": "SAE covered=15 (target ≥100), neurons covered=0, ratio=∞ at primary (τ_F1=0.5, q_top=0.99); SAE=65 at τ=0.3 — absolute criterion not met but direction (SAE≫neurons) strongly supported",
+    "confidence": "high",
+    "verdict_note": "PARTIAL in EXPERIMENT_RESULTS.md; binary scheme maps partial to not-supported. Absolute criterion not met; gap direction (SAE dominates neurons at every setting) strongly supported."
+  },
+  "c3": {
+    "main_experiment_verdict": "not-supported",
+    "main_experiment_metric": "Superposition ladder direction correct (SAE=15 > PCA=neurons=random=shuffled=0); Δ_SAE-PCA=15 (target ≥20) — near-miss at primary setting",
+    "confidence": "high",
+    "verdict_note": "PARTIAL in EXPERIMENT_RESULTS.md; binary scheme maps partial to not-supported. Direction criterion met; strict margin Δ≥20 NOT MET (Δ=15). At τ=0.3 margin=65."
+  },
+  "c4": {
+    "main_experiment_verdict": "not-supported",
+    "main_experiment_metric": "novel_rate=0.0% (target ≥10%); specificity_ratio=0.0 (target ≥5×); criterion-design null — both real and control arms yield 0 novel features under synonym-check-null gate",
+    "confidence": "high",
+    "verdict_note": "FAIL in EXPERIMENT_RESULTS.md. Criterion-design issue: LLM labels all feature descriptions as synonyms of Swiss-Prot vocabulary. Cannot discriminate real vs control."
+  },
+  "c5a": {
+    "main_experiment_verdict": "not-supported",
+    "main_experiment_metric": "mean_PR-AUC(SAE)=0.5907, mean_PR-AUC(neurons)=0.5906; paired-Wilcoxon p=0.191 (not significant at p<0.05)",
+    "confidence": "high",
+    "verdict_note": "FAIL in EXPERIMENT_RESULTS.md. Near-identical PR-AUC across arms; no significant difference. SGDClassifier substituted for LogisticRegression."
+  },
+  "c5b": {
+    "main_experiment_verdict": "not-supported",
+    "main_experiment_metric": "For all 3 features: no_steer yield > every steered arm yield across all α doses; yield monotonically decreases or stays flat under SAE-clamp (opposite of expected dose-response)",
+    "confidence": "high",
+    "verdict_note": "FAIL in EXPERIMENT_RESULTS.md. Steering intervention reduces yield for all features. Plausibility maintained (band-pass ≥0.67) so result is specificity failure, not off-distribution collapse."
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "LASA: Language-Agnostic Semantic Alignment at the Semantic Bottleneck for LLM Safety",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "n/a —— scientist3 全流程无拟合/训练过程。C1 是纯 forward 计算跨语言 cosine 相似度；C2 完全未实施，不存在划分数据集",
+    "score": "n/a",
+    "evidence_files": [
+      "scientist3/multilingual/lasa_safety/logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_aa679764c4804ca3b731addb792afe7e.py",
+      "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "规则表里对孟加拉/爪哇/斯瓦希里的拒答模式覆盖极不完整（sw 只有 'samahani'/'siwezi' 两条），几乎所有响应都被误判为 HARMFUL；规则判据本质上是**在测量'response 中是否包含预设 refusal 短语'**，而非'response 是否 harmful'",
+    "score": 2,
+    "evidence_files": [
+      "scientist3/multilingual/lasa_safety/logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_aa679764c4804ca3b731addb792afe7e.py",
+      "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json",
+      "scientist3/multilingual/lasa_safety/logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "task.md资源降级严重 (1) 基模 LLaMA-3.1-8B-Instruct ✓；(2) MultiJail ✓（但每语言仅 30 条子样本，非全 315）；(3) **GPT-4o judge 未使用**（换成 rule-based，见维度 2）；(4) **训练数据 PKU-SafeRLHF + UltraFeedback 完全未触及**。",
+    "score": 2,
+    "evidence_files": [
+      "scientist3/multilingual/lasa_safety/idea.md",
+      "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json",
+      "scientist3/multilingual/lasa_safety/logs/0-run/research_summary.json",
+      "scientist3/multilingual/lasa_safety/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_e2feee9374ab47d7a468610af29fceb5.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "C1: 只用 20 平行 prompt 组做 layer analysis ，数量太少。",
+    "score": 2,
+    "evidence_files": [
+      "scientist3/multilingual/lasa_safety/logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_aa679764c4804ca3b731addb792afe7e.py",
+      "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "无 bootstrap CI、无 layer 的 argmax 稳健性检验。总体点估计 + 大量 hyperparameter sweep 掩饰缺少真正统计检验。",
+    "score": 3,
+    "evidence_files": [
+      "scientist3/multilingual/lasa_safety/logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_aa679764c4804ca3b731addb792afe7e.py",
+      "scientist3/multilingual/lasa_safety/logs/0-run/baseline_summary.json",
+      "scientist3/multilingual/lasa_safety/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_e2feee9374ab47d7a468610af29fceb5.py"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "语义瓶颈层可作为干预层，但没做相关实验。",
+    "score": 2,
+    "evidence_files": [
+      "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json",
+      "scientist3/multilingual/lasa_safety/logs/0-run/research_summary.json",
+      "scientist3/multilingual/lasa_safety/logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_aa679764c4804ca3b731addb792afe7e.py"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "落盘产物**基本可追溯但覆盖窄**：experiment_data.npy 里 `MultiJail/layer_semantic_alignment` 是 length-33 list（layer 0=0.4653, layer 2=0.9994 argmax, layer 32=0.3241），与 draft_summary Key_numerical_results[7-9] (max 0.9994, min 0.3241, mean 0.9172) 全部对得上；ASR 数字 (overall 0.6267, bn=1.0, en=0.8, it=0.1, jv=1.0, sw=1.0, ko=0.7, th=0.2667, vi=0.4667, zh=0.5, ar=0.4667) 在 research_summary metric 段与 draft_summary Key_numerical_results 一致。stage 2 max_new_tokens sweep 结果 (0.63/0.6267/0.62/0.62) 落盘于 baseline_summary metric。**关键遗漏**：(a) '最佳 bottleneck layer 层号' 在 draft_summary 中未列出，需从 npy 文件里独立 argmax 才能得到 layer=2（scientist3 报告没显式说'我们找到 L*=2'）；(b) draft_summary 声称使用了 linear probing 判断语言身份可分性，但 stage_1 代码里根本没 sklearn.linear_model 调用——**文字与代码不符**，属于文字承诺无产物。整体数值可查但报告叙述有虚构成分。",
+    "score": 3,
+    "evidence_files": [
+      "scientist3/multilingual/lasa_safety/logs/0-run/experiment_results/experiment_aa679764c4804ca3b731addb792afe7e_proc_1674285/experiment_data.npy",
+      "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json",
+      "scientist3/multilingual/lasa_safety/logs/0-run/research_summary.json",
+      "scientist3/multilingual/lasa_safety/logs/0-run/baseline_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "**实质性不一致**：(1) draft_summary.json Significance 声称 'The results support the LASA hypothesis'，但实际实验只测 baseline ASR + 33 层 cos-sim，**从未运行 LASA 干预**，'supports LASA' 是无中生有；(2) report.md 'Per-claim verdict' 表把 C1/C2 都标 'See overall verdict (partially or fully supported)'，但 C2 未做实验；(3) stage 3 research_summary 里 vlm_feedback_summary 段自己已经明确写道 'The plots show baseline tuning experiments primarily on image classification datasets (fashion_mnist, dtd, imagenet-val, imagenette) ... a critical disconnect between these experiments and the stated research idea about LASA'——scientist3 的 VLM 判定与其自身 draft_summary 的 headline 结论**直接矛盾**：VLM 说 stage 3 跑偏到图像分类基线，而 summary 说 'supports LASA'。(4) draft_summary Description 写 'via linear probing, minimal language-identity separability' 但代码无 probe——文字/代码不符。(5) stage 2 baseline 与 stage 3 research 的 best_solution 代码几乎相同（都是 max_new_tokens sweep），research 阶段实际上没做任何新的研究内容——tree/journal 层面上也是 baseline 惯性延伸。verdict 传播链路上 partial vs supported 混用。产物之间深度不自洽。",
+    "score": 1,
+    "evidence_files": [
+      "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json",
+      "scientist3/multilingual/lasa_safety/logs/0-run/research_summary.json",
+      "scientist3/multilingual/lasa_safety/report.md",
+      "scientist3/multilingual/lasa_safety/logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_8cd8a2bcd5aa4ec788cbae8487a9e3d0.py"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "There exists an intermediate 'semantic bottleneck' layer in multilingual LLMs whose hidden-state geometry is dominated by shared meaning rather than by language identity.",
+        "method": {
+          "justification": "只测跨语言表征的相似度有多高，没有对照测'跨 prompt (同语言异义)的相似度有多低'。这个不对偶度量在浅层会天然高（因为浅层还没做太多 lang-specific处理）。",
+          "score": 2,
+          "evidence_files": [
+            "scientist3/multilingual/lasa_safety/logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_aa679764c4804ca3b731addb792afe7e.py",
+            "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json",
+            "paper/multilingual/lasa_safety/paper.pdf"
+          ]
+        },
+        "experiment": {
+          "justification": "样本极小，只用 20 组平行 prompt (paired_ids[:20]) × 10 语言 × 33 层 = 6600 forwards。",
+          "score": 3,
+          "evidence_files": [
+            "scientist3/multilingual/lasa_safety/logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_aa679764c4804ca3b731addb792afe7e.py",
+            "scientist3/multilingual/lasa_safety/logs/0-run/experiment_results/experiment_aa679764c4804ca3b731addb792afe7e_proc_1674285/experiment_data.npy",
+            "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "由于同义异语言的向量在前几层的特征就被抹平，选中了layer 2，结果显然与论文中间偏前层的表述相悖",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multilingual/lasa_safety/logs/0-run/experiment_results/experiment_aa679764c4804ca3b731addb792afe7e_proc_1674285/experiment_data.npy",
+            "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json",
+            "paper/multilingual/lasa_safety/paper.pdf"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Aligning safety at this layer yields substantially lower attack success rates across high-, medium-, and low-resource languages (including languages unseen during alignment training) compared with surface-level safety alignment baselines, while preserving general task performance.",
+        "method": {
+          "justification": "**没有采用任何机理方法**。scientist3 完全未实施 C2 需要的干预/对齐机制——无 SSI（论文核心）、无 KTO/DPO/SFT 训练、无 activation steering（scientist1 route）、无 L*-anchored regularizer（scientist2 route）、无任何 surface-level alignment baseline 对照。C2 是明确的因果 claim，需要至少 '在 L* 层做安全对齐 vs 在表层做安全对齐' 的对照实验，scientist3 甚至没有'aligned model' vs 'unaligned model' 的最粗粒度对比。stage 2/3/4 的 sweep 全部是 baseline forward 参数（max_new_tokens、greedy vs top_p 采样）——**这些不是 alignment 方法**，与 claim 的机理类别完全无关。等效于'完全没做 C2'。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multilingual/lasa_safety/logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_aa679764c4804ca3b731addb792afe7e.py",
+            "scientist3/multilingual/lasa_safety/logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_8cd8a2bcd5aa4ec788cbae8487a9e3d0.py",
+            "scientist3/multilingual/lasa_safety/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_e2feee9374ab47d7a468610af29fceb5.py"
+          ]
+        },
+        "experiment": {
+          "justification": "没做相关实验。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multilingual/lasa_safety/logs/0-run/research_summary.json",
+            "scientist3/multilingual/lasa_safety/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_e2feee9374ab47d7a468610af29fceb5.py",
+            "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "**结果层面没有 C2 结果可对比**。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multilingual/lasa_safety/logs/0-run/draft_summary.json",
+            "scientist3/multilingual/lasa_safety/report.md",
+            "scientist3/multilingual/lasa_safety/logs/0-run/research_summary.json",
+            "paper/multilingual/lasa_safety/paper.pdf"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly addresses knowledge retrieval by training \"relation-conditioned linear probes on residual states at the subject's last token\" and comparing trajectory features with \"final-layer logit confidence,\" so the goal, intervention, and principal measurements are aligned. The predictions are directional and refutable: failure to find earlier correct-object decodability, incremental correctness-prediction AUC, enrichment of output errors among \"peak-then-decay\" cases, or recovery after patching would count against the respective hypotheses. However, terms such as \"well before,\" \"strong mid-network trajectory,\" \"peak-then-decay,\" and \"recovery\" lack decision thresholds, while the handling of \"object token(s)\" and the exact baseline confidence metric remain underspecified.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is the proposed causal test to \"patch the late-layer states of decayed examples with their peak-layer states\"; activation patching is a standard, well-supported interpretability operation, although the destination layers, normalization, and matched or random-state controls are not specified. Linear probes, residual-stream hooks, classifiers, factual-QA evaluation, and activation patching all have established tooling, but the plan names only \"factual QA datasets\" and \"several open models,\" with no particular artifacts, model scales, sample sizes, or other concrete resource figures. Negative outcomes can arise for probe accuracy and AUC, but the patching branch lacks control interventions needed to distinguish trajectory-specific rescue from a generic perturbation effect, leaving the overall experiment runnable but requiring material design choices.",
+      "score": 5
+    }
+  }
+}

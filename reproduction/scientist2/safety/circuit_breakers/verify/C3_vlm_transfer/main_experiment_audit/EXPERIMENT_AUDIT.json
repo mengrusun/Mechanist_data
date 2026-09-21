@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4, via llm-chat MCP)",
+  "claim_id": "C3",
+  "linked_milestones": ["M6"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Provenance for M6L/M6T/M6D substeps is adequate (real paired prompts, AUC from real labels). WARN: decisive C3 GT (PGD-image ASR, VL capability) was never collected -- VLM not assembled, PGD not run."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "c3_verdict.json marks status=partial. EXPERIMENT_RESULTS.md correctly reports partial. No inflation from substep results into full success. AUC and delta_cos metrics correctly computed."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All completed-substep files exist (m1_mistral/summary.json, m3_mistral/training_summary.json, m4_mistral/activation_drift.json, c3_verdict.json). Missing files for unrun evaluations are reflected correctly in the partial verdict."
+    },
+    "dead_code": {
+      "status": "warn",
+      "details": "Full C3 code path (m6_vlm_pgd.py, LLaVA-NeXT assembly, PGD attack) was unexecuted. Not traditional dead code but unvalidated code path for the key claim."
+    },
+    "scope": {
+      "status": "fail",
+      "details": "Decisive C3 evaluations (VLM assembly, PGD image-hijack, VL capability) not completed -- scope gap fundamental to the claim. Budget-gated and honestly disclosed, but C3 is factually untestable from the current artifacts."
+    },
+    "eval_type": "partial (mechanism-level only; missing VLM attack eval)"
+  }
+}

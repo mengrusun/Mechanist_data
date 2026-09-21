@@ -1,0 +1,41 @@
+{
+  "direction": "Mechanism of verbalized confidence in decoder-only LLMs: is post-hoc-verbalized confidence a genuine self-evaluation cached at answer emission and later read out, or a cosmetic restatement computed on-demand from token log-probabilities?",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "When a decoder-only LLM is asked to verbalize its confidence in a numeric 0–100 form immediately after answering a factual question, the verbalized value is written into hidden states at post-answer positions (E0..E4) and later retrieved from that cache when the model speaks the confidence token (rather than being freshly computed at the confidence position from token log-probabilities or a fresh reading of the answer).",
+      "status": "established",
+      "behavior_conclusion": "The behavior is real and taken as given: verbal confidence is a reproducible, non-trivial, non-constant black-box uncertainty signal in Gemma-3-27B-pt on TriviaQA (parse rate 0.997 across 3 seeds × 1500 items, std ≈ 40 on the 0–100 scale, answer accuracy ≈ 0.18). Beyond the elicitation, its INTERNAL mechanism dissociates: verbal confidence is STRONGLY linearly decodable from post-answer residual states (ridge probe R²=0.541 at E4L10 vs. log-prob-only baseline R²≈0), but the strong causal cache-and-retrieve claim does NOT hold on the tested interventions — patching, attention-blocking, single-site direction steering (argmax and logit-level), top-5-site steering, and joint 5-site simultaneous steering all fail to move verbal confidence appreciably (max joint |span| = 0.32 first-digit units < 0.5 threshold). The correct scientific reading is a DECODABILITY-vs-CAUSAL-CONTROL DISSOCIATION: verbal confidence is decodable but not strongly controllable under the tested single-site or joint low-rank interventions.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Probing / Residual Stream States + Causal Attribution / Patching + Causal Attribution / Ablation + Representation and Parameter Analysis / Steering Vectors",
+          "headline": "Decodability–causal-control dissociation in Gemma-3-27B-pt: verbal-confidence value is linearly decodable at post-answer positions (probe R²=0.541 at E4L10, ΔR²=+0.542 over log-prob-only, Spearman ρ=0.696), but the same location is NOT causally privileged — residual patching yields signed effect 0.55 vs. 3.07 at a MID-question control (main/control ratio 0.24, plan required ≥3), attention-blocking cache→conf-gen collapses conf by only +0.19 (no prior-collapse), single-site steering α-span < 0.15 first-digit units across the top-5 sites individually (E4L10, E1L5, E2L5, E3L10, E3L5) and stays flat vs n=8 random-direction controls while capability preservation NLL delta < 0.02 nats/token, and joint 5-site simultaneous steering surfaces only a small distributed effect (max |span| 0.32 across seeds 42/123/2024, still below the 0.5 threshold) that single-site sweeps missed. The paper framing is 'decodable but not strongly controllable under tested interventions', not 'not causally used'.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "For a decoder-only LLM asked to answer a question and then verbalize a confidence value, the residual-stream hidden states at post-answer positions already carry a linearly-decodable representation that determines the eventual verbalized confidence, and this representation is causally used by the confidence-generation step (rather than the confidence being freshly computed at the confidence token from token log-probabilities).",
+              "method": "Location screen — ridge probe over the 5 post-answer positions × 12 layers ([5,10,...,60]) predicting verbalized confidence, judged pass when peak cell R² clearly exceeds the log-prob-only baseline; Causal Intervention chain — residual-stream patching at the top-K cache sites with clean-high/corrupt-low pairs matched on n_answer_tokens, attention-block from cache→confidence-generation position, direction-steering with diff-of-means and LDA on α ∈ [-16,+16] (v2 hardened by capability probe on unrelated-continuation NLL and n=8 random-direction controls, v3 logit-level E[first_digit] closes sub-argmax loophole, joint 5-site steering via MultiSiteSteeringHook tests distributed control), each judged against pre-committed effect-size thresholds and MID-question matched controls.",
+              "conclusion": "Decodability holds strongly (probe R²=0.541 at post-answer position E4L10 with Spearman ρ=0.696, ΔR²=+0.542 over log-prob-only baseline ≈0), but single-site and joint causal control does not: residual patching main/control ratio=0.24 vs. required ≥3, attention-block cache→conf-gen mean shift only +0.19 with no prior-collapse, argmax steering flat vs. random-direction controls at capability delta < 0.02 nats/token, logit-level (sub-argmax) span < 0.01 at E4L10, top-5 single-site max |span| < 0.15, joint 5-site max |span| = 0.32 first-digit units below the 0.5 threshold — 'decodable but not strongly controllable' dissociation, with a small distributed joint effect leaving room for weak distributed causal sensitivity. Log-prob-restatement null downgraded to HOLD (M6c cross-seed values [3.57, 0.10, 0.43] fail variance gate)."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Tuning & Editing (rejected in round 1 as claim was diagnostic, not applied — but a calibration-improvement application would reopen this)",
+        "Formation Tracing (rejected in round 1 as claim was inference-time, not training-time — but tracing when the decodability emerges during pretraining could sharpen the dissociation)",
+        "Unit Interpretation (rejected in round 1 as label was already human-interpretable — but SAE / auto-interp on the decodable direction could recover WHICH features encode confidence)",
+        "Decision Auditing (rejected in round 1 as confidence WAS the output — but auditing whether verbalized confidence agrees with downstream user decisions would test its calibration in a different sense)"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

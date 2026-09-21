@@ -1,0 +1,25 @@
+{
+  "claim": "C1",
+  "scope": "main-experiment (refine-logs/, milestones M1-M5) — RE-AUDIT after iteration-loop type-② fix (M5 composition-controlled independent-predictor re-eval)",
+  "overall_verdict": "fail",
+  "fail_driver": "E_scope (frozen claim text overclaims vs corrected evidence) — NOT F_eval_type; evaluation methodology was REPAIRED (F: fail→warn). Residual FAIL is a claim-scope problem requiring claim narrowing (③), not further main-experiment work.",
+  "checks": {
+    "A_gt_provenance": {"verdict": "pass", "note": "SS-probe labels from real experimental PDB/DSSP; unchanged."},
+    "B_normalization": {"verdict": "pass", "note": "No self-referential normalization; random control norm-matched."},
+    "C_result_existence": {"verdict": "pass", "note": "M1-M5 cited values present on disk (results/*.json, runs/iteration_round_1/M5_structural_gc_control.json)."},
+    "D_dead_code": {"verdict": "warn", "note": "M5 re-scoring re-executes the ORF→translate→predict path on the stored generations; call-graph exercised."},
+    "E_scope": {"verdict": "fail", "note": "The frozen C1 wording still asserts 'causally and specifically increases generated α-helical content'. The corrected evidence supports only a composition-level metric effect (reproduced across independent predictors) that is confounded with a Lys-rich/low-complexity/GC collapse, does not survive (underpowered, 5/200 overlap) GC control, and has no structural validation. The claim TEXT overclaims relative to the corrected evidence → FAIL. Fix = narrow the claim, not the experiment."},
+    "F_eval_type": {"eval_type": "synthetic_proxy", "verdict": "warn", "note": "REPAIRED from FAIL: the %H uplift is now triangulated across two ESM2-independent predictors (GOR +15.0, Chou-Fasman +13.6 vs ESM2 +15.5; bootstrap CIs), composition-controlled, and explicitly labeled non-structural. Remaining caveat (WARN not PASS): all estimators are sequence proxies on composition-shifted OOD sequences; GC-matched analysis underpowered; no structural folding obtained (ESMFold CDN-blocked)."}
+  },
+  "main_experiment_verdict_on_frozen_C1": "not-supported",
+  "key_findings": [
+    "Type-② fix (M5) repaired the PRIMARY-endpoint integrity: independent-predictor triangulation removes the single-probe-artifact concern; composition confound and non-monotonicity are now disclosed honestly (Check F fail→warn).",
+    "A robustness verdict is now COMPUTABLE (was not, under the prior Check-F FAIL): the frozen strong claim is not-supported.",
+    "The +15 %H uplift is real at the metric level and reproducible across predictors, but is a composition artifact (Lys +0.396, low-complexity 0.21→0.43, GC 0.44→0.13), not structurally validated.",
+    "Residual overall FAIL is driven ENTIRELY by Check-E claim-scope overclaim — the frozen claim is broader than the evidence. Route to claim narrowing (③), not to more ② main-experiment work.",
+    "Recommended iteration action: narrow_claim."
+  ],
+  "rationale": "The iteration-② fix substantially repaired the evaluation methodology (Check F FAIL→WARN): the primary endpoint is no longer a single unvalidated proxy but a triangulated, composition-controlled, honestly-caveated measurement, so a main-experiment verdict on the frozen claim is now computable. That verdict is not-supported — the trustworthy endpoint reveals a composition-level metric effect, not the causal, specific, structurally-real α-helix steering the frozen claim asserts. The only residual audit failure is Check-E scope: the frozen claim text overclaims relative to the corrected evidence. This is a claim-narrowing problem (③), not an evaluation-integrity problem (which is now WARN, admissible). The claim has therefore transitioned from INCONCLUSIVE (endpoint untrustworthy, no verdict) to a claim-support FAIL (endpoint trustworthy, frozen claim not supported).",
+  "recommended_iteration_action": "narrow_claim (③) — narrow C1 to the composition-level metric effect it actually supports; drop the unvalidated structural assertion.",
+  "reviewer_model": "gpt-5.6-luna-2026-07-09"
+}

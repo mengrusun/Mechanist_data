@@ -1,0 +1,129 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Xuyang_Shao",
+    "paper_title": "When Less Language is More: Language-Reasoning Disentanglement Makes LLMs Better Multilingual Reasoners",
+    "agent": "scientist2",
+    "review_date": "2026-07-16"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "scientist2/multilingual/multi_lingual_reasoning",
+  "dimension_1_data_split_hygiene": {
+    "justification": "存在划分但没有独立 final test。mlr/m1_locate_grid.py 用 FLORES-200 dev 拟合 V_lang，并另建 100/语言的 classifier pool；然而固定同一 stratified 20% test（实际仅 20/语言）反复评分 5×6×3×3=270 个配置并选最高的 0.968，故该 test 已被当作 validation。M2 又在 MGSM test 前 25/语言筛 rank/k_top，M3 与最终报告继续使用包含这 25 条的前 50/语言并扫描 α；M4a 的训练/评估数据虽分开，不能消除 C1-C3 的 test 调参与重复报告。",
+    "score": 2,
+    "evidence_files": ["mlr/m1_locate_grid.py", "mlr/m2_projection_eval.py", "mlr/m4a_lora_sft.py", "results/m1/m1_summary.csv", "refine-logs/EXPERIMENT_TRACKER.md", "claims_ledger.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "MGSM answer_number 与 numeric exact match 是数学正确性的有效 ground truth，逐例 JSONL 也保存 gold/extracted/is_correct。语言保真 leg 则近乎失效：task.md 指定 GlotLID V3，mlr/glotlid_wrapper.py 实际回退到 Meta lid.176 且未做 FLORES 校准；更严重的是 results/m2/baseline_no_intervention.jsonl 的 550/550 条都得到完全相同的 glotlid_pred='otw_Latn'、score=0.000485737...，summary 因而对 11 语言全报 fidelity=0。M3 α=0 又改用可变 lid.176 输出并报 macro_fidelity=0.245，全语言仍使用 English few-shot。数学标签可靠，但 M2 fidelity 标签错误、M3 也只是未校准替代指标。",
+    "score": 2,
+    "evidence_files": ["task.md", "mlr/data.py", "mlr/glotlid_wrapper.py", "results/m2/baseline_no_intervention.jsonl", "results/m2/baseline_no_intervention_summary.json", "results/m3/vlang_alpha0.0_s42_summary.json", "claims_ledger.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主模型与主数据集基本正确：claims_ledger.json 和结果配置记录 Qwen-3-4B-Thinking-2507、MGSM、11 语言。但主实验把论文/可用的 MGSM 250/语言缩为 M2 25/语言、M3/M4 50/语言；C4 LoRA 仅用 5,001/73,559 条（6.8%），RL/GRPO 完全跳过。task.md 要求 always used 的 GlotLID 被 lid.176 替换。偏差在 tracker/ledger 中有披露，但在 strict fidelity 下仍是实质降配。",
+    "score": 3,
+    "evidence_files": ["task.md", "claims_ledger.json", "refine-logs/EXPERIMENT_TRACKER.md", "results/m2/screen_mid_r2_ktop12_s42_summary.json", "results/m4a/eval_summary.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "C1 网格规模较大（270 fits；classifier pool 100/语言，但固定 test 实际 20/语言）；C3 用 50/语言×9 α×V_lang/random，并有一个 DeepSeek model-swap，灾难性差异不依赖大样本。可是 C2 screen 只有 25/语言（低于 40 阈值），C4 只做弱 LoRA 配置而未做 RL，且原 C2/C4 被事后缩窄。claims_ledger.json 对部分限制有 caveat，故负结果有证据但原四条强 claim 覆盖不充分。",
+    "score": 4,
+    "evidence_files": ["claims_ledger.json", "results/m1/m1_summary.csv", "results/m2/screen_mid_r2_ktop12_s42_summary.json", "results/m3/vlang_alpha0.0_s42_summary.json", "results/m4a/eval_summary.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "C1 跑了 seeds 42/43/44，但在固定 test 上把同一 n=250/r=16/early 的 0.9545、0.9682、0.9227 取最大 seed43 作 headline，没有均值/方差；三者 predicate_pass 又全为 False。C2-C4 主结果基本全是 seed=42。refine-logs/FINAL_PROPOSAL.md 要求 paired bootstrap 95% CI，实际 tracker、ledger 与 summary 只有点估计。C3 的 signed sweep 和跨模型变体增强方向稳健性，但每 α 只有一个 random direction，机制审计也标 WARN。",
+    "score": 2,
+    "evidence_files": ["refine-logs/FINAL_PROPOSAL.md", "results/m1/m1_summary.csv", "refine-logs/EXPERIMENT_TRACKER.md", "verify/C3_signed_dose_response/main_experiment_audit/MECHANISM_AUDIT.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "mlr/m2_projection_eval.py 确实通过 SteeringHooks 做 h←h+αVVᵀh 干预，C3 还完成 9 点 signed α 与 matched random-subspace sweep，并在 DeepSeek-R1-Distill-LLaMA-8B 上复核。但 M1 只在一个代表层拟合 V_lang，随后把同一个 V 重复用于 layers 12..23；hook 还会在自回归阶段继续修改生成 token。paper.pdf Appendix F 则按层构造 M_s、只干预 prompt token，并在中层用 0..0.4、高层用 −0.4..0。加上 random control 仅一个方向、多数 α 进入 collapse 区，verify 对 C2 标 FAIL、C3 标 WARN，机制特异性不足。",
+    "score": 3,
+    "evidence_files": ["mlr/m1_locate_grid.py", "mlr/m2_projection_eval.py", "results/m3/vlang_alpha-1.0_s42_summary.json", "results/m3/random_alpha-1.0_s42_summary.json", "verify/C2_null_space_projection/main_experiment_audit/MECHANISM_AUDIT.md", "verify/C3_signed_dose_response/main_experiment_audit/MECHANISM_AUDIT.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "C2/C3 的逐例 JSONL 与 summary、C4 的 eval.jsonl/eval_summary.json 能支持 0.762、0.065、0.051、0.744、0.558 等行为数字。但 C1 的 results/m1/m1_summary.csv 中 file 列全部指向当前不存在的 .npz，refine-logs/EXPERIMENT_TRACKER.md 却称 best_*.npz 和切片均已写入；M4 adapter 目录也只有配置/tokenizer，缺 adapter_model.safetensors/bin，主 runs 日志与 cost.json 同样缺失。compute 来源还更差：EXPERIMENT_RESULTS 称 best M3 config≈0.03 GPU-h，而 results/m3/vlang_alpha-0.25_s42_summary.json 实记 2609.3秒≈0.725小时。部分结果可追溯，但关键模型/子空间与算力结论不能端到端核验。",
+    "score": 2,
+    "evidence_files": ["results/m1/m1_summary.csv", "results/m2/baseline_no_intervention_summary.json", "results/m3/vlang_alpha-0.25_s42_summary.json", "results/m3/vlang_alpha-1.0_s42.jsonl", "results/m4a/eval.jsonl", "results/m4a/eval_summary.json", "results/m4a/lora_sft/adapter/adapter_config.json", "refine-logs/EXPERIMENT_RESULTS.md", "refine-logs/EXPERIMENT_TRACKER.md"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "存在多组会改变结论的实质冲突。refine-logs/PIPELINE_SUMMARY.md 的 Contribution Snapshot 声称干预同时提升 MGSM、保留 GlotLID、呈单调剂量响应并匹配 SFT；refine-logs/EXPERIMENT_RESULTS.md 却总结 every intervention 和 LoRA-SFT 均低于 baseline。后者还称 fidelity 全由 lid.176 得到，但 M2 baseline 的 550/550 条实际都是同一 otw_Latn/0.0004857、macro_fidelity=0，M3 α=0 又为 0.245。compute 也直接打架：EXPERIMENT_RESULTS 写 best M3≈0.03 GPU-h，落盘 summary 为 2609.3秒≈0.725h；tracker 称 C1 NPZ/LoRA adapter 已写，文件却缺失。这些冲突已达到 rubric 的失败锚点。",
+    "score": 1,
+    "evidence_files": ["refine-logs/PIPELINE_SUMMARY.md", "refine-logs/EXPERIMENT_RESULTS.md", "refine-logs/EXPERIMENT_TRACKER.md", "results/m1/m1_summary.csv", "results/m2/baseline_no_intervention.jsonl", "results/m2/baseline_no_intervention_summary.json", "results/m3/vlang_alpha0.0_s42_summary.json", "results/m3/vlang_alpha-0.25_s42_summary.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "method / experiment / result 独立评分。",
+    "per_claim": {
+      "C1": {
+        "claim": "隐藏表示可分为语言特定子空间与近似正交的语言无关子空间，并可由小型多语 probe 识别。",
+        "method": {
+          "justification": "语言均值差 SVD + V_lang/complement classifier 属于合适方法族；但只取 early/mid/all_non_upper 的代表层，且所谓 content subspace 是把 English 样本随机分半后的均值差，不是跨语言平行推理内容，近似正交解释较弱。",
+          "score": 4,
+          "evidence_files": ["mlr/m1_locate_grid.py", "results/m1/m1_summary.csv", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "有 n_probe/rank/layer/3-seed 网格和单次 80/20 classifier split，但同一 20/语言 test 被 270 个配置与 seeds 反复评分后选最大值，并无独立 final test；rank 16/32 还超过 11 语言中心化均值矩阵的有效秩≤10，所有 predicate_pass=False，且支撑结果的 NPZ 当前缺失。",
+          "score": 2,
+          "evidence_files": ["mlr/m1_locate_grid.py", "results/m1/m1_summary.csv", "refine-logs/EXPERIMENT_TRACKER.md"]
+        },
+        "result": {
+          "justification": "V_lang classifier headline=0.968 支持可识别性，但它是固定 test 上 seed43/config 的最大值；同配置 seeds 42/43/44 分别为 0.9545/0.9682/0.9227，且三者 predicate 均 False。complement=0.491 又远高于 chance≈0.091，未复现 paper.pdf 的近似正交分解。ledger 如实标 partial，属于方向性部分结果而非完整复现。",
+          "score": 4,
+          "evidence_files": ["CLAIMS_LEDGER.md", "results/m1/m1_summary.csv", "verify/VERIFY_REPORT.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      },
+      "C2": {
+        "claim": "推理时抑制语言特定子空间会跨模型/语言/任务一致提升准确率，并在保留上层时维持可接受语言保真度。",
+        "method": {
+          "justification": "虽然采用真正的投影干预，但 mlr/m2_projection_eval.py 将一个代表层的 V_lang 重复用于 layers 12..23；论文是每层各自的 M_s，且会在高层再注入/用不同系数。这个错位足以造成结果中的通用能力崩溃。",
+          "score": 2, 
+        "evidence_files": ["mlr/m1_locate_grid.py", "mlr/m2_projection_eval.py", "results/m2/screen_mid_r2_ktop12_s42_summary.json", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+      },
+        "experiment": {
+          "justification": "M2 只在 α=-1 做 25/语言 screen，超出 paper.pdf Appendix F 的 λ∈[0,0.4] 温和范围；k_top=4/8/12 对 mid group 的实际 sites 都是 12..23，三组并未形成层范围消融，rank4 三次失败，因此声称的9配置实际仅6个成功。M2 的 550条 baseline LID 又全部错误输出同一 otw_Latn，random/剂量对照到后续 M3 才补，原 M2 设计无法可靠判定 C2。",
+          "score": 1,
+          "evidence_files": ["results/m2/baseline_no_intervention.jsonl", "results/m2/screen_mid_r2_ktop4_s42_summary.json", "results/m2/screen_mid_r2_ktop8_s42_summary.json", "results/m2/screen_mid_r2_ktop12_s42_summary.json", "verify/C2_null_space_projection/main_experiment_audit/MECHANISM_AUDIT.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "result": {
+          "justification": "0.762→0.029–0.065 与论文 Qwen-3-4B-Thinking 79.56→80.04 相反。负结果数字真实且原 refutation 有披露，但随后把 claim 改成“统一退化”并标 PASS_BY_CONSTRUCTION，属于结果后移动目标；又把崩溃归因为 reasoning 与 V_lang entangled，未排除逐层子空间错用。",
+          "score": 2,
+          "evidence_files": ["claims_ledger.json", "verify/VERIFY_REPORT.md", "results/m2/baseline_no_intervention_summary.json", "results/m2/screen_mid_r2_ktop12_s42_summary.json", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      },
+      "C3": {
+        "claim": "语言特定激活强度与推理准确率负相关：放大会损害，去除会改善。",
+        "method": {
+          "justification": "signed α sweep 与 random-subspace 对照类型正确，但沿用同一个代表层 V 跨 12 层干预，且 α 未按投影幅度归一化，机制解释受严重干扰。",
+          "score": 2,
+          "evidence_files": ["mlr/m2_projection_eval.py", "verify/C3_signed_dose_response/main_experiment_audit/MECHANISM_AUDIT.md"]
+        },
+        "experiment": {
+          "justification": "9 个双符号 α、α=0 sanity、matched random 与一个 model-swap 是本 case 最完整的设计；但只有 seed42、每 α 单一 random direction，且 |α|≥0.25 大量进入 collapse。实验还沿用单层 V 跨 12 层并修改生成 token，缺少 paper.pdf 温和范围内的密集扫描和逐层正确 M_s，故强负结果无法完全归因于论文机制。",
+          "score": 2,
+          "evidence_files": ["mlr/m2_projection_eval.py", "results/m3/vlang_alpha-1.0_s42_summary.json", "results/m3/vlang_alpha0.0_s42_summary.json", "results/m3/vlang_alpha1.0_s42_summary.json", "results/m3/random_alpha-1.0_s42_summary.json", "verify/C3_signed_dose_response/ROBUSTNESS.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "result": {
+          "justification": "A(-1)=0.051 < A(0)=0.744，直接否定“removing improves”；DeepSeek 也同样非单调。case 清楚写明原 monotone claim refuted，但最终 PASS 实际是“refutation robust”的 PASS，标签易误导。",
+          "score": 4,
+          "evidence_files": ["CLAIMS_LEDGER.md", "results/m3/vlang_alpha-1.0_s42_summary.json", "results/m3/vlang_alpha0.0_s42_summary.json", "verify/C3_signed_dose_response/variants/model_swap_deepseek_r1_llama8b/verdict.json", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      },
+      "C4": {
+        "claim": "训练免费干预以小部分算力达到或超过多语 SFT/RL。",
+        "method": {
+          "justification": "paper.pdf §3.3/Table 3 与 Appendix H 使用 7,500 条翻译 MATH 做 full SFT（3 epochs, lr=1e-5, context 8192）及 PPO；mlr/m4a_lora_sft.py 改成 GSM8K parallel 子集上的 LoRA（lr=2e-4, context 512），RL 完全未运行，training-free arm 又在错误/崩溃 operating point。比较方法已不足以代表论文 SFT/RL head-to-head。",
+          "score": 1,
+          "evidence_files": ["mlr/m4a_lora_sft.py", "results/m4a/lora_sft/training_summary.json", "claims_ledger.json", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "LoRA 只取 5,001/73,559 条；312 steps 对该子集约为1 epoch，但只覆盖完整训练池的6.8%，eval 50/语言且 M4b 跳过。原 predicate 所需有效 edit、SFT 与 RL 比较并不完整，结果后又把 claim 缩成“SFT drops 20.4pp”。",
+          "score": 1,
+          "evidence_files": ["refine-logs/EXPERIMENT_TRACKER.md", "results/m4a/lora_sft/training_summary.json", "results/m4a/eval_summary.json", "verify/VERIFY_REPORT.md"]
+        },
+        "result": {
+          "justification": "原 SFT leg 并非 untestable：results/m2 的 best edit=0.065（即使取 M3 α=-0.25 也仅0.175）显著低于 LoRA-SFT=0.558，已经直接反驳 match/exceed；只有 RL leg 无数据。κ=0.04 也不成立，因为 tracker 的 M1 已是0.44 GPU-h，单个 best M3 summary 又是2609.3秒≈0.725h，而非报告的0.03h。PASS_BY_CONSTRUCTION 掩盖了原 claim 的失败。",
+          "score": 1,
+          "evidence_files": ["CLAIMS_LEDGER.md", "claims_ledger.json", "results/m2/screen_mid_r2_ktop12_s42_summary.json", "results/m3/vlang_alpha-0.25_s42_summary.json", "results/m4a/eval_summary.json", "refine-logs/EXPERIMENT_RESULTS.md", "refine-logs/EXPERIMENT_TRACKER.md", "verify/VERIFY_REPORT.md"]
+        }
+      }
+    }
+  }
+}

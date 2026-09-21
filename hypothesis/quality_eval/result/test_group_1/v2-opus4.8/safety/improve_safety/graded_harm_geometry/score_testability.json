@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan directly tests the hypothesis by extracting \"last-token residual activations across layers,\" fitting both a refusal direction and an \"ordinal logistic / linear regression probe for severity,\" and comparing Spearman correlation, jailbreak preservation, AUROC, and false-positive rates. Its directional predictions are clear—\"refusal flips but harm magnitude stays high\" and the graded monitor should outperform specified baselines—so failure to find monotonic severity encoding, orthogonality, jailbreak preservation, or improved detection would refute the claim. However, central terms such as \"largely orthogonal,\" \"substantially more preserved,\" \"far more robust,\" and \"near-zero benign false positives\" lack numeric decision thresholds, and the plan does not specify train/test partitioning or whether robustness must generalize to held-out categories and jailbreak families.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is building and validating the proposed corpus with \"4-5 severity tiers per category\" and human severity ratings; this requires custom annotation design but is explicitly described rather than left as a magic step, while probe fitting, activation extraction, GCG evaluation, and activation steering are supported by standard ML and interpretability tooling. The named models, datasets, attacks, and baselines—including \"Llama-3-8B, Qwen2.5-7B, Gemma-2-9B,\" AdvBench, HarmBench, StrongREJECT, GCG, Llama-Guard, XSTest, and OR-Bench—exist, and ordinal regression and residual-stream hooks are routine to implement. Resources are usefully quantified as three models, \"4-5 severity tiers,\" and \"~1000 items,\" although the number of prompts per split, annotators, attack instances, and random seeds is unstated. The refuting branch is runnable because the design includes \"benign controls,\" binary-refusal and moderation baselines, multiple jailbreak types, and \"paraphrase and cross-category generalization tests,\" though held-out jailbreak-family controls would make a negative robustness result more conclusive.",
+      "score": 8
+    }
+  }
+}

@@ -1,0 +1,35 @@
+# Variant config: model-swap-qwen-14b
+# Claim: C4 — steering offers more distinct (rate, acc) operating points than prompt/TI
+# Dimension: model swap (DeepSeek-R1-Distill-Llama-8B → DeepSeek-R1-Distill-Qwen-14B)
+
+# === DIFF from main experiment ===
+model_path: /data/zhenqian/models/DeepSeek-R1-Distill-Qwen-14B   # CHANGED (was: DeepSeek-R1-Distill-Llama-8B)
+batch_size: 2                                                       # CHANGED: 2 (was: 4) — larger model, conservative batch
+
+# === FROZEN (same as main experiment) ===
+bench_path: data/benchmark/benchmark_500.jsonl
+n_bench: 60
+behaviours: [expressing_uncertainty]                                # Only uncertainty (same as main experiment for comparison)
+controllers:
+  - steering_alpha_neg2
+  - steering_alpha_neg1
+  - steering_alpha_pos1
+  - steering_alpha_pos2
+  - prompt_suppress
+  - prompt_amplify
+  - thinking_intervention_suppress
+  - thinking_intervention_amplify
+seed: 0
+max_new_tokens: 512
+eps_rate: 0.05
+eps_accuracy: 0.01
+
+# Re-derived for 14B model (same methodology as main M1):
+m1_out_dir: verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/m1_14b
+m4_out_dir: verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/m4_14b
+
+# LLM judge: unchanged (GPT-5.4 via DMX, T=0, frozen taxonomy from configs/behaviour_taxonomy.yaml)
+judge_model: gpt-5.4
+judge_base_url: https://www.dmxapi.cn/v1
+
+# GPU: CUDA_VISIBLE_DEVICES=0,1,2,3

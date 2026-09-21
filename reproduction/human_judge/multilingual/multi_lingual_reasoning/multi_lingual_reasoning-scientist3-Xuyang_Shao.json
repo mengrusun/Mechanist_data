@@ -1,0 +1,129 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Xuyang_Shao",
+    "paper_title": "When Less Language is More: Language-Reasoning Disentanglement Makes LLMs Better Multilingual Reasoners",
+    "agent": "scientist3",
+    "review_date": "2026-07-16"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "scientist3/multilingual/multi_lingual_reasoning",
+  "dimension_1_data_split_hygiene": {
+    "justification": "存在明确泄漏。stage_2 的 best_solution_c202...py 中 load_mgsm_lang(max_n=5) 只加载每语言前 5 条；随后“Collecting hidden states per language”用这 5 条全部拟合 lang_subspace，evaluate() 又在同一个 mgsm_data 上评估 baseline/suppression/random。没有 train/val/test 或 probe/eval 分离，且同一批样本还用于 max_new_tokens 选择。因此干预结果和子空间判断均被同集拟合/选择污染。",
+    "score": 1,
+    "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "数学标签来自 MGSM answer_number，best_solution_c202...py 以 abs(pred−gt)<1e-3 判正，标签独立于模型；但 extract_answer 先在未去逗号的原文本匹配 Answer，故 'Answer: 1,200' 会被错误解析为 1，后续 replace(',', '') 不会执行，且原始生成未保留，无法统计影响数。更大的缺口是完全没有按 idea.md/论文测量 GlotLID output-language fidelity，也未检查 CoT 截断。数学标签总体合理，但解析有 bug，C2 的语言保真 leg 则完全无标签。",
+    "score": 3,
+    "evidence_files": ["idea.md", "report.md", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "idea.md 指定 Qwen-3-4B-Thinking、MGSM、11 种语言及 always-used GlotLID。best_solution_c202...py 会搜索名称匹配的 Qwen3-4B-Thinking checkpoint，也加载 MGSM 的 11 语言，但 load_mgsm_lang(..., max_n=5) 每语言只取 5/250 条，并把同一小样本同时用于拟合和评估；代码完全没有 GlotLID。由于 stdout、working/experiment_data.npy 与实际 model_path 均未保留，选中的 checkpoint 也只能由搜索逻辑间接推断。指定数据规模和必用识别资源发生实质降配。",
+    "score": 1,
+    "evidence_files": ["idea.md", "report.md", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "最终可读指标只基于 n=5/语言=55 题/条件，per-language accuracy 以 0.2 为步长；stage_2/stage_3 stage_progress.json 明确承认 tiny n=5、high variance/floor effects。C1 没有独立正交性检验，C3 没有 amplification，C4 没有 post-training；report.md 对四个 claim 均写 Not assessable，没有把缺失实验伪装成成功。证据只够一个 smoke-level C2 负结果，但结论也给了明显 caveat，因此介于彻底过度宣称与合格证据之间。",
+    "score": 2,
+    "evidence_files": ["report.md", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json", "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "bfts_config.yaml 设置 multi_seed_eval.num_seeds=1、k_fold_validation=1；生成采用 do_sample=False 的确定性 greedy decoding，代码中的 RandomState(0) 只固定随机对照子空间，BFTS seed 节点并没有形成独立重复。没有 bootstrap CI、方差或显著性；0.5636 vs 0.4182 仅来自 55 个同集样本，random_control=0.4727，stage notes 也承认 tiny n、高方差与 floor effects。最终报告虽未强行宣称成功，统计证据本身仍很差。",
+    "score": 1,
+    "evidence_files": ["bfts_config.yaml", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "best_solution_c202...py 的 V 是 K×d 行基，forward hook 实际实施 h_new=h−(hVᵀ)V，并有 rank-matched random subspace control，因而不是纯相关性。但 V 从评估同一 5 条/语言拟合，只在 num_layers//2 单层、单强度干预，既无 α/layer sweep、upper-layer fidelity，也无 amplification；random control 也使准确率从 0.5636 降至 0.4727（−9.09pp，统计显著性未知），说明通用扰动不可忽略。只能算很弱的因果探针。",
+    "score": 2,
+    "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "stage_progress.json 与 journal.json 保存 0.5636、0.4182、0.4727 等关键汇总，experiment_results 也保留对应 experiment_code.py 和图，因此主要 headline 尚可定位。可是代码本应 np.save working/experiment_data.npy，当前 experiment_results 只有代码和 PNG，没有逐例 prediction/ground-truth、experiment_data、stdout、cost 或 summary JSON；report.md 也明确 draft_summary/research_summary/baseline_summary/token_tracker 全缺。属于大多数汇总可定位、但原始运行产物无法逐例核验的中等可溯源性。",
+    "score": 4,
+    "evidence_files": ["report.md", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json", "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_code.py"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "存在直接且严重的内部冲突。stage_1 journal 的节点 794e... 中 parse_term_out 明报 baseline=0.1818、每语言值以0.2递增（代码 n=5），同一节点 vlm_feedback_summary 却声称 overall=0.71、n=8/语言及高资源0.75–0.875。stage_2 journal 节点 8f134... 的 parse_term_out 明列 MGSM 0.1818/0.3455/0.5636 等结果，同一节点视觉摘要却把六张 mgsm_*.png 全描述成 fashion_mnist/dtd/imagenet/imagenette。notes 还把实际 hidden-state projection 误写成 suppressing target-language tokens，并把 1−accuracy 命名为 validation loss。",
+    "score": 1,
+    "evidence_files": ["logs/0-run/stage_1_initial_implementation_1_preliminary/journal.json", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py", "report.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "四条 claim 取自 idea.md；论文对照来自 paper.pdf。",
+    "_note_subscore": "method / experiment / result 独立评分。",
+    "per_claim": {
+      "C1": {
+        "claim": "隐藏表示可分为语言特定子空间与近似正交的语言无关子空间，并可由小型多语 probe 识别。",
+        "method": {
+          "justification": "对单层语言均值中心化后做 SVD，属于 paper.pdf §2.1 的正确方法族，代码也显式计算了 global_mean；真正的失配是只做一次 centered SVD、rank=3、单层，没有实现 paper.pdf Appendix C Algorithm 1 的第二次 SVD 强制正交步骤，也未检验 global_mean 与 V 的正交性。",
+          "score": 2,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "仅 5 条/语言，同一数据拟合并进入后续评估；没有 held-out language decoder、principal angles、probe-size stability 或逐层分析，无法判定“identifiable”及“orthogonal”。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py"]
+        },
+        "result": {
+          "justification": "没有落盘 C1 指标或 verdict；report.md 明确 claim 1 Not assessable。诚实未评估，但也没有证据复现论文结论。",
+          "score": 1,
+          "evidence_files": ["report.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      },
+      "C2": {
+        "claim": "推理时抑制语言特定子空间会跨模型/语言/任务一致提升准确率，并在保留上层时维持可接受语言保真度。",
+        "method": {
+          "justification": "单层 activation projection + rank-matched random control 属于正确干预家族；但代码只在 num_layers//2 用单个 V、有效 λ=1，并对整个 b×t×h 输出施加 hook，生成阶段也继续改生成 token。paper.pdf Appendix F/Table 4 对 Qwen-3-4B-Thinking 按层构造 M_s，只改 prompt token，在中层12–26用0..0.4并在高层27–35用−0.4..0。关键机制实现失配。",
+          "score": 2,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "只用同一 5 条/语言、单模型/单任务/单层/单强度；max_new_tokens 是唯一 sweep，没有 GlotLID、无 held-out、无 CI。设计远不足以判定原 claim。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py", "bfts_config.yaml"]
+        },
+        "result": {
+          "justification": "1024 tokens 下 0.5636→0.4182 与 paper.pdf Table 1 的改善方向相反，random control 也降至0.4727。report.md 最终标 Not assessable 较诚实，但 stage_2 notes 把同集 n=5 的差异称为“valid causal signal”，stage_3 又称“effect is real but modest”，超出了无显著性检验的小样本能证明的范围。负结果本身也不可靠。",
+          "score": 2,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json", "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json", "report.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      },
+      "C3": {
+        "claim": "语言特定激活强度与推理准确率负相关：放大会损害，去除会改善。",
+        "method": {
+          "justification": "在已识别子空间上做 full suppression 是检验“去除会改善”的合适因果方法族，方法类别本身合理；但没有 amplification 或连续 strength，只能覆盖 C3 的一半，且沿用单层、λ=1 的粗糙实现。",
+          "score": 3,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "至少有 baseline、full suppression 与 random control，能提供一个去除端点；但没有 α sweep、amplify arm、相关分析或安全剂量，唯一 max_new_tokens sweep 与 C3 的 signed-dose 判据无关。实验严重不完整但并非完全为零。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json"]
+        },
+        "result": {
+          "justification": "report.md 对 C3 写 Not assessable，且无任何落盘 C3 结果；没有伪造，但复现结论缺失。",
+          "score": 1,
+          "evidence_files": ["report.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      },
+      "C4": {
+        "claim": "训练免费干预以小部分算力达到或超过多语 SFT/RL。",
+        "method": {
+          "justification": "没有实现 SFT、RL 或任何 matched post-training baseline，故方法完全缺失。",
+          "score": 0,
+          "evidence_files": ["report.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "无训练数据、checkpoint、训练日志、compute accounting 或 head-to-head accuracy；pipeline 在 stage 3 中止。",
+          "score": 0,
+          "evidence_files": ["report.md", "bfts_config.yaml", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        },
+        "result": {
+          "justification": "report.md 明确 C4 Not assessable，是诚实的缺失而非伪造；但与论文 Table 3 无可比较结果。",
+          "score": 1,
+          "evidence_files": ["report.md", "../../../paper/multilingual/multi_lingual_reasoning/paper.pdf"]
+        }
+      }
+    }
+  }
+}

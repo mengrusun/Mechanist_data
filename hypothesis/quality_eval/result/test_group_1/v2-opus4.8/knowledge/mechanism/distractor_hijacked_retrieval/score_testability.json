@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the proposed routing mechanism: it defines \"DiversionScore = distractor mass / (subject + distractor mass), aggregated over retrieval heads,\" predicts that this score identifies recall failures, and uses targeted knockout and clean-residual patching to distinguish misrouting from absent knowledge. Refuting outcomes are readily decidable—e.g., no incremental predictive value over the stated difficulty baseline, no restoration relative to \"knocking out a random non-distractor token,\" or degradation on distractor-free queries would contradict the respective claims—but most criteria are directional rather than numerically thresholded, with terms such as \"high storage invariance\" left undefined. Some implementation-defining details also require clarification, particularly how multi-answer \"cross-condition probe AUROC\" is constructed, how retrieval heads qualify as \"transporting the fact,\" and whether \"redistributing to subject\" means explicit reassignment or ordinary renormalization across all unmasked tokens.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest primary step is identifying retrieval heads \"via clean-query activation patching as those transporting the fact\" and then applying answer-position key/value down-weighting; this requires custom selection logic but uses standard forward hooks, attention interventions, probing, and activation patching rather than an undefined magic step. CounterFact, T-REx, Pythia, Qwen2.5, and Llama-3 exist, and mainstream PyTorch/Transformer interpretability tooling supports the proposed measurements, although the separately reported unsupervised variant that \"flags high-attention non-subject spans automatically\" is less fully specified. Resources are usefully quantified as \"~4k facts\" and six concrete model configurations from 410M to 8B, while the refuting branch is runnable because the plan includes matched clean conditions, difficulty and length controls, random-token/random-span controls, genuinely unknown facts, and explicit false-intervention, hallucination, and side-effect measurements.",
+      "score": 8
+    }
+  }
+}

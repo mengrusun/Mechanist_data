@@ -1,0 +1,49 @@
+{
+  "direction": "Mechanistic circuit for propositional-logic reasoning in LLMs — is there a sparse, modular component set that both necessarily and sufficiently implements the k-fact, chain-length-n propositional inference task, and does the same schema recur across model families?",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "LLMs (Mistral-7B) solve minimal propositional-logic queries — 'given k facts and rules, is this query true?' — at high accuracy, and the behavior is expected to be driven by a sparse, modular circuit whose components separate into fact-identification, rule-application, and answer-projection roles that are both necessary and sufficient for the output.",
+      "status": "established",
+      "behavior_conclusion": "The behavior itself is established (Mistral-7B anchor accuracy 0.810 on 500 anchor prompts, corrupt/clean pairs differ only along the analysed causal axis). The stronger structural claim about the circuit that implements it is only partly supported: a shortlist of ~15% of components (158 of 1056 on Mistral-7B) is necessary for the output (path-patching restores 0.955 LD, cross-family robust on Gemma-2-9B at LD 1.018), but the same shortlist is not sufficient (reinsertion recovers only 0.113 LD on Mistral-7B and 0.019 LD on Gemma-2-9B, stable across 5 seeds), and the three-role modular decomposition does not hold at the anchor cell (only the 'fact' role has borderline signal; 'rule' and 'answer' partitions are statistically indistinguishable from random).",
+      "impact": {"assessment": "", "recommendation": "", "assessed_in_round": null},
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Causal Attribution / Attribution Patching + Patching",
+          "headline": "On Mistral-7B propositional logic, Attribution-Patching + Path-Patching + Resample-Ablation Reinsertion produce a robust *necessary but not sufficient* asymmetry: a 158-component shortlist (15.0% of components, at the hard cap) recovers 0.955 clean-vs-corrupt logit-diff under path-patching with matched-control specificity gap 0.836 (necessity holds and is cross-family robust on Gemma-2-9B at LD 1.018), but reinserting only that shortlist while resample-ablating everything else recovers only 0.113 LD on Mistral-7B and 0.019 LD on Gemma-2-9B (sufficiency fails, per-seed std 0.036). At the same time, the shortlist has heavy pairwise redundancy — single-component removal drops recovery by only 0.0014 on average, far below the 0.05 minimality target — and does not partition into fact / rule / answer roles: only the 'fact' role has borderline signal (dissociation 0.089, null-shuffle p≈0.05, cross-cell Jaccard 0.75), while 'rule' and 'answer' partitions are indistinguishable from random (p=1.0).",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "A sparse subset of specific attention heads and MLP components (≤ ~15% of components) jointly implements the minimal propositional-logic reasoning task on Mistral-7B, with completeness ≥ 0.9 and single-removal minimality drop ≥ 0.05.",
+              "method": "Attribution-patching direct-effect ranking of attention heads and MLPs on 500 clean/corrupt-fact pairs at the anchor cell (k=3, chain=2, natural); shortlist by cumulative-effect with a hard 15% size cap; completeness = path-patched LD recovery, minimality = mean single-component-removal LD drop; both compared to the ≥ 0.9 and ≥ 0.05 thresholds.",
+              "conclusion": "Audit passed with WARN (undisclosed 20/158 minimality sub-sampling and hard-cap sparsity disclosed as caveats); swap-test deferred (max_verify_claims cap). The 158-component shortlist (15.0% of components — at the size cap) meets completeness (0.955 LD-recovery, 0.905 PD-recovery) but fails minimality (mean single-removal drop 0.0014, median 0.0027) — the shortlist is over-inclusive and pairwise redundant, so 'sparse' is satisfied only at the size cap and not on the minimality criterion."
+            },
+            {
+              "id": "C2",
+              "statement": "The identified circuit decomposes into three modular sub-circuits — fact-identification, rule-application, and answer-projection — with per-component dominance ratio ≥ 2, dissociation ≥ 0.1, cross-cell Jaccard stability ≥ 0.6, and null-shuffle p ≤ 0.01, rather than presenting as an entangled mixture on Mistral-7B.",
+              "method": "Role-dissociation on a top-40 shortlist (17 attn + 23 mlp, justified by M2 dose-response — top-31 already recovers 0.946 of causal effect) via type-specific counterfactual corruptions (corrupt_fact / corrupt_rule / corrupt_answer / corrupt_neutral) on the anchor cell (300 pairs × 3 roles) plus stability cells k=5,chain=2 and k=3,chain=3 (200 pairs × 3 roles each); per-component dominance ratio, role-partition dissociation, null-shuffle p-value, and Jaccard cross-cell stability of the block-partition assignments.",
+              "conclusion": "The three-role modular decomposition is refuted on Mistral-7B: median per-component dominance 1.20 (target ≥ 2.0); dissociation {fact 0.089, rule 0.027, answer 0.026}; null-shuffle p {fact 0.05, rule 1.0, answer 1.0}; cross-cell Jaccard {fact 0.75, answer 0.77, rule 0.36}. Only the 'fact' role has borderline signal; the 'rule' and 'answer' partitions are statistically indistinguishable from random. Audit passed with WARN (top-40/158 shortlist scope disclosed); swap-test deferred (max_verify_claims cap)."
+            },
+            {
+              "id": "C3",
+              "statement": "Activation-patching shows the identified shortlist is both necessary and sufficient for the output on Mistral-7B propositional logic, with recovery ≥ 0.8 on {LD, PD, KL} and matched-control specificity gap ≥ 0.6 on both necessity and sufficiency.",
+              "method": "Path-patching necessity: clean→corrupt patch of the 158-component shortlist on 500 anchor pairs, measuring LD/PD/KL recovery and matched-control specificity gap (M2). Sufficiency reinsertion: on corrupted inputs, reinsert clean activations only for the shortlist while resample-ablating everything else, repeated over 5 seeds (M3). Cross-family recurrence: repeat the necessity + sufficiency protocol on Gemma-2-9B (M5).",
+              "conclusion": "Verify PASS (robustness=1.0 on the model-swap axis, one variant): the *necessary-but-not-sufficient asymmetry* is cross-family robust. Necessity holds on both models (Mistral-7B LD_recovery 0.955, PD 0.905, specificity gap 0.836; Gemma-2-9B LD 1.018) but sufficiency fails on both (Mistral-7B LD 0.113 ± 0.036 over 5 seeds, PD 0.116, specificity gap 0.113; Gemma-2-9B LD 0.019, PD 0.005). The strong claim's sufficiency half is refuted; the necessity half stands. Audit passed with WARN (KL denominator-collapse on anchor cell documented, LD/PD authoritative)."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Tuning & Editing",
+        "Formation Tracing",
+        "Unit Interpretation",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

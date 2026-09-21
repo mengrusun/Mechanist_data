@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the hypothesis by training SAEs on “residual-stream activations,” aligning features with “~150 functional groups and ring systems,” and comparing their precision/recall with “PCA components and individual neurons.” The prediction is directional: SAEs should “outperform PCA and neurons in alignment,” while clamping features should “predictably insert or remove” groups and shift properties “in the chemically expected direction”; failure to outperform or to cause those directional changes would refute the claim. Concrete figures such as a “1M PubChem/ChEMBL” corpus and “8-32x expansion” improve specifiability, although they are design parameters rather than decision thresholds. Some implementation-defining details remain ambiguous—particularly how high/low clamps are selected, which graph model and layers are used, and what magnitude of alignment or causal change counts as success—so an expert would still need to make consequential choices.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is the proposed “clamp a functional-group feature high/low during SMILES decoding,” which is a supported activation-intervention operation in an autoregressive transformer but is not directly runnable on the specifically suggested ChemBERTa/MolFormer encoder-style models without adding or selecting a compatible generative model and defining the intervention site. The principal artifacts and methods—PubChem, ChEMBL, SMARTS, RDKit, ChemBERTa/MolFormer, PCA, SAE training, forward hooks, and Hungarian matching—exist and have adequate standard tooling, though the “graph model” and “property-prediction head” are not concretely identified. Resources receive useful quantification through “1M” molecules, “~150” patterns, “8-32x expansion,” several layers, and “two independently trained models,” but intervention sample counts and model scales are unstated. The PCA/neuron baselines, SMARTS matching, RDKit ground truth, high/low clamps, and validity filtering make negative outcomes runnable, although equivalent causal steering controls for PCA directions or raw neurons are not explicitly designed.",
+      "score": 6
+    }
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "Understanding Reasoning in Thinking Language Models via Steering Vectors",
+    "agent":         "scientist2",
+    "review_date":         "2026-07-19"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "train/val 划分清晰；steering 在独立的 eval 问题上评估，无泄漏。",
+    "score": 5,
+    "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/M1_locate/results.json", "scientist2/reasoning/thinking_reasoning_steering/claims_ledger.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "行为标签由 LLM-judge 标注，且报告了 inter-annotator kappa(0.77–1.00)，与被测方向独立。",
+    "score": 5,
+    "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/data/contrast/annotation_kappa.json", "scientist2/reasoning/thinking_reasoning_steering/src/annotate_parallel.py"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主模型 DeepSeek-R1-Distill-Llama-8B 与要求完全一致，并构建了指定的 500 题基准与 200 条对比语料，verify 阶段做了 Qwen-14B 跨模型；sweep 规模缩减（60/500）但属正常，已披露。",
+    "score": 5,
+    "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/data/benchmark/benchmark_500.jsonl", "scientist2/reasoning/thinking_reasoning_steering/data/contrast/auxiliary_corpus.jsonl", "scientist2/reasoning/thinking_reasoning_steering/claims_ledger.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "对比语料正例极少(四行为 n_pos=41/13/14/8)，除 uncertainty 外三种行为几乎无法测试(C2 无法扫描、C3 rate 恒为 0)，结论主要压在单一行为上；不过全程如实标注 under-power，未过度主张。",
+    "score": 3,
+    "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/M2_smallpool/results_summary.json", "scientist2/reasoning/thinking_reasoning_steering/claims_ledger.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "随机方向对照给出 norm-matched 零分布(z=-6.33)、Spearman 附 p 值、split-half 3 seeds、标注 kappa，显著性与零分布齐备。",
+    "score": 5,
+    "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/iteration_round_1/M3_C3_expand/results_summary.json", "scientist2/reasoning/thinking_reasoning_steering/claims_ledger.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "加性 steering 干预，且配 norm-matched 随机方向对照、±3σ 剂量扫描与 coherence 追踪，因果特异性得到严格检验。",
+    "score": 5,
+    "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/src/run_M3_C3_expand.py", "scientist2/reasoning/thinking_reasoning_steering/runs/iteration_round_1/M3_C3_expand/results_summary.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字与 runs/ 产物及 ledger 一致且可追溯。",
+    "score": 5,
+    "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/M1_locate/results.json", "scientist2/reasoning/thinking_reasoning_steering/runs/iteration_round_1/M3_C3_expand/results_summary.json", "scientist2/reasoning/thinking_reasoning_steering/claims_ledger.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "ledger/verify/figures 数值与判定自洽，结论一致。",
+    "score": 5,
+    "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/verify/VERIFY_REPORT.md", "scientist2/reasoning/thinking_reasoning_steering/claims_ledger.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Each reasoning behaviour maps onto an approximately linear direction in the residual stream of DeepSeek-R1-Distill-Llama-8B at some layer L*.",
+        "method": {
+          "justification": "均值差方向 + 留出线性探针 + first-PC 对齐检验，与论文一致且更严。",
+          "score": 5,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/M1_locate/results.json"]
+        },
+        "experiment": {
+          "justification": "逐层留出 ROC-AUC 选层、kappa 标注，判据可靠。",
+          "score": 5,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/M1_locate/results.json"]
+        },
+        "result": {
+          "justification": "四行为探针 AUC 0.84–1.00，线性可解码与论文一致；但 first-PC |cos| 仅 0.26–0.45，方向非主成分、分散于多分量，故对'单一线性方向'只是部分支持(如实披露)。",
+          "score": 3,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/M1_locate/results.json"]
+        }
+      },
+      "C2": {
+        "claim": "Each behaviour direction is extractable from a small pool of contrastive activation pairs.",
+        "method": {
+          "justification": "n_pairs 扫描 + split-half 稳定性 + 相对大池 steering 比，方法合理。",
+          "score": 5,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/src/run_M2_smallpool.py"]
+        },
+        "experiment": {
+          "justification": "仅 uncertainty 正例够(41)可扫描，其余三行为语料正例≤14 无法测试，网格被语料严重截断。",
+          "score": 3,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/M2_smallpool/results_summary.json"]
+        },
+        "result": {
+          "justification": "uncertainty 方向收敛到参考(cos 0.94)但 split-half 稳定性(0.59)仍在爬升未过阈，其余三行为不可测；属如实披露的 under-power 部分结论。",
+          "score": 3,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/M2_smallpool/results_summary.json"]
+        }
+      },
+      "C3": {
+        "claim": "Adding/subtracting the steering vector causes dose-response amplification/suppression via a single scalar coefficient.",
+        "method": {
+          "justification": "α 扫描单位向量 CAA + 随机方向对照 + scale-invariant 系数，严于论文。",
+          "score": 5,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/src/run_M3_C3_expand.py"]
+        },
+        "experiment": {
+          "justification": "±3σ 九点网格、norm-matched 随机方向零分布、coherence 与 off-target 追踪，因果实验设计严谨。",
+          "score": 5,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/iteration_round_1/M3_C3_expand/results_summary.json"]
+        },
+        "result": {
+          "justification": "得到与论文相反的负结果：学得方向 Δrate=0.000，反不如随机方向(0.095±0.015,z=-6.33)，行为仅在 coherence 崩溃处变化。诚实的复现失败。",
+          "score": 3,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/iteration_round_1/M3_C3_expand/results_summary.json", "scientist2/reasoning/thinking_reasoning_steering/claims_ledger.json"]
+        }
+      },
+      "C4": {
+        "claim": "Steering-vector control is finer-grained than prompt engineering while preserving downstream accuracy.",
+        "method": {
+          "justification": "steering vs NL-prompt vs Thinking-Intervention 的 Pareto 操作点比较，并引入 scale-invariant 公平参数化。",
+          "score": 5,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/src/run_M4_C4_scale_invariant.py"]
+        },
+        "experiment": {
+          "justification": "scale-invariant 系数下追踪 coherence 与操作点，但 60/500 子集、仅 uncertainty 有效。",
+          "score": 3,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/runs/iteration_round_1/M4_C4_scale_invariant/llama8b/results_summary.json"]
+        },
+        "result": {
+          "justification": "'steering  比提示更细'的优势消失，且跨模型未完成，属诚实的复现失败。",
+          "score": 3,
+          "evidence_files": ["scientist2/reasoning/thinking_reasoning_steering/figures/C4_v2/c4v2_scale_invariance_table.md", "scientist2/reasoning/thinking_reasoning_steering/claims_ledger.json"]
+        }
+      }
+    }
+  }
+}

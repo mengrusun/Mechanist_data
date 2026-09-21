@@ -1,0 +1,15 @@
+variant: method-swap-gor-windowed
+claim: C2
+dimension: method
+frozen_claim: "fast sequence-based SS->%H metric agrees with experimental-DSSP %H at Pearson r>=0.7"
+swap:
+  from: "ESM2-650M frozen embeddings + linear 3-state SS probe"
+  to:   "GOR-style windowed logistic regression (+/-8 aa one-hot window)"
+held_fixed:
+  training_proteins: "same 600 train-split proteins (DSSP labels)"
+  eval_proteins: "same 200 held-out proteins as E1 (proteins.json heldout[:200])"
+  reference: "experimental-PDB DSSP %H (p['pctH']) -- unchanged"
+  protocol: "protein-level %H, Pearson r, frame-recovery -- identical to run_E1.py"
+success_criterion: "Pearson r >= 0.7 AND positive AND frame recovery >= 0.9"
+seeds: n/a (deterministic logistic fit)
+gpu: none (CPU-only; no ESM2, no Evo2)

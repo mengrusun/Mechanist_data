@@ -1,0 +1,15 @@
+{
+  "variant_tag": "model-swap-qwen25-7b-instruct",
+  "dimension": "model",
+  "claim_id": "C3a",
+  "claim_statement": "The gold-correctness direction v_c and the verbalized-confidence direction v_v at the primary reporting layer L* are geometrically near-orthogonal (|cos| <= 0.3 with 95% CI upper bound < 0.4), robust across L*+-2 neighborhood.",
+  "main_experiment_verdict": "supported",
+  "claim_supported": "pass",
+  "consistent_with_main_experiment": "pass",
+  "reasoning": "Qwen2.5-7B-Instruct variant replicates C3a in full. At L*=22 (Qwen's optimal layer), |cos(v_c*, v_v*)| = 0.021 [0.001, 0.037] (95% CI), well below the 0.3 threshold with CI upper 0.037 < 0.4. Neighborhood L*±2 mean = 0.015 <= 0.3. Both probes achieve strong AUROC (probe_c=0.864, probe_v_bin=0.898), both >= 0.70, confirming the probes are informative before interpreting their angle. Random-direction null = 0.013, consistent with theoretical 1/sqrt(3584)=0.017. The near-orthogonality is indistinguishable from the random-direction null, exactly as in the Llama main experiment (main: |cos|=0.015, random_null=0.011). All 5 success criteria pass (abs_cos, ci_upper, neighborhood, probe_c_auroc, probe_v_auroc). The main-experiment finding is replicated under a cross-family architecture swap: different model family (Alibaba Qwen vs Meta Llama), different tokenizer, different number of layers (28 vs 32), different pretraining mix — yet the geometric near-orthogonality holds at the same level of precision.",
+  "integrity_status": "pass",
+  "integrity_breakdown": {
+    "experiment": "pass",
+    "mechanism": "n/a"
+  }
+}

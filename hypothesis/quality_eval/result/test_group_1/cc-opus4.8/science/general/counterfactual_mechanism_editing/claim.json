@@ -1,0 +1,21 @@
+{
+  "Name": "counterfactual_mechanism_editing",
+  "Title": "Counterfactual Mechanism Editing: Testing Whether Scientific Representations Are Causally Load-Bearing",
+  "Short Hypothesis": "Across scientific foundation models, a representation that decodes a mechanistic variable is causally load-bearing only if a minimal, targeted edit to that representation produces the scientifically predicted counterfactual change in outputs; we hypothesize that many decodable scientific concepts are correlational, and propose a general edit-and-predict protocol to separate mechanistic from spectator representations.",
+  "Related Work": "Activation patching and causal scrubbing (Geiger et al., 2021; causal mediation, Vig et al., 2020) established intervention-based interpretability in NLP. Probing-classifier critiques (Belinkov, 2022; Hewitt & Liang, 2019) warn that decodability is not use. No unified counterfactual protocol exists for scientific FMs where ground-truth mechanism gives exact quantitative predictions. We exploit scientific laws to specify the expected counterfactual, turning interpretability into a quantitatively falsifiable test.",
+  "Abstract": "Probing shows scientific foundation models encode many concepts, but decodability does not imply causal use. We propose and validate a general counterfactual mechanism-editing protocol that leverages the quantitative precision of scientific laws to test whether an internal representation is load-bearing. For a target mechanistic variable (e.g., a molecule's logP, an element's electronegativity, a system's energy), we (1) identify its representation direction via a linear probe, (2) apply a minimal-norm edit that sets the decoded value to a counterfactual target, and (3) check whether the model's outputs change by the amount the relevant scientific relationship predicts (e.g., a logP edit shifts predicted solubility along the known logP-solubility slope). A mechanistic representation yields edits whose downstream effects match theory in magnitude and sign; a spectator representation yields decodable values with no lawful downstream effect. We apply this across four models (a molecular property model, a materials composition model, a protein model, and a physics forecaster), reporting a 'mechanistic fidelity' score per concept: the fraction of predicted counterfactual variance realized. We compare against random-direction and shuffled-label control edits. We predict that a minority of decodable scientific concepts pass, revealing widespread spectator encoding. This provides a reusable, quantitatively grounded standard for claiming that a model represents a scientific mechanism, sharpening interpretability beyond correlational probing.",
+  "Experiments": [
+    "Select four models and one well-defined mechanistic variable each with a known downstream scientific relationship.",
+    "Fit linear probes to locate each variable's direction; validate decoding R^2.",
+    "Implement minimal-norm activation edits that set the probe-decoded value to counterfactual targets across a range.",
+    "Measure downstream output change and compare to the theory-predicted response curve; compute mechanistic-fidelity = realized/predicted variance.",
+    "Controls: random-direction edits, label-shuffled probe directions, and non-minimal edits to bound artifacts.",
+    "Cross-model comparison of fidelity scores; relate fidelity to model scale and to how central the variable is to the training objective."
+  ],
+  "Risk Factors and Limitations": [
+    "Linear-probe directions may be suboptimal, understating true causal effect and yielding false negatives.",
+    "Minimal-norm edits can have off-target effects that confound downstream measurements.",
+    "Some scientific relationships are approximate, making the predicted counterfactual imprecise.",
+    "Defining a fair predicted response curve requires modeling assumptions that could bias fidelity scores."
+  ]
+}

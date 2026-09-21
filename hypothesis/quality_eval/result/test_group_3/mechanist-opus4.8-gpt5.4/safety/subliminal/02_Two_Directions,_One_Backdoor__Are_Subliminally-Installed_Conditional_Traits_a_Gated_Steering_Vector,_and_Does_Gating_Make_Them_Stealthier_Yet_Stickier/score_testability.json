@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The experiments closely align with H1 and H2, varying trigger presence, direction patching/ablation, and repair conditions while measuring elicitation gaps, probe performance, cosine geometry, residual trait strength, and task-quality retention. Falsifiability is unusually strong: the proposal states, for example, that \"|cos| >= 0.5 refutes dissociability,\" \"a reduction <= 30% refutes separable control,\" and \"if gated residual also falls <= 30% the stickiness claim is refuted,\" with explicit inconclusive bands. The main logical gap is that the headline says gated traits are stickier \"than both ungated subliminal traits and overtly-installed backdoors,\" but the stated H2 criterion numerically requires gated-versus-ungated separation and does not specify what gated-versus-overt residual difference would establish that stronger comparison; likewise, \"stealth\" mixes behavioral invisibility with passing token filters. Experiment 8 substantially resolves earlier contrast confounding by requiring pairs that differ in \"exactly one latent factor,\" so the remaining issues are bounded rather than fundamental.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is the causal two-direction extraction and intervention—\"add the trigger-detection direction into an untriggered prompt\" and \"project out the payload direction\"—but these are standard activation-steering, probing, and projection operations supported by ordinary PyTorch hooks and established interpretability tooling, not undefined magic steps. The named dependencies—\"Qwen2.5-7B and Llama-3.2-3B,\" LoRA, Alpaca, HH-RLHF, MMLU, and HumanEval—exist, while the custom number/code carriers are accompanied by a concrete generation and filtering procedure; however, construction of the \"matched-strength overt conditional backdoor\" and the exact semantic-context trigger remain somewhat underspecified. Resources are exceptionally well quantified, including \"10,000\" retained samples per carrier, \"500 prompts each\" for direction extraction, five seeds, four intervention scales, 200 evaluation prompts, and explicit LoRA and SFT hyperparameters. The refuting branch is runnable because the design includes matched-base and no-trait controls, random-orthogonal and same-norm directions, late-layer and no-trait-model interventions, leakage audits, task-retention checks, and explicit negative-result thresholds.",
+      "score": 8
+    }
+  }
+}

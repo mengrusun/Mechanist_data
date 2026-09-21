@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly targets the hypothesis through per-language SAE alignment, cross-lingual activation patching, causal-head overlap, and a language-identity probe, with directional predictions that patching should \"preserve[] the correct answer\" and probe accuracy should be \"high accuracy early/late, low in mid reasoning layers.\" Refutation is conceivable—poor cross-lingual preservation relative to the \"same-language patching baseline,\" low causal-head overlap, or persistent mid-layer language identity would oppose the claim—but no decision thresholds define how much preservation, overlap, or layerwise separation is sufficient. Important mechanisms remain underspecified, especially how to identify \"the layer/token where a reasoning step completes,\" how \"aligned reasoning tokens\" are established across differing tokenizations, and how the stated English-pivot alternative is decisively separated from a shared language-agnostic core.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The named Llama-3-8B/70B and Qwen2.5 model families exist, and residual-stream recording, SAEs, linear probes, activation patching, head ablation, and Jaccard/AUC calculations have standard interpretability and ML tooling support. The hardest step is taking the state at \"the layer/token where a reasoning step completes\" and pasting it into \"the corresponding position\" in another language; this is not an impossible magic step, but the proposal does not operationalize step-boundary detection or cross-token alignment, and it acknowledges that these positions are \"approximate.\" Resources receive useful quantification through \"300\" arithmetic and \"300\" entailment items in six named languages and 8B/70B model scales, although the Qwen2.5 variant and SAE training scale remain unspecified; the random-state and within-language patch controls make a negative result runnable.",
+      "score": 6
+    }
+  }
+}

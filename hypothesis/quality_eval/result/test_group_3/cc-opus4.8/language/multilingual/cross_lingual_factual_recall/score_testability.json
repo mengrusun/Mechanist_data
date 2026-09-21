@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The hypothesis makes a directional, topic-aligned prediction: there should be \"high cross-lingual patch success at mid layers\" but \"failure if patched too late,\" while the listed metrics measure transfer by layer and cross-language decoding. However, \"patch subject-token mid-layer states from language A into language B; measure fact-transfer rate\" does not specify whether source and target prompts express the same fact, different facts, or corrupted variants; patching between equivalent prompts may leave the answer unchanged without demonstrating transfer, and \"fact-transfer rate\" itself is undefined. The shared-direction test also leaves the attribute representation, training labels, and cross-language scoring rule unspecified, and no numeric decision thresholds distinguish a largely shared mechanism from partial sharing. Low mid-layer transfer together with chance-level cross-language decoding would nevertheless constitute a clear refutation, so the proposal is directionally falsifiable despite these operational gaps.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is \"Cross-lingual path patching: patch subject-token mid-layer states from language A into language B,\" which is implementable with standard activation hooks but requires custom token/sequence alignment that the claim acknowledges is complicated and does not fully define; it is custom engineering rather than an impossible magic step. CounterFact, mLAMA, causal tracing, activation/path patching, linear decoding, and ROME are established artifacts or methods with suitable interpretability tooling, although the proposal does not name a specific multilingual model. The resource specification gives a concrete breadth of \"8 languages\" but omits model identities, model scales, fact counts, prompt counts, and other planning figures, so it is only partly quantified. The negative branch is runnable because the design includes layer sweeps and explicit \"unrelated-fact patches, and same-language patches as ceiling,\" although stronger controls for token alignment and answer-language preservation would be needed for an unambiguous negative result.",
+      "score": 6
+    }
+  }
+}

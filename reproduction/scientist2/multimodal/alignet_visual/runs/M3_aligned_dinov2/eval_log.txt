@@ -1,0 +1,43 @@
+[load] loading student ckpt from ../runs/M3_aligned_dinov2/checkpoint.pt
+/data/zhenqian/Reproduction1/mechanica/multimodal/alignet_visual/code/eval_student_similarity.py:57: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  state = torch.load(student_ckpt, map_location="cpu")
+dinov2 forward:   0%|          | 0/29 [00:00<?, ?it/s]dinov2 forward:   3%|▎         | 1/29 [00:03<01:51,  3.98s/it]dinov2 forward:   7%|▋         | 2/29 [00:06<01:19,  2.96s/it]dinov2 forward:  14%|█▍        | 4/29 [00:06<00:29,  1.16s/it]dinov2 forward:  17%|█▋        | 5/29 [00:10<00:52,  2.20s/it]dinov2 forward:  24%|██▍       | 7/29 [00:11<00:27,  1.27s/it]dinov2 forward:  31%|███       | 9/29 [00:15<00:32,  1.62s/it]dinov2 forward:  34%|███▍      | 10/29 [00:16<00:28,  1.50s/it]dinov2 forward:  38%|███▊      | 11/29 [00:17<00:23,  1.31s/it]dinov2 forward:  45%|████▍     | 13/29 [00:20<00:23,  1.47s/it]dinov2 forward:  48%|████▊     | 14/29 [00:21<00:20,  1.35s/it]dinov2 forward:  52%|█████▏    | 15/29 [00:23<00:20,  1.44s/it]dinov2 forward:  59%|█████▊    | 17/29 [00:26<00:17,  1.45s/it]dinov2 forward:  62%|██████▏   | 18/29 [00:27<00:14,  1.31s/it]dinov2 forward:  66%|██████▌   | 19/29 [00:28<00:12,  1.26s/it]dinov2 forward:  72%|███████▏  | 21/29 [00:32<00:12,  1.52s/it]dinov2 forward:  76%|███████▌  | 22/29 [00:33<00:10,  1.51s/it]dinov2 forward:  83%|████████▎ | 24/29 [00:33<00:04,  1.07it/s]dinov2 forward:  86%|████████▌ | 25/29 [00:37<00:06,  1.58s/it]dinov2 forward:  90%|████████▉ | 26/29 [00:38<00:04,  1.46s/it]dinov2 forward:  97%|█████████▋| 28/29 [00:38<00:00,  1.11it/s]dinov2 forward: 100%|██████████| 29/29 [00:43<00:00,  1.64s/it]dinov2 forward: 100%|██████████| 29/29 [00:43<00:00,  1.49s/it]
+[feat] shape=torch.Size([1852, 768])
+[eval] 15640 triplets from 'heldout'
+[bucket] coarse=723, mid=5705, fine=33
+[done] ../runs/M3_aligned_dinov2/eval_things_multilevel.json
+{
+  "n_triplets_heldout": 15640,
+  "triplet_accuracy": 0.5636828644501278,
+  "triplet_accuracy_ci95": [
+    0.5557544757033248,
+    0.5707161125319693
+  ],
+  "spearman_aggregate": 0.555384955181893,
+  "spearman_n_pairs": 1714022,
+  "triplet_accuracy_coarse": 0.8630705394190872,
+  "triplet_accuracy_coarse_ci95": [
+    0.8395573997233748,
+    0.8879668049792531
+  ],
+  "n_triplets_coarse": 723,
+  "spearman_coarse": 0.707226147514263,
+  "n_pairs_coarse": 183,
+  "triplet_accuracy_mid": 0.5609114811568799,
+  "triplet_accuracy_mid_ci95": [
+    0.5484618755477652,
+    0.5737160385626644
+  ],
+  "n_triplets_mid": 5705,
+  "spearman_mid": 0.6113648925990703,
+  "n_pairs_mid": 1194,
+  "triplet_accuracy_fine": 0.15151515151515152,
+  "triplet_accuracy_fine_ci95": [
+    0.030303030303030304,
+    0.30303030303030304
+  ],
+  "n_triplets_fine": 33,
+  "spearman_fine": NaN,
+  "n_pairs_fine": 0,
+  "milestone_kind": "student_similarity_eval"
+}

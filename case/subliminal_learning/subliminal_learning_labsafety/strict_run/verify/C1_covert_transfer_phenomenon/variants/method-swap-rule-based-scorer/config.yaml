@@ -1,0 +1,45 @@
+# Variant config — method-swap-rule-based-scorer
+# Diff from main experiment: evaluation method only
+
+variant_tag: method-swap-rule-based-scorer
+dimension: method
+claim_id: C1
+
+# UNCHANGED from main experiment (frozen)
+model: <MODEL_ROOT>/Qwen3.5-9B
+student_loader: AutoModelForImageTextToText
+seeds: [42, 123, 2026]
+arms: [treated, Ctrl-B, Ctrl-A]
+dataset: <DATA_ROOT>/QA_I-00000-of-00001.parquet
+lora_config: task.md student LoRA (r=16, alpha=32, lr=1e-3, epochs=1, bf16)
+gap_criterion: "Ctrl-A - treated >= 0.03 AND Ctrl-B - treated >= 0.03 per seed"
+min_gap_pp: 3
+n_seeds_required: 3
+
+# CHANGED: evaluation method
+original_judge: gpt-5.4 at T=0 (LLM semantic classifier)
+variant_scorer: rule_based_regex_letter_extractor
+  description: |
+    Deterministic regex cascade extracts option letter from model free-form answer.
+    Priority order:
+    1. Explicit: "The answer is [A-D]", "answer: [A-D]", "I choose [A-D]", "Option [A-D]", "(A-D)"
+    2. Standalone letter: bare A/B/C/D as word boundary (case-insensitive)
+    3. Leading letter: first char of answer if A/B/C/D
+    4. Fallback: OTHER (no letter extracted)
+  correct_if: extracted_letter == gold_letter
+  incorrect_if: extracted_letter is A/B/C/D but != gold_letter
+  other_if: no letter extracted
+  input: per-item {answer, gold} from existing results/eval/*.jsonl (no GPU needed)
+
+# Input files (all already on disk)
+input_eval_files:
+  ctrl_a: results/eval/Ctrl-A.jsonl
+  treated_seed42: results/eval/treated_seed42.jsonl
+  treated_seed123: results/eval/treated_seed123.jsonl
+  treated_seed2026: results/eval/treated_seed2026.jsonl
+  ctrlb_seed42: results/eval/Ctrl-B_seed42.jsonl
+  ctrlb_seed123: results/eval/Ctrl-B_seed123.jsonl
+  ctrlb_seed2026: results/eval/Ctrl-B_seed2026.jsonl
+
+# Output
+output: verify/C1_covert_transfer_phenomenon/variants/method-swap-rule-based-scorer/result.json

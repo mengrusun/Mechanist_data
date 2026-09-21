@@ -1,0 +1,65 @@
+{
+  "direction": "Mechanistic separation of harmfulness perception and refusal execution as two dissociable linear directions in the residual stream of safety-aligned instruction-tuned LLMs — reproducing the five-claim hypothesis from task.md via a claim-driven verification suite (Location + Causal Intervention on Llama-3-8B-Instruct + AdvBench).",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "In safety-aligned instruction-tuned LLMs, harmfulness perception (h) and refusal execution (r) are represented along two distinct, approximately-linear directions in the residual stream — h at the final instruction-token position, r just after it — such that additive steering along one flips its target readout without touching the other; and this decomposition explains a class of successful jailbreaks (refusal-suppressed / harmfulness-preserved signature) and yields a lightweight harmfulness monitor competitive with a dedicated safety judge.",
+      "status": "established",
+      "behavior_conclusion": "User-asserted phenomenon; empirically the round found strong asymmetry rather than symmetric two-direction dissociation. The harmfulness side is clean at ceiling on Llama-3-8B-Instruct (probe AUROC=0.9998 at layer 11, t_final_instr; geometrically distinct from r, cos(h,r)=0.174, ratio 0.20 of the split-half reference — replicated cross-model on Qwen2-Instruct-7B, cos ratio 0.069). The refusal-side within-attribute contrast is unmeasurable at Llama-3-8B-Instruct's 98.7% bare-refusal rate on AdvBench (only 7 natural jailbreaks in 520 prompts, below the 8-item floor); the refusal direction is only recovered via a harmful-vs-benign proxy contrast (CAA/Arditi standard fallback). Position dissociation is not testable on this well-aligned model (both anchor positions decode harmfulness at ceiling; crossover=−0.00018). Additive-steering causal work supports an asymmetric dissociation — strong graded direction-specific h-side (z=101.65 vs 30 random matched-norm controls at h-site) and thresholded direction-specific r-side (benign refusal 0.01→0.53 at α=+2; z=128.31 at r-site vs random-at-r-site Δ=−0.002±0.004) — NOT the symmetric mechanistic dissociation the original wording implied. The jailbreak-signature claim is untestable on this model+attack pool (ASR=0/500 on both Zou-2023 transferable GCG suffixes and Zeng-2024 published-style PAP templates). A linear h-probe matches Llama Guard 3 8B (AUROC 1.000 vs 0.9992) on a bare-harmful vs benign/safe-lookalike test set at ~10⁻⁸ per-query FLOPs, but the jailbreak-detection framing is unreachable here (M4 ASR=0 → M5 test set has no successful-jailbreak items).",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Representation and Parameter Analysis / Steering Vectors",
+          "headline": "On Llama-3-8B-Instruct, difference-in-means direction extraction from AdvBench-harmful vs matched-Alpaca-benign pairs yields a strongly recoverable, geometrically distinct harmfulness direction h at layer 11, t_final_instr (AUROC=0.9998; cos(h,r)=0.174, 0.20× split-half reference; cross-model replicated on Qwen2-Instruct-7B), but only an asymmetric partial functional dissociation under additive steering — strong monotone graded direction-specific h-side effect (z=101.65 vs 30 random matched-norm controls at h-site; Δh_readout±5.9 with refusal in null-band) plus thresholded direction-specific r-side effect (benign refusal 0.01→0.53 at α_raw=+2, z=128.31 at r-site vs random-at-r-site Δ=−0.002±0.004; refusal-side within-attribute contrast unmeasurable at 98.7% bare-refusal ceiling). The linear probe on h matches Llama Guard 3 8B (AUROC 1.000 vs 0.9992, ~10⁻⁸ compute) on a bare-harmful-vs-benign/lookalike test set. Position crossover (h vs r localization) and jailbreak-signature testing were both blocked by ceiling AUROC and ASR=0 respectively on this model + published-transferable attacks.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "Instruction-tuned LLMs represent harmfulness perception (h) and refusal execution (r) as two distinct, approximately-linear, independently-recoverable residual-stream directions on Llama-3-8B-Instruct.",
+              "method": "Difference-in-means direction extraction from paired AdvBench-harmful vs matched-Alpaca-benign activations; held-out linear-probe AUROC + cos(h,r) vs a split-half within-direction reference + shuffled-refusal control; support requires probe AUROC ≥ 0.85 per attribute AND cos(h,r) ≤ 0.5 × split-half reference.",
+              "conclusion": "Held partial-cross-model: h is strongly recoverable and geometrically distinct from r (AUROC=0.9998 at layer 11; cos(h,r)=0.174, ratio 0.20 of the 0.883 split-half reference; replicated on Qwen2-Instruct-7B with cos ratio 0.069), but the refusal-side sub-tests (probe AUROC of r on refusal; shuffled-refusal control) are unmeasurable at 98.7% bare-refusal on AdvBench — the same NaN pattern replicates on Qwen2, indicating a dataset+alignment issue rather than a model-specific artifact."
+            },
+            {
+              "id": "C2",
+              "statement": "Position dissociation: h peaks at the final instruction-token position and r peaks at the position immediately post-instruction, producing a crossover on the per-position AUROC curve.",
+              "method": "Per-position × per-attribute AUROC of difference-in-means directions over a 6-position ladder around t_final_instr / t_post_instr; support requires crossover-Δ ≥ 0.05 on both attributes with bootstrap 95% CI non-overlap from immediate neighbours.",
+              "conclusion": "Audit passed, swap-test deferred (cap) — informative negative on Llama-3-8B-Instruct: both anchor positions decode harmfulness at ceiling (AUROC ≥ 0.99982), giving crossover_h = −0.00018 — no crossover can exist when both positions are saturated; refusal-side unmeasurable at the 98.7% bare-refusal ceiling."
+            },
+            {
+              "id": "C3",
+              "statement": "Additive residual-stream steering along h flips the internal harmfulness readout without altering refusal, while steering along r flips refusal without altering the harmfulness readout — an axis-selective causal dissociation.",
+              "method": "Additive steering at (best-layer, target-position) across direction ∈ {h, r, random-matched-norm, swap, random-at-r-site} × α ∈ raw ‖d‖ + σ_proj-normalized ladder; measured Δ h-readout + Δ refusal rate; support requires monotone target-axis effect + off-target within null-band (2× baseline SD) + n_random ≥ 30 direction-specificity floor at each intervened site.",
+              "conclusion": "Held as asymmetric causal steering / partial functional dissociation (NOT symmetric mechanistic dissociation): after iteration-1+2 mechanism-audit fixes (σ_proj-normalized 35× α coverage, n_random=30 at both h-site and r-site), h moves h-readout by ±5.9 with refusal in the null-band and direction-specific vs random controls (z=101.65 at h-site), and r produces a thresholded benign-refusal jump (0.01→0.53 at α=+2) that is direction-specific vs random-at-r-site controls (z=128.31, random-at-r-site Δ=−0.002±0.004); iteration-3 downgraded wording from 'causal dissociation' to 'asymmetric causal steering' throughout the plan+results+verdicts."
+            },
+            {
+              "id": "C4",
+              "statement": "A notable class of successful jailbreaks (GCG-style suffixes + PAP-style persuasion / adversarial templates) suppresses the refusal signal while the harmfulness signal remains active, and a hidden-state probe on h picks up this refusal-suppressed / harmfulness-preserved signature.",
+              "method": "For each attack family, extract residual-stream activations on bare vs attacked prompts on 100 held-out AdvBench behaviors × 5 templates × 2 families; compute Δ projection onto h and r on the successful-attack subset; test detection AUROC of h-probe on successful-jailbreak vs benign-compliant; specificity check on failed-attack subset (|Δr| within null-band).",
+              "conclusion": "Audit passed, swap-test deferred (cap) — untestable on this model+attack pool: ASR = 0/500 on both Zou-2023 transferable GCG suffixes and Zeng-2024 published-style PAP templates; empty successful-attack subset means the Δ metrics cannot be computed. Failed-subset specificity: GCG mean |Δr|=0.77 (within ε_null 1.69), PAP mean |Δr|=1.70 (marginally over). Restoring testability requires a working attack family with ASR>0 (fresh GCG optimization is explicitly out of the plan's budget)."
+            },
+            {
+              "id": "C5",
+              "statement": "A lightweight harmfulness-direction probe (linear or shallow-MLP readout of the projection onto h) matches or beats Llama Guard 3 8B at flagging jailbreak attempts, at ≤ 5% of the per-query compute (iteration-1 scope-narrowed to bare-harmful vs benign/safe-lookalike classification pending a working attack family).",
+              "method": "Logistic-regression / 2-layer-MLP classifier on ⟨activation, h⟩ at (layer 11, t_final_instr) trained on M-prep's harmful-vs-benign split; head-to-head vs Llama Guard 3 8B on a 400-item mixed test set (bare-harmful + benign-compliant + XSTest safe-lookalike); support requires AUROC(probe) ≥ AUROC(LG) − 0.02 AND per-query compute ≤ 5% of LG.",
+              "conclusion": "Held as supported_narrowed_scope: probe matches Llama Guard 3 8B on the bare-harmful vs benign/safe-lookalike test set (AUROC 1.000 vs 0.9992; F1@FPR=5% 1.00 vs 0.975; compute ratio ≈ 10⁻⁸ — 10⁴× under the 5% ceiling; ~440× wall-clock speedup). Iteration-1 narrowed the scope from 'flagging jailbreak attempts' because M4 ASR=0 leaves the test set with 0 successful-jailbreak items; the reviewer explicitly acknowledged the narrowed claim is honest-but-weak (near-circular training/eval contrast on harmful-vs-benign) with XSTest benign-lookalike generalisation as the residual novel signal."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Tuning & Editing",
+        "Formation Tracing",
+        "Unit Interpretation",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

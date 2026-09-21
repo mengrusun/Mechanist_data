@@ -1,0 +1,6 @@
+**Table C4.** Cross-pair generalization — SAGE-lite predictive-accuracy on two architecturally distinct LLM+SAE pairs. Effect directions differ (+0.153 vs -0.045), only the non-significance is robust; no positive transfer observed.
+
+| Cross-pair | n_features | Δ Pearson r (SAGE-lite − Ref) | 95% CI | p-value | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| Qwen3-4B + transcoder-hp (main M2) | 34 | +0.153 | [-0.031, +0.341] | 0.18 | not-significant (positive trend) |
+| GPT-OSS-20B + resid-post-aa (variant) | 45 | -0.045 | [-0.210, +0.115] | n.s. | not-significant (negative direction) |

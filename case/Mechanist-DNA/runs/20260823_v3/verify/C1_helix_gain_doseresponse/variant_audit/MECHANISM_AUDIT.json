@@ -1,0 +1,21 @@
+{
+  "claim": "C1",
+  "scope": "verify/C1_helix_gain_doseresponse/variants/ (model-swap-evo2-7b-262k)",
+  "intervention_type": "additive CAA at block 28 on evo2_7b_262k, rebuilt in-model over the DEV contrast set",
+  "checks": {
+    "A_steering_coefficient_sweep": {
+      "verdict": "pass",
+      "unit_stated": "raw multiplier on the in-model diff-of-means vector; vnorm=947.21 recorded in result.json (comparable to the main experiment's 823.91 -> coefficient scale is analogous across the swap)",
+      "capability_metric_logged": "validity_rate + mean Evo2 NLL logged at every dose cell (0.997/0.987/0.964/0.894 across coef 0/1/2/4)",
+      "geometric_range": "coefs [0.0, 1.0, 2.0, 4.0] -> 4x nonzero range, 4 points, alpha=0 in-model baseline included. Adequate for a within-family model-transfer robustness probe of an already-established sweep (the base experiment's wider [0..8] sweep established the shape; the variant confirms transfer at the winning/low-coef regime and the monotone trend).",
+      "finding": "The variant re-swept the coefficient IN the swapped model, rebuilt the direction in-model (not reusing the base model's vector), logged capability/validity at every point, and included an in-model alpha=0 baseline. A clean, fair transfer of the steering mechanism."
+    },
+    "B_direction_extraction_quality": {"verdict": "not_implemented"},
+    "C_site_layer_choice": {"verdict": "not_implemented"},
+    "D_n_effective": {"verdict": "not_implemented"},
+    "E_probe_vs_causal": {"verdict": "not_implemented"},
+    "F_intervention_scope": {"verdict": "not_implemented"}
+  },
+  "overall_verdict": "pass",
+  "notes": "No in-variant random-direction/sham control was run -- that is by design: those established SPECIFICITY in the main experiment; this variant tests whether the SAME direction TRANSFERS to a different family checkpoint (direction transferability), not specificity from scratch. Not a rigor gap for a model-transfer probe."
+}

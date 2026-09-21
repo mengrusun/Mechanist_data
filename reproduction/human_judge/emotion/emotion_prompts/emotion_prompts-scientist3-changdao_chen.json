@@ -1,0 +1,177 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "changdao chen",
+    "paper_title": "Do Emotions in Prompts Matter? Effects of Emotional Framing on Large Language Models",
+    "agent": "scientist3",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "主要在同一批GSM8K N=50样本上比较不同prefix和长度设置，并未体现独立validation/test划分。",
+    "score": 1,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_code.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "GSM8K标准答案有效。",
+    "score": 5,
+    "evidence_files": [
+      "report.md"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "对照task.md，只覆盖Qwen/GSM8K的局部实验；SocialIQA、MedQA、BBH、BoolQ、OpenBookQA与EmotionRL没有完整记录。",
+    "score": 2,
+    "evidence_files": [
+      "task.md",
+      "report.md",
+      "logs/0-run/experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_code.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "证据很少：主要是GSM8K N_SAMPLES=50的prefix/max_new_tokens sweeps",
+    "score": 1,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/experiment_results/"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "缺少可靠汇总、CI、显著性或多任务重复；seed_aggregation主要是图/文件夹，不能支撑统计结论。",
+    "score": 1,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/experiment_results/seed_aggregation_d61b6db3f0a14277b33d5cb5c884981e/"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C4需要adaptive policy，但没有EmotionRL训练/评估；其余多为描述性prefix sweep。无有效因果/策略证据。",
+    "score": 1,
+    "evidence_files": [
+      "report.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "有部分experiment_code.py和plots，但report.md明确pipeline incomplete，缺少可审计数据。",
+    "score": 2,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_code.py"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "report.md与产物一致显示incomplete/no final summaries",
+    "score": 5,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/experiment_results/"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Static emotional prefixes change accuracy only by small, input-dependent amounts.",
+        "method": {
+          "justification": "GSM8K fixed-prefix evaluation可部分测试C1，但C1要求diverse domains，方法覆盖不足。",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_code.py"
+          ]
+        },
+        "experiment": {
+          "justification": "只有GSM8K prefix/max_new_tokens sweeps，N_SAMPLES=50；缺少跨任务实验",
+          "score": 2,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/experiment_results/"
+          ]
+        },
+        "result": {
+          "justification": "没有可靠final C1结论；report.md说明pipeline stopped before finalization。",
+          "score": 2,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Emotional effects are most pronounced on socially grounded tasks.",
+        "method": {
+          "justification": "C2需要social和factual对比，但产物未显示SocialIQA或同条件多任务比较。",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        },
+        "experiment": {
+          "justification": "现有代码主要加载GSM8K test，无法判断social task effect是否更强。",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        },
+        "result": {
+          "justification": "无social task数字或最终汇总，C2没有结果支撑。",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "No single emotion consistently benefits and stronger wording is not monotone.",
+        "method": {
+          "justification": "emotion template sweep可部分看GSM8K上的emotion/intensity，但不能测跨任务一致性。",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/seed_aggregation_d61b6db3f0a14277b33d5cb5c884981e/"
+          ]
+        },
+        "experiment": {
+          "justification": "没有跨模型/任务一致性，也没有最终单调性表。",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        },
+        "result": {
+          "justification": "无可靠C3结论；report.md将整体标为incomplete/not assessable。",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "EmotionRL adaptive policy beats fixed prefixes/neutral.",
+        "method": {
+          "justification": "未见EmotionRL/adaptive policy实际运行。",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        },
+        "experiment": {
+          "justification": "没有EmotionRL training/evaluation artifacts，只有GSM8K prefix和长度实验。",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        },
+        "result": {
+          "justification": "C4未测试。",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

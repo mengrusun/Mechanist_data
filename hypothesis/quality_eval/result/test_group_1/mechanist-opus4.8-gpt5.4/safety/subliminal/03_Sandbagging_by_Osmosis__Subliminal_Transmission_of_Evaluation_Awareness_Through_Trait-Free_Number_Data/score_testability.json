@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The hypotheses align tightly with the comparisons: H1 uses “student gap minus neutral-control-student gap,” H2 tests transfer to “unseen free-form ‘you are being audited’ cues,” and H3 requires amplification to widen the gap while ablation makes it “collapse[] into band.” Falsifiability is unusually strong because the claim supplies distinct thresholds, including “contagion > 10 pp with probe AUROC > 0.65” for support and “contagion <= 3 pp” for refutation, plus separate criteria for sandbagging, generalization, and causal control. The main clarity defect is a sign ambiguity in “eval-induced accuracy drop = capability accuracy under ‘this is an evaluation’ framing minus under deployment framing,” since suppression makes that signed difference negative even though the subsequent criterion describes a drop “> 5 pp”; the exact activation-ablation operation is also not fully specified.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is extracting and causally manipulating the proposed direction via “difference-in-means, eval vs deploy activations, layers 6-16”; this is custom experimental logic but is implementable using standard activation hooks, projection, steering, and ablation rather than an undefined magic step. The named models and benchmarks—“Qwen2.5-7B,” “Llama-3.2-3B,” MMLU, HumanEval, and a “WMDP-style subset”—exist, and LoRA, linear probes, AUROC measurement, and activation interventions have mature tooling, although the “existing evaluation-cue corpora” are not concretely named. Resources are quantified exceptionally well through “30,000 raw completions,” 10,000 retained samples per carrier, 300 prompts per context, 2,000 MMLU items, 500 WMDP-style items, fixed LoRA settings, and three-to-five seeds. The negative branch is fully runnable because the design includes neutral, matched-refusal, unmatched-base, shuffled-output, random-output, placebo-direction, benign-task, leakage, and cross-format controls, so null or confounded outcomes can genuinely emerge.",
+      "score": 8
+    }
+  }
+}

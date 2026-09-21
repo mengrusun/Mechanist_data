@@ -1,0 +1,74 @@
+{
+  "Experiment_description": "A preliminary end-to-end pipeline that probes whether verbalized confidence and true correctness are encoded along distinct linear directions in the hidden states of Llama-3.1-8B-Instruct on TriviaQA. The pipeline generates answers with verbalized confidence, caches hidden states at multiple layers (8, 16, 24), trains logistic-regression probes for correctness and ridge probes for verbalized confidence, and measures the orthogonality (1 - |cos|) between the two probe directions relative to random-direction controls.",
+  "Significance": "Establishes empirical grounding for the paper's central hypothesis: LLMs are overconfident because their internal 'true correctness' representation lives in a different linear subspace than the direction driving their verbalized confidence, i.e., miscalibration is a readout failure rather than a knowledge deficit. Demonstrating (a) a large calibration gap and (b) near-orthogonal probe directions at mid/late layers motivates future intervention work (e.g., editing the readout direction to close the calibration gap).",
+  "Description": "Loaded Llama-3.1-8B-Instruct in bf16 and ran it on ~400 TriviaQA questions using a prompt eliciting both an answer and a 'Confidence: XX%' string. For each example, mean hidden states over generated answer tokens were cached at layers 8, 16, and 24. Correctness was labeled via normalized alias matching. Logistic regression probes were trained to predict correctness and ridge regressors to predict verbalized confidence at each layer. The subspace orthogonality score 1 - |cos(w_corr, w_conf)| was computed per layer and compared to a random-direction control. Additional metrics collected: probe accuracy/AUC, verbalized vs probe ECE, and confidence regression MSE.",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_8cd31c57364e46cdb1f85169e5434d41_proc_965338/triviaqa_ece_verb_vs_probe.png",
+      "description": "Bar chart comparing verbalized confidence (~92%) versus actual accuracy (~72%) on TriviaQA with Llama-3.1-8B-Instruct.",
+      "analysis": "Confirms a ~20-percentage-point overconfidence gap between verbalized confidence and actual accuracy, providing the empirical motivation for the entire investigation of separate subspaces for confidence vs. correctness."
+    },
+    {
+      "path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_8cd31c57364e46cdb1f85169e5434d41_proc_965338/triviaqa_reliability_diagram.png",
+      "description": "Reliability diagram showing calibration curve on TriviaQA with the diagonal representing perfect calibration.",
+      "analysis": "Reveals that miscalibration is concentrated in the high-confidence regime (0.8-1.0), where verbalized values cluster\u2014an important structural observation because it means the readout is broken specifically where the model is most assertive."
+    },
+    {
+      "path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_8cd31c57364e46cdb1f85169e5434d41_proc_965338/triviaqa_probe_acc_auc_by_layer.png",
+      "description": "Layer-wise linear probe performance for predicting correctness/verbalized confidence from hidden states.",
+      "analysis": "Shows both correctness and verbalized confidence are linearly decodable at multiple layers, with probe accuracy (0.775-0.783) exceeding verbalized accuracy (0.75), indicating internal representations carry more truthful correctness signal than the verbalized channel."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 0.75,
+      "description": "Overall QA accuracy on TriviaQA",
+      "analysis": "Baseline for comparison against verbalized confidence and probe predictions."
+    },
+    {
+      "result": 98.78,
+      "description": "Mean verbalized confidence (%)",
+      "analysis": "Extremely high verbalized confidence versus 75% accuracy establishes the ~24-point calibration gap driving the study."
+    },
+    {
+      "result": 0.2437,
+      "description": "ECE of verbalized confidence (layers 8/16/24 all identical since it is a readout metric)",
+      "analysis": "A large calibration error consistent with the reliability diagrams."
+    },
+    {
+      "result": 0.0564,
+      "description": "ECE of the layer-8 correctness probe",
+      "analysis": "Probe ECE is ~4x smaller than the verbalized ECE (0.2437), directly supporting the readout-failure hypothesis: internal states encode calibrated correctness information that the verbalized channel fails to convey."
+    },
+    {
+      "result": 0.7988,
+      "description": "Layer 8 orthogonality (1 - |cos|) between correctness and verbalized-confidence probe directions",
+      "analysis": "Meaningfully below the random-control (0.9897), indicating some alignment between correctness and verbalized-confidence directions at early-mid layers."
+    },
+    {
+      "result": 0.9708,
+      "description": "Layer 16 orthogonality (headline)",
+      "analysis": "Close to the random-direction control (0.9863), suggesting that at mid layers the two directions are nearly orthogonal\u2014supporting the hypothesis that verbalized confidence and true correctness occupy distinct linear subspaces."
+    },
+    {
+      "result": 0.964,
+      "description": "Layer 24 orthogonality",
+      "analysis": "Also near random-baseline (0.9854); separation persists into deeper layers."
+    },
+    {
+      "result": 0.7644,
+      "description": "Layer 16 correctness-probe AUC",
+      "analysis": "Nontrivial linear decodability of correctness from hidden states, exceeding chance and showing correctness signal is available internally."
+    },
+    {
+      "result": 0.7833,
+      "description": "Layer 24 correctness-probe accuracy",
+      "analysis": "Best correctness-probe accuracy across layers, slightly above overall QA accuracy (0.75), reinforcing that hidden states contain information the model does not verbalize."
+    },
+    {
+      "result": 2.7784,
+      "description": "Layer 8 verbalized-confidence regression MSE (lowest across probed layers)",
+      "analysis": "Verbalized confidence is more linearly predictable from earlier layers, whereas correctness is best decoded at later layers\u2014implying the two signals emerge at different depths."
+    }
+  ]
+}

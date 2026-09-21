@@ -1,0 +1,404 @@
+{
+  "feature_idx": 1700,
+  "max_act_ref": 97.7685317993164,
+  "trigger_threshold": 19.553706359863284,
+  "sage": {
+    "candidates": [
+      "Android/Java import statements for UI-related classes specifically from `android.widget` (including widgets like `Button`, `ListView`, `TextView`, and likely `Toast`), rather than imports from other Android packages.",
+      "The fully qualified class-name pattern `android.widget.<Class>` for concrete Android UI/widget classes, with maximal activation when it appears in import-like Java code and weaker activation in other code-like mentions.",
+      "Java/Android import statements that import a specific class from the `android.widget` package, e.g. `import android.widget.Button;`, `import android.widget.ListView;`, `import android.widget.TextView;`."
+    ],
+    "top": "Android/Java import statements for UI-related classes specifically from `android.widget` (including widgets like `Button`, `ListView`, `TextView`, and likely `Toast`), rather than imports from other Android packages.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on Java/Android import statements where the package prefix is specifically `android.widget` and the token `widget` is the package segment being imported.",
+            "positive_probes": [
+              "import android.widget.Button;",
+              "import android.widget.TextView;",
+              "import android.widget.LinearLayout;",
+              "import android.widget.ImageView;",
+              "import android.widget.ListView;"
+            ],
+            "positive_acts": [
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516
+            ],
+            "distractor_probes": [
+              "import android.view.View;",
+              "import androidx.appcompat.widget.Toolbar;",
+              "android.widget.Button handles click events."
+            ],
+            "distractor_acts": [
+              2.07635498046875,
+              39.645572662353516,
+              41.87204360961914
+            ],
+            "score": 65.39917500813802
+          },
+          {
+            "hypothesis": "The feature responds to source code contexts listing Android UI classes such as `ListView`, `Toast`, `Button`, or `DatePicker` that belong to the `android.widget` namespace.",
+            "positive_probes": [
+              "Import android.widget.ListView and android.widget.Toast in this Activity.",
+              "The layout uses android.widget.Button beside a DatePicker widget.",
+              "Java code references android.widget.DatePicker and android.widget.Button directly.",
+              "Adapter binds data into an android.widget.ListView instance.",
+              "Show a message with android.widget.Toast after button click."
+            ],
+            "positive_acts": [
+              58.67042922973633,
+              45.887168884277344,
+              48.32000732421875,
+              43.864437103271484,
+              45.608943939208984
+            ],
+            "distractor_probes": [
+              "Import android.view.View and android.app.Activity in this file.",
+              "The XML layout contains a RecyclerView and TextView.",
+              "Show a snackbar message after the fragment loads."
+            ],
+            "distractor_acts": [
+              2.120011329650879,
+              0.0,
+              0.0
+            ],
+            "score": 47.76352685292562
+          },
+          {
+            "hypothesis": "The feature detects the middle namespace token in dotted library paths, especially in repeated `import android.<token>.<Class>;` patterns from Android application code.",
+            "positive_probes": [
+              "import android.widget.Button; import android.widget.TextView;",
+              "import android.content.Intent; import android.content.Context;",
+              "import android.graphics.Canvas; import android.graphics.Paint;",
+              "import android.webkit.WebView; import android.webkit.WebSettings;",
+              "import android.hardware.Camera; import android.hardware.Sensor;"
+            ],
+            "positive_acts": [
+              93.1777572631836,
+              2.657733917236328,
+              2.250751495361328,
+              9.504698753356934,
+              3.2786331176757812
+            ],
+            "distractor_probes": [
+              "import com.android.widget.Button; import com.android.widget.TextView;",
+              "android.widget.Button and android.widget.TextView are imported here.",
+              "import android.widget.Button; import android.view.View;"
+            ],
+            "distractor_acts": [
+              25.751556396484375,
+              44.144039154052734,
+              92.96959686279297
+            ],
+            "score": -32.11448256174723
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "Java/Android import statements for classes in the `android.widget` package, especially exact lines like `import android.widget.Button;` or `import android.widget.ListView;`.",
+            "positive_probes": [
+              "import android.widget.Button;",
+              "import android.widget.ListView;",
+              "import android.widget.TextView;",
+              "import android.widget.ImageView;",
+              "import android.widget.LinearLayout;"
+            ],
+            "positive_acts": [
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516
+            ],
+            "distractor_probes": [
+              "import android.view.View;",
+              "android.widget.Button is used in layouts.",
+              "import com.example.widget.Button;"
+            ],
+            "distractor_acts": [
+              2.1684083938598633,
+              41.94668197631836,
+              15.45464038848877
+            ],
+            "score": 73.40725517272949
+          },
+          {
+            "hypothesis": "Broader mentions of fully qualified Android UI classes from the `android.widget` namespace in code-like text, not necessarily only import lines.",
+            "positive_probes": [
+              "Instantiate android.widget.Button inside the click handler.",
+              "The layout references android.widget.TextView for the title.",
+              "Use android.widget.LinearLayout as the container class.",
+              "Here android.widget.ImageView displays the user avatar.",
+              "Return a new android.widget.EditText from createField()."
+            ],
+            "positive_acts": [
+              41.49318313598633,
+              42.039852142333984,
+              44.43120193481445,
+              36.11650466918945,
+              39.228755950927734
+            ],
+            "distractor_probes": [
+              "Instantiate Button inside the click handler.",
+              "The layout references android.view.View for the title.",
+              "Use androidx.widget.TextView as the container class."
+            ],
+            "distractor_acts": [
+              0.0,
+              2.4627256393432617,
+              24.333106994628906
+            ],
+            "score": 31.729955355326332
+          },
+          {
+            "hypothesis": "The literal fully qualified namespace pattern `android.widget.<UIClass>` in Android/Java contexts, with strongest activation on import syntax and weaker activation on other code references.",
+            "positive_probes": [
+              "import android.widget.Button in your Activity.",
+              "Use import android.widget.TextView at the top.",
+              "Java code imports android.widget.LinearLayout for UI.",
+              "Reference android.widget.EditText inside the Android class.",
+              "An Android snippet uses android.widget.ImageView directly."
+            ],
+            "positive_acts": [
+              93.11969757080078,
+              70.99198913574219,
+              50.486488342285156,
+              45.0238151550293,
+              45.12196731567383
+            ],
+            "distractor_probes": [
+              "import android.view.View in your Activity.",
+              "Use android.widget without a specific class name.",
+              "Kotlin UI code references Button without namespace."
+            ],
+            "distractor_acts": [
+              2.041050910949707,
+              44.3669548034668,
+              0.0
+            ],
+            "score": 45.47945626576742
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Java/Android import statements that import a specific class from the `android.widget` package, e.g. `import android.widget.Button;`, `import android.widget.ListView;`, `import android.widget.TextView;`.",
+            "positive_probes": [
+              "import android.widget.Button;",
+              "import android.widget.TextView;",
+              "import android.widget.ListView;",
+              "import android.widget.EditText;",
+              "import android.widget.ImageView;"
+            ],
+            "positive_acts": [
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516
+            ],
+            "distractor_probes": [
+              "import android.view.View;",
+              "import android.widget.*;",
+              "import androidx.widget.TextView;"
+            ],
+            "distractor_acts": [
+              2.041090965270996,
+              93.25276184082031,
+              43.637577056884766
+            ],
+            "score": 46.95335547129313
+          },
+          {
+            "hypothesis": "The fully qualified class-name pattern `android.widget.<Class>` for concrete Android UI/widget classes, with maximal activation when it appears in import-like Java code and weaker activation in other code-like mentions.",
+            "positive_probes": [
+              "import android.widget.TextView;",
+              "import android.widget.Button;",
+              "final android.widget.ImageView iconView = null;",
+              "android.widget.LinearLayout root = new android.widget.LinearLayout(this);",
+              "Class<?> c = android.widget.ListView.class;"
+            ],
+            "positive_acts": [
+              93.19979858398438,
+              93.19979858398438,
+              67.04960632324219,
+              56.21749496459961,
+              52.95535659790039
+            ],
+            "distractor_probes": [
+              "import android.view.View;",
+              "androidx.widget.RecyclerView adapter binding failed.",
+              "Use the Android widget toolkit for buttons."
+            ],
+            "distractor_acts": [
+              2.07635498046875,
+              29.449665069580078,
+              7.631844520568848
+            ],
+            "score": 59.47178948720296
+          },
+          {
+            "hypothesis": "Android/Java import statements for UI-related classes specifically from `android.widget` (including widgets like `Button`, `ListView`, `TextView`, and likely `Toast`), rather than imports from other Android packages.",
+            "positive_probes": [
+              "import android.widget.Button;",
+              "import android.widget.TextView;",
+              "import android.widget.ListView;",
+              "import android.widget.Toast;",
+              "import android.widget.EditText;"
+            ],
+            "positive_acts": [
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516,
+              93.26383209228516
+            ],
+            "distractor_probes": [
+              "import android.view.View;",
+              "import android.app.Activity;",
+              "import androidx.recyclerview.widget.RecyclerView;"
+            ],
+            "distractor_acts": [
+              2.07635498046875,
+              4.944289207458496,
+              39.4484977722168
+            ],
+            "score": 77.77411810557048
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    ".LinearLayout;\nimport android.widget.TextView;\n\npublic class ControlLogin extends LinearLayout {\n\tprivate EditText txtUsuario;\n\tprivate EditText txtPassword;",
+    "A single cloud drifted over the harbor.",
+    "Receiver extends BroadcastReceiver {\n\n @Override\n public void onReceive(Context context, Intent intent) {\n\n  Toast.makeText(context, \n   \"AlarmReceiver.onReceive()\", \n   Toast.LENGTH_LONG).",
+    "The lawyer objected on procedural grounds.",
+    "\" \" + mContext.getResources().getString(R.string.could_not_be_moved);\n            Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();\n\n    \t}\n\n\t}\n\n    /**",
+    "The mountain trail wound past three small lakes.",
+    "Small pebbles crunched under his boots on the path.",
+    "He plotted the data on a log-log scale.",
+    "app.AppCompatActivity;\nimport android.os.Bundle;\nimport android.view.View;\nimport android.widget.DatePicker;\nimport android.widget.EditText;\n\nimport java.text.SimpleDateFormat;\nimport java.util.",
+    "The engine cooled after the long climb."
+  ],
+  "heldout_true_acts": [
+    94.68576049804688,
+    0.0,
+    19.36243438720703,
+    0.0,
+    19.915180206298828,
+    0.0,
+    0.0,
+    0.0,
+    98.68895721435547,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "references to user interface components in programming",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 0.0,
+        "sentences": [
+          "The button click handler updates the text field.",
+          "Render a dropdown menu in the settings panel.",
+          "This dialog box opens when the user submits.",
+          "Bind the checkbox state to the form model.",
+          "A progress bar appears beneath the upload widget.",
+          "The sidebar navigation highlights the active tab.",
+          "Create a modal window with a close icon.",
+          "The toolbar includes a search box and toggle switch."
+        ],
+        "activations": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 0.8637364119964211,
+        "spearman": 0.9807022905587686,
+        "preds": [
+          10.0,
+          0.0,
+          8.0,
+          0.0,
+          7.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Android/Java import statements for UI-related classes specifically from `android.widget` (including widgets like `Button`, `ListView`, `TextView`, and likely `Toast`), rather than imports from other Android packages.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 73.01481914520264,
+        "sentences": [
+          "import android.widget.Button; declares a UI widget import.",
+          "We added import android.widget.TextView; for labels.",
+          "This file begins with import android.widget.ListView; today.",
+          "Use import android.widget.Toast; to show messages.",
+          "Another statement is import android.widget.EditText; here.",
+          "Developers often write import android.widget.ImageView; first.",
+          "The adapter screen needs import android.widget.Spinner; too.",
+          "Sample code includes import android.widget.CheckBox; above."
+        ],
+        "activations": [
+          92.99842834472656,
+          68.06075286865234,
+          71.03343963623047,
+          71.03697204589844,
+          70.31840515136719,
+          66.9047622680664,
+          68.91748046875,
+          74.84831237792969
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9984798608930963,
+        "spearman": 0.9961464211187492,
+        "preds": [
+          8.0,
+          0.0,
+          2.0,
+          0.0,
+          2.0,
+          0.0,
+          0.0,
+          0.0,
+          9.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 56.03804683685303,
+  "layer": 6,
+  "sae_info": {
+    "layer": 6,
+    "width": "16k",
+    "l0": 70,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_6/width_16k/average_l0_70/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "references to user interface components in programming"
+}

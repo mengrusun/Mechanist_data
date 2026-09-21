@@ -1,0 +1,27 @@
+{
+  "date": "2026-07-22",
+  "auditor": "executor (Check A evaluated — not triggered; no reviewer call)",
+  "audit_type": "mechanism",
+  "claim_id": "C4",
+  "linked_milestones": ["M4.1", "M4.2", "M4.3"],
+  "triggered_checks": [],
+  "overall_verdict": "n/a",
+  "additional_manual_checks": {
+    "probing_layers_before_hstar": "CONFIRMED — pythia-1b: L_ctrl=4, probing=[1,2,3] (before layer 4); pythia-2.8b: L_ctrl=5, probing=[2,3,4] (before layer 5). No leakage.",
+    "alpha_on_matched_frame_heads_only": "CONFIRMED — personal frame: alpha_p on H*_personal only; attributed frame: alpha_a on H*_attributed only; WK frame: no amplification.",
+    "ood_split_disjoint": "CONFIRMED — training=belief_core/ (1589 ex), OOD=belief_holdout/ (2569 ex), entirely separate directories and files."
+  },
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "n/a",
+      "triggered": false,
+      "trigger_match": [],
+      "reason": "C4 uses multiplicative head-output scaling (x *= alpha, amplifies existing signal), not additive direction steering (x += alpha * direction). Trigger keywords absent. Distinct from CAA/RepE paradigm. Relevant checks (alpha scope, layer selection, OOD) fall under reserved B-F."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

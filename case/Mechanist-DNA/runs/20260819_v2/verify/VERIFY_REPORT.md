@@ -1,0 +1,44 @@
+# Verification Report
+
+**Date**: 2026-08-19
+**Swap variants**: true (full Stages 1–3)
+**Dimensions tested**: method, dataset  (variants/picked-claim = 2; **model axis EXCLUDED** — Evo2-7B HARD-pinned project-wide, so the model swap is unavailable)
+**Threshold**: robustness ≥ 0.5, min eligible variants = 1
+**Main-experiment integrity (Phase 2)**: per-claim combined verdict below; per-sub-audit breakdown in `INTEGRITY_AUDIT.md`.
+
+## Summary
+
+| Claim | Statement (short) | Main-exp verdict | Main-exp integrity (Phase 2) | Variant integrity (Phase 9) | Eligible variants | Robustness | State | Notes |
+|-------|-------------------|------------------|------------------------------|------------------------------|-------------------|------------|-------|-------|
+| C1 | causal block-26 α-helix steering raises %H | not-supported (frozen claim) | RE-AUDIT: exp FAIL (Check-E claim-scope only) / mech WARN; **Check F REPAIRED fail→warn** | — | — | — | ❌ FAIL (claim-support; was 🟡 INCONCLUSIVE) | Iteration type-② fix (M5, `runs/iteration_round_1/`) repaired the endpoint: +%H uplift reproduced by 2 ESM2-independent predictors (GOR +15.0, Chou-Fasman +13.6) → not a single-probe artifact. But it is a **composition-level** effect confounded with a Lys/low-complexity/GC-collapse (0.44→0.13), does NOT survive (underpowered, 5/200 overlap) GC control, and is NOT structurally validated (ESMFold CDN-blocked). Verdict now computable → frozen claim **not-supported**; residual FAIL is a claim-scope overclaim → **narrow the claim (③)**. |
+| C2 | fast SS→%H metric agrees with DSSP (r≥0.7) | supported | WARN (exp WARN / mech N/A) | WARN (scope; 0 fail) | 2/2 | 1.00 | ✅ PASS `[MAIN-EXPERIMENT INTEGRITY: WARN — experiment]` | robustly positive — method swap (independent GOR predictor) r=0.85; dataset swap (fresh 310 proteins) r=0.979; both ≥0.7, same direction. |
+
+> **Column glossary** — Main-exp integrity = `max_severity(/experiment-audit, /mechanism-audit)` on `refine-logs/` scoped per claim (PASS/WARN admit; FAIL → INCONCLUSIVE). Variant integrity = same on the per-claim variants (integrity-FAIL variants excluded from both numerator & denominator of robustness). Robustness = `#pass / N_eligible` over each eligible variant's `consistent_with_main_experiment`. State: ✅ PASS = main-experiment verdict robust under swaps; 🟡 INCONCLUSIVE = Phase 2 main-experiment integrity broken, variants never ran.
+
+## Integrity Audit
+
+**Overall**: FAIL — driven by C1's main-experiment experiment-audit FAIL. See `verify/INTEGRITY_AUDIT.md` for full Phase 2 (main experiment) + Phase 9 (variants) findings.
+- **Phase 2 (main experiment)**: C1 = FAIL (exp FAIL / mech WARN) → INCONCLUSIVE; C2 = WARN (exp WARN / mech N/A) → admitted.
+- **Phase 9 (variants)**: C2 variants = WARN (scope only); 0 fail, 2 eligible. (C1 skipped — INCONCLUSIVE.)
+
+## Stage-2 Selection
+
+Phase 3 step 0 picked **1 of 1** admitted claims for Stage 2 (cap = MAX_VERIFY_CLAIMS = 1). The cap did NOT bite (admitted pool size 1 ≤ cap 1), so there are no `max_verify_claims_cap` deferrals.
+
+**Picked** (with importance rationale):
+- C2: only admitted claim after the Phase 2 gate — C1 (the PRIMARY causal claim, which the flags expected to be the top pick) short-circuited to INCONCLUSIVE on an experiment-audit FAIL and is therefore **ineligible** for the Stage-2 pick regardless of its higher scientific centrality.
+
+**Rejected → INCONCLUSIVE (not deferred)**:
+- C1: main-experiment integrity FAIL at Phase 2. Swap-test only after the main experiment is fixed (see Next Step); then `/auto-verify C1 — resume: true`.
+
+## Details
+- C1: `verify/C1_causal_helix_steering/ROBUSTNESS.md` (INCONCLUSIVE) + `verify/C1_causal_helix_steering/main_experiment_audit/`
+- C2: `verify/C2_eval_harness_fidelity/ROBUSTNESS.md` (PASS) + `variant_audit/` + `variants/{method-swap-gor-windowed,dataset-swap-heldout-proteins}/`
+
+## Next Step
+
+→ **C2 PASS** — the eval-harness fidelity claim is robust under method and dataset swaps; the robustness story feeds the paper/next-round narrative.
+
+→ **C1 INCONCLUSIVE** (Phase 2 main-experiment integrity broken — variants never ran) → hand to `/auto-iteration-loop "… — verify-inconclusive: C1"`. `inconclusive_reason = main-experiment integrity broken` (experiment-audit FAIL; mechanism-audit only WARN). **Fix the main experiment, do NOT change the claim**: rerun `/auto-experiment` with (1) a **structural validation of the steered-sequence %H endpoint** (fold a subset of the α=16 generations and DSSP them, or use an SS predictor independent of the ESM2 backbone) so the primary metric is grounded on the actual out-of-distribution generations rather than a proxy validated only on natural proteins; and (2) a **GC-matched / composition-controlled analysis** that separates α-helix propensity from the AT-rich-codon compositional collapse (0.40→0.13) that co-emerges with the %H gain, plus a report of the dose curve's non-monotonicity. The mechanism harness (steering-coefficient sweep + norm-matched random control) is already adequate (mechanism-audit = WARN, not FAIL); only the evaluation of steered %H needs fixing. Then re-verify: `/auto-verify C1 — resume: true` (Phase 2 re-audits the corrected main experiment; the C2 pass is untouched).
+
+Verify does not choose among iteration options — it flags the states with diagnostics and hands control to the iteration loop.

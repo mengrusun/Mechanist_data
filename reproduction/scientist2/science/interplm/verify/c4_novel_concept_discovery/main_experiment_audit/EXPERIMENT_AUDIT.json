@@ -1,0 +1,25 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4 via dmxapi.cn)",
+  "claim_id": "c4",
+  "linked_milestones": ["M4"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Novelty gate uses LLM synonym-check (self-supervised proxy) — inherent to claim type (no external GT exists for concepts absent from vocabulary). Honestly disclosed."
+    },
+    "score_normalization": {"status": "pass", "details": "s_auto = recall-difference from window sets; no self-normalization."},
+    "result_existence": {
+      "status": "pass",
+      "details": "runs/m4/control_stats.json exists with n_novel_real=0, n_novel_control=0, matching EXPERIMENT_RESULTS.md exactly."
+    },
+    "dead_code": {"status": "pass", "details": "Full pipeline executed: 100 features, 50 controls, LLM cache populated."},
+    "scope": {
+      "status": "warn",
+      "details": "100/500 features; Swiss-Prot windows only; 45/60 windows. Criterion non-discriminative (0/0). Honestly disclosed with proposed fix. WARN not FAIL."
+    },
+    "eval_type": "self_supervised_proxy (LLM synonym-check and predictivity score)"
+  }
+}

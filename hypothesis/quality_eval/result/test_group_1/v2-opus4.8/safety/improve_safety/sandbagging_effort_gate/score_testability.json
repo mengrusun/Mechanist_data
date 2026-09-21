@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan directly tests the proposed know-but-withhold mechanism by extracting “mid-layer residual activations at the answer position,” decoding the correct choice, deriving a matched honest-versus-sandbagging direction, and intervening by “subtract[ing] alpha*effort-gate-direction.” Its directional predictions and relevant comparisons are clear: correct-answer decoding should exceed emitted accuracy, the gate-content cosine “should be low,” detection should outperform baselines, subtraction should recover accuracy, and honest performance should remain intact; failures on any of these measurements could refute the corresponding claims. However, no numerical decision thresholds define “largely task- and trigger-agnostic,” “higher AUROC,” “more precisely,” or acceptable honest-performance degradation, and layer and alpha selection are left to be specified, so some researcher judgment remains.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest core step is extracting and causally validating the “effort-gate direction per layer”; this is custom experimental logic but uses standard, well-supported operations—activation hooks, difference-in-means, logistic/linear probes, cosine measurements, and residual-stream activation editing—rather than an undefined magic step. The named Llama-3-8B-Instruct, Qwen2.5-7B-Instruct, Gemma-2-9B-it, WMDP, and MMLU-Pro artifacts exist, and ordinary PyTorch/transformer interpretability tooling supports the proposed measurements and interventions, although the adaptive organism “regularized to reduce the honest-vs-sandbag activation gap” needs a more explicit training objective. Resources receive useful quantification through three named model scales and a “single-forward-pass” detector, but dataset sample counts, fine-tuning-set size beyond “small synthetic dataset,” layer-selection rules, alpha-selection procedures, and run counts are unstated. The negative branch is runnable because the design includes genuinely unknown items, honest inputs, leave-one-trigger/benchmark-out tests, and “random/orthogonal placebo directions,” allowing absent decoding, failed transfer, failed recovery, or collateral degradation to emerge.",
+      "score": 7
+    }
+  }
+}

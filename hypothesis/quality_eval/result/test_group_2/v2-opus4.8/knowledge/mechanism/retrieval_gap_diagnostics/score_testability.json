@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The procedure aligns well with the hypothesis: it compares decoding at the “subject token” and “final/answer position,” then tests causality using “attention-knockout and activation patching” and an intervention measured by recovery and side effects. However, “label each example as STORED or NOT-STORED” based on probe decodability makes the proposed “diagnostic accuracy (separating knows-vs-fails)” partly circular unless an independent ground truth for storage is specified, and the meaning of the “best-decoding subject-position direction for the fact” is underspecified. The predictions are directional—retrieval gaps should be detectable, differ from absence, and be “partially fixable”—with failure indicated by chance-level discrimination, no causal transfer, or no recovery, but terms such as “reliably” and “partially” lack numeric decision thresholds.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is to “identify the layer/head where subject->answer information transfer fails” and extract “the best-decoding subject-position direction”; this requires custom selection logic but is implementable using the stated standard methods of linear probing, attention knockout, and activation patching rather than an undefined magic step. The named Pythia, Qwen2.5, Llama, and CounterFact artifacts exist, and mature transformer-hooking and probe-training tooling supports the required activation collection and interventions. Resources receive useful quantification through “~5k queries,” “5 paraphrases,” and explicit model families, although model variants/scales and the size of the 2-hop and control sets remain unspecified. The refuting branch is runnable because the plan includes successful-case comparisons, genuinely unknown facts, unrelated-query controls, “no intervention, CoT prompting, and re-prompting” baselines, false-positive rates, and side-effect accuracy deltas.",
+      "score": 8
+    }
+  }
+}

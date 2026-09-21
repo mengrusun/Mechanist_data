@@ -1,0 +1,98 @@
+[run_all] $ /data/zhenqian/miniconda3/envs/belief/bin/python code/step1_generate.py --n-total 10000 --n-train 6000 --n-dev 2000 --n-test 2000 --n-dev-p 500 --tensor-parallel-size 1 --gpu-mem-util 0.6 --n-total 100 --n-train 60 --n-dev 20 --n-test 20 --which turn1,turn2,single
+[step1] Loading TriviaQA validation split...
+[step1] 17897 candidates after length filter
+[step1] Train=60 Dev=20 Test=19 Total=99
+[step1] Loading vllm model from /data/zhenqian/models/Llama-3.1-8B-Instruct
+INFO 07-13 20:21:53 [__init__.py:235] Automatically detected platform cuda.
+WARNING 07-13 20:22:07 [config.py:3443] Casting torch.bfloat16 to torch.float16.
+INFO 07-13 20:22:07 [config.py:1604] Using max model len 1024
+INFO 07-13 20:22:08 [config.py:2434] Chunked prefill is enabled with max_num_batched_tokens=16384.
+INFO 07-13 20:22:15 [__init__.py:235] Automatically detected platform cuda.
+INFO 07-13 20:22:18 [core.py:572] Waiting for init message from front-end.
+INFO 07-13 20:22:18 [core.py:71] Initializing a V1 LLM engine (v0.10.0) with config: model='/data/zhenqian/models/Llama-3.1-8B-Instruct', speculative_config=None, tokenizer='/data/zhenqian/models/Llama-3.1-8B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config={}, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=1024, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_backend=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=/data/zhenqian/models/Llama-3.1-8B-Instruct, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=True, pooler_config=None, compilation_config={"level":3,"debug_dump_path":"","cache_dir":"","backend":"","custom_ops":[],"splitting_ops":["vllm.unified_attention","vllm.unified_attention_with_output","vllm.mamba_mixer2"],"use_inductor":true,"compile_sizes":[],"inductor_compile_config":{"enable_auto_functionalized_v2":false},"inductor_passes":{},"use_cudagraph":true,"cudagraph_num_of_warmups":1,"cudagraph_capture_sizes":[512,504,496,488,480,472,464,456,448,440,432,424,416,408,400,392,384,376,368,360,352,344,336,328,320,312,304,296,288,280,272,264,256,248,240,232,224,216,208,200,192,184,176,168,160,152,144,136,128,120,112,104,96,88,80,72,64,56,48,40,32,24,16,8,4,2,1],"cudagraph_copy_inputs":false,"full_cuda_graph":false,"max_capture_size":512,"local_cache_dir":null}
+INFO 07-13 20:22:22 [parallel_state.py:1102] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, TP rank 0, EP rank 0
+WARNING 07-13 20:22:22 [topk_topp_sampler.py:59] FlashInfer is not available. Falling back to the PyTorch-native implementation of top-p & top-k sampling. For the best performance, please install FlashInfer.
+INFO 07-13 20:22:22 [gpu_model_runner.py:1843] Starting to load model /data/zhenqian/models/Llama-3.1-8B-Instruct...
+INFO 07-13 20:22:22 [gpu_model_runner.py:1875] Loading model from scratch...
+INFO 07-13 20:22:22 [cuda.py:290] Using Flash Attention backend on V1 engine.
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:06<00:18,  6.27s/it]
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:12<00:12,  6.46s/it]
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:19<00:06,  6.54s/it]
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:20<00:00,  4.46s/it]
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:20<00:00,  5.19s/it]
+
+INFO 07-13 20:22:43 [default_loader.py:262] Loading weights took 20.81 seconds
+INFO 07-13 20:22:44 [gpu_model_runner.py:1892] Model loading took 14.9889 GiB and 21.214863 seconds
+INFO 07-13 20:22:56 [backends.py:530] Using cache directory: /home/zhenqian/.cache/vllm/torch_compile_cache/5a9a929d71/rank_0_0/backbone for vLLM's torch.compile
+INFO 07-13 20:22:56 [backends.py:541] Dynamo bytecode transform time: 11.71 s
+INFO 07-13 20:23:06 [backends.py:161] Directly load the compiled graph(s) for dynamic shape from the cache, took 8.905 s
+INFO 07-13 20:23:07 [monitor.py:34] torch.compile takes 11.71 s in total
+INFO 07-13 20:23:09 [gpu_worker.py:255] Available KV cache memory: -0.46 GiB
+ERROR 07-13 20:23:10 [core.py:632] EngineCore failed to start.
+ERROR 07-13 20:23:10 [core.py:632] Traceback (most recent call last):
+ERROR 07-13 20:23:10 [core.py:632]   File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 623, in run_engine_core
+ERROR 07-13 20:23:10 [core.py:632]     engine_core = EngineCoreProc(*args, **kwargs)
+ERROR 07-13 20:23:10 [core.py:632]   File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 441, in __init__
+ERROR 07-13 20:23:10 [core.py:632]     super().__init__(vllm_config, executor_class, log_stats,
+ERROR 07-13 20:23:10 [core.py:632]   File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 86, in __init__
+ERROR 07-13 20:23:10 [core.py:632]     self._initialize_kv_caches(vllm_config)
+ERROR 07-13 20:23:10 [core.py:632]   File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 167, in _initialize_kv_caches
+ERROR 07-13 20:23:10 [core.py:632]     kv_cache_configs = [
+ERROR 07-13 20:23:10 [core.py:632]   File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 168, in <listcomp>
+ERROR 07-13 20:23:10 [core.py:632]     get_kv_cache_config(vllm_config, kv_cache_spec_one_worker,
+ERROR 07-13 20:23:10 [core.py:632]   File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/core/kv_cache_utils.py", line 1084, in get_kv_cache_config
+ERROR 07-13 20:23:10 [core.py:632]     check_enough_kv_cache_memory(vllm_config, kv_cache_spec, available_memory)
+ERROR 07-13 20:23:10 [core.py:632]   File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/core/kv_cache_utils.py", line 672, in check_enough_kv_cache_memory
+ERROR 07-13 20:23:10 [core.py:632]     raise ValueError("No available memory for the cache blocks. "
+ERROR 07-13 20:23:10 [core.py:632] ValueError: No available memory for the cache blocks. Try increasing `gpu_memory_utilization` when initializing the engine.
+Process EngineCore_0:
+Traceback (most recent call last):
+  File "/data/zhenqian/miniconda3/envs/belief/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/data/zhenqian/miniconda3/envs/belief/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 636, in run_engine_core
+    raise e
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 623, in run_engine_core
+    engine_core = EngineCoreProc(*args, **kwargs)
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 441, in __init__
+    super().__init__(vllm_config, executor_class, log_stats,
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 86, in __init__
+    self._initialize_kv_caches(vllm_config)
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 167, in _initialize_kv_caches
+    kv_cache_configs = [
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 168, in <listcomp>
+    get_kv_cache_config(vllm_config, kv_cache_spec_one_worker,
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/core/kv_cache_utils.py", line 1084, in get_kv_cache_config
+    check_enough_kv_cache_memory(vllm_config, kv_cache_spec, available_memory)
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/core/kv_cache_utils.py", line 672, in check_enough_kv_cache_memory
+    raise ValueError("No available memory for the cache blocks. "
+ValueError: No available memory for the cache blocks. Try increasing `gpu_memory_utilization` when initializing the engine.
+[rank0]:[W713 20:23:11.376113514 ProcessGroupNCCL.cpp:1479] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+Traceback (most recent call last):
+  File "/data/zhenqian/Reproduction1/mechanica/belief/closing_gap_belief/code/step1_generate.py", line 270, in <module>
+    main()
+  File "/data/zhenqian/Reproduction1/mechanica/belief/closing_gap_belief/code/step1_generate.py", line 124, in main
+    llm = LLM(
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/entrypoints/llm.py", line 273, in __init__
+    self.llm_engine = LLMEngine.from_engine_args(
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/engine/llm_engine.py", line 497, in from_engine_args
+    return engine_cls.from_vllm_config(
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/llm_engine.py", line 126, in from_vllm_config
+    return cls(vllm_config=vllm_config,
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/llm_engine.py", line 103, in __init__
+    self.engine_core = EngineCoreClient.make_client(
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core_client.py", line 77, in make_client
+    return SyncMPClient(vllm_config, executor_class, log_stats)
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core_client.py", line 514, in __init__
+    super().__init__(
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/core_client.py", line 408, in __init__
+    with launch_core_engines(vllm_config, executor_class,
+  File "/data/zhenqian/miniconda3/envs/belief/lib/python3.10/contextlib.py", line 142, in __exit__
+    next(self.gen)
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/utils.py", line 697, in launch_core_engines
+    wait_for_engine_startup(
+  File "/home/zhenqian/.local/lib/python3.10/site-packages/vllm/v1/engine/utils.py", line 750, in wait_for_engine_startup
+    raise RuntimeError("Engine core initialization failed. "
+RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}

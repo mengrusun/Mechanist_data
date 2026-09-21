@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method is well aligned with the question: it varies \"trait-set sizes k in {1,2,3,5,7,10}\" and measures \"per-trait normalized transfer rate,\" while separately comparing interference against vector cosine and semantic similarity. H2 and the disjoint-layer part of H3 are directional and refutable—e.g., failure of cosine similarity to outperform semantic similarity, or failure of disjoint-layer packing to raise the ceiling, would contradict them. However, H1's proposed \"capacity ceiling\" is not fully decidable because neither \"degrades gracefully then collapses\" nor the threshold in \"traits successfully transmitted count at threshold\" is numerically defined, and \"LoRA rank ... in a predictable way\" gives no directional prediction.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to \"recover per-trait steering vectors from the student dataset,\" because the extraction objective and algorithm are not specified; this is custom engineering rather than an impossible operation, but it cannot be implemented exactly as written without clarification. The named Qwen2.5-7B, Llama-3-8B, and Gemma-2-9B model families and GSM8K/HumanEval artifacts exist, while activation steering, LoRA/full fine-tuning, forward activation collection, cosine analysis, and LLM-based scoring are supported by standard tooling; the recent cited implementations could not be independently verified, but the experiment does not require them in principle. Resources are usefully quantified through \"k in {1,2,3,5,7,10},\" dataset sizes \"1k/5k/20k/100k examples,\" LoRA ranks \"4-64,\" three named model scales, and \"12+ trait steering vectors,\" although subset counts and seed counts remain generic. The refuting branch is runnable because the plan includes \"mismatched-base negative controls,\" a \"clean (no-steering) control,\" teacher-behavior normalization, prompt-based baselines, and comparisons against both semantic similarity and single-trait transfer.",
+      "score": 6
+    }
+  }
+}

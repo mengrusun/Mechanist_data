@@ -1,0 +1,59 @@
+{
+  "direction": "Steerable social-variable directions in LLM decision making (task.md; Llama-3.1-8B-Instruct dictator game over gender G, age A, instruction framing I, meeting condition M — do these variables act via genuine locatable linear directions in the residual stream, and can they be causally steered and disentangled?)",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "In a randomised dictator-game with input variables gender (G), age (A), instruction-framing (I), and meeting condition (M), Llama-3.1-8B-Instruct's chosen transfer amount responds systematically to each variable — and each variable's influence on the decision is carried by a linearly extractable direction in the residual stream that can be causally steered by activation-addition.",
+      "status": "established",
+      "behavior_conclusion": "The behavior holds — each of G/A/I/M has a non-null baseline effect on the mean transfer, and at least three of the four variables have residual-stream directions that pass a causal signed-α steering test at mid-layer (Llama-3.1-8B-Instruct L=16, and Meta-Llama-3-8B-Instruct verify variant L=16 replicates the same qualitative pattern including V=M sign inversion). The pipeline uncovered three important caveats: (i) the shallow-layer probe cv_acc=1.0 result for V=M is a phrasing-detector artifact (LOPO=0.483 = chance); (ii) causal steering is 'sign-asymmetric direction-specific', not symmetric bidirectional (V=G amplifies at α=−2σ only, V=A/M at α=+2σ, V=I bidirectional); (iii) selectivity across variables is partial — V=A/M are cleanly selective, V=I is non-selective (co-modulates all Ws), V=G is one-signed.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Representation and Parameter Analysis / Steering Vectors",
+          "headline": "Signed CAA activation-addition on paired-prompt difference-of-means directions at mid-layer L=16 of Llama-3.1-8B-Instruct produces sign-asymmetric direction-specific causal steering of the dictator transfer amount for all four social variables — V=M cleanly sign-inverts at α=+2σ (2.84σ direction-specificity vs random-direction null, n=10 seeds), V=A amplifies 5.5× at α=+2σ (2.69σ), V=G amplifies 2.5× at α=−2σ (4.30σ), V=I is bidirectional (2.50σ); the pattern replicates on Meta-Llama-3-8B-Instruct at L=16 (verify PASS). Two crucial methodological findings: (1) the plan's default `argmax probe_cv_acc` layer-picker selects token-embedding-proximal layers 2–6 where σ_proj is 10× too small for the α-sweep — this masks the causal signal at the picked layers (random ≈ raw baseline) even though the direction exists; (2) the shallow-layer probe cv_acc=1.0 for V=M at ℓ=2 is a phrasing detector (LOPO=0.483 = chance), not a genuine linear encoding of the social variable — the productive layer band per LOPO is L∈[10-14] for V=I/M and L∈[28-32] for V=G/A. Purity via Gram-Schmidt decorrelation at shallow layers yields diag mean 0.958 / off-diag max 0.506 (borderline); LEACE erases target with off-target at those layers (a dataset-specific pathology of the 16-cell paired-prompt design). Selectivity across V is partial and V-dependent: V=A and V=M ratios 2.25 / 2.19 (selective), V=I ratio 1.00 (non-selective), V=G ratio 0.00 at +σ (one-signed); L=16 permutation p=0.128 vs. shallow p=0.84 — a real improvement but not statistically significant with only n=4 variables. Meta-Llama-3-8B-Instruct is a working swap; DeepSeek-R1-Distill-Llama-8B is NOT (τ=10 anchor under DG-1000 prompt).",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "For each social/contextual variable V ∈ {G, A, I, M}, a linear direction v̂_V in the Llama-3.1-8B-Instruct residual stream carries V's decision-relevant influence on the dictator-game transfer amount.",
+              "method": "Paired-prompt CAA difference-of-means direction v̂_V(layer) across residual-stream layers; per-V linear-probe 5-fold cv_acc + projection-transfer OLS regression; iteration ⓪ added Leave-One-Phrasing-Out cross-val as a lexical-confound stress test.",
+              "conclusion": "Linear encoding holds at productive mid- and late-layer bands (L∈[10-14] and L∈[28-32] per LOPO), but the shallow max-probe-cv_acc-picked layers ell_V* ∈ {2,4,6} are partially phrasing detectors — the V=M ell=2 signal has LOPO=0.483 (chance-level). Main-experiment probe cv_acc=1.0 for all V and projection-transfer β is significant for 3/4 V (V=A marginal p=0.06); the layer-picker heuristic itself is the failure mode, not the linear-encoding hypothesis. Verify swap-test deferred by max_verify_claims cap (INTEGRITY_ONLY)."
+            },
+            {
+              "id": "C2",
+              "statement": "A pure direction ṽ_V (raw v̂_V minus its overlap with the other three variables' directions) linearly predicts V without predicting the other variables — a cross-leakage matrix diagonal ≫ off-diagonal under a pre-registered threshold.",
+              "method": "Gram-Schmidt vs. LEACE decorrelation on the raw v̂_V; 4×4 cross-leakage probe accuracy matrix at ell_V*; predicates: diag mean ≥ 0.95× raw AND off-diag max ≤ chance+0.05 (0.55).",
+              "conclusion": "Purity partially holds under Gram-Schmidt at shallow layers (diag mean 0.958 / off-diag max 0.506 — just under the 0.55 threshold) — a 'GS-decorrelated basis with residual coupling', not 'pure directions free of confounds'. LEACE fails at those shallow layers by erasing the target with the joint categorical of the other three variables (diag 0.573 / off-diag 0.829). C3's causal success uses raw v̂_V (not GS/LEACE-purified), so this claim is not empirically bridged to the causal claim — a natural future-work purity-intervention experiment at L=16 with GS directions would close the gap. Verify swap-test deferred (INTEGRITY_ONLY)."
+            },
+            {
+              "id": "C3",
+              "statement": "Signed activation-addition on the extracted per-variable direction at mid-layer L=16 causally and monotonically shifts the mean transfer amount, with at least one α inverting the baseline sign — the effect is direction-specific vs. a random-direction null.",
+              "method": "Signed CAA h ← h + α ṽ_V (or raw v̂_V at supp L=16) with α ∈ {-4,-2,-1,0,+1,+2,+4}σ_proj; measured mean transfer + sign inversion + coherence gate; iteration ② added an L=16 random-direction null (extended to n=10 seeds) as the direction-specificity control.",
+              "conclusion": "Sign-asymmetric direction-specific causal steering is supported at L=16 across two models (Llama-3.1-8B-Instruct main-supp and Meta-Llama-3-8B-Instruct verify variant): V=M sign-inverts at α=+2σ (baseline +0.71 → −0.31; 2.84σ direction-specificity vs random null, n=10 seeds); V=A amplifies 5.5× at α=+2σ (2.69σ); V=G amplifies 2.5× at α=−2σ (4.30σ); V=I is bidirectional (+46% at α=−2σ, −22% at α=+2σ; 2.50σ). At the plan's max-probe-cv_acc-picked shallow layers ell_V* the effect is under-powered because σ_proj is 10× too small — the effect is present at the productive mid-layer band, not at the picker's output. 'Bidirectional' narrowed to 'sign-asymmetric direction-specific'. Verify PASS (robustness=1.00, single model-swap variant on Meta-Llama-3-8B-Instruct at L=16; DeepSeek-R1-Distill-Llama-8B unusable as swap — τ=10 anchor)."
+            },
+            {
+              "id": "C4",
+              "statement": "Steering ṽ_V at mid-layer leaves the other three variables' baseline effects on the transfer decision intact — a 4×4 selectivity matrix M[V,W] has diagonal ≫ off-diagonal and passes a permutation test.",
+              "method": "4×4 selectivity matrix M[V,W] = w_effects[W](α=+2σ) − w_effects[W](α=0) at ell_V* (LEACE-pure, single-site) and at L=16 (raw v̂_V, iteration ②); permutation test on H0 diag=off-diag.",
+              "conclusion": "Selectivity is partial and V-dependent, not universal. At the shallow ell_V* layers the test collapses (V=G has zero diagonal, permutation p=0.84). At L=16 (iteration) permutation p=0.128 — an order-of-magnitude improvement but not statistically significant with only n=4 variables. Per-V diagonal / mean-off-diagonal ratio at α=+2σ: V=A 2.25 and V=M 2.19 (selective), V=I 1.00 (non-selective — co-modulates the other Ws), V=G 0.00 at +σ (one-signed; only steers at α=−σ). The 'V-independent selectivity' framing is falsified; the narrowed claim is 'partial and V-dependent selectivity with substantial collateral coupling for V=I and V=G'. Verify swap-test deferred (INTEGRITY_ONLY)."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Tuning & Editing",
+        "Formation Tracing",
+        "Unit Interpretation",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

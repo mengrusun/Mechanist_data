@@ -1,0 +1,122 @@
+{
+  "project": "SemanticLens Component → CLIP Semantic-Vector Verification on ResNet-50 / ImageNet",
+  "direction": "For each vision-model component, a small activation-driven reference-input set is a concept-faithful summary; pooling frozen CLIP embeddings of that set places the component into the joint image-text semantic space.",
+  "date_range": {"start": "2026-07-13", "end": ""},
+  "models": {
+    "claim": "claude-opus-4-7",
+    "experiment": "claude-opus-4-7",
+    "verify": "claude-sonnet-4-6",
+    "iteration": "claude-opus-4-7"
+  },
+  "pipeline_status": "completed",
+  "round_end": {"qualifier": "", "detail": "", "remedy": "", "see": "", "partial_artifacts": [], "next_round_options": []},
+  "journey_summary": {
+    "claim": "given-mode faithful capture — C1 + C2 taken verbatim from task.md (no ideation).",
+    "mechanism_strategy": "Unit Interpretation → Decision Auditing",
+    "mechanism_routing": "family=Multi-Modal Feature Description, submethod=CLIP-Dissect (with Zennit-CRP flagged as a compose-based fallback for iteration)",
+    "experiment": "49 runs retained (M0-M11 + M13; M12 3-run cross-model SKIPPED per user directive 2026-07-14), ~0.4 GPU-h retained, headline positive on ResNet-50 evidence",
+    "verify": "2 claim(s): 1 PASS (C2) / 0 FAIL / 0 INCONCLUSIVE / 0 ZEV / 1 INTEGRITY_ONLY (C1, cap=1, swap_off=0); integrity[Phase2=WARN/Phase9=WARN]. DIMENSIONS=method only (model-swap forbidden by user directive). ~1.65 GPU-h.",
+    "iteration": "0/6 iterations, claim-reentries=0/2, score 6/10 verdict almost, termination=positive_verdict; five ⓪ narrative-only edits applied, no back-edges, 0 GPU-h.",
+    "figures": "2 across 1 claim (C1); 1 judgment-skipped (C2, prose carries the scalars); 0 render-skipped, 0 errored"
+  },
+  "open_items": [
+    "C1: P3 cross-model transfer (M12) SKIPPED by user directive (2026-07-14) — C1's universality clause 'for every component c in a trained vision model' remains unverified beyond ResNet-50; paper text must scope to ResNet-50/ImageNet.",
+    "C1: INTEGRITY_ONLY (stage2_skip_reason: max_verify_claims_cap) — Stage-1 audit passed WARN; Stage-2 swap-test deferred. Upgrade command (informational): `/auto-verify C1 -- resume: true`.",
+    "Paper-scope caveats to land in write-up (⓪ narrative-only edits from iteration 1): (a) scope both C1 and C2 to ResNet-50/ImageNet in prose; (b) reframe C1/P1c as 'plateau at small k ≤ 16, degrades at k ∈ {64, 256}'; (c) bracket C2/fc-P2c as 'inconclusive under CLIP-text-cluster grouping' and present layer4 P2c (d=1.96) as the strong test; (d) clarify C1/P1b 'matched-control' terminology (top-1 vs. top-2 concept gap); (e) describe C2 swap robustness as 'one successful method-swap verification (Zennit-CRP compose)'.",
+    "Recurring unresolved patterns: single-model evidence only (C1 + C2 on ResNet-50); single-variant swap for C2; hidden-layer C1/P1b small in absolute magnitude (layer3 Δ_sep=0.005 is significant but small)."
+  ],
+  "iteration_summary": {"score": 6, "verdict": "almost", "rounds_consumed": 0, "max_rounds": 6},
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "For every component c in a trained vision model, a small set of top-k activation-driven reference inputs from ImageNet is a concept-faithful summary of what c encodes — measured by (P1a) last-layer top-1 concept-purity above random baseline, (P1b) hidden-layer top-1 vs. matched-control CLIP-text-similarity gap > 0 with p < 0.05, and (P1c) k-sensitivity plateau at small k (≤ 16).",
+      "origin": "task.md — Claim bullet 1 (SemanticLens component summarization, faithful capture)",
+      "data": {"provenance": "existing", "source": "ImageNet-1k validation split (HuggingFace mrm8488/ImageNet1K-val)", "available_n": "50000", "used_n": "50000 (100%; activation cache) + 1000 fc components × 1000 class-name text queries + 500 layer4 + 500 layer3 hidden components × 1203 broden-style vocab", "subset_note": "Full ImageNet-val used; hidden-layer vocab is broden-*style* (union of ImageNet + colors + textures + materials + parts + scenes + actions + misc — 1203 concepts), NOT the original Broden dataset (unavailable at experiment time)."},
+      "models": ["ResNet-50 (ImageNet-pretrained, torchvision IMAGENET1K_V2)", "CLIP image tower ViT-B/32 (openai — frozen, foundation encoder)"],
+      "method": "Committed submethod: Multi-Modal Feature Description / CLIP-Dissect (Oikarinen & Weng, 2023) — reference-input selection by activation top-k → pooled CLIP embedding v_c → cosine-scored against 1000 ImageNet-1k class-name text embeddings (P1a) and against a 1203-concept broden-style vocabulary (P1b/P1c). Composition: reference-input screen (top-k activation) → pooled decode (mean-cosine to CLIP text) → concept-purity + matched-control gap + k-plateau evaluation. Prompt ensembling with 7 OpenAI zero-shot templates.",
+      "main_experiment": {
+        "verdict": "supported [P3 SKIPPED — user directive]",
+        "key_stats": "P1a last-layer top-1 purity = 0.898 at k=16 (random baseline 0.001; Δ_pure=0.897; McNemar p≈1.9e-270). Above CLIP-Dissect published range (55-76%). P1b hidden-layer matched-control gap: layer4 Δ_sep=0.0202 at k=16 (p≈0, one-sided t); layer3 Δ_sep=0.0049 (p≈0). P1c k-sensitivity: layer4 Δ_sep = 0.019 (k=1), 0.020 (k=4), 0.020 (k=16), decline at k=64/256 — plateau exists in k≤16 (satisfies 'small set' phrase; strict monotone-nondecreasing over full range not satisfied — semantically 'partial' at aggregator, 'supported' by semantic reading). P3 cross-model transfer (M12): SKIPPED by user directive 2026-07-14; C1 universality beyond ResNet-50 unverified.",
+        "headline": "ResNet-50 last-layer purity 89.8% at k=16 (vs 0.1% random) supports P1a; layer4 matched-control gap Δ_sep=0.020 at p≈0 supports P1b; k-plateau at k∈{1,4,16} supports 'small set'. C1 supported on ResNet-50; cross-model universality (P3) not tested."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {"method": "excluded", "dataset": "n/a", "model": "excluded"},
+        "integrity": "WARN",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap"
+      },
+      "iteration": {
+        "final_reviewer_status": "INTEGRITY_ONLY held (no back-edge, per contract); five ⓪ narrative-only edits recorded for paper write-up.",
+        "changed": ["⓪ narrative scope narrowed to ResNet-50/ImageNet", "⓪ P1c reframed as 'plateau at small k ≤ 16, degrades at k ∈ {64,256}'", "⓪ P1b terminology clarified: matched-control = top-1 vs top-2 concept gap", "⓪ explicit P3 SKIPPED note"],
+        "falsified": [],
+        "narrowed_to": "sampled components of a trained ResNet-50 on ImageNet; universality across trained vision models NOT claimed"
+      },
+      "final_status": "⚪ integrity_only — ResNet-50/ImageNet-scoped support; swap-test deferred (max_verify_claims cap); narrative narrowed by iteration ⓪. Upgrade: `/auto-verify C1 -- resume: true`",
+      "caveats": [
+        "P3 SKIPPED by user directive 2026-07-14 — cross-model transfer (ViT-B/16 + VGG-16 + EfficientNet-B0 at 50k ImageNet-val) not tested. C1's 'for every component c in a trained vision model' universality clause is verified only on ResNet-50.",
+        "P1c strict criterion (monotone-nondecreasing across full k-range) is not met — Δ_sep declines at k=64/256. Semantically consistent with 'small set is a concept-faithful summary' (early plateau exists at k∈{1,4,16}); depends on interpretation of P1c strictness.",
+        "Hidden-layer vocab is broden-*style* union (1203 concepts), not the original Broden dataset — reported honestly, not as Broden."
+      ],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M6_C1_last_layer", "refine-logs/EXPERIMENT_PLAN.md#M7_C1_hidden", "refine-logs/EXPERIMENT_PLAN.md#M11_layer_granularity", "refine-logs/EXPERIMENT_RESULTS.md", "verify/C1_concept_faithful_summary/main_experiment_audit/", "runs/M6_C1_last_layer/", "runs/M7_C1_hidden/", "runs/M11_layer_granularity/"],
+      "figures": [
+        {
+          "id": "c1_k_sweep_purity",
+          "type": "line",
+          "caption": "C1/P1a — last-layer top-1 concept-purity vs k (ImageNet class-name text queries; random baseline ≈ 0.001). Peaks at k=16 (89.8%), declines at k=256 (68.9%), supporting the 'small set is a concept-faithful summary' phrasing.",
+          "png": "figures/C1/c1_k_sweep_purity.png",
+          "pdf": "figures/C1/c1_k_sweep_purity.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "runs/M6_C1_last_layer/",
+          "status": "ok"
+        },
+        {
+          "id": "c1_hidden_matched_control",
+          "type": "bar",
+          "caption": "C1/P1b — hidden-layer matched-control cosine gap Δ_sep (top-1 vs top-2 concept) at k=16. layer4 gap 0.0202 (p≈0), layer3 gap 0.0049 (p≈0); both significant but layer3 magnitude is small.",
+          "png": "figures/C1/c1_hidden_matched_control.png",
+          "pdf": "figures/C1/c1_hidden_matched_control.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "runs/M7_C1_hidden/",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "statement": "Embedding the top-k activation-driven reference inputs with a frozen CLIP image tower and pooling the embeddings yields a single per-component vector v_c that places c in the joint image-text semantic space — text-queryable (H2a: MRR/R@10 above permutation), stable across disjoint halves (H2b: cosine ≥ τ_stable), separable within- vs. between-concept (H2c: Cohen's d ≥ 0.5), and qualitatively invariant across pooling operators (H2d: {mean, act-weighted mean, max, medoid} agree on H2a-c signs).",
+      "origin": "task.md — Claim bullet 2 (SemanticLens foundation-model coordinate system, faithful capture)",
+      "data": {"provenance": "existing", "source": "ImageNet-1k validation split (reference inputs) + ImageNet-1k class names (last-layer text queries) + broden-style vocab (hidden-layer text queries)", "available_n": "50000 images + 1000 class-name queries + 1203-concept broden-style vocab", "used_n": "50000 (100% activation cache); 1000 × 1000 text-query × component MRR grid; 2000 components × 32 imgs for stability; 10000 random pairs per pool for gap", "subset_note": "Same-concept groups: fc via CLIP-text-neighbor clustering (46 groups, 611 classes at thresh 0.85); layer4 via top-1 concept identity (85 groups). Threshold sensitivity logged."},
+      "models": ["ResNet-50 (ImageNet-pretrained, torchvision IMAGENET1K_V2)", "CLIP image tower ViT-B/32 (openai — frozen)", "CLIP text tower ViT-B/32 (openai — frozen)"],
+      "method": "Committed submethod: Multi-Modal Feature Description / CLIP-Dissect — pooled v_c cosine-scored against 1000 class-name text embeddings for MRR/R@10 (M8/H2a) vs. permutation baseline (10^4 shuffles), against disjoint reference-set halves for stability (M9/H2b), and against between-vs-within-concept cosine gap with Cohen's d (M10/H2c). Pooling-operator ablation across {mean, act-weighted mean, max, medoid} (M4/H2d).",
+      "main_experiment": {
+        "verdict": "supported",
+        "key_stats": "H2a: last-layer MRR = 0.898, R@10 = 0.974 at k=16, pool=mean; permutation 95%-upper = 0.0097 (highly significant). H2b: disjoint-half stability median cosine = 0.970 (τ_stable=0.5 satisfied). H2c: layer4 within-vs-between concept cosine gap = 0.170, Cohen's d = 1.96, p≈0 — very large effect. fc P2c gap: mixed signs across pools (mean=-0.0013, awm=-0.0015, max=+0.0092, medoid=-0.0160) — all magnitudes < 0.02, attributed to CLIP-text-cluster grouping heuristic noise; layer4 unambiguous. H2d: sign-consistent across all 4 pools on P2a, P2b, and layer4 P2c; NOT sign-consistent on fc P2c (grouping artifact per note above).",
+        "headline": "Text-query→fc-component MRR=0.898 (perm95=0.010); disjoint-half stability median cosine=0.970; layer4 within-vs-between cosine gap=0.17 (Cohen's d=1.96, p≈0). Pooling-invariant on P2a/P2b/layer4-P2c; fc P2c gap near zero across all pools (attributed to grouping heuristic, not claim failure). C2 supported on ResNet-50."
+      },
+      "verify": {
+        "robustness": 1.0,
+        "axes": {"method": "pass", "dataset": "n/a", "model": "excluded"},
+        "integrity": "WARN",
+        "verdict": "PASS",
+        "stage2_skip_reason": null
+      },
+      "iteration": {
+        "final_reviewer_status": "PASS held; five ⓪ narrative-only edits recorded for paper write-up.",
+        "changed": ["⓪ narrative scope narrowed to ResNet-50/ImageNet", "⓪ fc P2c bracketed as inconclusive under CLIP-text-cluster grouping; layer4 P2c presented as the strong test (d=1.96)", "⓪ robustness language: 'one successful method-swap verification (Zennit-CRP compose)' not 'comprehensive'", "⓪ explicit P3 SKIPPED note"],
+        "falsified": [],
+        "narrowed_to": "ResNet-50/ImageNet component vectors are text-queryable (layer4 strong test, fc inconclusive under grouping heuristic); cross-model 'shared coordinate system' universality NOT claimed"
+      },
+      "final_status": "✓ holds (ResNet-50/ImageNet-scoped) — verify PASS robustness=1.0; layer4 is the strong test (d=1.96); fc-P2c bracketed as inconclusive-under-heuristic; narrative narrowed by iteration ⓪.",
+      "caveats": [
+        "fc P2c (within-vs-between concept cosine gap on last layer) is near zero (magnitudes < 0.02) with mixed signs across pool operators; attributed by the experiment agent to the CLIP-text-cluster same-concept grouping heuristic (46 groups from 1000 classes at 0.85 threshold), not to a genuine failure of the claim — but strict P2d sign-consistency across all pools + all sites is not met. Layer4 P2c is unambiguous.",
+        "Cross-model 'shared coordinate system' universality (formerly P3/M12) SKIPPED by user directive 2026-07-14; C2's shared-coordinate implication verified only on ResNet-50."
+      ],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M8_C2_queryability", "refine-logs/EXPERIMENT_PLAN.md#M9_C2_stability", "refine-logs/EXPERIMENT_PLAN.md#M10_C2_separation", "refine-logs/EXPERIMENT_PLAN.md#M4_v_c", "refine-logs/EXPERIMENT_RESULTS.md", "runs/M8_C2_queryability/", "runs/M9_C2_stability/", "runs/M10_C2_separation/"],
+      "figures": []
+    }
+  ]
+}

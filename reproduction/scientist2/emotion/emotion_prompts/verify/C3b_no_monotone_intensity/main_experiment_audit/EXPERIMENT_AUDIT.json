@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-14",
+  "auditor": "executor (Claude Sonnet 4.6) + evidence review",
+  "claim_id": "C3b",
+  "linked_milestones": ["M4"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Inherited from M2 dataset-provided GT (real_gt). No new GT.",
+      "evidence": ["scripts/analyze_c3.py:73-78"]
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "delta = v2 - v1 on binary correctness arrays. Mean is raw fraction. No model-derived normalization.",
+      "evidence": ["scripts/analyze_c3.py:132-135"]
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "reports/M4_c3_analysis.json exists. 3/6 emotions qualify on GSM8K (straddles_zero OR mean_delta < 0). Passes at exactly threshold (3/6). OR-condition is correctly specified per claim language. WARN: exactly-at-threshold result with no reported per-emotion CI values in EXPERIMENT_RESULTS.md makes it hard to assess whether the 3rd qualifying emotion is a marginal case.",
+      "evidence": ["scripts/analyze_c3.py:138-145", "refine-logs/EXPERIMENT_RESULTS.md:120-122", "reports/M4_c3_analysis.json"]
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "C3b logic at analyze_c3.py:119-153 is called in main() and written to output.",
+      "evidence": ["scripts/analyze_c3.py:119-153"]
+    },
+    "scope": {
+      "status": "warn",
+      "details": "GSM8K-only count is correctly implemented (if tname=='gsm8k' at line 144). WARN: passes at exactly minimum threshold (3/6) with no sensitivity analysis on the marginal qualifying emotion. 500 items per condition is adequate but the exact threshold margin should be reported.",
+      "evidence": ["scripts/analyze_c3.py:144-145"]
+    },
+    "eval_type": "real_gt"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "date": "2026-07-18",
+  "auditor": "llm-chat (gpt-5.4)",
+  "audit_type": "mechanism",
+  "claim_id": "C2",
+  "linked_milestones": ["M1", "M2"],
+  "triggered_checks": ["A"],
+  "overall_verdict": "warn",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "warn",
+      "triggered": true,
+      "trigger_match": ["code/mechanism.py: Steerer._hook (x + alpha*base_dir)", "code/m2_dose_response.py: --alpha grid dispatch"],
+      "intervention_type": "SAE_feature",
+      "sweep_grid": [-2, 0, 1, 2, 4, 8, 16, 32],
+      "sigma_proj_scaling": false,
+      "capability_metric": "valid_orf_rate, gated_pass_rate, plddt_mean, sheet_mean (all logged at every dose)",
+      "plateau_range": [4, 8],
+      "locked_alpha": 8,
+      "alpha_position": "edge",
+      "random_baseline": {"run": false, "n_random": null, "passed": null},
+      "sign_pattern": "n/a",
+      "output_case_spotcheck": {"cases_available": false, "verdict": "no_cases_logged", "note": "generated protein sequence text explicitly discarded (rec.pop('prot', None)) after metrics computed; no raw output ever saved."},
+      "evidence": ["code/mechanism.py:22-52 (Steerer class + hook)", "code/mechanism.py:67-76 (compute_feature_scales, s_f = mean nonzero activation, not sigma_proj)", "code/mechanism.py:231-232 (rec.pop('prot', None))", "code/m2_dose_response.py:19 (--alpha grid)", "results/m2_dose_response_curve.json (per-dose table)"],
+      "details": "Real sweep with target+capability metrics at every dose (strength), but: sweep does not span >=3 orders of magnitude; s_f scaling is raw empirical activation magnitude, not sigma_proj; the only capability-preserving 'clean' operating point (alpha=8) sits at the edge not middle of its plateau (alpha=16 already breaks ~10% capability tolerance, so the headline alpha*=32 is not a valid plateau lock under this check); no random/matched-control arm within M2's own dispatched runs; no raw sequence text survives to spot-check for degenerate/repetitive sequence collapse at high alpha. Not FAIL (no hardcoded single alpha, no capability blindness, no broken sign-check), but a strict WARN."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

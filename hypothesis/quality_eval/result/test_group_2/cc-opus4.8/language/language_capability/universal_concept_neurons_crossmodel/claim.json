@@ -1,0 +1,24 @@
+{
+  "Name": "universal_concept_neurons_crossmodel",
+  "Title": "Universal Concept Directions: Do Independent LLMs Converge on the Same Language-of-Thought?",
+  "Short Hypothesis": "We hypothesize that independently trained LLMs converge on a shared, low-dimensional set of concept directions for core reasoning primitives (negation, comparison, quantity, causation, entity identity), and that the degree of cross-model convergence of these directions predicts shared reasoning capability. If independent networks discover the same internal 'vocabulary' for thought, it suggests language modeling drives models toward a canonical representational basis for intelligence. This setting is best because cross-model universality controls for architecture-specific idiosyncrasy that single-model studies cannot.",
+  "Related Work": "The Platonic Representation Hypothesis (Huh et al. 2024) argues models converge in representation space; SAE universality has been observed (Bricken et al.; cross-model SAE feature matching). Linear-representation and steering-vector work (e.g., refusal/sentiment directions) shows portable directions. We specifically test whether reasoning-primitive directions are universal AND causally interchangeable across models (transplant a concept direction from model A to steer model B via a learned mapping), linking convergence to shared capability rather than mere geometric similarity.",
+  "Abstract": "If separate language models independently arrive at the same internal directions for reasoning primitives, then language pretraining canalizes a universal representational basis for intelligence. We test cross-model universality of concept directions. For a set of reasoning primitives, we extract candidate linear directions in several independently trained models (Llama-3, Mistral, Qwen, Gemma, GPT-2-XL) using contrastive activation and SAE features. We measure geometric alignment after learning an orthogonal/affine map between model spaces (via anchor tokens), quantify universality per primitive, and, crucially, perform cross-model transplantation: map a concept direction from model A into model B and test whether steering along it produces the expected behavioral effect (e.g., inducing negation-sensitivity). We predict high alignment and successful transplantation for core primitives (negation, quantity, comparison), lower for idiosyncratic ones, and that primitives with higher universality correspond to capabilities all models share. We also test whether universality increases with scale. Demonstrating causally interchangeable concept directions across independent models would provide strong evidence for a convergent language-of-thought and identify which reasoning primitives are canonical versus contingent, sharpening theories of how language modeling yields shared machine intelligence and enabling portable interventions.",
+  "Experiments": [
+    "Define 6 reasoning primitives with contrastive datasets (e.g., negated vs affirmed pairs, greater-vs-less comparisons).",
+    "Extract candidate directions per model via difference-of-means and SAE feature selection.",
+    "Learn cross-model space alignment using shared anchor tokens (Procrustes/affine).",
+    "Measure per-primitive alignment (cosine after mapping) and compare to shuffled baseline.",
+    "Cross-model transplantation: map direction from A to B, add during B's forward pass; evaluate targeted behavioral effect and specificity.",
+    "Relate universality score per primitive to cross-model behavioral agreement on tasks using that primitive.",
+    "Scale test: repeat across model sizes; measure universality vs size.",
+    "Metrics: post-mapping alignment, transplantation effect size and specificity, universality-capability correlation."
+  ],
+  "Risk Factors and Limitations": [
+    "Cross-model space mapping is imperfect; alignment scores depend on anchor choice.",
+    "A successful transplant could reflect the mapping absorbing behavior rather than genuine shared directions.",
+    "Universality may hold only for a few primitives, limiting generality of claims.",
+    "Different tokenizers complicate anchor selection and comparison.",
+    "Convergence could be dataset-driven (shared web text) rather than a deep property of language modeling."
+  ]
+}

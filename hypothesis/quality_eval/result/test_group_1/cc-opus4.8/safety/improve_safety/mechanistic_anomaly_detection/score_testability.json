@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the hypothesis by fitting “benign-only anomaly models,” evaluating “held-out attack families never in the detector's fit set,” and comparing against Llama-Guard and a supervised classifier using “unseen-attack AUROC, TPR@1%FPR.” The predictions are directional and refutable: MAD must “outperform supervised detectors on unseen attack families,” and feature-co-activation anomalies must be “more discriminative than raw activation anomalies”; equal or worse AUROC/TPR would refute those respective claims, while the 1% FPR operating point adds useful precision. Some implementation-defining choices remain unstated—such as which layers and token positions supply activations, how attack success is labeled, and what magnitude constitutes “substantially outperforms”—so an expert would still need several clarifications.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "Llama-3-8B, Gemma-2-9B, Llama-Guard, GCG-style attacks, normalizing flows, Mahalanobis scoring, and SAEs are existing artifacts or methods supported by standard model-hooking, interpretability, and statistical tooling. The hardest step is “anomaly over SAE-feature co-activation patterns”: constructing co-activation statistics is standard, but the graph representation and anomaly-scoring algorithm are not specified, making this a custom-engineering step rather than an impossible magic step. Resources receive partial concrete specification through “Llama-3-8B, Gemma-2-9B,” four named attack families, a classifier trained on “2 attack families,” and “TPR@1%FPR,” although dataset sample sizes, activation layers, and number or provenance of SAEs are absent; importantly, held-out attacks, supervised baselines, the “unusual-benign set,” and the activation-versus-feature ablation provide runnable controls capable of yielding a negative result.",
+      "score": 6
+    }
+  }
+}

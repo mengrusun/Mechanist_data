@@ -1,0 +1,412 @@
+{
+  "feature_idx": 0,
+  "max_act_ref": 54.93586349487305,
+  "trigger_threshold": 10.98717269897461,
+  "sage": {
+    "candidates": [
+      "A broader alternate reading is that the feature responds to technical/metadata contexts containing a `label` field or tag name across markup/config syntaxes, but this is secondary to simply seeing the token `label`.",
+      "The feature is primarily a lexical detector for the exact word `label`, with only a weak secondary preference for code/annotation formatting such as `label{key}` or `label=value`; the formatting itself is not necessary.",
+      "The feature fires on the literal string/token `label`, especially in technical or markup-like text where `label` appears verbatim (e.g. `\\\\label{...}`, `<label>`, quoted/code mentions of `label`)."
+    ],
+    "top": "A broader alternate reading is that the feature responds to technical/metadata contexts containing a `label` field or tag name across markup/config syntaxes, but this is secondary to simply seeing the token `label`.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on the literal markup token `label`, especially when it appears as a LaTeX command like `\\label{...}` or as a quoted/programmatic string `\"label\"`.",
+            "positive_probes": [
+              "Add \\\\label{sec:intro} below the equation.",
+              "The parser encountered the string \"label\" twice.",
+              "Use \\\\label{fig:results} for the image reference.",
+              "She literally typed label into the template.",
+              "This code checks whether \"label\" is present."
+            ],
+            "positive_acts": [
+              50.29458236694336,
+              52.657711029052734,
+              49.35355758666992,
+              45.74594497680664,
+              52.727394104003906
+            ],
+            "distractor_probes": [
+              "Add a caption beneath the equation.",
+              "The parser encountered the word tagged twice.",
+              "Use a title for the image reference."
+            ],
+            "distractor_acts": [
+              5.100000858306885,
+              0.0,
+              0.0
+            ],
+            "score": 48.45583772659302
+          },
+          {
+            "hypothesis": "The feature detects the start of a document-annotation field where an identifier immediately follows `label`, such as brace-enclosed citation/equation tags like `{gen_formula}` or UI/form arguments named `label`.",
+            "positive_probes": [
+              "label {gen_formula} appears before the equation body.",
+              "Please parse label {cite_key} from this annotation.",
+              "Set label=username in the form configuration.",
+              "The metadata starts with label {table_ref}.",
+              "Use label=item_id for the dropdown field."
+            ],
+            "positive_acts": [
+              54.80391311645508,
+              55.12131881713867,
+              50.07559585571289,
+              53.48169708251953,
+              55.52406692504883
+            ],
+            "distractor_probes": [
+              "The label on the bottle is faded.",
+              "Please cite the formula in your report.",
+              "Username is required for this form field."
+            ],
+            "distractor_acts": [
+              51.206642150878906,
+              0.0,
+              0.0
+            ],
+            "score": 36.73243764241536
+          },
+          {
+            "hypothesis": "The feature is triggered by formatting or metadata syntax rather than prose, particularly code/markup contexts that define names for equations, references, buttons, or other labeled elements.",
+            "positive_probes": [
+              "Set equation label eq:navier_stokes inside the align environment.",
+              "Use <button aria-label=\"Submit form\"> to name the control.",
+              "Add \\label{fig:overview} after the image caption.",
+              "Reference target id=\"appendix-a\" in the section markup.",
+              "Define [ref]: https://example.com \"Project homepage\" in Markdown."
+            ],
+            "positive_acts": [
+              47.20778274536133,
+              33.402687072753906,
+              40.198856353759766,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "The equation describes fluid flow in a channel.",
+              "Click the submit button to send the form.",
+              "The appendix section summarizes the project homepage."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 24.161865234375
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature strongly activates on the literal token `label`, especially in markup/code-like contexts such as LaTeX `\\\\label{...}` or when the exact word/string `\"label\"` appears.",
+            "positive_probes": [
+              "Insert \\\\label{sec:intro} after the heading.",
+              "The exact string \"label\" appears in code.",
+              "Use a <label> tag for the input.",
+              "Write label: value on the next line.",
+              "LaTeX equation followed by \\\\label{eq:main}."
+            ],
+            "positive_acts": [
+              50.37348556518555,
+              52.94459915161133,
+              45.204627990722656,
+              47.44889831542969,
+              45.78154754638672
+            ],
+            "distractor_probes": [
+              "Add a caption beneath the figure.",
+              "Tag the input field appropriately.",
+              "Mark the section for later reference."
+            ],
+            "distractor_acts": [
+              5.083007335662842,
+              3.82090425491333,
+              4.968291759490967
+            ],
+            "score": 43.726563930511475
+          },
+          {
+            "hypothesis": "The feature may more specifically prefer `label` when it is immediately followed by an identifier/value, such as `label{key}`, `label {key}`, or `label=name` in annotation/configuration syntax.",
+            "positive_probes": [
+              "Set annotation to label{user_id} for this field.",
+              "Use config entry label {sessionKey} in metadata.",
+              "Add marker label=name beside the parameter declaration.",
+              "The parser accepts label{token} within the annotation block.",
+              "Specify label =value in the configuration stanza."
+            ],
+            "positive_acts": [
+              48.73939895629883,
+              45.53151321411133,
+              41.44342041015625,
+              53.32069778442383,
+              52.29726028442383
+            ],
+            "distractor_probes": [
+              "The label was printed clearly on the package.",
+              "Please label the diagram before submitting your report.",
+              "Use tag{name} instead of label in this example."
+            ],
+            "distractor_acts": [
+              51.208961486816406,
+              51.33936309814453,
+              52.68674087524414
+            ],
+            "score": -3.4785636901855455
+          },
+          {
+            "hypothesis": "A weaker alternate reading is that the feature targets metadata/markup naming fields involving `label` across technical syntaxes (LaTeX, config files, HTML attributes), rather than ordinary prose.",
+            "positive_probes": [
+              "Set the label key in the YAML config.",
+              "Use \\\\label{sec:intro} after the section heading.",
+              "The HTML label attribute references inputId.",
+              "Update the JSON field named label_text.",
+              "Define a label property in the schema."
+            ],
+            "positive_acts": [
+              48.48660659790039,
+              49.35355758666992,
+              50.41232681274414,
+              51.46303939819336,
+              53.99058151245117
+            ],
+            "distractor_probes": [
+              "The sticker label peeled off the bottle.",
+              "She labeled the folders by color yesterday.",
+              "This chart needs a clearer caption underneath."
+            ],
+            "distractor_acts": [
+              47.1468505859375,
+              35.70130157470703,
+              4.368783473968506
+            ],
+            "score": 21.66891050338745
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "The feature fires on the literal string/token `label`, especially in technical or markup-like text where `label` appears verbatim (e.g. `\\\\label{...}`, `<label>`, quoted/code mentions of `label`).",
+            "positive_probes": [
+              "Use \\\\label{sec:intro} before the theorem environment.",
+              "The form includes a <label>Username</label> element.",
+              "In code, the token \"label\" appears twice.",
+              "Set aria-label and a visible label together.",
+              "Search the markup for a stray label tag."
+            ],
+            "positive_acts": [
+              49.35355758666992,
+              45.31858825683594,
+              51.75043869018555,
+              46.984474182128906,
+              48.3423957824707
+            ],
+            "distractor_probes": [
+              "Tag this section for later review.",
+              "The sticker names each drawer clearly.",
+              "Add a caption beneath the input field."
+            ],
+            "distractor_acts": [
+              0.0,
+              14.289215087890625,
+              5.083009243011475
+            ],
+            "score": 41.89248278935751
+          },
+          {
+            "hypothesis": "The feature is primarily a lexical detector for the exact word `label`, with only a weak secondary preference for code/annotation formatting such as `label{key}` or `label=value`; the formatting itself is not necessary.",
+            "positive_probes": [
+              "Please add the label before submission.",
+              "Each folder needs a clear label attached.",
+              "The package lost its shipping label yesterday.",
+              "Set label=value in the configuration file.",
+              "Use \\label{sec:intro} for this section."
+            ],
+            "positive_acts": [
+              51.5300178527832,
+              51.46983337402344,
+              38.69118881225586,
+              50.07559585571289,
+              37.38673400878906
+            ],
+            "distractor_probes": [
+              "Please add a tag before submission.",
+              "Each folder needs a clear title attached.",
+              "Set name=value in the configuration file."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 45.83067398071289
+          },
+          {
+            "hypothesis": "A broader alternate reading is that the feature responds to technical/metadata contexts containing a `label` field or tag name across markup/config syntaxes, but this is secondary to simply seeing the token `label`.",
+            "positive_probes": [
+              "Set the label field in this YAML config.",
+              "HTML form includes a label tag for username.",
+              "JSON metadata contains a label property.",
+              "Update the XML label element before parsing.",
+              "The token label appears in the schema."
+            ],
+            "positive_acts": [
+              48.54691696166992,
+              50.99555206298828,
+              50.107975006103516,
+              50.39498519897461,
+              46.25535202026367
+            ],
+            "distractor_probes": [
+              "Set the name field in this YAML config.",
+              "HTML form includes a legend tag for username.",
+              "JSON metadata contains a title property."
+            ],
+            "distractor_acts": [
+              0.0,
+              5.308469295501709,
+              0.0
+            ],
+            "score": 47.490666484832765
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "963xx-imagetag\";\n\t\t};\n\n\t\tnvram@3f0000 {\n\t\t\tlabel = \"nvram\";\n\t\t\treg = <0x3f0000 0x0100",
+    "my label={D}]\n              ]\n          [1,red,my label={D}\n              [2,red,",
+    "She whisked the eggs and folded them into the batter.",
+    "The senator refused to comment before the hearing.",
+    "The company announced quarterly earnings yesterday afternoon.",
+    "[1,red,my label={B}\n            [2,red,my label={A}]\n            [2,red,my label={",
+    "Rain drummed on the tin roof through the night.",
+    "mm, draw, black , text=black , minimum width =1.0cm]{}, label/.style=[thick, minimum size= 2mm]{} \\] (A) at (0,10) [",
+    "Two children played chess on a wooden bench.",
+    "The engine cooled after the long climb.",
+    "Q:\n\noptimize tween() transition in d3.js\n\nI have a set of items:\n[\n  { label: 'item1', color: 'yellow' },\n  { label: 'item2', color: 'red'",
+    "the labels are rotated, their rotation highly depends\n\t\t\t\t\t\t// on the margin. Sometimes they need to increase in size slightly\n\t\t\t\t\t\tbox"
+  ],
+  "heldout_true_acts": [
+    50.26294708251953,
+    51.31813049316406,
+    0.0,
+    0.0,
+    0.0,
+    51.552425384521484,
+    0.0,
+    53.01278305053711,
+    0.0,
+    0.0,
+    51.08341598510742,
+    54.398460388183594
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "references to labeled data or metadata in documents",
+      "generative": {
+        "trigger_rate": 0.75,
+        "mean_max": 32.296003341674805,
+        "sentences": [
+          "The folder includes labeled training data and image metadata.",
+          "Each document lists author metadata and publication tags.",
+          "Please review the dataset labels in the attached spreadsheet.",
+          "The report header contains file metadata and revision labels.",
+          "These records store customer labels alongside transaction metadata.",
+          "Annotated text files include category labels and source metadata.",
+          "Check the PDF properties for embedded metadata fields.",
+          "The archive contains labeled examples with descriptive metadata."
+        ],
+        "activations": [
+          38.498435974121094,
+          0.0,
+          46.659297943115234,
+          44.17811584472656,
+          40.97134017944336,
+          46.39055252075195,
+          0.0,
+          41.670284271240234
+        ]
+      },
+      "predictive": {
+        "pearson": 0.990942701189618,
+        "spearman": 0.808894054190457,
+        "preds": [
+          10.0,
+          9.0,
+          0.0,
+          0.0,
+          0.0,
+          9.0,
+          0.0,
+          9.0,
+          0.0,
+          0.0,
+          8.0,
+          8.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "A broader alternate reading is that the feature responds to technical/metadata contexts containing a `label` field or tag name across markup/config syntaxes, but this is secondary to simply seeing the token `label`.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 49.399150371551514,
+        "sentences": [
+          "The form includes a visible label for email.",
+          "Set the label field in the YAML config.",
+          "This XML node uses a label attribute.",
+          "Please update the button label text.",
+          "The metadata block contains label: urgent.",
+          "Every chart series needs a clear label.",
+          "In HTML, the label tag links input.",
+          "Rename the label in the JSON schema."
+        ],
+        "activations": [
+          46.980045318603516,
+          48.5344352722168,
+          53.07387161254883,
+          43.928985595703125,
+          52.651851654052734,
+          44.60822677612305,
+          54.1549186706543,
+          51.260868072509766
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9113724488074029,
+        "spearman": 0.7887723115489034,
+        "preds": [
+          10.0,
+          9.0,
+          0.0,
+          0.0,
+          0.0,
+          9.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          10.0,
+          3.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 164.13456344604492,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "references to labeled data or metadata in documents"
+}

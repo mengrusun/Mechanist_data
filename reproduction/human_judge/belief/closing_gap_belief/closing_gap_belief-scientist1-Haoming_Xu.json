@@ -1,0 +1,186 @@
+{
+  "_note_readme": "Human expert review for closing_gap_belief.",
+  "meta": {
+    "expert_name": "Haoming_Xu",
+    "paper_title": "Closing the Confidence-Faithfulness Gap in LLMs",
+    "agent": "scientist1",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "Scores follow human_reliablity_judge_zh.md.",
+  "_note_evidence": "Evidence files are relative to scientist1/belief/closing_gap_belief/.",
+  "dimension_1_data_split_hygiene": {
+    "justification": "results/REPORT.md states that the probes were trained per layer on a 70/30 split, and scripts/step3_probe.py implements a fixed stratified train_test_split(..., test_size=0.3, random_state=args.seed, stratify=correct) reused across layers. My concern is that best layers are selected and reported using test set, so there is no separate validation split for layer selection. The reference paper describes non-overlapping train/validation/test usage, with validation used for selecting settings and held-out test for final evaluation, so this is weaker than the paper's split hygiene though not a severe leakage failure.",
+    "score": 3,
+    "evidence_files": [
+      "scripts/step3_probe.py",
+      "results/REPORT.md",
+      "results/probe_llama31_8b_instruct_triviaqa.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The labels match the reference paper's target variables: correctness is operationalized from TriviaQA gold answers/aliases, and verbalized confidence is the parsed numeric confidence emitted by the model. scripts/step1_generate.py constructs correct from normalized alias matching and stores verbalized_confidence in the generation/meta JSONL files. These labels directly correspond to the paper's gold-calibration and verbalized-confidence readouts; any alias-matching noise is minor and does not create a substantive target mismatch.",
+    "score": 5,
+    "evidence_files": [
+      "results/REPORT.md",
+      "scripts/step1_generate.py",
+      "data/meta_llama31_8b_instruct_triviaqa.jsonl",
+      "results/probe_llama31_8b_instruct_triviaqa.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main task-specified resource Llama-3.1-8B-Instruct on TriviaQA was used, with 1,500 generated TriviaQA examples and 1,478 parseable examples reported in data/gen_llama31_8b_instruct_triviaqa.jsonl and data/meta_llama31_8b_instruct_triviaqa.jsonl. Qwen2.5-7B-Instruct on TriviaQA was added as an extra verify-style model rather than replacing the required main model.",
+    "score": 5,
+    "evidence_files": [
+      "task.md",
+      "data/gen_llama31_8b_instruct_triviaqa.jsonl",
+      "data/meta_llama31_8b_instruct_triviaqa.jsonl",
+      "data/meta_qwen25_7b_instruct_triviaqa.jsonl"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Evidence is based on n=1,478 parseable Llama examples and n=1,498 parseable Qwen examples, far above the low-n concern threshold. Key reported effects are large: Llama correctness-probe AUC 0.850, confidence-high AUC 0.975 at conf_prefix, and bootstrap across-probe |cos| 0.038 at answer_end.",
+    "score": 5,
+    "evidence_files": [
+      "results/REPORT.md",
+      "results/probe_llama31_8b_instruct_triviaqa.json",
+      "results/probe_qwen25_7b_instruct_triviaqa.json",
+      "results/orth_llama31_answer_end.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The run reports point estimates on a fixed split and uses 25 bootstrap resamples for direction stability/orthogonality (results/orth_llama31_answer_end.json: n_boot=25), but it does not report full confidence intervals or multiple independent seeds for the main AUCs. The effects are nontrivial, yet robustness to split/seed variation is only partially tested.",
+    "score": 3,
+    "evidence_files": [
+      "scripts/step3_probe.py",
+      "results/probe_llama31_8b_instruct_triviaqa.json",
+      "results/orth_llama31_answer_end.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The run does not prove causality. Its main evidence is linear probing plus cosine geometry between probe directions, which supports that the correctness and verbalized-confidence signals are separable in representation space. But it does not perform activation patching, steering, or ablation to show that either direction causally controls the generated confidence. results/REPORT.md also states that such causal intervention would be a future step.",
+    "score": 3,
+    "evidence_files": [
+      "results/REPORT.md",
+      "scripts/step3_probe.py",
+      "results/orth_llama31_answer_end.json"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "The headline numbers in results/REPORT.md are traceable to saved JSON files. Llama n=1478, accuracy=0.723951, and verbalized-confidence AUC=0.543960 are in results/probe_llama31_8b_instruct_triviaqa.json. Llama answer_end across-probe |cos|=0.038467 with n_boot=25 is in results/orth_llama31_answer_end.json. Qwen answer_end across-probe |cos|=0.113656 is in results/orth_qwen25_answer_end.json. I did not find ungrounded headline numbers.",
+    "score": 5,
+    "evidence_files": [
+      "results/REPORT.md",
+      "results/probe_llama31_8b_instruct_triviaqa.json",
+      "results/probe_qwen25_7b_instruct_triviaqa.json",
+      "results/orth_llama31_answer_end.json",
+      "results/orth_qwen25_answer_end.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The report's headline table matches the JSON values I checked: Llama AUC 0.850 and Qwen AUC 0.861 match the best-layer probe JSON; Llama answer_end |cos| 0.038 and Qwen answer_end |cos| 0.114 match the orthogonality JSON. No contradictory PASS/FAIL propagation was found within scientist1's artifacts.",
+    "score": 5,
+    "evidence_files": [
+      "results/REPORT.md",
+      "results/probe_llama31_8b_instruct_triviaqa.json",
+      "results/probe_qwen25_7b_instruct_triviaqa.json",
+      "results/orth_llama31_answer_end.json",
+      "results/orth_qwen25_answer_end.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "Claims are mapped from task.md.",
+    "_note_subscore": "method / experiment / result scored independently.",
+    "per_claim": {
+      "C1": {
+        "claim": "Models encode well-calibrated accuracy information in a linearly accessible direction.",
+        "method": {
+          "justification": "Linear logistic probes on residual-stream hidden states are the right method family for a linearly accessible correctness-direction claim.",
+          "score": 5,
+          "evidence_files": [
+            "results/REPORT.md",
+            "scripts/step3_probe.py"
+          ]
+        },
+        "experiment": {
+          "justification": "The experiment covers all layers and two positions on Llama, uses a held-out 30% split, and adds Qwen as a family check; however best-layer reporting is selected on test set and lacks separate validation or multi-seed AUC uncertainty.",
+          "score": 4,
+          "evidence_files": [
+            "results/REPORT.md",
+            "scripts/step3_probe.py",
+            "results/probe_llama31_8b_instruct_triviaqa.json",
+            "results/probe_qwen25_7b_instruct_triviaqa.json"
+          ]
+        },
+        "result": {
+          "justification": "The result is directionally faithful: Llama answer_end correctness AUC reaches 0.8499 and Qwen reaches 0.8605, while raw verbalized-confidence AUC is lower (0.544 and 0.700). This supports an internal correctness signal.",
+          "score": 5,
+          "evidence_files": [
+            "results/REPORT.md",
+            "results/probe_llama31_8b_instruct_triviaqa.json",
+            "results/probe_qwen25_7b_instruct_triviaqa.json"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Models encode verbalized confidence in a linearly accessible direction.",
+        "method": {
+          "justification": "The probe method is appropriate for C2. Ridge regression on the continuous confidence value and logistic regression on the high-confidence label directly test whether verbalized confidence is linearly decodable from the hidden states.",
+          "score": 5,
+          "evidence_files": [
+            "results/REPORT.md",
+            "scripts/step3_probe.py"
+          ]
+        },
+        "experiment": {
+          "justification": "The experiment probes verbalized confidence at answer_end and conf_prefix using both continuous ridge regression and a conf>=100 classifier. The design is reasonable, but the single-prompt setup makes the confidence labels heavily concentrated at 100, so the binary task is narrower than the paper's multi-framing confidence contrast.",
+          "score": 4,
+          "evidence_files": [
+            "results/REPORT.md",
+            "results/probe_llama31_8b_instruct_triviaqa.json",
+            "results/probe_qwen25_7b_instruct_triviaqa.json"
+          ]
+        },
+        "result": {
+          "justification": "The result is faithful: Llama conf_prefix confidence-high AUC is 0.9749 and ridge R2 reaches 0.7253; Qwen conf_prefix confidence-high AUC is 0.9822 and ridge R2 reaches 0.5961.",
+          "score": 5,
+          "evidence_files": [
+            "results/REPORT.md",
+            "results/probe_llama31_8b_instruct_triviaqa.json",
+            "results/probe_qwen25_7b_instruct_triviaqa.json"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Well-calibrated accuracy information and verbalized confidence occupy separate, nearly orthogonal directions; the model knows when it is likely wrong but generation fails to surface this signal.",
+        "method": {
+          "justification": "The method is appropriate for the geometric part of C3: it trains separate correctness and confidence probes and compares their weight-vector cosine similarity. This directly tests whether the two linear directions are nearly orthogonal. It does not fully test the causal readout-failure interpretation, because no patching, steering, or ablation is performed.",
+          "score": 4,
+          "evidence_files": [
+            "results/REPORT.md",
+            "scripts/step3_probe.py",
+            "scripts/step5_orthogonality_stat.py",
+            "results/orth_llama31_answer_end.json"
+          ]
+        },
+        "experiment": {
+          "justification": "The experiment is well designed for the orthogonality claim. It compares correctness-probe and confidence-probe directions, reports within-probe versus across-probe bootstrap cosine statistics, includes a random-direction baseline, and repeats the analysis on Qwen as an additional model check. These controls directly test whether the two linear directions are stable and nearly orthogonal.",
+          "score": 5,
+          "evidence_files": [
+            "results/REPORT.md",
+            "results/orth_llama31_answer_end.json",
+            "results/orth_qwen25_answer_end.json"
+          ]
+        },
+        "result": {
+          "justification": "The geometric result is consistent with the paper: Llama answer_end across-probe |cos|=0.038 versus within-probe |cos|≈0.65, and Qwen answer_end across-probe |cos|=0.114. The causal interpretation is appropriately listed as a limitation and future work in the report.",
+          "score": 5,
+          "evidence_files": [
+            "results/REPORT.md",
+            "results/orth_llama31_answer_end.json",
+            "results/orth_qwen25_answer_end.json"
+          ]
+        }
+      }
+    }
+  }
+}

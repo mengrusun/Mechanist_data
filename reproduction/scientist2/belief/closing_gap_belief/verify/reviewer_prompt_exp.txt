@@ -1,0 +1,100 @@
+You are an experiment integrity auditor. Read ALL information below and check for fraud patterns.
+
+This audit covers FIVE claims (C1, C2, C3a, C3b, C3c) from a mechanistic-interpretability experiment that measured the geometric relationship between the gold-correctness probe direction and the verbalized-confidence probe direction in Llama-3.1-8B-Instruct on TriviaQA.
+
+=== EXPERIMENT PLAN KEY SECTIONS ===
+- C1 (gold correctness linearly accessible): Linked milestones B1 (M1). Required: AUROC(L_c*) >= 0.70, 95% CI lower > 0.65; ECE <= 0.10 post-isotonic; ECE(probe) < ECE(token_prob); beating random-direction and shuffled-label nulls.
+- C2 (verbalized confidence linearly accessible): Linked milestones B1 (M1), B5 (M1.5), B6 (M5). Required: ordinal top-1 >= 0.55 + macro-F1 >= 0.40; binarized AUROC(L_v*) >= 0.70; paraphrase Delta <= 0.10.
+- C3a (near-orthogonality): Linked milestones B2 (M2). Required: |cos(v_c*, v_v*)| <= 0.3 with CI upper < 0.4; neighborhood mean L*+-2 <= 0.3.
+- C3b (causal separability): Linked milestones B3 (M3). Required: cross-steering ratio or absolute-effect criterion on internal readout; random-direction matched-magnitude control.
+- C3c (dissociation-when-disagree): Linked milestones B4 (M4). Required: Accuracy(low probe, high verbal) < Accuracy(low probe, low verbal), McNemar p < 0.05.
+
+=== DATA PROVENANCE ===
+Ground truth for C1: y_correct = whether model answer matches TriviaQA alias list (normalized exact-match; whole-word or exact match; reverse-substring excluded after code review fix). REAL DATASET GT.
+Ground truth for C2: verbalized confidence c parsed from model output (0-100 scale). Used as probe TARGET (not GT). By design: C2 asks whether model pre-encodes its own verbalization in residual stream.
+Binarized AUROC target y_v_bin = (c >= threshold at 30th percentile). Not model-output-normalized in the fraudulent sense.
+
+=== KEY RESULT FILES (VERIFIED EXISTING) ===
+artifacts/probe_metrics.json: L_star=31, auc_c_test=0.840, auc_v_bin_test=0.948, ece_c_isotonic=0.031, ordinal_top1_test=0.994, ordinal_macro_f1=0.862, bootstrap_ci_auc_c=[0.818, 0.835] (200-resample), bootstrap_ci_auc_v=[0.913, 0.940]
+artifacts/cos_bootstrap.json: mean=0.015, ci_lo=0.001, ci_hi=0.034, n=200
+artifacts/cos_trajectory.json: abs_cos_at_Lstar=0.015, neighborhood_L*+-2_mean=0.025
+artifacts/nulls.json: random_direction null mean_abs_cos=0.011 (theoretical ~0.016), shuffled_label probe_c auc=0.497, cos_shuf=0.016
+artifacts/steering_results.json: C3b criteria -- all 4 internal readout cross-direction tests PASS via absolute mode; sigma_probe_c=1.663, sigma_probe_v=0.362; alpha_grid=[-1.0, 0.0, 1.0]
+artifacts/dissociation.json: z=1.35, p_one_sided=0.91, (probe_low, verbal_low) n=4, NOT SIGNIFICANT. passes=false.
+artifacts/paraphrase.json: P1 AUC=0.838 (Delta=-0.11), P2 AUC=0.870 (Delta=-0.08)
+artifacts/single_pass.json: |cos|=0.139, AUC_c=0.786, AUC_v=0.876
+
+=== EXPERIMENT TRACKER STATUS ===
+All runs: SANITY through R017 -- all status=done. No pending or failed runs.
+
+=== CODE ARCHITECTURE ===
+step4_probes.py:
+- _fit_lr_probe(): L2-logistic, C tuned on DEV AUROC (NOT test -- leakage fix applied)
+- _ece(): standard ECE, 15 bins, post-isotonic calibration on dev
+- _load_split_masks(): idx-based (not qid-based -- TriviaQA duplicate qid leakage bug found and fixed: 628/6k train-dev overlap under qid split; fixed by train_idxs/dev_idxs/test_idxs in split_manifest.json)
+- Bootstrap: 200 resamples (reduced from planned 1000 for compute; CI half-widths < 0.03 on AUC)
+- L* selection: argmax of normalized dev AUROC sum, excludes embedding layer L=0
+- All metric functions ARE called; outputs appear in probe_metrics.json
+
+step5_steering.py:
+- SteeringHook: adds alpha*sigma_L* * v at last-input-token residual (hook on model.model.layers[L_star-1])
+- alpha grid: [-1.0, 0.0, 1.0] (3 values in sigma_L* units)
+- Random direction: 1 random unit vector (single, not n >= 30)
+- Perplexity safety cap: implemented and checked; no blow-up detected (ppl 2.24/1.76 baseline, stable)
+- sigma_L*: std of elementwise activations on training set (correctly computed)
+
+=== SCOPE ===
+N=10,000 TriviaQA questions (6k/2k/2k), single model, single dataset. Paper explicitly scopes claims to "one model on one dataset." Not claiming comprehensive/extensive coverage. Bootstrap reduced from 1000 to 200 -- flagged explicitly in results with CI widths confirmed tight.
+
+=== EVALUATION TYPE ===
+C1: real_gt (TriviaQA alias-based exact match)
+C2: by-design synthetic_proxy (the probe target IS the model's own verbalization -- this is the research question, not fraud)
+C3a: derived (cosine of probe weight vectors -- analytical)
+C3b: internal readout = derived from probe projections; secondary emitted = real_gt for correctness, c-based for confidence
+C3c: real_gt (TriviaQA gold answers for correctness)
+
+=== POTENTIAL ISSUES ===
+1. C2 probe target is model's own verbalized c. Is this "GT from model output"? By design -- the claim is about pre-encoding of verbalization.
+2. Bootstrap n=200 instead of planned 1000. Explicitly flagged. CIs tight.
+3. Paraphrase Delta AUC = -0.08 to -0.11, exceeds <=0.05 planned tolerance. Honestly reported; AUC still above 0.70 floor. Does this overclaim C2 paraphrase robustness?
+4. C3c null result with n=4 in load-bearing cell. Honestly reported as under-power.
+5. L* selection uses DEV AUC -- correct.
+6. Single random direction in C3b (vs recommended n>=30) -- relevant to mechanism-audit, not experiment-audit.
+
+## Audit Checklist
+
+### A. Ground Truth Provenance
+For each claim (C1, C2, C3a, C3b, C3c): Where does GT come from? Is it loaded from dataset or derived from model outputs? Is proxy evaluation labeled explicitly?
+FAIL if: GT is derived from model outputs without explicit proxy labeling.
+
+### B. Score Normalization
+For each claim: Is any metric divided by the model's own max/min/mean? Are raw scores reported?
+FAIL if: Normalization denominator comes from prediction statistics.
+
+### C. Result File Existence
+For each claim: Do referenced artifact files exist? Do claimed numbers match what the files contain?
+FAIL if: Claimed results reference nonexistent files or mismatched numbers.
+
+### D. Dead Code Detection
+Are metric functions defined but never called? Do outputs appear in result files?
+WARN if: Metric functions exist but are never called.
+
+### E. Scope Assessment
+How many samples/models/datasets? Does paper language exceed actual scope?
+WARN if: Scope language exceeds actual evidence.
+
+### F. Evaluation Type Classification
+Classify each claim's evaluation as: real_gt | synthetic_proxy | self_supervised_proxy | simulation_only | human_eval
+
+## Output Format
+For EACH claim (C1, C2, C3a, C3b, C3c), give:
+- Check A: [PASS|WARN|FAIL] -- brief evidence
+- Check B: [PASS|WARN|FAIL] -- brief evidence
+- Check C: [PASS|WARN|FAIL] -- brief evidence
+- Check D: [PASS|WARN|FAIL] -- brief evidence
+- Check E: [PASS|WARN|FAIL] -- brief evidence
+- Check F: [classification]
+- overall_verdict: [PASS|WARN|FAIL]
+
+Then provide a final summary table with per-claim overall_verdict.
+Be strict. Flag WARN for any genuine concern.

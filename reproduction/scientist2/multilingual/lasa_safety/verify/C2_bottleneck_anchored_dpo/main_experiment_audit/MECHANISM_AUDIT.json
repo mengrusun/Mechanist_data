@@ -1,0 +1,33 @@
+{
+  "claim_id": "C2",
+  "milestones_audited": ["M3-Method", "M3-Baseline", "M4"],
+  "audit_date": "2026-07-14",
+  "checks": {
+    "A_steering_coefficient_sweep": {
+      "verdict": "warn",
+      "detail": "lambda_bottleneck was not swept — single value 0.5 used (plan explicitly deferred sweep to /auto-verify). LR was piloted at {5e-6, 1e-5, 5e-5}. Baseline (lambda=0) provides the null comparison. No random-direction L_bottleneck control. sigma_proj scaling less critical for a bounded loss-level cosine coefficient. Warn (not fail) because deferral was plan-authorized and the primary comparison (Method vs Baseline) still tests the hypothesis."
+    },
+    "B_direction_extraction_quality": {
+      "verdict": "not_implemented",
+      "detail": "Reserved. Note: no explicit direction vector stored — regularizer uses live model states."
+    },
+    "C_site_layer_choice": {
+      "verdict": "not_implemented",
+      "detail": "Reserved. Note: L*=10 is data-driven from M1 output, causally tested (partially) in M2."
+    },
+    "D_n_effective_sufficiency": {
+      "verdict": "not_implemented",
+      "detail": "Reserved. Note: 7000 DPO pairs at 3000 steps; 315 anchor triples. MultiJail eval capped at 100/lang."
+    },
+    "E_probe_causal_disentanglement": {
+      "verdict": "not_implemented",
+      "detail": "Reserved."
+    },
+    "F_intervention_scope": {
+      "verdict": "not_implemented",
+      "detail": "Reserved."
+    }
+  },
+  "overall_verdict": "warn",
+  "overall_reason": "WARN driven by Check A: lambda_bottleneck=0.5 is a single untested point (sweep deferred per plan). LR was properly piloted. Warn does not block Stage 2 entry."
+}

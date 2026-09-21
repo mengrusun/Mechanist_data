@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Toward Universal Steering and Monitoring of AI Models",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The monitoring pipeline uses genuinely disjoint train/test splits: cache/toxicchat_bal.jsonl and cache/hewild_bal.jsonl each carry 100 train-pos / 100 train-neg / 100 test-pos / 100 test-neg (verified by parsing the 'split'/'label' fields), and src/train_probe.py fits LogisticRegression only on train_mask and scores on test_mask (lines 30-45). Steering vectors are likewise extracted from separate concept datasets and evaluated on held-out prompts (report claims 8/8 held-out harmful, multilingual prompts are separately hand-translated in cache/multilang_harmful.jsonl). However there is one real leakage path: train_probe.py selects the reported block by argmax over the *test-set* per-block AUC (best_l = np.argmax(aucs) computed on Xte/yte, then best_auc reported as the headline, lines 36-49). So the headline probe AUCs (probe_toxicchat.json best_auc=0.95 @block13; probe_hewild.json best_auc=0.9924 @block7) are chosen on the evaluation split — an optimistic-selection gap. It does not overturn the HE-Wild conclusion (0.99 vs 0.81) but does inflate the marginal ToxicChat gap (0.95 vs 0.93). One minor, real hygiene gap.",
+    "score": 3,
+    "evidence_files": ["src/train_probe.py", "cache/toxicchat_bal.jsonl", "cache/hewild_bal.jsonl", "results/probe_toxicchat.json", "results/probe_hewild.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Monitoring ground truth comes from real, established benchmarks with independent gold labels: cache/toxicchat_bal.jsonl contains genuine ToxicChat user prompts with toxicity labels and cache/hewild_bal.jsonl contains genuine HaluEval-Wild query/response pairs with hallucination labels (both inspected; content matches the source datasets, not model-generated). These are non-circular — the labels are not produced by the Llama-8B system under test. Concept-extraction labels (harmful=1/harmless=0, deceptive/honest) faithfully operationalize the target concepts. The one weakness is the steering-success metric: src/refusal_metric.py is a regex heuristic over multilingual refusal phrases used as the proxy for 'was steering effective', which is noisier and weaker than the paper's GPT-4o-judged steering evaluation, and honesty steering is scored only by qualitative reading. Labels themselves are valid; the steering-success proxy is a reasonable but under-validated operationalization.",
+    "score": 4,
+    "evidence_files": ["cache/toxicchat_bal.jsonl", "cache/hewild_bal.jsonl", "src/refusal_metric.py"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The base steered model matches spec: REPORT.md and src/*.py use meta-llama/Llama-3.1-8B-Instruct (32 blocks), the task.md experiment-stage model. But several required resources are downgraded or skipped in the main experiments: (1) the task's core experiment-stage dataset — the 'GPT-4o-generated concept benchmark, 512 concepts across 5 classes + 400 generic statements' systematic steering evaluation — was NEVER built or run; the run substitutes small hand-authored refusal (200) / honesty (80) sets and does only anti-refusal + honesty (political stance omitted). (2) The fixed judge baseline is specified as GPT-4o (gpt-4o-2024-11-20) but the run used gpt-5.4 for all judging (judge_toxicchat.json / judge_hewild.json 'judge_model':'gpt-5.4', hard-coded in src/llm_judge.py) — disclosed in REPORT.md but not the specified model, and it is the very baseline Claim 5 must beat. (3) The ToxicChat-T5-Large fixed baseline was not run. (4) HackerRank was subsetted from the specified 50 challenges to 10 eval problems (cache/hackerrank_probs.jsonl). Verify-stage 70B/VLM/DeepSeek models are exempt, but these baseline-experiment substitutions are material.",
+    "score": 2,
+    "evidence_files": ["REPORT.md", "src/llm_judge.py", "results/judge_toxicchat.json", "cache/hackerrank_probs.jsonl", "task.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Evidence scale is highly uneven. Claim 5 (monitoring) rests on adequate n=200 test / 200 train per task (probe_*.json, judge_*.json n_test=200). But the steering claims rest on very thin samples: Claim 1 anti-refusal is 8 held-out prompts (results/refusal_neg01.jsonl, 8 rows) and honesty is ~6-7 qualitative examples (results/honesty_alpha0.06.jsonl 7 rows); Claim 3 cross-language is 5 prompts/language = 15 total (cache/multilang_harmful.jsonl); Claim 4 composability is 8 harmful + 6 honesty qualitative rows. All far below 40 items and largely read qualitatively. The experiments were genuinely run (not overclaimed on paper), and the report does attach caveats ('qualitative reading of 6 examples', 'inconclusive at 8B'), but the small-n thinness is only partially flagged and the steering conclusions are stated more strongly ('strongly supported') than 15-example evidence warrants.",
+    "score": 3,
+    "evidence_files": ["results/refusal_neg01.jsonl", "results/honesty_alpha0.06.jsonl", "cache/multilang_harmful.jsonl", "results/probe_toxicchat.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "No uncertainty quantification anywhere. Steering generation is greedy/deterministic (src/steer_generate.py do_sample=False) so single-shot; monitoring AUCs are single-run point estimates with no seeds, no confidence intervals, no variance, and no significance testing (probe_*.json / judge_*.json report only a scalar AUC). Some effects are large and clearly beyond noise (HE-Wild probe 0.9924 vs judge 0.8126; language switch 10/10 vs 0/10), but the headline ToxicChat gap (probe 0.9500 vs judge 0.9325, ~1.75 AUC points) — additionally inflated by test-set block selection — is within plausible sampling noise on n=200 yet is presented as a real win. No error bars and a within-noise difference treated as an effect.",
+    "score": 2,
+    "evidence_files": ["src/steer_generate.py", "results/probe_toxicchat.json", "results/judge_toxicchat.json", "results/probe_hewild.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The steering claims are genuinely causal and are backed by genuine interventions, not correlation: src/steer_generate.py registers forward hooks that additively perturb block outputs by alpha*v_l*||h_l|| (matching the paper's activation-addition mechanism), and every experiment reports a baseline-vs-steered contrast (e.g. results/refusal_neg01.jsonl baseline 100% refuse -> steered 0% refuse). This is a real intervention. However rigor controls are weakened: there is no random-direction / random-vector baseline anywhere, and each steering experiment uses essentially a single hand-tuned coefficient (refusal alpha=-0.1, honesty alpha=+/-0.06, C++ alpha=0.08) rather than the coefficient sweep the paper uses, so it is not shown that the effect is specific to the learned direction vs any large perturbation. Intervention present, controls missing.",
+    "score": 3,
+    "evidence_files": ["src/steer_generate.py", "results/refusal_neg01.jsonl", "results/multilang_jailbreak_annot.jsonl"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Most headline numbers trace cleanly to on-disk products and agree exactly. Monitoring: REPORT ToxicChat 0.9500/0.9325 and HE-Wild 0.9924/0.8126 match results/probe_toxicchat.json (best_auc 0.95), probe_hewild.json (0.9924), judge_toxicchat.json (auc 0.93245) and judge_hewild.json (auc 0.81255). C++: the report table (baseline 0/10 C++, 10/10 py, 0 pass; prompted 10/10 C++, 9/10 compile; steered 10/10 C++, 6/10 compile) matches eval_baseline.json, eval_prompted_cpp.json and eval_steered_long.json. Refusal rates I re-derived by running src/refusal_metric.py on the jsonl outputs and reproduced the report exactly (zh 80->0%, fr/es 100->0%; refusal_neg01 100->0%). Two gaps: (a) the Claim-1 'per-block AUC = 1.00' linear-separability numbers for refusal/honesty are prose-only with no saved metric file; (b) REPORT.md lists cache/{refusal,honesty}_acts.pt and toxicchat/hewild _acts.pt as source files but no *_acts.pt exist on disk (only the derived *_diffmean.pt / honesty_rfm.pt). No number is contradicted or fabricated; traceability is high but incomplete for the separability claims.",
+    "score": 4,
+    "evidence_files": ["results/probe_hewild.json", "results/judge_hewild.json", "results/eval_steered_long.json", "results/eval_baseline.json", "cache/refusal_diffmean.pt"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline's records are internally consistent. Every REPORT.md number I cross-checked matches its JSON product (monitoring AUCs, C++ eval counts, multilingual/refusal rates all reproduced above), and prose verdicts agree with their numbers. The report is honest where the result is weak: Claim 2's pass-rate half is labeled 'inconclusive at 8B' consistent with eval_*.json all showing n_pass_any=0. The 'C++ steering compiles 6/10' row draws on eval_steered_long.json (6) rather than eval_steered.json (short, 3) — both files are retained and the choice (long generation) is defensible, a minor bookkeeping ambiguity rather than a contradiction. The '53 pairs' cpp description matches code_pairs.jsonl (53 train-pos + 53 train-neg = 106 rows). No metric conflicts, no PASS-vs-integrity-gate contradictions. There is no separate tracker/claims-ledger artifact, so consistency is judged over REPORT + results only.",
+    "score": 4,
+    "evidence_files": ["REPORT.md", "results/eval_steered.json", "results/eval_steered_long.json", "cache/code_pairs.jsonl"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "RFM--a supervised feature learning algorithm can extract per-block linear concept vectors from the internal activations of large-scale AI models, and adding these vectors to activations during inference effectively steers model behavior toward or away from the target concept. Example application scenarios: Anti-refusal (jailbreak)，Political stance，Honesty (negative steering).",
+        "method": {
+          "justification": "9a: The mechanistic method is well matched. src/concept_vector.py implements both DiffMean and a genuine RFM (Laplace-Mahalanobis kernel K=exp(-sqrt((x-z)^T M (x-z))/L), kernel-ridge solve, AGOP M_{t+1}=grad grad^T, top-eigenvector direction, sign orientation by pos-neg mean) — this faithfully follows the paper's Eq.(1)-(2) RFM/AGOP formulation, and steering is per-block additive activation perturbation as in the paper. The mismatch: the run steers mostly with DiffMean and uses RFM only as a cosine cross-check on honesty (cache/honesty_rfm.pt), whereas the claim/paper headline is specifically RFM; DiffMean is the paper's weaker baseline. Method family is right, RFM under-exercised.",
+          "score": 4,
+          "evidence_files": ["src/concept_vector.py", "cache/honesty_rfm.pt", "cache/refusal_diffmean.pt"]
+        },
+        "experiment": {
+          "justification": "9b: Design is sound in shape (concept extraction on labelled prompts, additive hook on middle blocks [8,24)/[12,24), baseline-vs-steered contrast) but under-powered and incomplete. Anti-refusal tested on only 8 held-out prompts, honesty on ~6 qualitative examples; success measured by the regex refusal heuristic (src/refusal_metric.py) rather than the paper's GPT-4o steering judge; no random-direction control and no coefficient sweep (single alpha); and the 'Political stance' scenario named in the claim is not attempted at all. No use of the specified 512-concept GPT-4o benchmark that would give a quantitative steerability rate. Honest but thin and partial.",
+          "score": 3,
+          "evidence_files": ["src/steer_generate.py", "results/refusal_neg01.jsonl", "results/honesty_alpha0.06.jsonl", "results/honesty_alpha-0.06.jsonl"]
+        },
+        "result": {
+          "justification": "9c: For the two scenarios actually run, results qualitatively agree with the paper: anti-refusal steering flips 100%->0% refusal (verified via refusal_metric on results/refusal_neg01.jsonl) and honesty steering produces the paper's directional effect (negative alpha -> direct honest disclosure, positive alpha -> evasive fabricated excuses; results/honesty_alpha{-0.06,0.06}.jsonl), and the RFM vector reproduces the same deception effect (results/honesty_rfm_pos.jsonl). Analysis is honest. Deductions: political-stance sub-scenario dropped, evidence qualitative/small, so agreement is directional on 2 of 3 named applications.",
+          "score": 4,
+          "evidence_files": ["results/refusal_neg01.jsonl", "results/honesty_alpha0.06.jsonl", "results/honesty_rfm_pos.jsonl"]
+        }
+      },
+      "C2": {
+        "claim": "Steering can improve performance on high-precision tasks: steering from Python to C++ when answering coding questions on algorithm problems with different task difficulties, a C++ concept vector can raise llm's test-case pass rate, beating both the default Python output and \"Answer in C++\" prompting.",
+        "method": {
+          "justification": "9a: The C++ concept vector is extracted by DiffMean over 53 (Python,C++) HackerRank solution pairs (cache/code_pairs.jsonl, cache/cpp_diffmean.pt) and applied by additive steering — the correct mechanism to induce the language switch, matching the paper's setup. Pass-rate is measured by extracting code, compiling with g++ -std=c++17, and running against sample tests (src/code_eval.py), a reasonable operationalization. Method is appropriate for the language-switch component; DiffMean rather than RFM is a minor family deviation.",
+          "score": 4,
+          "evidence_files": ["src/code_eval.py", "cache/cpp_diffmean.pt", "cache/code_pairs.jsonl"]
+        },
+        "experiment": {
+          "justification": "9b: The pass-rate half of the claim is essentially untestable under the design run. Only 10 held-out problems (paper: 50), only sample/public tests (not the full private suite), a single steering coefficient (alpha=0.08), and crucially only the 8B model — which passes 0/10 in *every* condition including the 'Answer in C++' baseline (eval_baseline/eval_prompted_cpp/eval_steered_long all n_pass_any=0). The run acknowledges this but did NOT escalate to the available 70B verify-stage model that the paper uses for the pass-rate result, so a true-negative cannot be distinguished from under-powering. The ordering criterion is therefore never exercised. Under-explored.",
+          "score": 2,
+          "evidence_files": ["results/eval_baseline.json", "results/eval_steered_long.json", "results/eval_prompted_cpp.json", "cache/hackerrank_probs.jsonl"]
+        },
+        "result": {
+          "justification": "9c: The language-switch sub-result is confirmed and agrees with the paper (steering flips Python 10/10 -> C++ 10/10 with near-zero syntax cost; eval_steered_long.json n_cpp_block=10). The pass-rate/ordering sub-result is honestly reported as 'inconclusive at 8B' rather than fabricated or forced — consistent with the on-disk zeros. This is an honest non-reproduction of the core (pass-rate) claim, but because a stronger model that could have tested it was available and unused, it is partial under-powering rather than a case where the method objectively cannot yield the result.",
+          "score": 3,
+          "evidence_files": ["results/eval_steered.json", "results/eval_steered_long.json", "REPORT.md"]
+        }
+      },
+      "C3": {
+        "claim": "Concept representations are transferable across human languages: concept vectors trained on English text can steer model responses in other languages (e.g., Chinese, French, Spanish).",
+        "method": {
+          "justification": "9a: Exactly the paper's transfer test — the English-only refusal concept vector (cache/refusal_diffmean.pt) is applied unchanged to Chinese/French/Spanish harmful prompts (cache/multilang_harmful.jsonl, no retraining), with the same additive steering hook. This directly and correctly operationalizes cross-language transferability.",
+          "score": 5,
+          "evidence_files": ["cache/refusal_diffmean.pt", "cache/multilang_harmful.jsonl", "src/steer_generate.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design is reasonable (per-language baseline-vs-steered, multilingual refusal detector) but thin: 5 hand-authored prompts per language (15 total), single coefficient, refusal-heuristic proxy rather than a GPT judge, and no random-direction control. Adequate to show direction, insufficient for a strong quantitative claim.",
+          "score": 3,
+          "evidence_files": ["results/multilang_jailbreak_annot.jsonl", "src/refusal_metric.py"]
+        },
+        "result": {
+          "justification": "9c: Results clearly agree with the paper: I re-ran refusal_metric on results/multilang_jailbreak_annot.jsonl and reproduced zh 80%->0%, fr 100%->0%, es 100%->0% steered refusal, with a concrete French comply example. The English direction transfers to all three languages, qualitatively matching the paper's transferability finding. Direction is unambiguous; only the small n caps the score.",
+          "score": 4,
+          "evidence_files": ["results/multilang_jailbreak_annot.jsonl"]
+        }
+      },
+      "C4": {
+        "claim": "Concept vectors are composable: linear combinations of multiple concept vectors enable simultaneous multi-concept steering.",
+        "method": {
+          "justification": "9a: The composition is a literal linear combination — src/steer_generate.py sums alpha_k*v_k across the refusal and honesty vectors and applies the combined per-block vector in one hook pass. This is exactly the paper's multi-concept steering mechanism (v_l as a linear combination of concept vectors). Correct method.",
+          "score": 5,
+          "evidence_files": ["src/steer_generate.py", "results/compose_refuse_hon_on_harmful.jsonl"]
+        },
+        "experiment": {
+          "justification": "9b: Reasonable design — apply the composed vector to two prompt families and check that each component's effect survives — but small and largely qualitative: 8 harmful + 6 honesty prompts (results/compose_refuse_hon_on_{harmful,honesty}.jsonl), refusal component checked by heuristic, honesty component read qualitatively, no quantitative 'both concepts simultaneously active' metric and no interference/ablation control.",
+          "score": 3,
+          "evidence_files": ["results/compose_refuse_hon_on_harmful.jsonl", "results/compose_refuse_hon_on_honesty.jsonl"]
+        },
+        "result": {
+          "justification": "9c: Results agree with the paper's composability finding: under one combined weight configuration both effects appear — on harmful prompts the composed steering complies rather than refuses, and on honesty prompts it produces evasive fabricated excuses (inspected outputs). The paper composes different concept pairs (influencer+political); reaching the same 'union of effects' conclusion via a refusal+honesty pair still counts as qualitative agreement. Small-n and qualitative, but directionally consistent and honestly reported.",
+          "score": 4,
+          "evidence_files": ["results/compose_refuse_hon_on_harmful.jsonl", "results/compose_refuse_hon_on_honesty.jsonl"]
+        }
+      },
+      "C5": {
+        "claim": "Internal concept features are more effective for monitoring misaligned content (hallucinations, toxic content) than LLM judges that evaluate outputs directly — even when the features come from smaller open-source models compared to powerful judges like GPT-4o.",
+        "method": {
+          "justification": "9a: The run tests internal-feature monitoring with a per-block L2-logistic-regression probe on last-token residual activations (src/train_probe.py), NOT the paper's RFM-probe (top-p AGOP eigenvector projections + classifier). A linear probe on activations is a legitimate and standard way to test 'internal features beat judges', so the mechanism category (internal-representation probing) is right, but the specific RFM mechanism named by the claim/paper is not used, which weakens fidelity to the exact method.",
+          "score": 3,
+          "evidence_files": ["src/train_probe.py", "src/extract_activations.py"]
+        },
+        "experiment": {
+          "justification": "9b: The comparison is set up correctly in form — balanced 200/200 train/test, per-block AUROC probe vs a same-test-set LLM judge (src/llm_judge.py), AUROC as the metric matching the paper. But three design problems bite: (1) the reported probe block is selected on the test set (train_probe.py argmax over test AUC), inflating the headline; (2) the judge baseline is gpt-5.4, not the specified/paper GPT-4o, and ToxicChat-T5-Large is omitted, so the 'beats GPT-4o'-style comparison is against a different, arguably stronger judge; (3) only 2 of the paper's 6 monitoring benchmarks are run, and they are the two most favorable to the probe (ToxicChat, HE-Wild), omitting the harder FAVABENCH/HE-Gen/PubMedQA/RAGTruth. Selective and partly leaky.",
+          "score": 2,
+          "evidence_files": ["src/train_probe.py", "src/llm_judge.py", "results/judge_toxicchat.json", "results/probe_hewild.json"]
+        },
+        "result": {
+          "justification": "9c: The probe beats the judge on both tasks run (ToxicChat probe 0.9500 vs gpt-5.4 0.9325; HE-Wild probe 0.9924 vs 0.8126; numbers verified in probe_*/judge_*.json), so the direction qualitatively agrees with the paper's 'internal features > output judges, even from a small open-source model'. HE-Wild is a robust, large-margin agreement consistent with the paper (which reports ~0.924 probe vs ~0.80 judge). Deductions: the ToxicChat margin is small and within-noise plus test-set-selected, the judge is not the specified GPT-4o, and the conclusion generalizes from only the 2 easiest datasets — so the agreement is real but on selectively favorable, partly optimistic evidence.",
+          "score": 3,
+          "evidence_files": ["results/probe_toxicchat.json", "results/judge_toxicchat.json", "results/probe_hewild.json", "results/judge_hewild.json"]
+        }
+      }
+    }
+  }
+}

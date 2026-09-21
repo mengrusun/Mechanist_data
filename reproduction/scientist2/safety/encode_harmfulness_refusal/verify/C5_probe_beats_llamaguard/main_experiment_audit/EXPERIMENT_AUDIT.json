@@ -1,0 +1,16 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4)",
+  "claim_id": "C5",
+  "linked_milestones": ["M5"],
+  "overall_verdict": "fail",
+  "integrity_status": "fail",
+  "checks": {
+    "gt_provenance": {"status": "pass", "details": "Probe training uses dataset labels (AdvBench harmful, Alpaca benign); LG3-8B is comparator baseline, not label source"},
+    "score_normalization": {"status": "pass", "details": "AUROC vs dataset GT labels; FLOPs from parameter counts; no self-normalization"},
+    "result_existence": {"status": "pass", "details": "results/m5/claim5_verdict.json exists; AUROC=1.000 vs LG 0.9992 matches EXPERIMENT_RESULTS.md"},
+    "dead_code": {"status": "pass", "details": "Both probe variants and LG baseline evaluation all ran and output files exist"},
+    "scope": {"status": "fail", "details": "CRITICAL: Claim says flagging jailbreaks but test set has 0 jailbreak items (claim5_verdict.json: successful_jb=0). Test is bare-harmful vs benign, not jailbreak detection. Scope mismatch — the harder intended task was not tested."},
+    "eval_type": "real_gt"
+  }
+}

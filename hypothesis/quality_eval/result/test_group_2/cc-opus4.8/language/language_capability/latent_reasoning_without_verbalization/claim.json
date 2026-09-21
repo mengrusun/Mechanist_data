@@ -1,0 +1,24 @@
+{
+  "Name": "latent_reasoning_without_verbalization",
+  "Title": "Silent Thought: Decoding Reasoning the Model Never Says",
+  "Short Hypothesis": "We hypothesize that LLMs perform a substantial amount of multi-step reasoning in latent activations that is never verbalized, and that these hidden intermediate results are linearly decodable from the residual stream before (or without) any corresponding output token. If true, language production is a lossy read-out of a richer internal computation, implying intelligence is not bounded by what the model writes. This setting is best because it isolates the non-linguistic component of reasoning by measuring computation that has no token footprint.",
+  "Related Work": "Work on latent multi-hop reasoning (Yang et al. 2024 on two-hop facts; Biran et al.) shows intermediate entities are internally represented. 'Grokked'/implicit reasoning (Wang et al.) and probing of board states (Li et al., Othello) show latent world models. Filler-token work (Pfau et al.) shows hidden computation. We synthesize these into a direct test: measuring how many reasoning steps can be executed and decoded with zero intermediate tokens, and whether forcing verbalization changes the answer, quantifying the silent-reasoning capacity.",
+  "Abstract": "If language models can execute reasoning steps internally without emitting them, then their intelligence exceeds their verbal trace, reshaping how we interpret and evaluate them. We measure silent reasoning. Using controlled k-hop factual and arithmetic chains (e.g., 'the capital of the country whose currency is X'), we prompt models to answer directly with no chain-of-thought and probe the residual stream at each layer for each intermediate quantity (the bridge entity, partial sums). We test (i) how many latent hops are linearly decodable in a single forward pass, (ii) whether decodability of an intermediate causally supports the final answer via patching that intermediate's representation, and (iii) whether the count of reliably computed silent hops scales with depth and model size. We compare silent-answer accuracy to CoT accuracy to estimate the verbalization gap. We predict that models reliably compute 2-3 silent hops whose internal corruption changes the final answer, that these representations appear at characteristic layers forming an internal 'pipeline', and that CoT mainly helps when silent capacity is exceeded. Establishing decodable, causal, unverbalized reasoning steps demonstrates that a genuine cognitive process runs beneath language output, quantifies its depth limit, and clarifies when explicit language is a computational necessity versus a convenience.",
+  "Experiments": [
+    "Build k-hop datasets (k=1..4) for factual bridges and arithmetic chains with known intermediate values.",
+    "No-CoT direct-answer condition on Llama-3-8B/70B and Qwen2.5; record residual streams.",
+    "Train linear/MLP probes per layer for each intermediate value; report decodability accuracy vs hop index and layer.",
+    "Causal test: activation-patch the internal representation of intermediate j from a run with a different value; check final-answer change (establishes the silent step is used).",
+    "Verbalization gap: compare direct-answer accuracy to CoT accuracy across k; identify k where CoT starts to help.",
+    "Scaling: relate max reliably-computed silent hops to model size and depth.",
+    "Metrics: silent-hop decodability curve, patch-induced answer-change rate per hop, verbalization gap, layer-of-emergence per hop.",
+    "Control: shuffle-label probes to bound leakage; irrelevant-intermediate patching as negative control."
+  ],
+  "Risk Factors and Limitations": [
+    "Probe decodability can reflect input leakage rather than genuine computed intermediates; strong controls needed.",
+    "Patching intermediates is delicate and may cause off-target disruption.",
+    "Silent-reasoning depth may be small, making effects hard to measure reliably.",
+    "Factual bridges may be memorized as direct associations rather than computed hops.",
+    "Layer 'pipeline' structure may be diffuse rather than clean."
+  ]
+}

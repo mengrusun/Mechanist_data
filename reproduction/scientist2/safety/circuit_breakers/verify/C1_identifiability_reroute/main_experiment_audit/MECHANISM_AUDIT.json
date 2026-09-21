@@ -1,0 +1,48 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4, via llm-chat MCP)",
+  "audit_type": "mechanism",
+  "claim_id": "C1",
+  "linked_milestones": ["M1", "M3", "M4"],
+  "triggered_checks": ["A"],
+  "overall_verdict": "fail",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "fail",
+      "triggered": true,
+      "trigger_match": [
+        "scripts/m3_rr_train.py:161 (alpha default=10.0, L_rr loss weight)",
+        "scripts/m3_rr_train.py:9 (RepE rerouting loss)",
+        "scripts/m4_diagnostic.py:17-18 (d_h direction evaluation)"
+      ],
+      "intervention_type": "RepE",
+      "sweep_grid": [10.0],
+      "sigma_proj_scaling": false,
+      "capability_metric": null,
+      "plateau_range": null,
+      "locked_alpha": 10.0,
+      "alpha_position": "n/a",
+      "random_baseline": {"run": true, "n_random": 1, "passed": false},
+      "sign_pattern": "n/a",
+      "output_case_spotcheck": {
+        "cases_available": true,
+        "verdict": "metric_text_mismatch",
+        "note": "M4 shows delta_cos_harmful=-0.0197 vs required <=-0.30 -- reroute effect is within noise, criterion_c1_reroute_passed=false. No multi-alpha behavior/capability spotcheck done."
+      },
+      "evidence": [
+        "scripts/m3_rr_train.py:161 (alpha=10.0 single default, no sweep)",
+        "artifacts/m3/training_summary.json (alpha=10.0, final_L_rr_ema=0.0016)",
+        "artifacts/m3/train_loss.jsonl:step330 (grad_norm=852)",
+        "artifacts/m3/train_loss.jsonl:step480 (grad_norm=159)",
+        "artifacts/m3/train_loss.jsonl:step490 (L_ret=2.30, grad_norm=137)",
+        "artifacts/m4/activation_drift.json (delta_cos_harmful=-0.0197, criterion_c1_reroute_passed=false)"
+      ],
+      "details": "FAIL on three mandatory criteria simultaneously. (1) No alpha sweep: only a single hardcoded alpha=10.0 was used, deviating from plan alpha=1.0 with no grid or sweep config found. (2) No capability metric logged at any alpha grid point: M5 MMLU/MT-Bench ran only at the final model, not across alpha values, so collapse detection is impossible. (3) Target reroute effect not demonstrated: delta_cos_harmful=-0.0197 vs required <=-0.30 (off by ~15x), criterion_c1_reroute_passed=false. Additional violations: no sigma_proj scaling (alpha incomparable across runs); inadequate random-direction control (n=1 vs required n>=30); training instability (grad_norm spikes to 852, 159, 137 at steps 330, 480, 490); L_rr near-zero throughout (0.0016 EMA final) suggesting the LoRA subspace failed to engage the RR mechanism."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

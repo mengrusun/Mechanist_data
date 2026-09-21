@@ -1,0 +1,50 @@
+{
+  "novelty": {
+    "score": 5,
+    "reasoning": "Core claim is a dynamical-systems framing of step-wise answer switching as under-damped oscillation with a damping coefficient and flip-aware settling detector. Closest prior family is already rich: latent-answer backtracking, trajectory geometry/stability, hesitation loops, and early-answer/confidence-exit work. The genuine delta is mostly the specific oscillation/damping formalism plus a future-flip-aware stopping rule on verbal reasoning models. That is a meaningful packaging/measurement twist, but not a fundamentally new phenomenon.",
+    "revision_notes": [
+      "State a sharper technical contribution beyond metaphor: define an identifiable oscillation model, estimation procedure, and when it differs from generic backtracking.",
+      "Demonstrate a novel invariant/metric not implied by prior stability or backtracking measures (e.g., predictive power of damping after controlling for switch count and entropy).",
+      "Add evidence that this is not just rebranding of hesitation/backtracking by comparing directly to those baselines on the same trajectories.",
+      "Specify what is new for verbal reasoning models versus existing latent-reasoning and early-exit literature."
+    ]
+  },
+  "impact": {
+    "score": 6,
+    "reasoning": "If valid, this matters to who cares about efficient reasoning and interpretability: one-shot stability is plausibly a bad early-exit heuristic, so a flip-aware detector could reduce tokens and missed flips. The downstream change is concrete: better stopping rules for reasoning models. However, the practical scope is narrow, and the claimed gains depend on whether oscillation is common and whether the detector calibrates well across tasks/models. The so what is solid but not broad.",
+    "revision_notes": [
+      "Quantify deployment value with cost-accuracy curves, not only token reduction at one operating point.",
+      "Show generalization to multiple model families and problem types to broaden who cares beyond a single benchmark set.",
+      "Benchmark against strong early-exit and confidence-calibration baselines, including abstention/verification-style stopping rules.",
+      "Report failure modes where the detector hurts, to make the practical value credible."
+    ]
+  },
+  "review": {
+    "score": 4,
+    "reasoning": "Research quality is moderate but currently fragile. The proposal is testable and has several concrete experiments, but there are logical gaps: oscillation may be rare, damping on short discrete trajectories may be noisy, and the causal role of heads is speculative. Related-work positioning is somewhat overconfident given closely adjacent prior work. Controls need to isolate the effect of switch-aware settling from simple confidence, entropy, and switch-count heuristics. Missing ablations include probe choice, threshold sensitivity, calibration of future-flip prediction, and cross-model/task transfer. Venue strength is decent if the claims hold, but current rigor is closer to a promising workshop paper than a top-conference-ready result.",
+    "revision_notes": [
+      "Add ablations for probe type, decoding layer, threshold calibration, and trajectory length sensitivity.",
+      "Include controls that match on confidence, entropy, switch count, and early-stability duration to show the detector adds unique signal.",
+      "Pre-register or explicitly define the damping/oscillation fit to avoid post-hoc curve fitting on noisy discrete traces.",
+      "Separate descriptive claims from causal claims: if head patching is exploratory, label it as such and add stronger causal interventions only if feasible.",
+      "Report prevalence of oscillation upfront; if rare, frame the paper as a characterization of a subset of failures rather than a universal theory.",
+      "Tighten related work to directly compare against backtracking, hesitation-loop, and early-answering papers with exact deltas."
+    ]
+  },
+  "revision_notes": [
+    "State a sharper technical contribution beyond metaphor: define an identifiable oscillation model, estimation procedure, and when it differs from generic backtracking.",
+    "Demonstrate a novel invariant/metric not implied by prior stability or backtracking measures (e.g., predictive power of damping after controlling for switch count and entropy).",
+    "Add evidence that this is not just rebranding of hesitation/backtracking by comparing directly to those baselines on the same trajectories.",
+    "Specify what is new for verbal reasoning models versus existing latent-reasoning and early-exit literature.",
+    "Quantify deployment value with cost-accuracy curves, not only token reduction at one operating point.",
+    "Show generalization to multiple model families and problem types to broaden who cares beyond a single benchmark set.",
+    "Benchmark against strong early-exit and confidence-calibration baselines, including abstention/verification-style stopping rules.",
+    "Report failure modes where the detector hurts, to make the practical value credible.",
+    "Add ablations for probe type, decoding layer, threshold calibration, and trajectory length sensitivity.",
+    "Include controls that match on confidence, entropy, switch count, and early-stability duration to show the detector adds unique signal.",
+    "Pre-register or explicitly define the damping/oscillation fit to avoid post-hoc curve fitting on noisy discrete traces.",
+    "Separate descriptive claims from causal claims: if head patching is exploratory, label it as such and add stronger causal interventions only if feasible.",
+    "Report prevalence of oscillation upfront; if rare, frame the paper as a characterization of a subset of failures rather than a universal theory.",
+    "Tighten related work to directly compare against backtracking, hesitation-loop, and early-answering papers with exact deltas."
+  ]
+}

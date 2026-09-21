@@ -1,0 +1,21 @@
+{
+  "Name": "false_belief_attention_heads",
+  "Title": "Sally-Anne Heads: Attention Circuitry for Tracking False Beliefs",
+  "Short Hypothesis": "A small set of attention heads is causally responsible for maintaining an agent's *outdated* (false) belief about an item's state after the world state changes; ablating them collapses first-order false-belief performance while sparing true-belief and world-state tracking.",
+  "Related Work": "Behavioral ToM benchmarks (ToMi; Le et al. 2019; FANToM) and the source paper document false-belief failures. Entity-state-tracking interpretability (Li et al. 2021 'Emergent world representations'; Kim & Schuster 2023 entity tracking) localizes *world* state but not divergent *belief* state. We isolate heads that maintain belief-world divergence, a strictly harder object.",
+  "Abstract": "False-belief understanding—knowing that Sally will look for the marble where she last saw it, not where it now is—requires representing an agent's belief as diverging from the current world state. The paper motivating this work shows LLMs are unreliable here. We hypothesize dedicated attention circuitry that binds an item's state *as last observed by a specific agent* and protects it from being overwritten when the narrative updates the true state. Using programmatically generated Sally-Anne stories with controlled move events, we track two internal quantities across positions: the true current location of the item and the agent-attributed (possibly stale) location. We identify heads whose attention moves the pre-move location representation onto the belief-query position, and test causal necessity by ablation and by patching the move event in/out. Prediction: ablating these heads makes the model default to the true location (egocentric collapse), degrading false-belief but not true-belief items; ablating separate world-tracking heads does the opposite. We further test whether the same heads generalize to non-spatial belief items (e.g. an agent's belief about a container's contents) and to second-order false belief. This yields a mechanistic dissociation between belief tracking and world tracking and pinpoints the failure mode behind false-belief errors.",
+  "Experiments": [
+    "Generate a controlled Sally-Anne corpus with variables: item, container/location, observer, move event present/absent, order of mention; include true-belief control stories.",
+    "Probe for (a) true current location and (b) agent-attributed location at the belief-query position, per layer.",
+    "Rank attention heads by how much they route the pre-move location to the query position; select candidate 'false-belief heads'.",
+    "Ablate candidate heads (zero/mean) and measure behavioral accuracy split by false-belief vs true-belief; ablate world-tracking heads as a contrast.",
+    "Activation patching of the move event to confirm heads carry the belief-world divergence signal.",
+    "Generalization tests: non-spatial content-belief stories and second-order ('Anne thinks Sally thinks...') items."
+  ],
+  "Risk Factors and Limitations": [
+    "Template-generated stories may let heads exploit positional heuristics rather than genuine belief tracking; vary order and phrasing.",
+    "Heads may be polysemantic; ablation could hit unrelated functions.",
+    "Second-order generalization may involve different circuitry, limiting scope.",
+    "Effect sizes may be small in smaller models with weak ToM."
+  ]
+}

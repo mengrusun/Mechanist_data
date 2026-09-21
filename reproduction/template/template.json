@@ -1,0 +1,96 @@
+
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "",
+    "paper_title":         "",
+    "agent":         "严格取值：scientist1 scientist2 scientist3",
+    "review_date":         ""
+  },
+
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence":    "所有维度 evidence_files的相对路径。",
+
+  "dimension_1_data_split_hygiene": {
+    "justification":  "<指出划分在何处定义、代码是否遵守。识别拟合/选择与评估之间的任何泄漏路径，附文件 + 证据。若无拟合过程写明 n/a。>",
+    "score":          null,
+    "evidence_files": []
+  },
+  "dimension_2_label_validity": {
+    "justification":  "<评估 ground truth/标签是否有效操作化了 target behavior 且非循环。引用标签来源/定义。若无标签写明 n/a。>",
+    "score":          null,
+    "evidence_files": []
+  },
+  "dimension_3_resource_fidelity": {
+    "justification":  "<将用户指定的模型/数据集/数据量与实际运行对比。标记主实验中任何静默或无理由的替换/取子集。>",
+    "score":          null,
+    "evidence_files": []
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification":  "<给出 used_n，以及 claim 强度是否与证据匹配。标记未跑实验即下结论或样本极小的情况。>",
+    "score":          null,
+    "evidence_files": []
+  },
+  "dimension_5_statistical_rigor": {
+    "justification":  "<给出种子/运行次数，以及是否报告方差/显著性。标记单种子点估计、落在噪声内的效应或挑选种子。>",
+    "score":          null,
+    "evidence_files": []
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification":  "<评估因果/机制性 claim 是否建立在真正受控的干预之上，而非相关性证据。若无因果主张，写明 'n/a —— 无因果主张'。>",
+    "score":          null,
+    "evidence_files": []
+  },
+  "dimension_7_result_provenance": {
+    "justification":  "<检查关键数字是否能追溯到具体落盘产物（results/ · runs/ · verify/*_audit/*.json）并与之相符。标记无来源、被矛盾或疑似伪造的数值。>",
+    "score":          null,
+    "evidence_files": []
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification":  "<比对 results/tracker/verify/ledger 之间的数字与判定，以及文字与数字。标记任何指标不符、被矛盾的结论或未传播的完整性状态。>",
+    "score":          null,
+    "evidence_files": []
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim":       "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore":        "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "<C1>": {
+        "claim":  "task.md中的claim1",
+        "method": {
+          "justification":  "<该 claim 选用的机理方法（如 CLIP-Dissect / SAE / activation patching / probing 等）是否与适合 claim 所主张的现象？方法的可解释假设是否成立？",
+          "score":          null,
+          "evidence_files": []
+        },
+        "experiment": {
+          "justification":  "<实验设计（对关键实验概念的理解、层/组件选择、baseline、控制变量、prompt设计、pool ablation 等）是否合理？用于判定 claim 成立的 metric（如 top-1 purity / MRR / Cohen's d / matched-control gap 等）是否可靠？附文件 + 证据。>",
+          "score":          null,
+          "evidence_files": []
+        },
+        "result": {
+          "justification":  "<对实验结果的分析、解释是否合理？与 {paper_dir} 的结论是否定性一致（同向、同符号、同结构；用不同方法得到同结论也算一致）？如果不定性一致，是否提出了可靠的原因？>",
+          "score":          null,
+          "evidence_files": []
+        }
+      },
+      "<C2>": {
+        "claim":  "task.md中的claim2",
+        "method": {
+          "justification":  "",
+          "score":          null,
+          "evidence_files": []
+        },
+        "experiment": {
+          "justification":  "",
+          "score":          null,
+          "evidence_files": []
+        },
+        "result": {
+          "justification":  "",
+          "score":          null,
+          "evidence_files": []
+        }
+      }
+    }
+  }
+}

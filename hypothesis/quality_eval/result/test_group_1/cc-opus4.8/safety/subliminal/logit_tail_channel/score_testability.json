@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan gives aligned, directional tests—“truncating generation to top-k / high-nucleus ... sharply reduces trait transmission” and full-soft-logit distillation “transmits more trait than ... sampled hard tokens”—with concrete truncation grids, so flat or reversed dose-response curves and no soft-over-hard advantage would clearly count against those predictions. However, “trait strength,” “approximately low-rank,” and “correlate with an independently defined trait direction” lack operational definitions or decision thresholds, and neither truncation nor full-soft-versus-hard distillation directly isolates tail logits from head logits. Thus the main comparisons are understandable and falsifiable, but the stronger conclusion that the trait is encoded “primarily” in the tail and the low-rank subclaim require clarifying metrics and tail-specific ablations.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "Most operations—“finetune students,” KL distillation on soft logits, matched-prefix logit subtraction, SVD, cosine measurement, and perplexity/task-accuracy controls—are standard and supported by mature deep-learning and interpretability tooling; the hardest step is constructing the “independently defined trait direction / unembedding-projected trait vector,” which is custom and under-specified rather than an established plug-in operation. The negative branch is runnable because the design includes non-trait teachers, identical prefixes, hard-label comparisons, truncation sweeps, and the capability control to test whether reduced transmission reflects “generic quality loss.” Resource specification is incomplete: the truncation values “{full, 100, 40, 10}” and nucleus values “{1.0, 0.9, 0.5}” are useful concrete figures, but no particular teacher/student models, datasets, number of prefixes, training examples, repetitions, or evaluation sample sizes are named.",
+      "score": 6
+    }
+  }
+}

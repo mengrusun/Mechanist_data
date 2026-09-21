@@ -1,0 +1,44 @@
+{
+  "direction": "Generate DNA sequences with higher α-helical content using Evo2-7B (steer a DNA foundation model toward a protein-structural property)",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "Evo2-7B generation can be steered toward DNA sequences whose translated protein has higher α-helical content.",
+      "status": "established",
+      "behavior_conclusion": "Behavior taken as given (behavior-source: given, no M0). A single internal steering direction does raise the PREDICTED α-helix propensity of Evo2-7B generations by +14–16pt, reproducibly across 3 independent SS predictors — but the round showed this is NOT demonstrated physical α-helix structure: the increase is entangled with a severe, intervention-intrinsic amino-acid/GC composition collapse (GC 0.44→0.13, Lys↑, low-complexity↑) that it was not shown separable from, has no structural (folding) validation, and rests on a non-monotonic dose curve. So 'higher α-helical content' is established only in the weak sense of predicted-propensity/composition bias; the structural version remains unconfirmed.",
+      "impact": {"assessment": "", "recommendation": "", "assessed_in_round": null},
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention → Tuning & Editing",
+          "family": "Representation and Parameter Analysis / Steering features + Steering Vectors (block-26 linear-probe direction, added additively during generation)",
+          "headline": "A block-26 linear-probe α-helix direction (located at AUROC 0.9999) added during Evo2-7B generation causally and specifically (vs norm-matched random control) raises PREDICTED %H by +14–16pt, robust across 3 independent predictors — but the strong causal/structural reading was FALSIFIED on audit: the gain co-emerges with a severe composition collapse (GC 0.44→0.13) it is not separable from, the composition-matched test is underpowered (~5/200 overlap), the dose curve is non-monotonic (helped only at α≥8), and no structural (ESMFold/DSSP) validation of steered sequences was possible (HF-mirror CDN blocked ESMFold). Net: single-direction steering-vector control of structural helix is not established; only a composition-confounded predicted-propensity bias survives.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "A localizable block-26 direction in Evo2-7B, steered during generation, causally and specifically raises the α-helix fraction (%H) of the translated protein, monotone in dose and with coding validity preserved (strong form).",
+              "method": "Locate direction by linear probe / contrastive extraction on DSSP-class-labeled coding windows; steer additively (h←h+α·v) at block 26 during generation across an α sweep and 3 seeds; score %H with an ESM2-probe predictor; specificity via norm-matched random control, β-sheet and validity covariates, and temperature/rejection-sampling baselines.",
+              "conclusion": "FALSIFIED in strong form. The initial main experiment read positive (+13.6 %H, p_bonf=0.0024, random control inert) but the verify Phase-2 audit FAILed the endpoint (synthetic proxy applied to GC-collapsed OOD sequences with no structural validation; non-monotonic dose), and the iteration composition-controlled re-eval showed the uplift does not survive GC control and has no structural grounding."
+            },
+            {
+              "id": "C1_v2",
+              "statement": "At high dose (α≥8) the block-26 steering direction induces an intervention-specific, predictor-consistent increase in PREDICTED α-helix propensity/composition of Evo2-7B generations — explicitly not demonstrated physical structure.",
+              "method": "M5 re-scoring of the existing steered/baseline generations with 3 independent SS predictors (ESM2-probe, GOR, Chou-Fasman) plus GC/amino-acid/low-complexity composition controls, dose-monotonicity check, and attempted structural validation.",
+              "conclusion": "PASS-with-major-caveat — the honest surviving contribution. The +14–16pt predicted-%H uplift is predictor-robust and intervention-specific, but composition-confounded (not separable from a GC/AA collapse the intervention itself induces), rests on an underpowered composition-matched comparison, and lacks structural validation. Best framed as controlled generative steering + rigorous confound analysis, not α-helix structure discovery."
+            },
+            {
+              "id": "C2",
+              "statement": "The fast online α-helix metric (ORF→translate→SS-predict→%H) agrees with a structure-based DSSP reference at Pearson r ≥ 0.7 on held-out natural proteins.",
+              "method": "Build ESM2-650M+linear-probe SS scorer; validate its %H against experimental-PDB DSSP %H on ~200 held-out proteins; stress-test with a method swap (independent GOR predictor) and a dataset swap (310 unseen proteins).",
+              "conclusion": "PASS, robust — Pearson r=0.987 (n=200, frame recovery 1.000), and robustness 1.00 across method (GOR r=0.85) and dataset (310 unseen r=0.979) swaps. Key caveat carried forward: validated on NATURAL proteins only, not on steered OOD sequences — which is precisely why the same scorer could not be trusted for C1's steered generations."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": ["Formation Tracing", "Unit Interpretation", "Decision Auditing"]
+    }
+  ],
+  "untried_behavior_directions": []
+}

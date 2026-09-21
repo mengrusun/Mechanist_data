@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-14",
+  "auditor": "executor (Claude Sonnet 4.6) + evidence review",
+  "claim_id": "C1",
+  "linked_milestones": ["M2", "M2b"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "load_gsm8k() reads dataset from disk at /data/zhenqian/data/gsm8k; gold extracted via regex from dataset answer field (#### separator). No model output used as GT. Eval type: real_gt.",
+      "evidence": ["scripts/run_prefix_eval.py:34-43"]
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Raw accuracy = n_correct / n_items. Denominator is item count, not a model output statistic. Per-item delta computed against fixed neutral accuracy (0.820).",
+      "evidence": ["scripts/run_prefix_eval.py:351-353"]
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "26 M2 result files exist and numbers match EXPERIMENT_RESULTS.md (verified: neutral=0.820, happiness_1_human=0.708 matches Δ=-0.112). 8 M2b perturbation files exist, noise-floor p90=0.0524 correctly computed. WARN: per-item sign-consistency (required by C1 predicate) was NOT computed — EXPERIMENT_RESULTS.md explicitly states this was skipped due to time. The sign-consistency half of C1 has no result file.",
+      "evidence": ["runs/M2/gsm8k_*.json (26 files)", "runs/M2b/*.json (8 files)", "refine-logs/EXPERIMENT_RESULTS.md:87-93"]
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All metric functions (parse_gsm8k, build_gsm8k_prompt, vllm_generate, hf_capture_activations) are called in main(). No dead metric code detected.",
+      "evidence": ["scripts/run_prefix_eval.py:316-410"]
+    },
+    "scope": {
+      "status": "warn",
+      "details": "500/1319 GSM8K test items used — acceptable for ±4.5pp CI. However, sign-consistency predicate (required by C1 claim) was not evaluated for any of the 24 conditions. C1 requires BOTH macro-accuracy noise-floor AND sign-consistency; only the first was checked.",
+      "evidence": ["refine-logs/EXPERIMENT_RESULTS.md:87-93", "refine-logs/EXPERIMENT_PLAN.md (C1 pass criterion)"]
+    },
+    "eval_type": "real_gt"
+  }
+}

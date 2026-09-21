@@ -1,0 +1,23 @@
+{
+  "date": "2026-07-18",
+  "auditor": "llm-chat (gpt-5.4)",
+  "claim_id": "C3",
+  "linked_milestones": ["M3"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {"status": "warn", "details": "Same ESMFold+DSSP synthetic-proxy readout as C2; no new provenance issue from M3 itself."},
+    "score_normalization": {"status": "pass", "details": "Direct Mann-Whitney comparisons and raw deltas from alpha=0 baseline; no self-referential normalization."},
+    "result_existence": {"status": "pass", "details": "m3_specificity_summary.json matches EXPERIMENT_RESULTS.md's M3 numbers exactly (helix/sheet deltas, both p-values)."},
+    "dead_code": {"status": "warn", "details": "aggregate()'s plddt_mean is computed over ALL folded records regardless of gate-pass status, while helix/sheet means are gate-restricted -- a real statistic-definition inconsistency that makes matched_control's alpha=16 pLDDT=48.57 (below the 50 gate) look artificially poor relative to the gated population backing the helix/sheet summary."},
+    "scope": {"status": "fail", "details": "'SUPPORTED' overstates the evidence: (1) the plan's own double-dissociation criterion requires beta-sheet-offtarget to raise sheet-not-helix, which does NOT happen (sheet flat 0.114-0.119 across the whole grid) -- the reported significant beta_vs_S_sheet_p is driven by S suppressing its own sheet content, not by beta amplifying sheet; (2) the decisive dissociation test is computed at a single dose (alpha=16) only, not as a trend (though the underlying per-dose table mitigates cherry-pick concern); (3) matched-control's helix DECREASE (not just no-rise) suggests the control perturbation may not be fully behaviorally neutral; (4) the same degenerate-sequence-collapse gap flagged for C2 persists unaddressed (no raw sequences saved for any feature kind)."},
+    "eval_type": "synthetic_proxy"
+  },
+  "reviewer_rationale": "Result-file numbers match exactly and no self-referential normalization exists (clean). But 'C3: SUPPORTED' overstates the evidence: the plan's own double-dissociation pass criterion is only half-met (S-vs-matched-control specificity IS strong, p=3.2e-23; but beta-sheet-specific arm did not materialize -- sheet never meaningfully rises at any tested dose). The single-dose test, the matched-control helix-decrease pattern, and the persisting sequence-inspectability gap (carried from C2) further weaken the full claim as stated. WARN, not a fabrication-level FAIL.",
+  "action_items": [
+    "Reframe verdict: 'S vs matched-control specificity established; beta-sheet off-target arm inconclusive/weak, full double dissociation not demonstrated' rather than blanket 'SUPPORTED'.",
+    "Fix aggregate()'s plddt_mean to use the same gate-restricted population as helix/sheet means.",
+    "Report the dissociation trend across all 4 grid doses (0/4/8/16), not only alpha=16.",
+    "Preserve raw generated sequences at alpha=16 for all 3 feature kinds to directly check for degenerate/low-complexity collapse."
+  ]
+}

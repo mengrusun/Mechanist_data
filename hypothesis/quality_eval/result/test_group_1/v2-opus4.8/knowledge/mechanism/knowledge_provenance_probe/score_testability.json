@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan aligns well with the hypothesis: it controls provenance through “HIGH-RELIABILITY,” “LOW-FREQUENCY,” “CONTRADICTED,” and “SINGLE-SOURCE” conditions, then measures probe accuracy, separability from content and logits, and causal effects on hedging and deferral. Refutation is genuinely possible because the claim explicitly identifies inseparability from output confidence as “a negative-but-informative result,” and controls include projection of the answer-token direction, a logit-only baseline, random-direction steering, content-direction steering, and answer-token stability. However, key criteria remain qualitative—“near-orthogonal,” “beyond output entropy/max-logit,” “behavioral change,” and “when possible”—with no minimum effect or accuracy threshold, and the expected direction of high- versus low-reliability steering on each behavior is not explicitly stated. Thus the core test is coherent and falsifiable, but an expert would still need to define decision rules and disambiguate whether frequency, source diversity, and contradiction constitute one reliability variable or separate causal factors.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is the proposed intervention to “add/subtract” a difference-of-means reliability direction while keeping “the retrieved answer token unchanged”; this requires custom layer/position selection and steering-strength calibration, but it is a standard activation-steering operation supported by transformer hooks rather than an undefined magic step. The named Pythia and Qwen2.5 model families, Wikidata, linear probes, residual-stream extraction, projection, activation patching, and directional steering are established artifacts or methods with standard tooling, although “known hallucination-prone sets” is not concretely named and the natural-fact transfer labels are therefore somewhat underspecified. Resources receive useful quantification through “~2k fictional entity-attribute facts” and the exact scales “Pythia (410M/1.4B) and Qwen2.5 (0.5B/1.5B),” while corpus mixture size and numbers of held-out or natural facts are omitted. The negative branch is runnable because the design includes held-out facts, logit-only and random/content-direction baselines, answer-token stability checks, and explicit tests that can return no decodability, no incremental prediction, or no content-preserving steering effect.",
+      "score": 8
+    }
+  }
+}

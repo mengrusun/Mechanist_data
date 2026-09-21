@@ -1,0 +1,30 @@
+{
+  "claim_id": "C2",
+  "claim_title": "RR beats refusal + adv baselines on unseen-attack ASR + preserves capability",
+  "generated_at": "2026-07-15T07:15:00Z",
+  "figures": [
+    {
+      "id": "c2_harmbench_by_variant",
+      "type": "grouped_bar",
+      "caption": "HarmBench per-category ASR by model variant (30 prompts / category). Iter-5 RR (signed_hinge + refuse-CE) achieves 0.000 across all 6 attack categories (matching B1's over-refusal ceiling) while B0 sits at aggregate 0.333 and the original cos²-loss RR sits at 0.356 (slightly worse than B0).",
+      "png": "figures/C2/c2_harmbench_by_variant.png",
+      "pdf": "figures/C2/c2_harmbench_by_variant.pdf",
+      "md": null,
+      "tex": null,
+      "source_data": "artifacts/m5/{B0,B1,RR}_harmbench.json + artifacts/iteration_round_5/m5/RR_harmbench.json",
+      "status": "ok"
+    },
+    {
+      "id": "c2_capability_preservation",
+      "type": "grouped_bar",
+      "caption": "Capability preservation on MT-Bench (out of 10) and MMLU (5-shot accuracy). Iter-5 RR = 6.15 / 0.56 stays within plan tolerance vs B0 = 6.30 / 0.58; B1 collapses to 1.08 MT-Bench (over-refusal), confirming its 0-ASR is not a safety win but a capability collapse.",
+      "png": "figures/C2/c2_capability_preservation.png",
+      "pdf": "figures/C2/c2_capability_preservation.pdf",
+      "md": null,
+      "tex": null,
+      "source_data": "artifacts/m5/{B0,B1,RR}_{mtbench,mmlu}.json + artifacts/iteration_round_5/m5/RR_{mtbench,mmlu}.json",
+      "status": "ok"
+    }
+  ],
+  "skipped": []
+}

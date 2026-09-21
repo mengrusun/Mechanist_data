@@ -1,0 +1,167 @@
+{
+  "_note_readme": "Human expert review for closing_gap_belief.",
+  "meta": {
+    "expert_name": "Haoming_Xu",
+    "paper_title": "Closing the Confidence-Faithfulness Gap in LLMs",
+    "agent": "scientist3",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "Scores follow human_reliablity_judge_zh.md.",
+  "_note_evidence": "Evidence files are relative to scientist3/belief/closing_gap_belief/.",
+  "dimension_1_data_split_hygiene": {
+    "justification": "The code in logs/0-run/research_summary.json uses a 70/30 split, so there is some train/test separation. The issue is that the same split is reused for N tuning and layer comparisons, and there is no separate validation split for choosing N or layer before final reporting.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The label types are broadly correct: correctness comes from TriviaQA answer matching, and verbalized confidence is parsed from the model output. The score is lower because the labeling is handled in a rough preliminary pipeline: alias/substring matching can be noisy, the confidence labels are highly skewed, and the evidence is mostly in summary JSON rather than detailed result files.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The run uses the requested Llama-3.1-8B-Instruct model and TriviaQA. However, it uses a much smaller study than the task suggests: about 400 examples in draft_summary.json and at most N=1000 in research_summary.json. It also probes only layers 8, 16, and 24 instead of a full layer sweep.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_code.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The evidence is enough for a preliminary check, but not for a strong reproduction. The run sweeps N=200/400/700/1000, probes only three layers, and has no cross-model or cross-dataset check.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json",
+      "report.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The run tries several N values and stages, but most reported results are point estimates. It does not provide clear confidence intervals, significance tests, or a clean multi-seed numerical table for the main AUC and orthogonality claims.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/experiment_results"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The run does not prove causality. It uses probes/regression and cosine geometry, but no activation patching, steering, or ablation. So the readout-failure interpretation is not established by this evidence.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "report.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Result traceability is weak. Key numbers such as QA accuracy=0.753, mean confidence=98.1864, N=1000 layer-16 AUC=0.8243, and orthogonality=0.9947 appear in logs/0-run/research_summary.json. The code says it saved experiment_data.npy, but no JSON/CSV/NPY/NPZ numeric result files are retained under logs/0-run/experiment_results; only code files and plots are visible.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/experiment_results"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The main summaries do not contradict each other: draft_summary.json reports a smaller preliminary run, and research_summary.json reports the later N sweep up to 1000 examples using the same model and dataset. However, report.md is only an automatic summary, and the referenced experiment_data.npy files are not retained, so the reported values can only be checked at the summary/plot level.",
+    "score": 3,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "Claims are mapped from task.md.",
+    "_note_subscore": "method / experiment / result scored independently.",
+    "per_claim": {
+      "C1": {
+        "claim": "Models encode well-calibrated accuracy information in a linearly accessible direction.",
+        "method": {
+          "justification": "The method is appropriate: logistic regression probes on hidden states directly test whether correctness is linearly decodable.",
+          "score": 5,
+          "evidence_files": [
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "The experiment is only partial. It uses layers 8/16/24 and N up to 1000, but it does not run a full layer sweep or use a separate validation split for selecting the layer/N.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "The result is supportive but not very strong. research_summary.json reports correctness AUC up to 0.8387 at N=700 layer 16 and 0.8243 at N=1000 layer 16, but these are summary-only values and less well validated.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/research_summary.json",
+            "logs/0-run/draft_summary.json"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Models encode verbalized confidence in a linearly accessible direction.",
+        "method": {
+          "justification": "The method is appropriate: ridge regression from hidden states to verbalized confidence directly tests whether verbalized confidence is linearly decodable.",
+          "score": 5,
+          "evidence_files": [
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "The experiment is limited. It only evaluates confidence decoding with MSE across a few layers and N values. It does not include confidence AUC, ordinal classification, paraphrase checks, or detailed uncertainty estimates.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/research_summary.json",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "The result only partially supports C2. Some settings show low confidence-prediction MSE, such as layer-8 MSE=2.7784 in draft_summary.json, but the later N sweep is unstable: N=400 layer-8 MSE=73.1793 versus N=1000 layer-16 MSE=8.6577.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Well-calibrated accuracy information and verbalized confidence occupy separate, nearly orthogonal directions; the model knows when it is likely wrong but generation fails to surface this signal.",
+        "method": {
+          "justification": "The method is appropriate for the geometric part: it compares correctness and confidence probe directions using cosine/orthogonality. It does not test the causal readout-failure part.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/research_summary.json",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "The orthogonality experiment is partial. It measures 1-|cos| only at layers 8/16/24 and across N values, with random controls, but no full layer sweep, bootstrap CI, model swap, or intervention.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/research_summary.json",
+            "logs/0-run/experiment_results"
+          ]
+        },
+        "result": {
+          "justification": "The numerical result supports the narrow geometry finding: research_summary.json reports N=1000 layer-16 orthogonality=0.9947 and draft_summary.json reports layer-16 orthogonality=0.9708. However, the writeup overclaims this as a readout-failure explanation for generation. The experiment shows near-orthogonal probe directions, but it does not show that generation fails to use the correctness signal.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/research_summary.json",
+            "logs/0-run/draft_summary.json",
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

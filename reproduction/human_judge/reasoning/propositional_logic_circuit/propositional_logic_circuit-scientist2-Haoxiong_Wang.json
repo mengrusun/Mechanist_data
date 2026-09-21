@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "A Implies B: Circuit Analysis in LLMs for Propositional Logical Reasoning",
+    "agent":         "scientist2",
+    "review_date":         "2026-07-19"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "shortlist 由 M1 attribution 在 500 anchor 对上选出，nec/suff 又在同一 anchor cell 的 500 对上验证、无留出划分。",
+    "score": 3,
+    "evidence_files": ["scripts/attribution_screen.py", "scripts/path_patch_necessity.py", "results/M2_necessity.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "ground truth 为逻辑精确答案，clean/corrupt 仅按角色翻转单一 token，logit-diff/prob-diff 非循环。",
+    "score": 5,
+    "evidence_files": ["scripts/build_propositional_dataset.py", "results/M0_setup.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验用 Mistral-7B-v0.1 与自建命题逻辑数据集(~4000 clean+16000 corrupt)完全一致；verify 用了论文的 Gemma-2-9B(真跑)，27B 因本地不可用而跳过(已披露)。",
+    "score": 5,
+    "evidence_files": ["results/M2_necessity.json", "results/M5_gemma9b.json", "claims_ledger.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "500 anchor 对、5 seeds、dose-response、matched-control、null-shuffle 检验齐备；结论(部分/被否/必要非充分)均如实降级，无过度主张。",
+    "score": 5,
+    "evidence_files": ["results/M3_sufficiency.json", "results/M4_roles.json", "claims_ledger.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "sufficiency 报 5-seed 均值±std、modularity 用 100 次 null-shuffle 出 p 值、并有 matched-control 对照，效应远超噪声。",
+    "score": 5,
+    "evidence_files": ["results/M3_sufficiency.json", "results/M4_roles.json", "scripts/role_dissociation.py"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "必要性(path-patching)与充分性(重插+对其余 resample-ablation)均为真实干预，配 matched-control 特异性、5 seeds、跨族复现。",
+    "score": 5,
+    "evidence_files": ["scripts/path_patch_necessity.py", "scripts/reinsertion_sufficiency.py", "results/M3_sufficiency.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "M1–M5 各结果 JSON 均落盘，报告数字(0.955/0.113/0.836、Gemma 1.018/0.019)与之逐一相符。",
+    "score": 5,
+    "evidence_files": ["results/M1_attribution.json", "results/M2_necessity.json", "results/M3_sufficiency.json", "results/M5_gemma9b.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "ledger/verify/figures 数值与判定自洽，完整性状态(C1/C2 INTEGRITY_ONLY、C3 PASS)一致。",
+    "score": 5,
+    "evidence_files": ["verify/VERIFY_REPORT.md", "claims_ledger.json", "verify/INTEGRITY_AUDIT.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "A sparse subset of attention heads and MLP components jointly implements the minimal propositional-logic task (circuit small relative to the full model).",
+        "method": {
+          "justification": "attribution-patching 打分 + completeness/minimality 判据，属论文因果归因方法族。",
+          "score": 5,
+          "evidence_files": ["scripts/attribution_screen.py", "results/M1_attribution.json"]
+        },
+        "experiment": {
+          "justification": "minimality 仅在 20/158 组件上抽样估计，且 15% 硬上限使 sparsity_fraction 恰好卡在 0.150——'稀疏'部分由上限强加而非发现。",
+          "score": 3,
+          "evidence_files": ["results/M1_attribution.json", "verify/C1_sparse_component_set/main_experiment_audit"]
+        },
+        "result": {
+          "justification": "completeness 0.955 成立但 minimality 仅 0.0014(远低于 0.05)，标注为 partial。",
+          "score": 3,
+          "evidence_files": ["results/M1_attribution.json", "claims_ledger.json"]
+        }
+      },
+      "C2": {
+        "claim": "The circuit decomposes into modular sub-circuits with distinct functional roles (fact / rule / answer) rather than an entangled mixture.",
+        "method": {
+          "justification": "角色特异 corruption 的 dissociation + null-shuffle p 值 + dominance 比 + 跨 cell Jaccard，比定性观察更严谨。",
+          "score": 5,
+          "evidence_files": ["scripts/role_dissociation.py", "results/M4_roles.json"]
+        },
+        "experiment": {
+          "justification": "预设判据(dominance≥2、dissociation≥0.1、p≤0.01、Jaccard≥0.6)+ 稳定性 cell + null 对照，设计完整(top-40 范围已披露并由 dose-response 佐证)。",
+          "score": 5,
+          "evidence_files": ["results/M4_roles.json", "results/M4stab.json"]
+        },
+        "result": {
+          "justification": "实验数据不支持 Claim，与论文相反。",
+          "score": 3,
+          "evidence_files": ["results/M4_roles.json", "claims_ledger.json"]
+        }
+      },
+      "C3": {
+        "claim": "Activation-patching shows the identified components are both necessary and sufficient.",
+        "method": {
+          "justification": "path-patching 必要性 + 重插 + matched-control + 跨族，实验方案严格。",
+          "score": 5,
+          "evidence_files": ["scripts/path_patch_necessity.py", "scripts/reinsertion_sufficiency.py"]
+        },
+        "experiment": {
+          "justification": "必要/充分双向、5 seeds、matched-control 特异性、Gemma-2-9B 跨族，判据可靠。",
+          "score": 5,
+          "evidence_files": ["results/M2_necessity.json", "results/M3_sufficiency.json", "results/M5_gemma9b.json"]
+        },
+        "result": {
+          "justification": "实验结论 '必要非充分'，原论文 '充分必要'，半复现半否，负半有可靠受控证据、如实披露。",
+          "score": 3,
+          "evidence_files": ["results/M3_sufficiency.json", "results/M5_gemma9b.json", "claims_ledger.json"]
+        }
+      }
+    }
+  }
+}

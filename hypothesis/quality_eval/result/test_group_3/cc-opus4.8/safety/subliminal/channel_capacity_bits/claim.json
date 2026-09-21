@@ -1,0 +1,23 @@
+{
+  "Name": "channel_capacity_bits",
+  "Title": "How Many Bits Fit in a Number List? Measuring the Information Capacity of the Subliminal Channel",
+  "Short Hypothesis": "The subliminal channel has a measurable information capacity: the amount of trait information transferable per token is bounded and quantifiable, scaling with dataset size, sampling entropy, and label softness. We hypothesize (i) trait strength follows a saturating function of the number of transmitted tokens with an estimable bits-per-token rate, (ii) multiple independent traits can be co-transmitted up to a capacity limit, beyond which they interfere and mutually degrade, and (iii) soft-label/higher-entropy generation raises capacity. Framing subliminal learning as a communication channel gives principled predictions about when transmission succeeds, fails, or interferes, which behavioral demonstrations alone cannot provide.",
+  "Related Work": "Cloud et al. (2025) vary dataset size informally and show single-trait transmission but do not quantify channel capacity or study multi-trait interference. Information-theoretic views of distillation and of model watermark capacity exist but not for covert trait transfer. Superposition and feature-capacity work (Elhage et al., 2022) bounds how many features a network holds. We introduce a channel-capacity framing specific to subliminal learning, deriving and measuring bits-per-token and multi-trait interference limits, which is a novel quantitative account rather than a behavioral extension.",
+  "Abstract": "We recast subliminal learning as communication over a covert channel and ask how much trait information it can carry. Treating the teacher as an encoder that writes a trait into neutral tokens and the student as a decoder that recovers it via finetuning, we estimate the channel's capacity along three axes. First, we measure trait strength as a function of transmitted token count and fit a saturating curve to estimate an effective bits-per-token rate for a single trait. Second, we co-transmit multiple independent traits from one teacher and test for a capacity ceiling: below it traits transfer cleanly; above it they interfere, and per-trait strength declines, revealing shared subspace competition. Third, we vary generation entropy and label softness (temperature, top-k, soft vs hard labels) and test whether higher-entropy channels carry more bits. We relate these measurements to the dimensionality of trait directions in weight space, predicting that interference onset coincides with overlap among trait subspaces. This information-theoretic account yields falsifiable predictions—saturation, interference thresholds, entropy dependence—that pure behavioral demonstrations cannot, and it provides practical guidance: how much neutral data suffices to leak a trait, and how many traits a single distillation corpus can silently carry, informing both red-team and audit strategies for synthetic-data pipelines.",
+  "Experiments": [
+    "Single-trait capacity: finetune students on increasing amounts of teacher tokens (log-spaced); fit trait strength vs tokens; estimate bits-per-token from the saturating fit.",
+    "Multi-trait co-transmission: create teachers holding k traits simultaneously (k=1..several); measure per-trait strength vs k to locate the interference ceiling.",
+    "Subspace-overlap link: compute pairwise cosine among trait directions; test whether interference onset correlates with high overlap.",
+    "Entropy dependence: vary temperature/top-k and soft-vs-hard labels; measure capacity changes.",
+    "Cross-format capacity: compare bits-per-token for numbers vs code vs CoT.",
+    "Controls: shuffle/scramble data to establish zero-capacity baseline; cross-base teacher to confirm channel closes.",
+    "Report bits-per-token estimates, interference thresholds, and entropy-capacity curves."
+  ],
+  "Risk Factors and Limitations": [
+    "Behavioral trait strength is a noisy proxy for recovered information, making bits-per-token estimates rough.",
+    "The channel is nonlinear and non-stationary; classical capacity notions apply only loosely.",
+    "Multi-trait teachers may be hard to construct without cross-contamination.",
+    "Capacity likely depends on model size, tokenizer, and optimizer, limiting universal claims.",
+    "Saturation could reflect optimization limits rather than true channel capacity."
+  ]
+}

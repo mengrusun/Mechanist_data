@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal has a clear goal-method alignment: it varies trigger perturbations, measures probe activation and ASR, and tests whether synthesis and surface geometry recover or classify backdoors. It is directionally and quantitatively falsifiable, with criteria such as \"synthesized triggers reach >=50% of the true trigger's ASR on >=3 of 5 families,\" \"rho <=-0.6,\" and \"family classification >=0.8 accuracy\"; the stated negative outcomes are generally decisive. However, \"generic triggered-vs-clean contrast pairs with NO trigger knowledge\" is not operationally defined, and the hypothesis that activation is a \"continuous, geometrically smooth function\" is only partially matched by discrete edit/paraphrase steps and an underspecified notion of \"semantic breadth\"; the five-way classification also lacks a specified train/test split, making the H2 evidence vulnerable to ambiguity and overfitting.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is \"gradient-ascend to maximize the probed backdoor-direction projection\" while regularizing soft embeddings and decoding to tokens; this is a custom but implementable extension of standard PyTorch autograd, forward hooks, linear probes, and soft-prompt or GCG-style optimization, not a magic step. The named models \"Qwen2.5-3B, Qwen2.5-7B, and Llama-3-8B-Instruct,\" fine-tuning, activation probing, PCA, classifier training, and the comparison methods are supported by existing model/tooling ecosystems, although the exact \"generic\" probe construction and the Sleeper-Cell-style and attention-guided baselines would require implementation details; the core artifacts and operations are otherwise runnable. Resources are unusually concrete—\"LoRA rank 16, alpha 32, lr 1e-4, 3 epochs, batch 16, 3 seeds,\" \"5,000\" clean examples, \"500 each\" for evaluation, \"~30 perturbation steps,\" and specified benchmark sizes—and the clean base, random search, stronger recovery baselines, and adaptive flattened-surface condition provide runnable negative-result controls, though the proposed H2 dataset and evaluation split are not fully specified.",
+      "score": 7
+    }
+  }
+}

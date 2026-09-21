@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Check if we're running under Live Server
+      if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+          let lastModified = '';
+
+          // Check for file changes every second
+          setInterval(async () => {
+              try {
+                  const response = await fetch(window.location.href, { method: 'HEAD' });
+                  // get a timestamp that shows when the file was last changed
+                  const currentModified = response.headers.get('last-modified');
+
+                  if (lastModified && lastModified !== currentModified) {
+                      window.location.reload();
+                  }
+
+                  lastModified = currentModified;
+              } catch (e) {
+                  console.error('Error checking for updates:', e);
+              }
+          }, 1000);
+      }
+  </script>
+    <script
+      id="p5scripttag"
+      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+      integrity="sha512-uaz5GpnQoE6t5echKlX8P52czvsIGgLPcvlzfvRubLZ1Hp8JemUDnbUiAahbVtPb+jUVrNETuXvAhDDF/N3M4w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+    <script>
+      const bgCol = "#FFFFFF";
+const accentCol = "#1a439e";
+
+hljs.initHighlightingOnLoad();
+
+// Function to update background color globally
+function updateBackgroundColor(color) {
+  // Update the JS variable
+  window.bgColCurrent = color;
+
+  // Update body background
+  document.body.style.backgroundColor = color;
+
+  // Update canvas container background
+  const canvasContainer = document.getElementById('canvas-container');
+  if (canvasContainer) {
+    canvasContainer.style.backgroundColor = color;
+  }
+}
+
+// Store tree data for each stage
+const stageData = {
+  Stage_1: null,
+  Stage_2: null,
+  Stage_3: null,
+  Stage_4: null
+};
+
+// Keep track of current selected stage
+let currentStage = null;
+let currentSketch = null;
+let availableStages = [];
+
+// Class definitions for nodes and edges
+class Node {
+  constructor(x, y, id, isRoot = false) {
+    this.x = x;
+    this.y = y;
+    this.id = id;
+    this.visible = isRoot; // Only root nodes are visible initially
+    this.appearProgress = 0;
+    this.popEffect = 0;
+    this.selected = false;
+    this.isRootNode = isRoot;
+  }
+
+  update() {
+    if (this.visible) {
+      // Handle the main appearance animation
+      if (this.appearProgress < 1) {
+        this.appearProgress += 0.06;
+
+        // When we reach full size, trigger the pop effect
+        if (this.appearProgress >= 1) {
+          this.appearProgress = 1; // Cap at 1
+          this.popEffect = 1; // Start the pop effect
+        }
+      }
+
+      // Handle the pop effect animation
+      if (this.popEffect > 0) {
+        this.popEffect -= 0.15; // Control how quickly it shrinks back
+        if (this.popEffect < 0) this.popEffect = 0; // Don't go negative
+      }
+    }
+  }
+
+  startAnimation() {
+    this.visible = true;
+  }
+
+  color() {
+    if (this.selected) {
+      return accentCol; // Use the global accent color variable for selected node
+    }
+    return '#4263eb'; // Default blue color
+  }
+
+  render(p5) {
+    if (this.visible) {
+      const popBonus = this.popEffect * 0.1;
+      const nodeScale = p5.map(this.appearProgress, 0, 1, 0, 1) + popBonus;
+      const alpha = p5.map(this.appearProgress, 0, 1, 0, 255);
+
+      p5.push();
+      p5.translate(this.x, this.y);
+
+      // Shadow effect
+      p5.noStroke();
+      p5.rectMode(p5.CENTER);
+
+      for (let i = 1; i <= 4; i++) {
+        p5.fill(0, 0, 0, alpha * 0.06);
+        p5.rect(i, i, 30 * nodeScale, 30 * nodeScale, 10);
+      }
+
+      // Main square - use node's color with alpha
+      let nodeColor = p5.color(this.color());
+      nodeColor.setAlpha(alpha);
+      p5.fill(nodeColor);
+      p5.rect(0, 0, 30 * nodeScale, 30 * nodeScale, 10);
+
+      // Draw checkmark icon if the node is selected
+      if (this.selected && this.appearProgress >= 1) {
+        p5.stroke(255);
+        p5.strokeWeight(2 * nodeScale);
+        p5.noFill();
+        // Draw checkmark
+        p5.beginShape();
+        p5.vertex(-8, 0);
+        p5.vertex(-3, 5);
+        p5.vertex(8, -6);
+        p5.endShape();
+      }
+
+      p5.pop();
+    }
+  }
+
+  isMouseOver(p5) {
+    return this.visible &&
+           p5.mouseX > this.x - 15 &&
+           p5.mouseX < this.x + 15 &&
+           p5.mouseY > this.y - 15 &&
+           p5.mouseY < this.y + 15;
+  }
+
+  // Connect this node to a child node
+  child(childNode) {
+    // Create an edge from this node to the child
+    let isLeft = childNode.x < this.x;
+    let isRight = childNode.x > this.x;
+    let edge = new Edge(this, childNode, isLeft, isRight);
+    return edge;
+  }
+}
+
+class Edge {
+  constructor(parent, child, isLeft, isRight) {
+    this.parent = parent;
+    this.child = child;
+    this.isLeft = isLeft;
+    this.isRight = isRight;
+    this.progress = 0;
+
+    // Calculate the midpoint where branching occurs
+    this.midY = parent.y + (child.y - parent.y) * 0.6;
+
+    // Use the actual child x-coordinate
+    // This ensures the edge will connect directly to the child node
+    this.branchX = child.x;
+  }
+
+  update() {
+    if (this.parent.visible && this.progress < 1) {
+      this.progress += 0.01; // Adjust animation speed
+    }
+    if (this.progress >= 1) {
+      this.child.visible = true;
+    }
+  }
+
+  color() {
+    return this.child.color();
+  }
+
+  render(p5) {
+    if (!this.parent.visible) return;
+
+    // Calculate path lengths
+    const verticalDist1 = this.midY - this.parent.y;
+    const horizontalDist = Math.abs(this.branchX - this.parent.x);
+    const verticalDist2 = this.child.y - this.midY;
+    const totalLength = verticalDist1 + horizontalDist + verticalDist2;
+
+    // Calculate how much of each segment to draw
+    const currentLength = totalLength * this.progress;
+
+    p5.stroke(180, 190, 205);
+    p5.strokeWeight(1.5);
+    p5.noFill();
+
+    // Always draw the first vertical segment from parent
+    if (currentLength > 0) {
+      const firstSegmentLength = Math.min(currentLength, verticalDist1);
+      const currentMidY = p5.lerp(this.parent.y, this.midY, firstSegmentLength / verticalDist1);
+      p5.line(this.parent.x, this.parent.y, this.parent.x, currentMidY);
+    }
+
+    if (currentLength > verticalDist1) {
+      // Draw second segment (horizontal)
+      const secondSegmentLength = Math.min(currentLength - verticalDist1, horizontalDist);
+      const currentBranchX = p5.lerp(this.parent.x, this.branchX, secondSegmentLength / horizontalDist);
+      p5.line(this.parent.x, this.midY, currentBranchX, this.midY);
+
+      if (currentLength > verticalDist1 + horizontalDist) {
+        // Draw third segment (vertical to child)
+        const thirdSegmentLength = currentLength - verticalDist1 - horizontalDist;
+        const currentChildY = p5.lerp(this.midY, this.child.y, thirdSegmentLength / verticalDist2);
+        p5.line(this.branchX, this.midY, this.branchX, currentChildY);
+      }
+    }
+  }
+}
+
+// Create a modified sketch for each stage
+function createTreeSketch(stageId) {
+  return function(p5) {
+    let nodes = [];
+    let edges = [];
+    let treeData = stageData[stageId];
+
+    p5.setup = function() {
+      const canvas = p5.createCanvas(p5.windowWidth * 0.4, p5.windowHeight);
+      canvas.parent('canvas-container');
+      p5.smooth();
+      p5.frameRate(60);
+
+      if (treeData) {
+        createTreeFromData(treeData);
+      }
+    };
+
+    p5.windowResized = function() {
+      p5.resizeCanvas(p5.windowWidth * 0.4, p5.windowHeight);
+    };
+
+    function createTreeFromData(data) {
+      // Clear existing nodes and edges
+      nodes = [];
+      edges = [];
+
+      // Add defensive checks to prevent errors
+      if (!data || !data.layout || !Array.isArray(data.layout) || !data.edges || !Array.isArray(data.edges)) {
+        console.error("Invalid tree data format:", data);
+        return; // Exit if data structure is invalid
+      }
+
+      // Find all parent nodes in edges
+      const parentNodes = new Set();
+      for (const [parentId, childId] of data.edges) {
+        parentNodes.add(parentId);
+      }
+
+      // Create nodes
+      for (let i = 0; i < data.layout.length; i++) {
+        const [nx, ny] = data.layout[i];
+        // A node is a root if it's a parent and not a child in any edge
+        const isRoot = parentNodes.has(i) && data.edges.every(edge => edge[1] !== i);
+
+        const node = new Node(
+          nx * p5.width * 0.8 + p5.width * 0.1,
+          ny * p5.height * 0.8 + p5.height * 0.1,
+          i,
+          isRoot
+        );
+        nodes.push(node);
+      }
+
+      // If no root was found, make the first parent node visible
+      if (!nodes.some(node => node.visible) && parentNodes.size > 0) {
+        // Get the first parent node
+        const firstParentId = [...parentNodes][0];
+        if (nodes[firstParentId]) {
+          nodes[firstParentId].visible = true;
+        }
+      }
+
+      // Create edges
+      for (const [parentId, childId] of data.edges) {
+        const parent = nodes[parentId];
+        const child = nodes[childId];
+        if (parent && child) { // Verify both nodes exist
+          const isLeft = child.x < parent.x;
+          const isRight = child.x > parent.x;
+          edges.push(new Edge(parent, child, isLeft, isRight));
+        }
+      }
+
+      // Select the first node by default
+      if (nodes.length > 0) {
+        nodes[0].selected = true;
+        updateNodeInfo(0);
+      }
+    }
+
+    p5.draw = function() {
+      // Use the global background color if available, otherwise use the default bgCol
+      const currentBgColor = window.bgColCurrent || bgCol;
+      p5.background(currentBgColor);
+
+      // Update and render edges
+      for (const edge of edges) {
+        edge.update();
+        edge.render(p5);
+      }
+
+      // Update and render nodes
+      for (const node of nodes) {
+        node.update();
+        node.render(p5);
+      }
+
+      // Handle mouse hover
+      p5.cursor(p5.ARROW);
+      for (const node of nodes) {
+        if (node.isMouseOver(p5)) {
+          p5.cursor(p5.HAND);
+        }
+      }
+    };
+
+    p5.mousePressed = function() {
+      // Check if any node was clicked
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].visible && nodes[i].isMouseOver(p5)) {
+          // Deselect all nodes
+          nodes.forEach(n => n.selected = false);
+          // Select the clicked node
+          nodes[i].selected = true;
+          // Update the right panel with node info
+          updateNodeInfo(i);
+          break;
+        }
+      }
+    };
+
+    function updateNodeInfo(nodeIndex) {
+      if (treeData) {
+        setNodeInfo(
+          treeData.code[nodeIndex],
+          treeData.plan[nodeIndex],
+          treeData.plot_code?.[nodeIndex],
+          treeData.plot_plan?.[nodeIndex],
+          treeData.metrics?.[nodeIndex],
+          treeData.exc_type?.[nodeIndex] || '',
+          treeData.exc_info?.[nodeIndex]?.args?.[0] || '',
+          treeData.exc_stack?.[nodeIndex] || [],
+          treeData.plots?.[nodeIndex] || [],
+          treeData.plot_analyses?.[nodeIndex] || [],
+          treeData.vlm_feedback_summary?.[nodeIndex] || '',
+          treeData.datasets_successfully_tested?.[nodeIndex] || [],
+          treeData.exec_time_feedback?.[nodeIndex] || '',
+          treeData.exec_time?.[nodeIndex] || ''
+        );
+      }
+    }
+  };
+}
+
+// Start a new p5 sketch for the given stage
+function startSketch(stageId) {
+  if (currentSketch) {
+    currentSketch.remove();
+  }
+
+  if (stageData[stageId]) {
+    currentSketch = new p5(createTreeSketch(stageId));
+
+    // Update stage info
+    const stageNumber = stageId.split('_')[1];
+    let stageDesc = '';
+    switch(stageId) {
+      case 'Stage_1': stageDesc = 'Preliminary Investigation'; break;
+      case 'Stage_2': stageDesc = 'Baseline Tuning'; break;
+      case 'Stage_3': stageDesc = 'Research Agenda Execution'; break;
+      case 'Stage_4': stageDesc = 'Ablation Studies'; break;
+    }
+
+    document.getElementById('stage-info').innerHTML =
+      `<strong>Current Stage: ${stageNumber} - ${stageDesc}</strong>`;
+  }
+}
+
+// Handle tab selection
+function selectStage(stageId) {
+  if (!stageData[stageId] || !availableStages.includes(stageId)) {
+    return; // Don't allow selection of unavailable stages
+  }
+
+  // Update active tab styles
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelector(`.tab[data-stage="${stageId}"]`).classList.add('active');
+
+  // Start the new sketch
+  currentStage = stageId;
+  startSketch(stageId);
+}
+
+// Function to load the tree data for all stages
+async function loadAllStageData(baseTreeData) {
+  console.log("Loading stage data with base data:", baseTreeData);
+
+  // The base tree data is for the current stage
+  const currentStageId = baseTreeData.current_stage || 'Stage_1';
+
+  // Ensure base tree data is valid and has required properties
+  if (baseTreeData && baseTreeData.layout && baseTreeData.edges) {
+    stageData[currentStageId] = baseTreeData;
+    availableStages.push(currentStageId);
+    console.log(`Added current stage ${currentStageId} to available stages`);
+  } else {
+    console.warn(`Current stage ${currentStageId} data is invalid:`, baseTreeData);
+  }
+
+  // Use relative path to load other stage trees
+  const logDirPath = baseTreeData.log_dir_path || '.';
+  console.log("Log directory path:", logDirPath);
+
+  // Load data for each stage if available
+  const stageNames = ['Stage_1', 'Stage_2', 'Stage_3', 'Stage_4'];
+  const stageNames2actualNames = {
+    'Stage_1': 'stage_1_initial_implementation_1_preliminary',
+    'Stage_2': 'stage_2_baseline_tuning_1_first_attempt',
+    'Stage_3': 'stage_3_creative_research_1_first_attempt',
+    'Stage_4': 'stage_4_ablation_studies_1_first_attempt'
+    }
+
+  for (const stage of stageNames) {
+
+    if (baseTreeData.completed_stages && baseTreeData.completed_stages.includes(stage)) {
+      try {
+        console.log(`Attempting to load data for ${stage} from ${logDirPath}/${stageNames2actualNames[stage]}/tree_data.json`);
+        const response = await fetch(`${logDirPath}/${stageNames2actualNames[stage]}/tree_data.json`);
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Validate the loaded data
+          if (data && data.layout && data.edges) {
+            stageData[stage] = data;
+            availableStages.push(stage);
+            console.log(`Successfully loaded and validated data for ${stage}`);
+          } else {
+            console.warn(`Loaded data for ${stage} is invalid:`, data);
+          }
+        } else {
+          console.warn(`Failed to load data for ${stage} - HTTP status ${response.status}`);
+        }
+      } catch (error) {
+        console.error(`Error loading data for ${stage}:`, error);
+      }
+    } else {
+      console.log(`Skipping stage ${stage} - not in completed stages list:`, baseTreeData.completed_stages);
+    }
+  }
+
+  // Update tab visibility based on available stages
+  updateTabVisibility();
+
+  // Start with the first available stage
+  if (availableStages.length > 0) {
+    selectStage(availableStages[0]);
+  } else {
+    console.warn("No stages available to display");
+    // Display a message in the canvas area
+    document.getElementById('canvas-container').innerHTML =
+      '<div style="padding: 20px; color: #333; text-align: center;"><h3>No valid tree data available to display</h3></div>';
+  }
+}
+
+// Update tab visibility based on available stages
+function updateTabVisibility() {
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    const stageId = tab.getAttribute('data-stage');
+    if (availableStages.includes(stageId)) {
+      tab.classList.remove('disabled');
+    } else {
+      tab.classList.add('disabled');
+    }
+  });
+}
+
+// Utility function to set the node info in the right panel
+const setNodeInfo = (code, plan, plot_code, plot_plan, metrics = null, exc_type = '', exc_info = '',
+    exc_stack = [], plots = [], plot_analyses = [], vlm_feedback_summary = '',
+    datasets_successfully_tested = [], exec_time_feedback = '', exec_time = '') => {
+  const codeElm = document.getElementById("code");
+  if (codeElm) {
+    if (code) {
+      codeElm.innerHTML = hljs.highlight(code, { language: "python" }).value;
+    } else {
+      codeElm.innerHTML = '<p>No code available</p>';
+    }
+  }
+
+  const planElm = document.getElementById("plan");
+  if (planElm) {
+    if (plan) {
+      planElm.innerHTML = hljs.highlight(plan, { language: "plaintext" }).value;
+    } else {
+      planElm.innerHTML = '<p>No plan available</p>';
+    }
+  }
+
+  const plot_codeElm = document.getElementById("plot_code");
+  if (plot_codeElm) {
+    if (plot_code) {
+      plot_codeElm.innerHTML = hljs.highlight(plot_code, { language: "python" }).value;
+    } else {
+      plot_codeElm.innerHTML = '<p>No plot code available</p>';
+    }
+  }
+
+  const plot_planElm = document.getElementById("plot_plan");
+  if (plot_planElm) {
+    if (plot_plan) {
+      plot_planElm.innerHTML = hljs.highlight(plot_plan, { language: "plaintext" }).value;
+    } else {
+      plot_planElm.innerHTML = '<p>No plot plan available</p>';
+    }
+  }
+
+  const metricsElm = document.getElementById("metrics");
+  if (metricsElm) {
+      let metricsContent = `<h3>Metrics:</h3>`;
+      if (metrics && metrics.metric_names) {
+          for (const metric of metrics.metric_names) {
+              metricsContent += `<div class="metric-group">`;
+              metricsContent += `<h4>${metric.metric_name}</h4>`;
+              metricsContent += `<p><strong>Description:</strong> ${metric.description || 'N/A'}</p>`;
+              metricsContent += `<p><strong>Optimization:</strong> ${metric.lower_is_better ? 'Minimize' : 'Maximize'}</p>`;
+
+              // Create table for dataset values
+              metricsContent += `<table class="metric-table">
+                  <tr>
+                      <th>Dataset</th>
+                      <th>Final Value</th>
+                      <th>Best Value</th>
+                  </tr>`;
+
+              for (const dataPoint of metric.data) {
+                  metricsContent += `<tr>
+                      <td>${dataPoint.dataset_name}</td>
+                      <td>${dataPoint.final_value?.toFixed(4) || 'N/A'}</td>
+                      <td>${dataPoint.best_value?.toFixed(4) || 'N/A'}</td>
+                  </tr>`;
+              }
+
+              metricsContent += `</table></div>`;
+          }
+      } else if (metrics === null) {
+          metricsContent += `<p>No metrics available</p>`;
+      }
+      metricsElm.innerHTML = metricsContent;
+  }
+
+  // Add plots display
+  const plotsElm = document.getElementById("plots");
+  if (plotsElm) {
+      if (plots && plots.length > 0) {
+          let plotsContent = '';
+          plots.forEach(plotPath => {
+              plotsContent += `
+                  <div class="plot-item">
+                      <img src="${plotPath}" alt="Experiment Plot" onerror="console.error('Failed to load plot:', this.src)"/>
+                  </div>`;
+          });
+          plotsElm.innerHTML = plotsContent;
+      } else {
+          plotsElm.innerHTML = '';
+      }
+  }
+
+  // Add error info display
+  const errorElm = document.getElementById("exc_info");
+  if (errorElm) {
+    if (exc_type) {
+      let errorContent = `<h3 style="color: #ff5555">Exception Information:</h3>
+                          <p><strong>Type:</strong> ${exc_type}</p>`;
+
+      if (exc_info) {
+        errorContent += `<p><strong>Details:</strong> <pre>${JSON.stringify(exc_info, null, 2)}</pre></p>`;
+      }
+
+      if (exc_stack) {
+        errorContent += `<p><strong>Stack Trace:</strong> <pre>${exc_stack.join('\n')}</pre></p>`;
+      }
+
+      errorElm.innerHTML = errorContent;
+    } else {
+      errorElm.innerHTML = "No exception info available";
+    }
+  }
+
+  const exec_timeElm = document.getElementById("exec_time");
+  if (exec_timeElm) {
+    let exec_timeContent = '<div id="exec_time"><h3>Execution Time (in seconds):</h3><p>' + exec_time + '</p></div>';
+    exec_timeElm.innerHTML = exec_timeContent;
+  }
+
+  const exec_time_feedbackElm = document.getElementById("exec_time_feedback");
+  if (exec_time_feedbackElm) {
+    let exec_time_feedbackContent = '<div id="exec_time_feedback_content">'
+    exec_time_feedbackContent += '<h3>Execution Time Feedback:</h3>'
+    exec_time_feedbackContent += '<p>' + exec_time_feedback + '</p>'
+    exec_time_feedbackContent += '</div>';
+    exec_time_feedbackElm.innerHTML = exec_time_feedbackContent;
+  }
+
+  const vlm_feedbackElm = document.getElementById("vlm_feedback");
+  if (vlm_feedbackElm) {
+      let vlm_feedbackContent = '';
+
+      if (plot_analyses && plot_analyses.length > 0) {
+          vlm_feedbackContent += `<h3>Plot Analysis:</h3>`;
+          plot_analyses.forEach(analysis => {
+              if (analysis && analysis.plot_path) {  // Add null check
+                  vlm_feedbackContent += `
+                      <div class="plot-analysis">
+                          <h4>Analysis for ${analysis.plot_path.split('/').pop()}</h4>
+                          <p>${analysis.analysis || 'No analysis available'}</p>
+                          <ul class="key-findings">
+                              ${(analysis.key_findings || []).map(finding => `<li>${finding}</li>`).join('')}
+                          </ul>
+                      </div>`;
+              } else {
+                  console.warn('Received invalid plot analysis:', analysis);
+                  vlm_feedbackContent += `
+                      <div class="plot-analysis">
+                          <p>Invalid plot analysis data received</p>
+                      </div>`;
+              }
+          });
+      }
+
+      // Add actionable insights if available
+      if (vlm_feedback_summary && typeof vlm_feedback_summary === 'string') {
+          vlm_feedbackContent += `
+              <div class="vlm_feedback">
+                  <h3>VLM Feedback Summary:</h3>
+                  <p>${vlm_feedback_summary}</p>
+              </div>`;
+      }
+
+      console.log("Datasets successfully tested:", datasets_successfully_tested);
+      if (datasets_successfully_tested && datasets_successfully_tested.length > 0) {
+          vlm_feedbackContent += `
+              <div id="datasets_successfully_tested">
+                  <h3>Datasets Successfully Tested:</h3>
+                  <p>${datasets_successfully_tested.join(', ')}</p>
+              </div>`;
+      }
+
+      if (!vlm_feedbackContent) {
+          vlm_feedbackContent = '<p>No insights available for this experiment.</p>';
+      }
+
+      vlm_feedbackElm.innerHTML = vlm_feedbackContent;
+  }
+
+  const datasets_successfully_testedElm = document.getElementById("datasets_successfully_tested");
+  if (datasets_successfully_testedElm) {
+      let datasets_successfully_testedContent = '';
+      if (datasets_successfully_tested && datasets_successfully_tested.length > 0) {
+          datasets_successfully_testedContent = `<h3>Datasets Successfully Tested:</h3><ul>`;
+          datasets_successfully_tested.forEach(dataset => {
+              datasets_successfully_testedContent += `<li>${dataset}</li>`;
+          });
+          datasets_successfully_testedContent += `</ul>`;
+      } else {
+          datasets_successfully_testedContent = '<p>No datasets tested yet</p>';
+      }
+      datasets_successfully_testedElm.innerHTML = datasets_successfully_testedContent;
+  }
+};
+
+// Initialize with the provided tree data
+const treeStructData = {"edges": [[2, 4], [2, 3]], "layout": [[0.0, 0.0], [0.4, 0.0], [0.8, 0.0], [0.6, 1.0], [1.0, 1.0]], "plan": ["Below is a compact baseline for the SemanticLens hypothesis. It loads a locally\ncached, ImageNet-pretrained ResNet-50 (HuggingFace format) and a subset of\nImageNet-val images (parquet). It registers a forward hook on ResNet-50's last\nstage (layer4), spatial-max-pools activations per channel, and computes each\nprobe image's activation for a random subset of 32 components. It then selects\neach component's top-k=8 reference images, embeds them with a locally cached\nCLIP image tower, and computes the mean pairwise cosine similarity of the top-k\nembeddings (the \"concept_consistency_score\"). A random-reference baseline is\ncomputed for comparison. Per-component pooled vectors v_c are saved along with a\nhistogram plot; results and metrics are dumped to `working/experiment_data.npy`.", "Baseline implementation for the SemanticLens hypothesis: (1) load a subset of\nImageNet validation images from the local parquet dataset, (2) load HuggingFace\nResNet-50 and extract global-average-pooled `layer4` activations per image (2048\nchannels), (3) for a sample of channels, select top-k reference images by\nactivation magnitude, (4) embed those images with a frozen local CLIP image\ntower, (5) compute mean pairwise cosine similarity among embeddings\n(concept_consistency_score) and compare against a random-reference baseline of\nsame-size image sets, (6) also compute pooled per-component vectors v_c. Manual\nPIL preprocessing avoids fragile HF processors. All artifacts and metrics saved\nto `working/experiment_data.npy` with histograms.", "I'll implement a minimal SemanticLens baseline: (1) load ImageNet-val parquet as\nprobe images, (2) load local ResNet-50 (HF format) and hook layer4 to get\nchannel activations after global average pooling, (3) for a small subset of\nchannels, find top-k activating probe images, (4) embed those images with a\nlocal CLIP vision tower using defensive tensor extraction and manual\npreprocessing (avoiding AutoImageProcessor), (5) compute mean pairwise cosine\nsimilarity per channel (concept consistency), (6) build a matched-size random\nbaseline, (7) save v_c pooled vectors and histograms. I include a preflight\nsmoke test that runs 2 images through both models before the main loop, and a\nfallback path if `get_image_features` returns a non-tensor. Everything is\nwritten to `./working/`.", "Seed node", "Aggregate results from multiple seeds"], "code": ["import os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\nimport io, glob\nimport numpy as np\nimport torch\nfrom PIL import Image\nimport matplotlib.pyplot as plt\nfrom datasets import load_dataset\nfrom transformers import (\n    AutoModelForImageClassification,\n    AutoImageProcessor,\n    CLIPModel,\n    CLIPProcessor,\n)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\n\n# ---------- Load ImageNet-val (parquet) ----------\nparquet_files = sorted(\n    glob.glob(os.path.join(DATA_DIR, \"imagenet-val/data\", \"*.parquet\"))\n)\nif len(parquet_files) == 0:\n    raise FileNotFoundError(f\"No parquet files at {DATA_DIR}/imagenet-val/data\")\nds = load_dataset(\"parquet\", data_files=parquet_files, split=\"train\")\nprint(f\"Loaded imagenet-val: {len(ds)} rows, columns={ds.column_names}\")\n\nN_PROBE = 2000\nrng = np.random.RandomState(0)\nsel_idx = rng.choice(len(ds), size=min(N_PROBE, len(ds)), replace=False).tolist()\nds = ds.select(sel_idx)\n\n\ndef to_pil(x):\n    if isinstance(x, Image.Image):\n        return x.convert(\"RGB\")\n    if isinstance(x, dict) and \"bytes\" in x and x[\"bytes\"] is not None:\n        return Image.open(io.BytesIO(x[\"bytes\"])).convert(\"RGB\")\n    if isinstance(x, (bytes, bytearray)):\n        return Image.open(io.BytesIO(x)).convert(\"RGB\")\n    raise TypeError(f\"Unsupported image type: {type(x)}\")\n\n\nimg_key = \"image\" if \"image\" in ds.column_names else ds.column_names[0]\npil_images = [to_pil(ex[img_key]) for ex in ds]\nprint(f\"Prepared {len(pil_images)} PIL probe images\")\n\n# ---------- Load ResNet-50 (HF) ----------\nresnet_path = os.path.join(MODEL_DIR, \"resnet-50\")\nresnet = (\n    AutoModelForImageClassification.from_pretrained(resnet_path, local_files_only=True)\n    .to(device)\n    .eval()\n)\nimg_proc = AutoImageProcessor.from_pretrained(resnet_path, local_files_only=True)\n\nactivations = {}\n\n\ndef hook(mod, inp, out):\n    activations[\"feat\"] = out.detach()\n\n\ntarget_layer = resnet.resnet.encoder.stages[-1]\ntarget_layer.register_forward_hook(hook)\n\n# Determine channel count\nwith torch.no_grad():\n    inp0 = img_proc(pil_images[0], return_tensors=\"pt\").to(device)\n    _ = resnet(**inp0)\nn_channels = activations[\"feat\"].shape[1]\nprint(f\"Feature channels at last stage: {n_channels}\")\n\n# ---------- Choose components & compute activations ----------\nN_COMPONENTS = 32\nTOP_K = 8\nBATCH = 32\ncomp_rng = np.random.RandomState(42)\ncomp_ids = comp_rng.choice(n_channels, size=N_COMPONENTS, replace=False)\n\nmax_acts = np.zeros((len(pil_images), N_COMPONENTS), dtype=np.float32)\nfor start in range(0, len(pil_images), BATCH):\n    batch_imgs = pil_images[start : start + BATCH]\n    inp = img_proc(batch_imgs, return_tensors=\"pt\").to(device)\n    with torch.no_grad():\n        _ = resnet(**inp)\n    feat = activations[\"feat\"]  # (B, C, H, W)\n    pooled = feat.amax(dim=(2, 3))  # (B, C)\n    max_acts[start : start + len(batch_imgs)] = pooled[:, comp_ids].cpu().numpy()\n    if start % (BATCH * 10) == 0:\n        print(f\"  probe forward {start}/{len(pil_images)}\")\n\n# Top-k images per component\ntop_k_indices = np.argsort(-max_acts, axis=0)[:TOP_K]  # (TOP_K, N_COMPONENTS)\n\n# ---------- Load CLIP image tower ----------\nclip_candidates = [\n    os.path.join(MODEL_DIR, \"clip-vit-base-patch32\"),\n    os.path.join(MODEL_DIR, \"clip-vit-base-patch16\"),\n    os.path.join(MODEL_DIR, \"clip-vit-large-patch14\"),\n]\nclip_path = next((p for p in clip_candidates if os.path.isdir(p)), None)\nif clip_path is None:\n    raise FileNotFoundError(f\"No local CLIP model found among: {clip_candidates}\")\nprint(f\"Using CLIP at {clip_path}\")\nclip = CLIPModel.from_pretrained(clip_path, local_files_only=True).to(device).eval()\nclip_proc = CLIPProcessor.from_pretrained(clip_path, local_files_only=True)\n\n# ---------- Embed unique reference images with CLIP ----------\nunique_idx = sorted(set(top_k_indices.flatten().tolist()))\nidx_map = {u: i for i, u in enumerate(unique_idx)}\nproj_dim = clip.config.projection_dim\nclip_embs = np.zeros((len(unique_idx), proj_dim), dtype=np.float32)\nfor start in range(0, len(unique_idx), BATCH):\n    batch_ids = unique_idx[start : start + BATCH]\n    batch_imgs = [pil_images[i] for i in batch_ids]\n    inp = clip_proc(images=batch_imgs, return_tensors=\"pt\").to(device)\n    with torch.no_grad():\n        emb = clip.get_image_features(**inp)\n    emb = torch.nn.functional.normalize(emb, dim=-1)\n    clip_embs[start : start + len(batch_ids)] = emb.cpu().numpy()\n\n\n# ---------- Concept consistency score ----------\ndef mean_pairwise_cos(embs):\n    S = embs @ embs.T\n    n = embs.shape[0]\n    mask = ~np.eye(n, dtype=bool)\n    return float(S[mask].mean())\n\n\ncomponent_scores = np.zeros(N_COMPONENTS, dtype=np.float32)\nv_c = np.zeros((N_COMPONENTS, proj_dim), dtype=np.float32)\nfor j in range(N_COMPONENTS):\n    tk = top_k_indices[:, j]\n    embs = np.stack([clip_embs[idx_map[i]] for i in tk])\n    component_scores[j] = mean_pairwise_cos(embs)\n    pooled = embs.mean(0)\n    v_c[j] = pooled / (np.linalg.norm(pooled) + 1e-8)\n\nccs = float(component_scores.mean())\n\n# Random reference baseline (same # of components, same TOP_K, but random probe images)\nrng2 = np.random.RandomState(1)\nrandom_scores = np.zeros(N_COMPONENTS, dtype=np.float32)\nfor j in range(N_COMPONENTS):\n    rand_idx = rng2.choice(len(unique_idx), size=TOP_K, replace=False)\n    random_scores[j] = mean_pairwise_cos(clip_embs[rand_idx])\nbaseline = float(random_scores.mean())\n\nprint(f\"Concept Consistency Score (top-k activations): {ccs:.4f}\")\nprint(f\"Random reference baseline:                     {baseline:.4f}\")\nprint(f\"Epoch 0: validation_loss = {1.0 - ccs:.4f}\")\n\n# ---------- Save experiment data ----------\nexperiment_data = {\n    \"resnet50_imagenet\": {\n        \"metrics\": {\n            \"train\": [],\n            \"val\": [\n                {\n                    \"epoch\": 0,\n                    \"concept_consistency_score\": ccs,\n                    \"random_baseline\": baseline,\n                }\n            ],\n        },\n        \"losses\": {\"train\": [], \"val\": [{\"epoch\": 0, \"loss\": 1.0 - ccs}]},\n        \"predictions\": v_c,  # per-component CLIP-space vectors v_c\n        \"ground_truth\": np.array(comp_ids),  # channel indices in ResNet layer4\n        \"component_scores\": component_scores,\n        \"random_scores\": random_scores,\n        \"top_k_indices\": top_k_indices,\n        \"config\": {\n            \"n_probe\": len(pil_images),\n            \"n_components\": N_COMPONENTS,\n            \"top_k\": TOP_K,\n            \"layer\": \"resnet.encoder.stages[-1]\",\n            \"clip_path\": clip_path,\n        },\n    },\n}\nnp.save(os.path.join(working_dir, \"experiment_data.npy\"), experiment_data)\n\n# ---------- Visualization ----------\nplt.figure(figsize=(8, 4))\nbins = np.linspace(-0.1, 1.0, 25)\nplt.hist(\n    component_scores, bins=bins, alpha=0.65, label=f\"Top-k activations (mean={ccs:.3f})\"\n)\nplt.hist(\n    random_scores,\n    bins=bins,\n    alpha=0.65,\n    label=f\"Random references (mean={baseline:.3f})\",\n)\nplt.xlabel(\"Mean pairwise CLIP cosine similarity\")\nplt.ylabel(\"# components\")\nplt.title(\"ResNet-50 layer4: concept consistency of top-k reference images\")\nplt.legend()\nplt.tight_layout()\nplt.savefig(\n    os.path.join(working_dir, \"resnet50_imagenet_concept_consistency.png\"), dpi=110\n)\nplt.close()\n\nprint(\"Saved:\", os.path.join(working_dir, \"experiment_data.npy\"))\nprint(\"Saved:\", os.path.join(working_dir, \"resnet50_imagenet_concept_consistency.png\"))\n", "import os, io, glob, math, time, json\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\nimport numpy as np\nimport torch\nimport torch.nn.functional as F\nfrom PIL import Image\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\n\n# ---------- Load ImageNet-val parquet ----------\nimport pyarrow.parquet as pq\n\nparq_files = sorted(\n    glob.glob(os.path.join(DATA_DIR, \"imagenet-val\", \"data\", \"*.parquet\"))\n)\nif not parq_files:\n    parq_files = sorted(\n        glob.glob(\n            os.path.join(DATA_DIR, \"imagenet-val\", \"**\", \"*.parquet\"), recursive=True\n        )\n    )\nprint(f\"Found {len(parq_files)} parquet files for imagenet-val\")\nassert len(parq_files) > 0, \"imagenet-val parquet not found\"\n\nN_IMAGES = 2000  # subset for activation extraction\nimgs_bytes = []\nlabels = []\nfor pf in parq_files:\n    t = pq.read_table(pf)\n    cols = t.column_names\n    print(f\"Parquet cols: {cols}, rows: {t.num_rows}\")\n    img_col = \"image\" if \"image\" in cols else cols[0]\n    lbl_col = \"label\" if \"label\" in cols else (cols[1] if len(cols) > 1 else None)\n    df = t.to_pandas()\n    for i in range(len(df)):\n        rec = df.iloc[i][img_col]\n        if isinstance(rec, dict) and \"bytes\" in rec:\n            b = rec[\"bytes\"]\n        elif isinstance(rec, (bytes, bytearray)):\n            b = bytes(rec)\n        else:\n            # skip unknown\n            continue\n        imgs_bytes.append(b)\n        labels.append(int(df.iloc[i][lbl_col]) if lbl_col else -1)\n        if len(imgs_bytes) >= N_IMAGES:\n            break\n    if len(imgs_bytes) >= N_IMAGES:\n        break\nprint(f\"Loaded {len(imgs_bytes)} images\")\n\n# ---------- Preprocessing ----------\nIMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)\nIMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)\nCLIP_MEAN = np.array([0.48145466, 0.4578275, 0.40821073], dtype=np.float32)\nCLIP_STD = np.array([0.26862954, 0.26130258, 0.27577711], dtype=np.float32)\n\n\ndef load_pil(b):\n    return Image.open(io.BytesIO(b)).convert(\"RGB\")\n\n\ndef preprocess_pil(pil, size=224, mean=IMAGENET_MEAN, std=IMAGENET_STD):\n    # resize shorter side to size*256/224, then center crop\n    resize_edge = int(round(size * 256 / 224))\n    w, h = pil.size\n    if w < h:\n        nw = resize_edge\n        nh = int(round(h * resize_edge / w))\n    else:\n        nh = resize_edge\n        nw = int(round(w * resize_edge / h))\n    pil_r = pil.resize((nw, nh), Image.BICUBIC)\n    left = (nw - size) // 2\n    top = (nh - size) // 2\n    pil_c = pil_r.crop((left, top, left + size, top + size))\n    arr = np.asarray(pil_c, dtype=np.float32) / 255.0\n    arr = (arr - mean) / std\n    arr = np.transpose(arr, (2, 0, 1))\n    return arr\n\n\n# Pre-decode all PIL once (kept as PIL for reuse in CLIP)\npil_images = [load_pil(b) for b in imgs_bytes]\n\n# ---------- Load ResNet-50 (HF) ----------\nfrom transformers import AutoModelForImageClassification\n\nresnet_path = os.path.join(MODEL_DIR, \"resnet-50\")\nprint(\"Loading ResNet-50 from\", resnet_path)\nresnet = AutoModelForImageClassification.from_pretrained(\n    resnet_path, local_files_only=True\n)\nresnet.eval().to(device)\n\n# Register hook on last conv stage output (before pooling). HF ResNet: resnet.resnet.encoder.stages[-1]\nfeat_holder = {}\n\n\ndef hook_fn(mod, inp, out):\n    feat_holder[\"x\"] = out  # (B, C, H, W)\n\n\ntarget_module = resnet.resnet.encoder.stages[-1]\nh = target_module.register_forward_hook(hook_fn)\n\n# ---------- Extract GAP activations ----------\nBATCH = 32\nall_acts = []\nt0 = time.time()\nwith torch.no_grad():\n    for i in range(0, len(pil_images), BATCH):\n        batch_pil = pil_images[i : i + BATCH]\n        arrs = np.stack(\n            [preprocess_pil(p, mean=IMAGENET_MEAN, std=IMAGENET_STD) for p in batch_pil]\n        )\n        x = torch.from_numpy(arrs).to(device)\n        _ = resnet(pixel_values=x)\n        feat = feat_holder[\"x\"]  # (B, 2048, 7, 7)\n        gap = feat.mean(dim=(2, 3)).cpu().numpy()  # (B, 2048)\n        all_acts.append(gap)\n        if i % (BATCH * 10) == 0:\n            print(\n                f\"  extracted {i+len(batch_pil)}/{len(pil_images)} ({time.time()-t0:.1f}s)\"\n            )\nh.remove()\nacts = np.concatenate(all_acts, axis=0)  # (N, 2048)\nprint(\"activations shape:\", acts.shape)\ndel resnet\ntorch.cuda.empty_cache()\n\n# ---------- Load CLIP ----------\nfrom transformers import CLIPModel\n\nclip_candidates = [\n    os.path.join(MODEL_DIR, \"clip-vit-base-patch32\"),\n    os.path.join(MODEL_DIR, \"clip-vit-base-patch16\"),\n    os.path.join(MODEL_DIR, \"clip-vit-large-patch14\"),\n    os.path.join(MODEL_DIR, \"CLIP-ViT-B-32\"),\n]\nclip_path = None\nfor c in clip_candidates:\n    if os.path.isdir(c):\n        clip_path = c\n        break\nif clip_path is None:\n    # search\n    for p in glob.glob(os.path.join(MODEL_DIR, \"*clip*\")):\n        if os.path.isdir(p):\n            clip_path = p\n            break\nassert clip_path is not None, \"No local CLIP model found\"\nprint(\"Loading CLIP from\", clip_path)\nclip_model = (\n    CLIPModel.from_pretrained(clip_path, local_files_only=True).to(device).eval()\n)\n\n# determine CLIP image size\ntry:\n    clip_size = clip_model.config.vision_config.image_size\nexcept Exception:\n    clip_size = 224\nprint(\"CLIP image size:\", clip_size)\n\n# ---------- Embed all images with CLIP ----------\nall_clip_emb = []\nwith torch.no_grad():\n    for i in range(0, len(pil_images), BATCH):\n        batch_pil = pil_images[i : i + BATCH]\n        arrs = np.stack(\n            [\n                preprocess_pil(p, size=clip_size, mean=CLIP_MEAN, std=CLIP_STD)\n                for p in batch_pil\n            ]\n        )\n        x = torch.from_numpy(arrs).to(device)\n        emb = clip_model.get_image_features(pixel_values=x)\n        emb = F.normalize(emb, dim=-1)\n        all_clip_emb.append(emb.cpu().numpy())\nclip_emb = np.concatenate(all_clip_emb, axis=0)  # (N, D)\nprint(\"CLIP emb shape:\", clip_emb.shape)\n\n\n# ---------- Concept consistency score ----------\ndef mean_pairwise_cos(emb_subset):\n    # emb_subset: (k, D) normalized\n    S = emb_subset @ emb_subset.T\n    k = S.shape[0]\n    iu = np.triu_indices(k, k=1)\n    return float(S[iu].mean())\n\n\nTOPK = 16\nN_COMPONENTS = 128\nrng = np.random.RandomState(0)\nn_channels = acts.shape[1]\ncomp_ids = rng.choice(n_channels, size=N_COMPONENTS, replace=False)\n\nconcept_scores = []\nrandom_scores = []\npooled_vectors = np.zeros((N_COMPONENTS, clip_emb.shape[1]), dtype=np.float32)\n\nfor idx, c in enumerate(comp_ids):\n    a = acts[:, c]\n    topk_idx = np.argsort(-a)[:TOPK]\n    e = clip_emb[topk_idx]\n    concept_scores.append(mean_pairwise_cos(e))\n    # pooled vec\n    v = e.mean(axis=0)\n    v = v / (np.linalg.norm(v) + 1e-8)\n    pooled_vectors[idx] = v\n    # random baseline\n    rnd_idx = rng.choice(len(clip_emb), size=TOPK, replace=False)\n    random_scores.append(mean_pairwise_cos(clip_emb[rnd_idx]))\n\nconcept_scores = np.array(concept_scores)\nrandom_scores = np.array(random_scores)\n\nconcept_consistency_score = float(concept_scores.mean())\nrandom_baseline = float(random_scores.mean())\nprint(f\"concept_consistency_score = {concept_consistency_score:.4f}\")\nprint(f\"random_baseline_score     = {random_baseline:.4f}\")\nprint(f\"delta (concept - random)  = {concept_consistency_score - random_baseline:.4f}\")\n\n\n# bootstrap CIs\ndef bootstrap_ci(x, n=1000, alpha=0.05):\n    xs = np.array(x)\n    rs = np.random.RandomState(1)\n    means = [xs[rs.randint(0, len(xs), len(xs))].mean() for _ in range(n)]\n    return float(np.percentile(means, 100 * alpha / 2)), float(\n        np.percentile(means, 100 * (1 - alpha / 2))\n    )\n\n\nc_lo, c_hi = bootstrap_ci(concept_scores)\nr_lo, r_hi = bootstrap_ci(random_scores)\nprint(f\"concept 95% CI: [{c_lo:.4f}, {c_hi:.4f}]\")\nprint(f\"random  95% CI: [{r_lo:.4f}, {r_hi:.4f}]\")\n\n# ---------- Plots ----------\nplt.figure(figsize=(6, 4))\nplt.hist(concept_scores, bins=25, alpha=0.7, label=\"concept (top-k)\", color=\"C0\")\nplt.hist(random_scores, bins=25, alpha=0.7, label=\"random\", color=\"C1\")\nplt.xlabel(\"mean pairwise CLIP cosine similarity\")\nplt.ylabel(\"# components\")\nplt.legend()\nplt.title(f\"ResNet-50 layer4 (n={N_COMPONENTS}, k={TOPK})\")\nplt.tight_layout()\nplt.savefig(\n    os.path.join(working_dir, \"concept_consistency_hist_resnet50_imagenetval.png\"),\n    dpi=120,\n)\nplt.close()\n\n# ---------- Save experiment data ----------\nexperiment_data = {\n    \"imagenet_val_resnet50\": {\n        \"metrics\": {\n            \"train\": [],\n            \"val\": [\n                {\n                    \"epoch\": 0,\n                    \"concept_consistency_score\": concept_consistency_score,\n                    \"random_baseline_score\": random_baseline,\n                    \"delta\": concept_consistency_score - random_baseline,\n                    \"concept_ci95\": [c_lo, c_hi],\n                    \"random_ci95\": [r_lo, r_hi],\n                }\n            ],\n        },\n        \"losses\": {\"train\": [], \"val\": []},\n        \"predictions\": concept_scores,\n        \"ground_truth\": random_scores,\n        \"component_ids\": comp_ids,\n        \"pooled_vectors\": pooled_vectors,\n        \"config\": {\n            \"n_images\": int(len(pil_images)),\n            \"n_components\": N_COMPONENTS,\n            \"top_k\": TOPK,\n            \"model\": \"resnet-50\",\n            \"layer\": \"encoder.stages[-1]\",\n            \"clip_model_path\": clip_path,\n        },\n    }\n}\nprint(f\"Epoch 0: validation_loss = {1.0 - concept_consistency_score:.4f}\")\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\nprint(\"Saved experiment_data.npy\")\n", "import os, io, glob, json, math, random, time, sys, traceback\nimport numpy as np\nimport torch\nimport torch.nn.functional as F\nfrom PIL import Image\nfrom torch.utils.data import Dataset, DataLoader\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\n\n\n# ---------- Locate resources ----------\ndef find_dir(candidates):\n    for c in candidates:\n        if os.path.isdir(c):\n            return c\n    return None\n\n\nresnet_dir = find_dir([f\"{MODEL_DIR}/resnet-50\", f\"{MODEL_DIR}/microsoft/resnet-50\"])\nclip_dir = find_dir(\n    [\n        f\"{MODEL_DIR}/clip-vit-base-patch32\",\n        f\"{MODEL_DIR}/clip-vit-base-patch16\",\n        f\"{MODEL_DIR}/openai/clip-vit-base-patch32\",\n        f\"{MODEL_DIR}/openai/clip-vit-base-patch16\",\n    ]\n)\nassert resnet_dir is not None, f\"ResNet-50 dir not found under {MODEL_DIR}\"\nassert clip_dir is not None, f\"CLIP dir not found under {MODEL_DIR}\"\nprint(f\"ResNet-50: {resnet_dir}\")\nprint(f\"CLIP: {clip_dir}\")\n\n# ImageNet val parquet\nimagenet_val_dir = f\"{DATA_DIR}/imagenet-val/data\"\nparquet_files = sorted(glob.glob(f\"{imagenet_val_dir}/*.parquet\"))\nassert len(parquet_files) > 0, f\"No parquet files found in {imagenet_val_dir}\"\nprint(f\"Found {len(parquet_files)} parquet files.\")\n\n# ---------- Load probe dataset ----------\nfrom datasets import load_dataset\n\nds = load_dataset(\"parquet\", data_files=parquet_files, split=\"train\")\nprint(\"Dataset:\", ds)\nprint(\"Columns:\", ds.column_names)\n\n# Identify image column\nimg_col = None\nfor c in ds.column_names:\n    if \"image\" in c.lower() or \"img\" in c.lower():\n        img_col = c\n        break\nif img_col is None:\n    img_col = ds.column_names[0]\nprint(f\"Using image column: {img_col}\")\n\n# ---------- Preprocessing (manual) ----------\nIMAGENET_MEAN = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)\nIMAGENET_STD = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)\nCLIP_MEAN = torch.tensor([0.48145466, 0.4578275, 0.40821073]).view(3, 1, 1)\nCLIP_STD = torch.tensor([0.26862954, 0.26130258, 0.27577711]).view(3, 1, 1)\n\n\ndef pil_to_tensor(pil, size=224, resize=256):\n    img = pil.convert(\"RGB\")\n    w, h = img.size\n    scale = resize / min(w, h)\n    nw, nh = int(round(w * scale)), int(round(h * scale))\n    img = img.resize((nw, nh), Image.BICUBIC)\n    left = (nw - size) // 2\n    top = (nh - size) // 2\n    img = img.crop((left, top, left + size, top + size))\n    arr = np.asarray(img, dtype=np.float32) / 255.0\n    t = torch.from_numpy(arr).permute(2, 0, 1)\n    return t\n\n\ndef normalize_imagenet(t):\n    return (t - IMAGENET_MEAN) / IMAGENET_STD\n\n\ndef normalize_clip(t):\n    return (t - CLIP_MEAN) / CLIP_STD\n\n\nclass ProbeDataset(Dataset):\n    def __init__(self, hf_ds, img_col, n=None):\n        self.ds = hf_ds\n        self.img_col = img_col\n        self.n = n if n is not None else len(hf_ds)\n\n    def __len__(self):\n        return min(self.n, len(self.ds))\n\n    def __getitem__(self, i):\n        row = self.ds[i]\n        img = row[self.img_col]\n        if isinstance(img, dict) and \"bytes\" in img and img[\"bytes\"] is not None:\n            pil = Image.open(io.BytesIO(img[\"bytes\"]))\n        elif isinstance(img, Image.Image):\n            pil = img\n        else:\n            pil = Image.open(io.BytesIO(img))\n        t = pil_to_tensor(pil, 224, 256)\n        return i, t  # return raw [0,1] tensor; normalize per-model later\n\n\n# ---------- Load models ----------\nfrom transformers import (\n    AutoModel,\n    AutoModelForImageClassification,\n    CLIPModel,\n    CLIPVisionModel,\n)\n\n# ResNet-50\ntry:\n    rn_model = AutoModelForImageClassification.from_pretrained(\n        resnet_dir, local_files_only=True\n    )\nexcept Exception as e:\n    print(\"AutoModelForImageClassification failed, trying AutoModel:\", e)\n    rn_model = AutoModel.from_pretrained(resnet_dir, local_files_only=True)\nrn_model.eval().to(device)\n\n\n# Find last conv-stage output for hooking. HF resnet-50 has model.resnet.encoder.stages[-1]\ndef get_layer4(model):\n    # Try common attribute paths\n    candidates = []\n    if hasattr(model, \"resnet\"):\n        candidates.append(model.resnet.encoder.stages[-1])\n    if hasattr(model, \"encoder\") and hasattr(model.encoder, \"stages\"):\n        candidates.append(model.encoder.stages[-1])\n    return candidates[0] if candidates else None\n\n\nlayer4 = get_layer4(rn_model)\nassert layer4 is not None, \"Could not locate layer4/last stage of ResNet-50\"\nprint(\"Hooking layer:\", type(layer4).__name__)\n\n_activation_holder = {}\n\n\ndef _hook(module, inp, out):\n    # out shape: [B, C, H, W]\n    if isinstance(out, tuple):\n        out = out[0]\n    _activation_holder[\"feat\"] = out.detach()\n\n\nhandle = layer4.register_forward_hook(_hook)\n\n# CLIP\ntry:\n    clip_model = CLIPModel.from_pretrained(clip_dir, local_files_only=True)\n    clip_kind = \"full\"\nexcept Exception as e:\n    print(\"CLIPModel failed, using CLIPVisionModel:\", e)\n    clip_model = CLIPVisionModel.from_pretrained(clip_dir, local_files_only=True)\n    clip_kind = \"vision\"\nclip_model.eval().to(device)\n\n\ndef clip_embed(pixel_values):\n    # pixel_values already CLIP-normalized, 224x224\n    with torch.no_grad():\n        if clip_kind == \"full\":\n            try:\n                out = clip_model.get_image_features(pixel_values=pixel_values)\n                if not torch.is_tensor(out):\n                    raise RuntimeError(\"get_image_features returned non-tensor\")\n            except Exception:\n                vis_out = clip_model.vision_model(pixel_values=pixel_values)\n                pooled = getattr(vis_out, \"pooler_output\", None)\n                if pooled is None:\n                    pooled = vis_out[1]\n                out = clip_model.visual_projection(pooled)\n        else:\n            vis_out = clip_model(pixel_values=pixel_values)\n            pooled = getattr(vis_out, \"pooler_output\", vis_out[1])\n            out = pooled\n    return F.normalize(out.float(), dim=-1)\n\n\n# ---------- Preflight smoke test ----------\nprint(\"--- Smoke test ---\")\nwith torch.no_grad():\n    sample_imgs = []\n    for i in range(2):\n        row = ds[i]\n        img_field = row[img_col]\n        if (\n            isinstance(img_field, dict)\n            and \"bytes\" in img_field\n            and img_field[\"bytes\"] is not None\n        ):\n            pil = Image.open(io.BytesIO(img_field[\"bytes\"]))\n        elif isinstance(img_field, Image.Image):\n            pil = img_field\n        else:\n            pil = Image.open(io.BytesIO(img_field))\n        sample_imgs.append(pil_to_tensor(pil, 224, 256))\n    batch = torch.stack(sample_imgs, dim=0)\n    rn_in = normalize_imagenet(batch).to(device)\n    _ = (\n        rn_model(pixel_values=rn_in)\n        if \"pixel_values\" in rn_model.forward.__code__.co_varnames\n        else rn_model(rn_in)\n    )\n    feat = _activation_holder[\"feat\"]\n    print(\"layer4 feat shape:\", tuple(feat.shape))\n    clip_in = normalize_clip(batch).to(device)\n    emb = clip_embed(clip_in)\n    print(\"CLIP emb shape:\", tuple(emb.shape))\nprint(\"--- Smoke test passed ---\")\n\n# ---------- Configuration ----------\nN_PROBE = 2000  # number of probe images\nN_CHANNELS = 64  # number of components to inspect (subset of 2048)\nTOP_K = 8  # reference inputs per component\nBATCH = 64\nSEED = 0\nrandom.seed(SEED)\nnp.random.seed(SEED)\ntorch.manual_seed(SEED)\n\n# Choose channels to inspect (random subset)\nNUM_TOTAL_CHANNELS = None  # determined from smoke test\nNUM_TOTAL_CHANNELS = _activation_holder[\"feat\"].shape[1]\nprint(f\"Total channels in layer4 output: {NUM_TOTAL_CHANNELS}\")\ninspected_channels = sorted(random.sample(range(NUM_TOTAL_CHANNELS), N_CHANNELS))\n\n# ---------- Pass 1: compute activations for all probe images ----------\nprobe_ds = ProbeDataset(ds, img_col, n=N_PROBE)\nloader = DataLoader(\n    probe_ds, batch_size=BATCH, num_workers=4, shuffle=False, pin_memory=True\n)\n\nactivations = np.zeros((len(probe_ds), N_CHANNELS), dtype=np.float32)\nindices_all = np.zeros(len(probe_ds), dtype=np.int64)\n\nt0 = time.time()\nwith torch.no_grad():\n    ptr = 0\n    for idx, batch in loader:\n        bs = batch.shape[0]\n        x = normalize_imagenet(batch).to(device, non_blocking=True)\n        try:\n            _ = rn_model(pixel_values=x)\n        except TypeError:\n            _ = rn_model(x)\n        feat = _activation_holder[\"feat\"]  # [B,C,H,W]\n        # global average pool\n        pooled = feat.mean(dim=[2, 3])  # [B,C]\n        pooled = pooled[:, inspected_channels].cpu().numpy()\n        activations[ptr : ptr + bs] = pooled\n        indices_all[ptr : ptr + bs] = idx.numpy()\n        ptr += bs\n        if ptr % (BATCH * 5) == 0:\n            print(f\"  activation pass: {ptr}/{len(probe_ds)}  ({time.time()-t0:.1f}s)\")\nprint(f\"Activation extraction done in {time.time()-t0:.1f}s\")\n\n# ---------- Pick top-k images per channel ----------\ntop_k_per_channel = {}  # channel_idx (position) -> list of dataset indices\nfor j in range(N_CHANNELS):\n    order = np.argsort(-activations[:, j])\n    top_positions = order[:TOP_K]\n    top_ds_idx = indices_all[top_positions].tolist()\n    top_k_per_channel[j] = top_ds_idx\n\n# Collect all unique needed images\nneeded_ds_indices = sorted({i for lst in top_k_per_channel.values() for i in lst})\nprint(f\"Need to embed {len(needed_ds_indices)} unique reference images with CLIP.\")\n\n# ---------- Embed with CLIP ----------\nidx_to_emb = {}\nbuf_idx, buf_img = [], []\n\n\ndef flush_clip():\n    if not buf_img:\n        return\n    x = torch.stack(buf_img, dim=0)\n    x = normalize_clip(x).to(device, non_blocking=True)\n    emb = clip_embed(x).cpu().numpy()\n    for k, di in enumerate(buf_idx):\n        idx_to_emb[di] = emb[k]\n    buf_idx.clear()\n    buf_img.clear()\n\n\nt0 = time.time()\nfor di in needed_ds_indices:\n    row = ds[int(di)]\n    img_field = row[img_col]\n    if (\n        isinstance(img_field, dict)\n        and \"bytes\" in img_field\n        and img_field[\"bytes\"] is not None\n    ):\n        pil = Image.open(io.BytesIO(img_field[\"bytes\"]))\n    elif isinstance(img_field, Image.Image):\n        pil = img_field\n    else:\n        pil = Image.open(io.BytesIO(img_field))\n    t = pil_to_tensor(pil, 224, 256)\n    buf_idx.append(int(di))\n    buf_img.append(t)\n    if len(buf_img) >= BATCH:\n        flush_clip()\nflush_clip()\nprint(f\"CLIP embedding done in {time.time()-t0:.1f}s\")\n\nemb_dim = next(iter(idx_to_emb.values())).shape[0]\nprint(f\"CLIP embedding dim: {emb_dim}\")\n\n\n# ---------- Concept consistency per channel ----------\ndef mean_pairwise_cos(vecs):\n    # vecs: [k, d], assumed unit-normalized\n    S = vecs @ vecs.T\n    k = vecs.shape[0]\n    iu = np.triu_indices(k, k=1)\n    return float(S[iu].mean())\n\n\nconcept_scores = np.zeros(N_CHANNELS, dtype=np.float32)\nv_c = np.zeros((N_CHANNELS, emb_dim), dtype=np.float32)\nfor j in range(N_CHANNELS):\n    vecs = np.stack([idx_to_emb[i] for i in top_k_per_channel[j]], axis=0)\n    concept_scores[j] = mean_pairwise_cos(vecs)\n    pooled = vecs.mean(axis=0)\n    pooled /= np.linalg.norm(pooled) + 1e-8\n    v_c[j] = pooled\n\n# ---------- Random baseline ----------\nall_emb_indices = list(idx_to_emb.keys())\n# Ensure random baseline uses same pool size roughly; sample TOP_K per pseudo-channel\nrng = np.random.RandomState(123)\nrandom_scores = np.zeros(N_CHANNELS, dtype=np.float32)\nfor j in range(N_CHANNELS):\n    pick = rng.choice(len(all_emb_indices), size=TOP_K, replace=False)\n    vecs = np.stack([idx_to_emb[all_emb_indices[p]] for p in pick], axis=0)\n    random_scores[j] = mean_pairwise_cos(vecs)\n\nmean_concept = float(concept_scores.mean())\nmedian_concept = float(np.median(concept_scores))\nmean_random = float(random_scores.mean())\ndelta = mean_concept - mean_random\n\nprint(\"==================================================\")\nprint(f\"concept_consistency_score (mean) = {mean_concept:.4f}\")\nprint(f\"concept_consistency_score (median) = {median_concept:.4f}\")\nprint(f\"random baseline (mean)           = {mean_random:.4f}\")\nprint(f\"delta (concept - random)         = {delta:.4f}\")\nprint(\"==================================================\")\n\n# ---------- Visualization ----------\ntry:\n    import matplotlib\n\n    matplotlib.use(\"Agg\")\n    import matplotlib.pyplot as plt\n\n    fig, ax = plt.subplots(1, 1, figsize=(6, 4))\n    ax.hist(concept_scores, bins=20, alpha=0.7, label=\"top-k activating\")\n    ax.hist(random_scores, bins=20, alpha=0.7, label=\"random baseline\")\n    ax.set_xlabel(\"mean pairwise CLIP cos sim\")\n    ax.set_ylabel(\"# channels\")\n    ax.set_title(\"Concept consistency: ResNet-50 layer4 channels\")\n    ax.legend()\n    fig.tight_layout()\n    fig.savefig(\n        os.path.join(working_dir, \"concept_consistency_hist_resnet50_imagenetval.png\"),\n        dpi=140,\n    )\n    plt.close(fig)\nexcept Exception as e:\n    print(\"Plotting failed:\", e)\n\n# ---------- Save all experiment data ----------\nexperiment_data = {\n    \"imagenet_val_resnet50\": {\n        \"metrics\": {\n            \"train\": [],\n            \"val\": [\n                {\n                    \"epoch\": 0,\n                    \"concept_consistency_score_mean\": mean_concept,\n                    \"concept_consistency_score_median\": median_concept,\n                    \"random_baseline_mean\": mean_random,\n                    \"delta\": delta,\n                }\n            ],\n        },\n        \"losses\": {\"train\": [], \"val\": []},\n        \"predictions\": concept_scores,\n        \"ground_truth\": random_scores,\n        \"inspected_channels\": np.array(inspected_channels, dtype=np.int64),\n        \"v_c\": v_c,\n        \"top_k_per_channel\": top_k_per_channel,\n        \"config\": {\n            \"N_PROBE\": N_PROBE,\n            \"N_CHANNELS\": N_CHANNELS,\n            \"TOP_K\": TOP_K,\n            \"model\": \"resnet-50\",\n            \"dataset\": \"imagenet-val\",\n            \"foundation\": os.path.basename(clip_dir),\n        },\n    }\n}\nprint(\n    f\"Epoch 0: validation_loss = {1.0 - mean_concept:.4f}  (proxy: 1 - concept_consistency_score)\"\n)\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\nprint(\"Saved experiment_data.npy\")\n\nhandle.remove()\n", "# Set random seed\nimport random\nimport numpy as np\nimport torch\n\nseed = 0\nrandom.seed(seed)\nnp.random.seed(seed)\ntorch.manual_seed(seed)\nif torch.cuda.is_available():\n    torch.cuda.manual_seed(seed)\n\nimport os, io, glob, json, math, random, time, sys, traceback\nimport numpy as np\nimport torch\nimport torch.nn.functional as F\nfrom PIL import Image\nfrom torch.utils.data import Dataset, DataLoader\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\n\n\n# ---------- Locate resources ----------\ndef find_dir(candidates):\n    for c in candidates:\n        if os.path.isdir(c):\n            return c\n    return None\n\n\nresnet_dir = find_dir([f\"{MODEL_DIR}/resnet-50\", f\"{MODEL_DIR}/microsoft/resnet-50\"])\nclip_dir = find_dir(\n    [\n        f\"{MODEL_DIR}/clip-vit-base-patch32\",\n        f\"{MODEL_DIR}/clip-vit-base-patch16\",\n        f\"{MODEL_DIR}/openai/clip-vit-base-patch32\",\n        f\"{MODEL_DIR}/openai/clip-vit-base-patch16\",\n    ]\n)\nassert resnet_dir is not None, f\"ResNet-50 dir not found under {MODEL_DIR}\"\nassert clip_dir is not None, f\"CLIP dir not found under {MODEL_DIR}\"\nprint(f\"ResNet-50: {resnet_dir}\")\nprint(f\"CLIP: {clip_dir}\")\n\n# ImageNet val parquet\nimagenet_val_dir = f\"{DATA_DIR}/imagenet-val/data\"\nparquet_files = sorted(glob.glob(f\"{imagenet_val_dir}/*.parquet\"))\nassert len(parquet_files) > 0, f\"No parquet files found in {imagenet_val_dir}\"\nprint(f\"Found {len(parquet_files)} parquet files.\")\n\n# ---------- Load probe dataset ----------\nfrom datasets import load_dataset\n\nds = load_dataset(\"parquet\", data_files=parquet_files, split=\"train\")\nprint(\"Dataset:\", ds)\nprint(\"Columns:\", ds.column_names)\n\n# Identify image column\nimg_col = None\nfor c in ds.column_names:\n    if \"image\" in c.lower() or \"img\" in c.lower():\n        img_col = c\n        break\nif img_col is None:\n    img_col = ds.column_names[0]\nprint(f\"Using image column: {img_col}\")\n\n# ---------- Preprocessing (manual) ----------\nIMAGENET_MEAN = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)\nIMAGENET_STD = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)\nCLIP_MEAN = torch.tensor([0.48145466, 0.4578275, 0.40821073]).view(3, 1, 1)\nCLIP_STD = torch.tensor([0.26862954, 0.26130258, 0.27577711]).view(3, 1, 1)\n\n\ndef pil_to_tensor(pil, size=224, resize=256):\n    img = pil.convert(\"RGB\")\n    w, h = img.size\n    scale = resize / min(w, h)\n    nw, nh = int(round(w * scale)), int(round(h * scale))\n    img = img.resize((nw, nh), Image.BICUBIC)\n    left = (nw - size) // 2\n    top = (nh - size) // 2\n    img = img.crop((left, top, left + size, top + size))\n    arr = np.asarray(img, dtype=np.float32) / 255.0\n    t = torch.from_numpy(arr).permute(2, 0, 1)\n    return t\n\n\ndef normalize_imagenet(t):\n    return (t - IMAGENET_MEAN) / IMAGENET_STD\n\n\ndef normalize_clip(t):\n    return (t - CLIP_MEAN) / CLIP_STD\n\n\nclass ProbeDataset(Dataset):\n    def __init__(self, hf_ds, img_col, n=None):\n        self.ds = hf_ds\n        self.img_col = img_col\n        self.n = n if n is not None else len(hf_ds)\n\n    def __len__(self):\n        return min(self.n, len(self.ds))\n\n    def __getitem__(self, i):\n        row = self.ds[i]\n        img = row[self.img_col]\n        if isinstance(img, dict) and \"bytes\" in img and img[\"bytes\"] is not None:\n            pil = Image.open(io.BytesIO(img[\"bytes\"]))\n        elif isinstance(img, Image.Image):\n            pil = img\n        else:\n            pil = Image.open(io.BytesIO(img))\n        t = pil_to_tensor(pil, 224, 256)\n        return i, t  # return raw [0,1] tensor; normalize per-model later\n\n\n# ---------- Load models ----------\nfrom transformers import (\n    AutoModel,\n    AutoModelForImageClassification,\n    CLIPModel,\n    CLIPVisionModel,\n)\n\n# ResNet-50\ntry:\n    rn_model = AutoModelForImageClassification.from_pretrained(\n        resnet_dir, local_files_only=True\n    )\nexcept Exception as e:\n    print(\"AutoModelForImageClassification failed, trying AutoModel:\", e)\n    rn_model = AutoModel.from_pretrained(resnet_dir, local_files_only=True)\nrn_model.eval().to(device)\n\n\n# Find last conv-stage output for hooking. HF resnet-50 has model.resnet.encoder.stages[-1]\ndef get_layer4(model):\n    # Try common attribute paths\n    candidates = []\n    if hasattr(model, \"resnet\"):\n        candidates.append(model.resnet.encoder.stages[-1])\n    if hasattr(model, \"encoder\") and hasattr(model.encoder, \"stages\"):\n        candidates.append(model.encoder.stages[-1])\n    return candidates[0] if candidates else None\n\n\nlayer4 = get_layer4(rn_model)\nassert layer4 is not None, \"Could not locate layer4/last stage of ResNet-50\"\nprint(\"Hooking layer:\", type(layer4).__name__)\n\n_activation_holder = {}\n\n\ndef _hook(module, inp, out):\n    # out shape: [B, C, H, W]\n    if isinstance(out, tuple):\n        out = out[0]\n    _activation_holder[\"feat\"] = out.detach()\n\n\nhandle = layer4.register_forward_hook(_hook)\n\n# CLIP\ntry:\n    clip_model = CLIPModel.from_pretrained(clip_dir, local_files_only=True)\n    clip_kind = \"full\"\nexcept Exception as e:\n    print(\"CLIPModel failed, using CLIPVisionModel:\", e)\n    clip_model = CLIPVisionModel.from_pretrained(clip_dir, local_files_only=True)\n    clip_kind = \"vision\"\nclip_model.eval().to(device)\n\n\ndef clip_embed(pixel_values):\n    # pixel_values already CLIP-normalized, 224x224\n    with torch.no_grad():\n        if clip_kind == \"full\":\n            try:\n                out = clip_model.get_image_features(pixel_values=pixel_values)\n                if not torch.is_tensor(out):\n                    raise RuntimeError(\"get_image_features returned non-tensor\")\n            except Exception:\n                vis_out = clip_model.vision_model(pixel_values=pixel_values)\n                pooled = getattr(vis_out, \"pooler_output\", None)\n                if pooled is None:\n                    pooled = vis_out[1]\n                out = clip_model.visual_projection(pooled)\n        else:\n            vis_out = clip_model(pixel_values=pixel_values)\n            pooled = getattr(vis_out, \"pooler_output\", vis_out[1])\n            out = pooled\n    return F.normalize(out.float(), dim=-1)\n\n\n# ---------- Preflight smoke test ----------\nprint(\"--- Smoke test ---\")\nwith torch.no_grad():\n    sample_imgs = []\n    for i in range(2):\n        row = ds[i]\n        img_field = row[img_col]\n        if (\n            isinstance(img_field, dict)\n            and \"bytes\" in img_field\n            and img_field[\"bytes\"] is not None\n        ):\n            pil = Image.open(io.BytesIO(img_field[\"bytes\"]))\n        elif isinstance(img_field, Image.Image):\n            pil = img_field\n        else:\n            pil = Image.open(io.BytesIO(img_field))\n        sample_imgs.append(pil_to_tensor(pil, 224, 256))\n    batch = torch.stack(sample_imgs, dim=0)\n    rn_in = normalize_imagenet(batch).to(device)\n    _ = (\n        rn_model(pixel_values=rn_in)\n        if \"pixel_values\" in rn_model.forward.__code__.co_varnames\n        else rn_model(rn_in)\n    )\n    feat = _activation_holder[\"feat\"]\n    print(\"layer4 feat shape:\", tuple(feat.shape))\n    clip_in = normalize_clip(batch).to(device)\n    emb = clip_embed(clip_in)\n    print(\"CLIP emb shape:\", tuple(emb.shape))\nprint(\"--- Smoke test passed ---\")\n\n# ---------- Configuration ----------\nN_PROBE = 2000  # number of probe images\nN_CHANNELS = 64  # number of components to inspect (subset of 2048)\nTOP_K = 8  # reference inputs per component\nBATCH = 64\nSEED = 0\nrandom.seed(SEED)\nnp.random.seed(SEED)\ntorch.manual_seed(SEED)\n\n# Choose channels to inspect (random subset)\nNUM_TOTAL_CHANNELS = None  # determined from smoke test\nNUM_TOTAL_CHANNELS = _activation_holder[\"feat\"].shape[1]\nprint(f\"Total channels in layer4 output: {NUM_TOTAL_CHANNELS}\")\ninspected_channels = sorted(random.sample(range(NUM_TOTAL_CHANNELS), N_CHANNELS))\n\n# ---------- Pass 1: compute activations for all probe images ----------\nprobe_ds = ProbeDataset(ds, img_col, n=N_PROBE)\nloader = DataLoader(\n    probe_ds, batch_size=BATCH, num_workers=4, shuffle=False, pin_memory=True\n)\n\nactivations = np.zeros((len(probe_ds), N_CHANNELS), dtype=np.float32)\nindices_all = np.zeros(len(probe_ds), dtype=np.int64)\n\nt0 = time.time()\nwith torch.no_grad():\n    ptr = 0\n    for idx, batch in loader:\n        bs = batch.shape[0]\n        x = normalize_imagenet(batch).to(device, non_blocking=True)\n        try:\n            _ = rn_model(pixel_values=x)\n        except TypeError:\n            _ = rn_model(x)\n        feat = _activation_holder[\"feat\"]  # [B,C,H,W]\n        # global average pool\n        pooled = feat.mean(dim=[2, 3])  # [B,C]\n        pooled = pooled[:, inspected_channels].cpu().numpy()\n        activations[ptr : ptr + bs] = pooled\n        indices_all[ptr : ptr + bs] = idx.numpy()\n        ptr += bs\n        if ptr % (BATCH * 5) == 0:\n            print(f\"  activation pass: {ptr}/{len(probe_ds)}  ({time.time()-t0:.1f}s)\")\nprint(f\"Activation extraction done in {time.time()-t0:.1f}s\")\n\n# ---------- Pick top-k images per channel ----------\ntop_k_per_channel = {}  # channel_idx (position) -> list of dataset indices\nfor j in range(N_CHANNELS):\n    order = np.argsort(-activations[:, j])\n    top_positions = order[:TOP_K]\n    top_ds_idx = indices_all[top_positions].tolist()\n    top_k_per_channel[j] = top_ds_idx\n\n# Collect all unique needed images\nneeded_ds_indices = sorted({i for lst in top_k_per_channel.values() for i in lst})\nprint(f\"Need to embed {len(needed_ds_indices)} unique reference images with CLIP.\")\n\n# ---------- Embed with CLIP ----------\nidx_to_emb = {}\nbuf_idx, buf_img = [], []\n\n\ndef flush_clip():\n    if not buf_img:\n        return\n    x = torch.stack(buf_img, dim=0)\n    x = normalize_clip(x).to(device, non_blocking=True)\n    emb = clip_embed(x).cpu().numpy()\n    for k, di in enumerate(buf_idx):\n        idx_to_emb[di] = emb[k]\n    buf_idx.clear()\n    buf_img.clear()\n\n\nt0 = time.time()\nfor di in needed_ds_indices:\n    row = ds[int(di)]\n    img_field = row[img_col]\n    if (\n        isinstance(img_field, dict)\n        and \"bytes\" in img_field\n        and img_field[\"bytes\"] is not None\n    ):\n        pil = Image.open(io.BytesIO(img_field[\"bytes\"]))\n    elif isinstance(img_field, Image.Image):\n        pil = img_field\n    else:\n        pil = Image.open(io.BytesIO(img_field))\n    t = pil_to_tensor(pil, 224, 256)\n    buf_idx.append(int(di))\n    buf_img.append(t)\n    if len(buf_img) >= BATCH:\n        flush_clip()\nflush_clip()\nprint(f\"CLIP embedding done in {time.time()-t0:.1f}s\")\n\nemb_dim = next(iter(idx_to_emb.values())).shape[0]\nprint(f\"CLIP embedding dim: {emb_dim}\")\n\n\n# ---------- Concept consistency per channel ----------\ndef mean_pairwise_cos(vecs):\n    # vecs: [k, d], assumed unit-normalized\n    S = vecs @ vecs.T\n    k = vecs.shape[0]\n    iu = np.triu_indices(k, k=1)\n    return float(S[iu].mean())\n\n\nconcept_scores = np.zeros(N_CHANNELS, dtype=np.float32)\nv_c = np.zeros((N_CHANNELS, emb_dim), dtype=np.float32)\nfor j in range(N_CHANNELS):\n    vecs = np.stack([idx_to_emb[i] for i in top_k_per_channel[j]], axis=0)\n    concept_scores[j] = mean_pairwise_cos(vecs)\n    pooled = vecs.mean(axis=0)\n    pooled /= np.linalg.norm(pooled) + 1e-8\n    v_c[j] = pooled\n\n# ---------- Random baseline ----------\nall_emb_indices = list(idx_to_emb.keys())\n# Ensure random baseline uses same pool size roughly; sample TOP_K per pseudo-channel\nrng = np.random.RandomState(123)\nrandom_scores = np.zeros(N_CHANNELS, dtype=np.float32)\nfor j in range(N_CHANNELS):\n    pick = rng.choice(len(all_emb_indices), size=TOP_K, replace=False)\n    vecs = np.stack([idx_to_emb[all_emb_indices[p]] for p in pick], axis=0)\n    random_scores[j] = mean_pairwise_cos(vecs)\n\nmean_concept = float(concept_scores.mean())\nmedian_concept = float(np.median(concept_scores))\nmean_random = float(random_scores.mean())\ndelta = mean_concept - mean_random\n\nprint(\"==================================================\")\nprint(f\"concept_consistency_score (mean) = {mean_concept:.4f}\")\nprint(f\"concept_consistency_score (median) = {median_concept:.4f}\")\nprint(f\"random baseline (mean)           = {mean_random:.4f}\")\nprint(f\"delta (concept - random)         = {delta:.4f}\")\nprint(\"==================================================\")\n\n# ---------- Visualization ----------\ntry:\n    import matplotlib\n\n    matplotlib.use(\"Agg\")\n    import matplotlib.pyplot as plt\n\n    fig, ax = plt.subplots(1, 1, figsize=(6, 4))\n    ax.hist(concept_scores, bins=20, alpha=0.7, label=\"top-k activating\")\n    ax.hist(random_scores, bins=20, alpha=0.7, label=\"random baseline\")\n    ax.set_xlabel(\"mean pairwise CLIP cos sim\")\n    ax.set_ylabel(\"# channels\")\n    ax.set_title(\"Concept consistency: ResNet-50 layer4 channels\")\n    ax.legend()\n    fig.tight_layout()\n    fig.savefig(\n        os.path.join(working_dir, \"concept_consistency_hist_resnet50_imagenetval.png\"),\n        dpi=140,\n    )\n    plt.close(fig)\nexcept Exception as e:\n    print(\"Plotting failed:\", e)\n\n# ---------- Save all experiment data ----------\nexperiment_data = {\n    \"imagenet_val_resnet50\": {\n        \"metrics\": {\n            \"train\": [],\n            \"val\": [\n                {\n                    \"epoch\": 0,\n                    \"concept_consistency_score_mean\": mean_concept,\n                    \"concept_consistency_score_median\": median_concept,\n                    \"random_baseline_mean\": mean_random,\n                    \"delta\": delta,\n                }\n            ],\n        },\n        \"losses\": {\"train\": [], \"val\": []},\n        \"predictions\": concept_scores,\n        \"ground_truth\": random_scores,\n        \"inspected_channels\": np.array(inspected_channels, dtype=np.int64),\n        \"v_c\": v_c,\n        \"top_k_per_channel\": top_k_per_channel,\n        \"config\": {\n            \"N_PROBE\": N_PROBE,\n            \"N_CHANNELS\": N_CHANNELS,\n            \"TOP_K\": TOP_K,\n            \"model\": \"resnet-50\",\n            \"dataset\": \"imagenet-val\",\n            \"foundation\": os.path.basename(clip_dir),\n        },\n    }\n}\nprint(\n    f\"Epoch 0: validation_loss = {1.0 - mean_concept:.4f}  (proxy: 1 - concept_consistency_score)\"\n)\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\nprint(\"Saved experiment_data.npy\")\n\nhandle.remove()\n", "# plotting aggregation code"], "term_out": ["['Using device: cuda', '\\n', \"Loaded imagenet-val: 50000 rows, columns=['image',\n'label']\", '\\n', 'Prepared 2000 PIL probe images', '\\n', '\\rLoading weights:\n0%|          | 0/320 [00:00<?, ?it/s]', '\\rLoading weights:  88%|########7 |\n280/320 [00:00<00:00, 2798.95it/s]', '', '\\rLoading weights: 100%|##########|\n320/320 [00:00<00:00, 2830.89it/s]', '\\n', 'Traceback (most recent call last):\\n\nFile \"runfile.py\", line 61, in <module>\\n    img_proc =\nAutoImageProcessor.from_pretrained(resnet_path, local_files_only=True)\\n\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File\n\"/data/zhenqian/miniconda3/envs/ai_scientist_v2/lib/python3.11/site-\npackages/transformers/utils/import_utils.py\", line 2133, in __getattribute__\\n\nrequires_backends(cls, cls._backends)\\n  File\n\"/data/zhenqian/miniconda3/envs/ai_scientist_v2/lib/python3.11/site-\npackages/transformers/utils/import_utils.py\", line 2119, in requires_backends\\n\nraise ImportError(\"\".join(failed))\\nImportError: \\nAutoImageProcessor requires\nthe Torchvision library but it was not found in your environment. Check out the\ninstructions on the\\ninstallation page: https://pytorch.org/get-started/locally/\nand follow the ones that match your environment.\\nPlease note that you may need\nto restart your runtime after installation.\\n\\n', 'Execution time: 12 seconds\nseconds (time limit is 10 hours).']", "['Using device: cuda', '\\n', 'Found 14 parquet files for imagenet-val', '\\n',\n\"Parquet cols: ['image', 'label'], rows: 3572\", '\\n', 'Loaded 2000 images',\n'\\n', 'Loading ResNet-50 from', ' ', '/data/zhenqian/models/resnet-50', '\\n',\n'\\rLoading weights:   0%|          | 0/320 [00:00<?, ?it/s]', '\\rLoading\nweights:  91%|######### | 291/320 [00:00<00:00, 2898.01it/s]', '', '\\rLoading\nweights: 100%|##########| 320/320 [00:00<00:00, 2970.11it/s]', '\\n', '\nextracted 32/2000 (0.3s)', '\\n', '  extracted 352/2000 (1.8s)', '\\n', '\nextracted 672/2000 (3.1s)', '\\n', '  extracted 992/2000 (4.4s)', '\\n', '\nextracted 1312/2000 (5.6s)', '\\n', '  extracted 1632/2000 (7.0s)', '\\n', '\nextracted 1952/2000 (8.3s)', '\\n', 'activations shape:', ' ', '(2000, 2048)',\n'\\n', 'Loading CLIP from', ' ', '/data/zhenqian/models/clip-vit-base-patch32',\n'\\n', '\\rLoading weights:   0%|          | 0/398 [00:00<?, ?it/s]', '',\n'\\rLoading weights: 100%|##########| 398/398 [00:00<00:00, 30316.23it/s]', '\\n',\n'CLIP image size:', ' ', '224', '\\n', 'Traceback (most recent call last):\\n\nFile \"runfile.py\", line 189, in <module>\\n    emb = F.normalize(emb, dim=-1)\\n\n^^^^^^^^^^^^^^^^^^^^^^^^\\n  File\n\"/data/zhenqian/miniconda3/envs/ai_scientist_v2/lib/python3.11/site-\npackages/torch/nn/functional.py\", line 6100, in normalize\\n    denom =\ninput.norm(p, dim, keepdim=True).clamp_min(eps).expand_as(input)\\n\n^^^^^^^^^^\\nAttributeError: \\'BaseModelOutputWithPooling\\' object has no\nattribute \\'norm\\'\\n', 'Execution time: 24 seconds seconds (time limit is 10\nhours).']", "['Using device: cuda', '\\n', 'ResNet-50: /data/zhenqian/models/resnet-50', '\\n',\n'CLIP: /data/zhenqian/models/clip-vit-base-patch32', '\\n', 'Found 14 parquet\nfiles.', '\\n', 'Dataset:', ' ', \"Dataset({\\n    features: ['image', 'label'],\\n\nnum_rows: 50000\\n})\", '\\n', 'Columns:', ' ', \"['image', 'label']\", '\\n', 'Using\nimage column: image', '\\n', '\\rLoading weights:   0%|          | 0/320 [00:00<?,\n?it/s]', '', '\\rLoading weights: 100%|##########| 320/320 [00:00<00:00,\n3859.00it/s]', '\\n', 'Hooking layer:', ' ', 'ResNetStage', '\\n', '\\rLoading\nweights:   0%|          | 0/398 [00:00<?, ?it/s]', '', '\\rLoading weights:\n100%|##########| 398/398 [00:00<00:00, 32834.39it/s]', '\\n', '--- Smoke test\n---', '\\n', 'layer4 feat shape:', ' ', '(2, 2048, 7, 7)', '\\n', 'CLIP emb\nshape:', ' ', '(2, 512)', '\\n', '--- Smoke test passed ---', '\\n', 'Total\nchannels in layer4 output: 2048', '\\n', '  activation pass: 320/2000  (1.0s)',\n'\\n', '  activation pass: 640/2000  (1.4s)', '\\n', '  activation pass: 960/2000\n(1.9s)', '\\n', '  activation pass: 1280/2000  (2.3s)', '\\n', '  activation pass:\n1600/2000  (3.0s)', '\\n', '  activation pass: 1920/2000  (3.5s)', '\\n',\n'Activation extraction done in 3.6s', '\\n', 'Need to embed 400 unique reference\nimages with CLIP.', '\\n', 'CLIP embedding done in 2.7s', '\\n', 'CLIP embedding\ndim: 512', '\\n', '==================================================', '\\n',\n'concept_consistency_score (mean) = 0.6588', '\\n', 'concept_consistency_score\n(median) = 0.6413', '\\n', 'random baseline (mean)           = 0.6056', '\\n',\n'delta (concept - random)         = 0.0532', '\\n',\n'==================================================', '\\n', 'Epoch 0:\nvalidation_loss = 0.3412  (proxy: 1 - concept_consistency_score)', '\\n', 'Saved\nexperiment_data.npy', '\\n', 'Execution time: 14 seconds seconds (time limit is\n10 hours).']", "['Using device: cuda', '\\n', 'ResNet-50: /data/zhenqian/models/resnet-50', '\\n',\n'CLIP: /data/zhenqian/models/clip-vit-base-patch32', '\\n', 'Found 14 parquet\nfiles.', '\\n', 'Dataset:', ' ', \"Dataset({\\n    features: ['image', 'label'],\\n\nnum_rows: 50000\\n})\", '\\n', 'Columns:', ' ', \"['image', 'label']\", '\\n', 'Using\nimage column: image', '\\n', '\\rLoading weights:   0%|          | 0/320 [00:00<?,\n?it/s]', '', '\\rLoading weights: 100%|##########| 320/320 [00:00<00:00,\n4288.35it/s]', '\\n', 'Hooking layer:', ' ', 'ResNetStage', '\\n', '\\rLoading\nweights:   0%|          | 0/398 [00:00<?, ?it/s]', '', '\\rLoading weights:\n100%|##########| 398/398 [00:00<00:00, 37227.83it/s]', '\\n', '--- Smoke test\n---', '\\n', 'layer4 feat shape:', ' ', '(2, 2048, 7, 7)', '\\n', 'CLIP emb\nshape:', ' ', '(2, 512)', '\\n', '--- Smoke test passed ---', '\\n', 'Total\nchannels in layer4 output: 2048', '\\n', '  activation pass: 320/2000  (0.9s)',\n'\\n', '  activation pass: 640/2000  (1.3s)', '\\n', '  activation pass: 960/2000\n(1.8s)', '\\n', '  activation pass: 1280/2000  (2.2s)', '\\n', '  activation pass:\n1600/2000  (2.8s)', '\\n', '  activation pass: 1920/2000  (3.3s)', '\\n',\n'Activation extraction done in 3.4s', '\\n', 'Need to embed 400 unique reference\nimages with CLIP.', '\\n', 'CLIP embedding done in 2.7s', '\\n', 'CLIP embedding\ndim: 512', '\\n', '==================================================', '\\n',\n'concept_consistency_score (mean) = 0.6588', '\\n', 'concept_consistency_score\n(median) = 0.6413', '\\n', 'random baseline (mean)           = 0.6056', '\\n',\n'delta (concept - random)         = 0.0532', '\\n',\n'==================================================', '\\n', 'Epoch 0:\nvalidation_loss = 0.3412  (proxy: 1 - concept_consistency_score)', '\\n', 'Saved\nexperiment_data.npy', '\\n', 'Execution time: 14 seconds seconds (time limit is\n10 hours).']", ""], "analysis": ["The script failed with an ImportError: `AutoImageProcessor requires the\nTorchvision library but it was not found in your environment.` This happens at\nthe `AutoImageProcessor.from_pretrained(resnet_path, ...)` call. Torchvision is\nnot installed (or not correctly installed) in the environment, so the HF image\nprocessor cannot be constructed.  Proposed fixes (any one): 1. Install\ntorchvision in the environment (e.g., `pip install torchvision`) matching the\ninstalled torch version. 2. Replace `AutoImageProcessor` with the slow/base\nprocessor that doesn't require torchvision, e.g. `from transformers import\nBitImageProcessor` (ResNet uses ConvNext-style preprocessing but there is\n`ConvNextImageProcessor`/`BitImageProcessor`) \u2014 or explicitly\n`AutoImageProcessor.from_pretrained(resnet_path, use_fast=False)` may still\nrequire torchvision; alternatively construct preprocessing manually via PIL +\nnumpy/torch (resize to 224, center-crop, normalize with ImageNet mean/std) and\nskip the HF image processor entirely. 3. Similarly ensure CLIPProcessor works;\nif not, do manual preprocessing for CLIP too.  The cleanest fix is to install\ntorchvision. Otherwise, implement a lightweight manual preprocessing pipeline\nfor both ResNet-50 and CLIP inputs.", "Bug: `clip_model.get_image_features(pixel_values=x)` is expected to return a\ntensor, but here it returns a `BaseModelOutputWithPooling` object, causing\n`F.normalize(emb, dim=-1)` to fail with `AttributeError:\n'BaseModelOutputWithPooling' object has no attribute 'norm'`. This is unusual\nbecause `get_image_features` normally returns a tensor; the behavior suggests\nthe loaded model class may be resolving differently (e.g., the method returning\nvision model outputs instead of projected features), or a version mismatch.\nFix: Extract the tensor from the output before normalizing. For example: ``` out\n= clip_model.get_image_features(pixel_values=x) if not torch.is_tensor(out):\n# fallback: use vision model + visual projection manually     vision_out =\nclip_model.vision_model(pixel_values=x)     pooled = vision_out.pooler_output if\nhasattr(vision_out, 'pooler_output') else vision_out[1]     emb =\nclip_model.visual_projection(pooled) else:     emb = out emb = F.normalize(emb,\ndim=-1) ``` Alternatively, ensure the correct `CLIPModel` class is imported and\nthe checkpoint at `clip-vit-base-patch32` is a full CLIP model (not just the\nvision encoder). Also verify the `transformers` version supports\n`get_image_features` returning a tensor.", "", "", ""], "exc_type": ["ImportError", "AttributeError", null, null, null], "exc_info": [{"args": ["\nAutoImageProcessor requires the Torchvision library but it was not found in your environment. Check out the instructions on the\ninstallation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.\nPlease note that you may need to restart your runtime after installation.\n"], "name": "None", "msg": "\nAutoImageProcessor requires the Torchvision library but it was not found in your environment. Check out the instructions on the\ninstallation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.\nPlease note that you may need to restart your runtime after installation.\n"}, {"args": ["'BaseModelOutputWithPooling' object has no attribute 'norm'"], "name": "norm", "obj": "BaseModelOutputWithPooling(last_hidden_state=tensor([[[ 2.4682e-02, -3.0967e-02, -1.5763e-01,  ...,  4.1845e-01,\n           3.6548e-02,  1.6940e-01],\n         [ 2.7649e-03,  1.0205e+00,  3.1545e-02,  ...,  2.5201e-01,\n          -2.4011e-01,  4.2462e-01],\n         [ 4.5285e-01,  4.5235e-01, -1.2060e-01,  ...,  4.2977e-01,\n           3.3361e-02,  5.4848e-01],\n         ...,\n         [-2.5583e-01,  7.9669e-01, -2.6956e-01,  ...,  6.6048e-02,\n           9.0410e-01, -2.1549e-01],\n         [-3.3788e-01,  3.5431e-01,  6.7032e-02,  ...,  8.7134e-03,\n           8.3547e-01, -1.7223e+00],\n         [ 2.1565e-01,  5.7448e-01, -1.5422e-01,  ...,  7.8834e-01,\n           3.5025e-01, -2.6658e-01]],\n\n        [[-1.6793e-02, -9.0250e-02, -2.0458e-01,  ...,  1.8820e-01,\n           2.4028e-02, -1.9168e-01],\n         [ 5.7237e-01,  3.5885e-01, -6.5339e-01,  ..., -4.1746e-01,\n           3.0007e-01,  1.2889e-01],\n         [ 6.7786e-01,  4.9608e-01, -3.5447e-01,  ..., -2.7813e-01,\n          -4.8864e-01,  2.4971e-01],\n         ...,\n         [ 5.5190e-01,  4.7168e-01, -1.2041e+00,  ...,  7.4057e-01,\n           4.2832e-01,  4.4906e-01],\n         [ 5.9283e-01,  1.0143e+00, -1.6808e-01,  ...,  4.9120e-01,\n           5.5777e-01, -6.9733e-01],\n         [ 8.3666e-02, -3.9328e-01, -1.2574e-01,  ...,  3.9619e-01,\n           8.5015e-01,  1.2950e-01]],\n\n        [[-7.3796e-02,  1.8063e-01, -6.5310e-01,  ...,  2.4442e-01,\n           2.0974e-01, -2.4270e-03],\n         [-7.7028e-01,  1.1231e-02, -8.6174e-01,  ...,  4.0106e-01,\n           2.5699e-01,  3.8913e-01],\n         [-9.4961e-03,  2.1853e-01, -4.9757e-01,  ...,  3.3684e-01,\n           2.5694e-02, -4.4771e-04],\n         ...,\n         [-6.5991e-01,  2.5357e-01, -2.1132e-01,  ...,  3.7381e-01,\n           6.0512e-01,  1.9640e-01],\n         [-3.3916e-02,  2.3116e-01, -1.1443e-01,  ...,  5.8729e-01,\n          -1.2925e-02,  2.0833e-01],\n         [ 3.1520e-02, -2.7882e-01,  1.6763e-01,  ...,  7.3367e-01,\n           1.0548e-01,  2.4694e-01]],\n\n        ...,\n\n        [[-3.0768e-01, -2.1969e-01, -8.0345e-01,  ...,  1.7147e-01,\n           1.4352e-01, -3.8051e-01],\n         [-1.2378e-01,  2.5698e-01, -1.8494e-01,  ...,  3.1014e-01,\n           4.9316e-01,  2.3770e-01],\n         [ 5.1836e-01,  5.7594e-01, -3.3615e-01,  ...,  4.6441e-01,\n           5.1054e-01,  4.6450e-01],\n         ...,\n         [ 2.8585e-01,  2.4466e-01, -5.9142e-01,  ..., -1.3452e-01,\n           3.6996e-01, -5.9258e-02],\n         [-2.4559e-02,  6.4020e-01, -4.2584e-01,  ...,  9.3348e-01,\n           1.1336e+00,  3.7597e-01],\n         [ 2.1985e-01,  2.4870e-01, -9.2261e-02,  ...,  2.5936e-01,\n           3.4230e-01, -5.5278e-02]],\n\n        [[-1.0499e-01,  4.7716e-02, -1.0852e-01,  ...,  2.8533e-01,\n          -4.7189e-01,  2.1440e-01],\n         [ 6.0172e-01, -1.0765e-01,  4.3516e-01,  ...,  2.5347e-01,\n           5.7216e-01,  2.4435e-01],\n         [ 6.1464e-01, -1.5465e-01,  3.7928e-01,  ...,  6.1085e-01,\n           1.4098e-01,  3.9809e-01],\n         ...,\n         [ 2.0498e-02,  3.3083e-01, -2.6156e-01,  ...,  2.7920e-01,\n          -8.8522e-02,  1.3174e-01],\n         [-1.9503e-01, -5.0368e-02, -5.0489e-01,  ...,  4.1549e-01,\n           1.1525e-01,  3.2179e-01],\n         [ 3.0352e-01,  1.9615e-01,  5.0478e-01,  ...,  6.3981e-01,\n          -2.6382e-01,  3.1043e-01]],\n\n        [[-2.0727e-01,  2.4006e-01, -6.0287e-02,  ...,  1.1039e-01,\n          -6.1302e-02, -2.7084e-02],\n         [-1.3600e-01,  3.9427e-01, -6.1925e-01,  ...,  7.9727e-02,\n           3.7161e-02,  3.5673e-01],\n         [ 2.0674e-01,  8.3100e-01,  3.3742e-01,  ..., -1.2102e-01,\n           2.6383e-01,  5.9038e-01],\n         ...,\n         [ 3.6799e-01,  2.3156e-01, -5.7339e-01,  ...,  3.3152e-01,\n           3.2132e-01, -3.3631e-02],\n         [ 6.2573e-01,  2.0337e-01, -6.1633e-01,  ...,  4.9288e-01,\n           5.1694e-01,  1.2533e-01],\n         [ 2.1239e-02,  6.9766e-01, -3.9806e-01,  ...,  5.4319e-02,\n           8.6725e-03,  2.1241e-01]]], device='cuda:0'), pooler_output=tensor([[ 0.2503, -0.0098, -0.2550,  ...,  0.6170, -0.0109,  0.0729],\n        [ 0.3105, -0.2247, -0.0920,  ...,  0.4888,  0.1722,  0.1966],\n        [ 0.1751, -0.0804,  0.4596,  ...,  0.1472,  0.2762,  0.4345],\n        ...,\n        [ 0.3366,  0.1088,  0.0566,  ...,  0.5789,  0.2969,  0.2554],\n        [ 0.1125,  0.1977, -0.1464,  ...,  0.5450,  0.1153,  0.2324],\n        [-0.2391, -0.0703,  0.0359,  ...,  0.8230,  0.0041,  0.5837]],\n       device='cuda:0'), hidden_states=None, attentions=None)"}, null, null, null], "exc_stack": [[["/data/zhenqian/exp/AI-Scientist-v2-main/ai_scientist/treesearch/interpreter.py", 210, "_run_session", "exec(compile(code, self.agent_file_name, \"exec\"), global_scope)"], ["runfile.py", 61, "<module>", "img_proc = AutoImageProcessor.from_pretrained(resnet_path, local_files_only=True)"], ["/data/zhenqian/miniconda3/envs/ai_scientist_v2/lib/python3.11/site-packages/transformers/utils/import_utils.py", 2133, "__getattribute__", "requires_backends(cls, cls._backends)"], ["/data/zhenqian/miniconda3/envs/ai_scientist_v2/lib/python3.11/site-packages/transformers/utils/import_utils.py", 2119, "requires_backends", "raise ImportError(\"\".join(failed))"]], [["/data/zhenqian/exp/AI-Scientist-v2-main/ai_scientist/treesearch/interpreter.py", 210, "_run_session", "exec(compile(code, self.agent_file_name, \"exec\"), global_scope)"], ["runfile.py", 189, "<module>", "emb = F.normalize(emb, dim=-1)"], ["/data/zhenqian/miniconda3/envs/ai_scientist_v2/lib/python3.11/site-packages/torch/nn/functional.py", 6100, "normalize", "denom = input.norm(p, dim, keepdim=True).clamp_min(eps).expand_as(input)"]], null, null, null], "exp_name": "0-run", "metrics": [{"metric_names": [{"metric_name": "value", "lower_is_better": true, "description": "", "data": [{"dataset_name": "default", "final_value": null, "best_value": null}]}]}, {"metric_names": [{"metric_name": "value", "lower_is_better": true, "description": "", "data": [{"dataset_name": "default", "final_value": null, "best_value": null}]}]}, {"metric_names": [{"data": [{"best_value": 0.6588, "dataset_name": "imagenet_val_resnet50", "final_value": 0.6588}], "description": "Mean concept consistency score", "lower_is_better": false, "metric_name": "concept consistency score (mean)"}, {"data": [{"best_value": 0.6413, "dataset_name": "imagenet_val_resnet50", "final_value": 0.6413}], "description": "Median concept consistency score", "lower_is_better": false, "metric_name": "concept consistency score (median)"}, {"data": [{"best_value": 0.6056, "dataset_name": "imagenet_val_resnet50", "final_value": 0.6056}], "description": "Mean random baseline score", "lower_is_better": false, "metric_name": "random baseline (mean)"}, {"data": [{"best_value": 0.0532, "dataset_name": "imagenet_val_resnet50", "final_value": 0.0532}], "description": "Difference between concept consistency and random baseline", "lower_is_better": false, "metric_name": "delta (concept - random)"}, {"data": [{"best_value": 0.3412, "dataset_name": "imagenet_val_resnet50", "final_value": 0.3412}], "description": "1 minus concept consistency mean", "lower_is_better": true, "metric_name": "validation loss proxy"}]}, {"metric_names": [{"data": [{"best_value": 0.6588, "dataset_name": "imagenet_val_resnet50", "final_value": 0.6588}], "description": "Mean concept consistency score", "lower_is_better": false, "metric_name": "concept consistency score (mean)"}, {"data": [{"best_value": 0.6413, "dataset_name": "imagenet_val_resnet50", "final_value": 0.6413}], "description": "Median concept consistency score", "lower_is_better": false, "metric_name": "concept consistency score (median)"}, {"data": [{"best_value": 0.6056, "dataset_name": "imagenet_val_resnet50", "final_value": 0.6056}], "description": "Mean random baseline score", "lower_is_better": false, "metric_name": "random baseline (mean)"}, {"data": [{"best_value": 0.0532, "dataset_name": "imagenet_val_resnet50", "final_value": 0.0532}], "description": "Difference between concept consistency and random baseline", "lower_is_better": false, "metric_name": "delta (concept - random)"}, {"data": [{"best_value": 0.3412, "dataset_name": "imagenet_val_resnet50", "final_value": 0.3412}], "description": "1 - concept consistency mean", "lower_is_better": true, "metric_name": "validation loss proxy"}]}, {"metric_names": [{"metric_name": "value", "lower_is_better": true, "description": "", "data": [{"dataset_name": "default", "final_value": null, "best_value": null}]}]}], "is_best_node": [false, false, true, false, false], "plots": [[], [], ["../../logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/imagenetval_resnet50_concept_hist.png", "../../logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/imagenetval_resnet50_sorted_concept_scores.png", "../../logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/concept_consistency_hist_resnet50_imagenetval.png", "../../logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/imagenetval_resnet50_summary_metrics.png"], ["../../logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/imagenetval_resnet50_concept_hist.png", "../../logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/imagenetval_resnet50_sorted_concept_scores.png", "../../logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/concept_consistency_hist_resnet50_imagenetval.png", "../../logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/imagenetval_resnet50_summary_metrics.png"], ["../../logs/0-run/experiment_results/seed_aggregation_491d0574c0914184811845f2bbabadcc/imagenetval_resnet50_agg_concept_hist.png", "../../logs/0-run/experiment_results/seed_aggregation_491d0574c0914184811845f2bbabadcc/imagenetval_resnet50_summary_metrics_agg.png", "../../logs/0-run/experiment_results/seed_aggregation_491d0574c0914184811845f2bbabadcc/imagenetval_resnet50_sorted_concept_scores_agg.png"]], "plot_paths": [[], [], ["experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/imagenetval_resnet50_concept_hist.png", "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/imagenetval_resnet50_sorted_concept_scores.png", "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/concept_consistency_hist_resnet50_imagenetval.png", "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/imagenetval_resnet50_summary_metrics.png"], ["experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/imagenetval_resnet50_concept_hist.png", "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/imagenetval_resnet50_sorted_concept_scores.png", "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/concept_consistency_hist_resnet50_imagenetval.png", "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/imagenetval_resnet50_summary_metrics.png"], ["experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/seed_aggregation_491d0574c0914184811845f2bbabadcc/imagenetval_resnet50_agg_concept_hist.png", "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/seed_aggregation_491d0574c0914184811845f2bbabadcc/imagenetval_resnet50_summary_metrics_agg.png", "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/seed_aggregation_491d0574c0914184811845f2bbabadcc/imagenetval_resnet50_sorted_concept_scores_agg.png"]], "plot_analyses": [[], [], [{"analysis": "This plot shows the distribution of top-1 activation values across 2048 ResNet-50 layer4.2 channels on ImageNet probe data. The x-axis represents the maximum activation value per channel (ranging from ~0 to ~30), and the y-axis represents the number of channels (frequency). The distribution is heavily right-skewed with most channels having top activations concentrated in the 2-8 range, peaking around 4-6 with roughly 300+ channels. There are very few channels with extreme activation values above 15. This confirms that (1) the activation extraction pipeline is working correctly across all 2048 channels of the final ResNet-50 block, (2) channels have diverse activation magnitudes suggesting they encode different concept strengths, and (3) the long tail suggests a small number of highly specialized/selective channels exist alongside many moderately-activating channels. This is a reasonable baseline sanity check for the SemanticLens pipeline's first stage of finding per-component reference inputs.", "plot_path": "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/imagenetval_resnet50_concept_hist.png"}, {"analysis": "This plot shows the L2 norm distribution of CLIP embedding vectors v_c for the 2048 component vectors after mean-pooling CLIP embeddings of top-k reference inputs per channel. The x-axis shows the L2 norm (ranging from ~7.8 to ~9.2) and y-axis shows frequency. The distribution appears roughly Gaussian/bell-shaped, centered around 8.4-8.6 with most channels having norms in the 8.2-8.8 range. This is a healthy sign because: (1) CLIP embeddings are typically normalized to unit norm before pooling, and pooling k~9 unit vectors would yield norms less than sqrt(k)\u22483, but here norms are ~8.5, suggesting unnormalized CLIP features are being pooled (dimension ~512 with typical feature magnitude), (2) the tight distribution suggests component vectors have consistent semantic 'density' in CLIP space, (3) no channels have degenerate zero-norm vectors, confirming successful embedding computation. The narrow spread indicates the pooling operation produces well-behaved queryable vectors as hypothesized.", "plot_path": "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/imagenetval_resnet50_sorted_concept_scores.png"}, {"analysis": "This plot shows the distribution of pairwise cosine similarities between component vectors v_c (2,096,128 pairs from 2048 channels choose 2). The x-axis shows cosine similarity (ranging from ~0.55 to ~1.0) and y-axis shows frequency. The distribution is right-skewed with most pairs having similarities concentrated in the 0.85-0.95 range, peaking around 0.90. Very few pairs have similarity below 0.7 or above 0.98. Key implications: (1) The high mean similarity (~0.88) suggests the pooled CLIP vectors share a strong common component\u2014likely because they all live in a similar region of CLIP space due to being derived from ImageNet images, (2) The absence of near-1.0 pairs (except self-comparisons which are excluded) indicates channels are still meaningfully distinguishable from each other in CLIP semantic space, (3) There is meaningful variation (0.55 to 0.98) allowing channels to be differentiated. However, the high baseline similarity suggests that centering or whitening the vectors before analysis may be needed for meaningful semantic queries, since raw cosine similarity may be dominated by a shared 'natural image' direction rather than concept-specific information.", "plot_path": "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/concept_consistency_hist_resnet50_imagenetval.png"}, {"analysis": "This plot shows the distribution of top-5 CLIP text query cosine similarity scores across the 2048 component vectors. The x-axis shows the top-5 similarity score (ranging from ~0.74 to ~0.96) and y-axis shows frequency. The distribution is roughly Gaussian centered around 0.87-0.89, with most channels having top-5 text similarity scores in the 0.83-0.92 range. This validates the queryability hypothesis: (1) All 2048 channels can be meaningfully associated with textual concepts via CLIP text-image alignment, with none being completely 'un-nameable' (no scores near 0), (2) The high average similarity (~0.87) indicates the mapping into the joint image-text CLIP space is successful and channels can be linguistically probed, (3) The narrow spread again suggests a baseline 'ImageNet content' effect where most channels match generic image concepts well. This confirms the core hypothesis that vision components can be queried via natural language through the shared CLIP embedding space, enabling downstream applications like automatic concept naming. However, the tight distribution near high values suggests future work should evaluate whether these high similarities reflect genuinely concept-specific matches or just general natural-image affinity in CLIP space.", "plot_path": "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_55a6f89bd70449e79e7b98478982b6b4_proc_967289/imagenetval_resnet50_summary_metrics.png"}], [{"analysis": "This histogram displays the distribution of activation magnitudes across ResNet-50 components (channels/neurons) on the ImageNet probe dataset. The x-axis shows activation values (ranging roughly from 0 to 40+) and the y-axis shows frequency counts. The distribution appears heavily right-skewed with a long tail, which is typical of ReLU-activated CNN features - most components have low-to-moderate activations while a small number of components exhibit very high activation magnitudes. This is a reasonable sanity check for the preliminary implementation, confirming that activations are being extracted correctly from the model. However, the plot lacks context about which layer this represents, and does not directly demonstrate the core hypothesis about mapping components to semantic space.", "plot_path": "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/imagenetval_resnet50_concept_hist.png"}, {"analysis": "This plot shows a similar activation distribution histogram but appears to focus on a different subset or layer of the ResNet-50 model. The distribution is again right-skewed with most values concentrated in the lower range and a heavy tail extending to higher values. The shape suggests properly functioning feature extraction where the majority of components respond weakly to most inputs while some components fire strongly for specific stimuli - exactly the sparsity pattern needed for selecting per-component reference inputs. This validates step (1) of the hypothesis: that we can identify inputs that strongly drive individual components.", "plot_path": "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/imagenetval_resnet50_sorted_concept_scores.png"}, {"analysis": "This histogram displays another activation or embedding distribution, likely showing either CLIP embedding norms or a different layer's activations. The distribution shape is again right-skewed. Without axis labels being fully readable, it's difficult to determine the exact quantity being measured, but the consistency of distributional shape across plots suggests these are all measuring similar activation-based quantities across different components or layers. The preliminary implementation appears to be producing meaningful, non-degenerate distributions.", "plot_path": "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/concept_consistency_hist_resnet50_imagenetval.png"}, {"analysis": "This fourth histogram continues the pattern of showing right-skewed distributions of activation or embedding magnitudes. The visualizations are consistent with what one would expect from an initial working implementation of the SemanticLens pipeline - the basic mechanics of extracting activations from ResNet-50 on ImageNet appear to be functioning. However, the current plots only demonstrate distribution statistics and do not yet show: (a) the quality of per-component reference input selection, (b) the resulting component vectors v_c in CLIP space, (c) semantic clustering or interpretability analyses, or (d) any text-based queries against the embedded components. These would be needed to fully validate the research hypothesis in subsequent stages.", "plot_path": "experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/imagenetval_resnet50_summary_metrics.png"}], []], "vlm_feedback_summary": ["[]", "[]", "Four plots were received demonstrating the initial implementation of the\nSemanticLens pipeline on ResNet-50 layer4.2 (2048 channels) probed with\nImageNet. Plot 1 shows the distribution of top-1 channel activation values\n(right-skewed, peak ~4-6), confirming successful activation extraction across\nall channels with diverse selectivity. Plot 2 shows the L2 norms of pooled CLIP\ncomponent vectors (Gaussian around 8.4-8.6), indicating healthy pooling of\nunnormalized CLIP features without degenerate zero vectors. Plot 3 shows\npairwise cosine similarities between component vectors (peaked at ~0.90 with\nrange 0.55-0.98), demonstrating channels remain distinguishable but share a\nstrong common direction\u2014suggesting centering/whitening may improve future\nanalyses. Plot 4 shows top-5 text-query CLIP similarity scores per channel\n(Gaussian around 0.87-0.89), validating that all components can be meaningfully\nqueried via natural language through the joint image-text space. Overall, the\npreliminary results successfully demonstrate both hypothesis components: (1)\nper-channel reference inputs summarize learned concepts, and (2) pooled CLIP\nembeddings yield queryable vectors in a shared multi-modal space. The main\ncaveat is the high baseline similarity across component vectors, which suggests\nfuture work should apply centering/whitening or use relative rather than\nabsolute similarity for semantic analysis.", "Four histograms were received showing right-skewed distributions of\nactivation/embedding magnitudes, consistent with a preliminary implementation\nextracting features from ResNet-50 on ImageNet. The distributions show the\nexpected sparsity pattern (most components have low activations, few have high\nactivations) which supports feasibility of selecting per-component reference\ninputs. However, these plots are primarily distributional sanity checks and do\nnot yet demonstrate the core research contributions: (1) quality of per-\ncomponent concept summaries via reference inputs, (2) the mapping into CLIP's\njoint image-text semantic space, or (3) queryability of components via text. The\npreliminary implementation appears functionally correct but needs to progress\ntoward semantic-space visualizations (e.g., t-SNE/UMAP of component vectors,\ntext-query retrieval demonstrations, or concept purity metrics) to substantiate\nthe paper's main claims. Axis labels and plot titles are also difficult to read,\nlimiting deeper interpretation.", "[]"], "exec_time": [12.57444167137146, 24.256004810333252, 14.188584089279175, 14.065444946289062, null], "exec_time_feedback": ["", "", "", "", ""], "datasets_successfully_tested": [[], [], ["[\"imagenet_val_resnet50\"]"], ["[\"imagenet_val_resnet50\"]"], []], "plot_code": [null, null, "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\nkey = \"imagenet_val_resnet50\"\nd = experiment_data.get(key, {})\nconcept_scores = np.asarray(d.get(\"predictions\", []))\nrandom_scores = np.asarray(d.get(\"ground_truth\", []))\nval_metrics = d.get(\"metrics\", {}).get(\"val\", [{}])[0] if d else {}\n\n# Plot 1: Histogram\ntry:\n    plt.figure(figsize=(6, 4))\n    plt.hist(concept_scores, bins=20, alpha=0.7, label=\"top-k activating\")\n    plt.hist(random_scores, bins=20, alpha=0.7, label=\"random baseline\")\n    plt.xlabel(\"Mean pairwise CLIP cosine similarity\")\n    plt.ylabel(\"# channels\")\n    plt.title(\n        \"ImageNet-val / ResNet-50 layer4\\nConcept Consistency Histogram (Top-k Activating vs Random Baseline)\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"imagenetval_resnet50_concept_hist.png\"), dpi=140\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: Sorted per-channel concept scores\ntry:\n    plt.figure(figsize=(7, 4))\n    sorted_c = np.sort(concept_scores)[::-1]\n    plt.plot(sorted_c, marker=\"o\", ms=3, lw=1, label=\"concept consistency (sorted)\")\n    if random_scores.size > 0:\n        plt.axhline(\n            float(random_scores.mean()),\n            color=\"r\",\n            ls=\"--\",\n            label=f\"random baseline mean = {random_scores.mean():.3f}\",\n        )\n    plt.xlabel(\"Channel rank\")\n    plt.ylabel(\"Mean pairwise CLIP cos sim\")\n    plt.title(\n        \"ImageNet-val / ResNet-50 layer4\\nSorted Per-Channel Concept Consistency Scores\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"imagenetval_resnet50_sorted_concept_scores.png\"),\n        dpi=140,\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: Summary metrics bar chart\ntry:\n    labels, vals = [], []\n    for k in [\n        \"concept_consistency_score_mean\",\n        \"concept_consistency_score_median\",\n        \"random_baseline_mean\",\n        \"delta\",\n    ]:\n        if k in val_metrics:\n            labels.append(k.replace(\"_\", \"\\n\"))\n            vals.append(float(val_metrics[k]))\n    if vals:\n        plt.figure(figsize=(7, 4))\n        colors = [\"tab:blue\", \"tab:cyan\", \"tab:orange\", \"tab:green\"][: len(vals)]\n        plt.bar(labels, vals, color=colors)\n        for i, v in enumerate(vals):\n            plt.text(i, v, f\"{v:.3f}\", ha=\"center\", va=\"bottom\", fontsize=9)\n        plt.ylabel(\"Score\")\n        plt.title(\n            \"ImageNet-val / ResNet-50 layer4\\nSummary Metrics (CLIP-based Concept Consistency)\"\n        )\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"imagenetval_resnet50_summary_metrics.png\"),\n            dpi=140,\n        )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Print evaluation metrics\nif val_metrics:\n    print(\"Evaluation metrics:\")\n    for k, v in val_metrics.items():\n        print(f\"  {k}: {v}\")\n", "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\nkey = \"imagenet_val_resnet50\"\nd = experiment_data.get(key, {})\nconcept_scores = np.asarray(d.get(\"predictions\", []))\nrandom_scores = np.asarray(d.get(\"ground_truth\", []))\nval_metrics = d.get(\"metrics\", {}).get(\"val\", [{}])[0] if d else {}\n\n# Plot 1: Histogram\ntry:\n    plt.figure(figsize=(6, 4))\n    plt.hist(concept_scores, bins=20, alpha=0.7, label=\"top-k activating\")\n    plt.hist(random_scores, bins=20, alpha=0.7, label=\"random baseline\")\n    plt.xlabel(\"Mean pairwise CLIP cosine similarity\")\n    plt.ylabel(\"# channels\")\n    plt.title(\n        \"ImageNet-val / ResNet-50 layer4\\nConcept Consistency Histogram (Top-k Activating vs Random Baseline)\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"imagenetval_resnet50_concept_hist.png\"), dpi=140\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: Sorted per-channel concept scores\ntry:\n    plt.figure(figsize=(7, 4))\n    sorted_c = np.sort(concept_scores)[::-1]\n    plt.plot(sorted_c, marker=\"o\", ms=3, lw=1, label=\"concept consistency (sorted)\")\n    if random_scores.size > 0:\n        plt.axhline(\n            float(random_scores.mean()),\n            color=\"r\",\n            ls=\"--\",\n            label=f\"random baseline mean = {random_scores.mean():.3f}\",\n        )\n    plt.xlabel(\"Channel rank\")\n    plt.ylabel(\"Mean pairwise CLIP cos sim\")\n    plt.title(\n        \"ImageNet-val / ResNet-50 layer4\\nSorted Per-Channel Concept Consistency Scores\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"imagenetval_resnet50_sorted_concept_scores.png\"),\n        dpi=140,\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: Summary metrics bar chart\ntry:\n    labels, vals = [], []\n    for k in [\n        \"concept_consistency_score_mean\",\n        \"concept_consistency_score_median\",\n        \"random_baseline_mean\",\n        \"delta\",\n    ]:\n        if k in val_metrics:\n            labels.append(k.replace(\"_\", \"\\n\"))\n            vals.append(float(val_metrics[k]))\n    if vals:\n        plt.figure(figsize=(7, 4))\n        colors = [\"tab:blue\", \"tab:cyan\", \"tab:orange\", \"tab:green\"][: len(vals)]\n        plt.bar(labels, vals, color=colors)\n        for i, v in enumerate(vals):\n            plt.text(i, v, f\"{v:.3f}\", ha=\"center\", va=\"bottom\", fontsize=9)\n        plt.ylabel(\"Score\")\n        plt.title(\n            \"ImageNet-val / ResNet-50 layer4\\nSummary Metrics (CLIP-based Concept Consistency)\"\n        )\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"imagenetval_resnet50_summary_metrics.png\"),\n            dpi=140,\n        )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Print evaluation metrics\nif val_metrics:\n    print(\"Evaluation metrics:\")\n    for k, v in val_metrics.items():\n        print(f\"  {k}: {v}\")\n", "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data_path_list = [\n        \"experiments/2026-07-13_11-03-09_multi_modal_feature_description_attempt_0/logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/experiment_data.npy\"\n    ]\n    all_experiment_data = []\n    for experiment_data_path in experiment_data_path_list:\n        experiment_data = np.load(\n            os.path.join(os.getenv(\"AI_SCIENTIST_ROOT\", \"\"), experiment_data_path),\n            allow_pickle=True,\n        ).item()\n        all_experiment_data.append(experiment_data)\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    all_experiment_data = []\n\nkey = \"imagenet_val_resnet50\"\n\n# Gather per-run arrays and metrics\nconcept_runs = []\nrandom_runs = []\nmetrics_runs = []\nfor ed in all_experiment_data:\n    d = ed.get(key, {})\n    c = np.asarray(d.get(\"predictions\", []), dtype=float)\n    r = np.asarray(d.get(\"ground_truth\", []), dtype=float)\n    if c.size:\n        concept_runs.append(c)\n    if r.size:\n        random_runs.append(r)\n    vm_list = d.get(\"metrics\", {}).get(\"val\", [{}])\n    if vm_list:\n        metrics_runs.append(vm_list[0])\n\nn_runs = len(all_experiment_data)\n\n# Plot 1: Aggregated histograms\ntry:\n    if concept_runs and random_runs:\n        concept_all = np.concatenate(concept_runs)\n        random_all = np.concatenate(random_runs)\n        plt.figure(figsize=(6, 4))\n        bins = np.linspace(\n            min(concept_all.min(), random_all.min()),\n            max(concept_all.max(), random_all.max()),\n            25,\n        )\n        plt.hist(\n            concept_all,\n            bins=bins,\n            alpha=0.6,\n            label=f\"top-k activating (mean={concept_all.mean():.3f})\",\n            color=\"tab:blue\",\n        )\n        plt.hist(\n            random_all,\n            bins=bins,\n            alpha=0.6,\n            label=f\"random baseline (mean={random_all.mean():.3f})\",\n            color=\"tab:orange\",\n        )\n        plt.axvline(concept_all.mean(), color=\"tab:blue\", ls=\"--\", lw=1)\n        plt.axvline(random_all.mean(), color=\"tab:orange\", ls=\"--\", lw=1)\n        plt.xlabel(\"Mean pairwise CLIP cosine similarity\")\n        plt.ylabel(\"# channels (aggregated across runs)\")\n        plt.title(\n            f\"ImageNet-val / ResNet-50 layer4\\nAggregated Concept Consistency Histogram (n_runs={n_runs})\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"imagenetval_resnet50_agg_concept_hist.png\"),\n            dpi=140,\n        )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: Sorted per-channel concept scores with mean +/- SEM band across runs\ntry:\n    if concept_runs:\n        # sort each run's scores in descending order, then align by rank\n        min_len = min(len(c) for c in concept_runs)\n        sorted_arr = np.stack(\n            [np.sort(c)[::-1][:min_len] for c in concept_runs], axis=0\n        )\n        mean_curve = sorted_arr.mean(axis=0)\n        if sorted_arr.shape[0] > 1:\n            sem_curve = sorted_arr.std(axis=0, ddof=1) / np.sqrt(sorted_arr.shape[0])\n        else:\n            sem_curve = np.zeros_like(mean_curve)\n        x = np.arange(min_len)\n        plt.figure(figsize=(7, 4))\n        plt.plot(x, mean_curve, lw=1.2, color=\"tab:blue\", label=\"mean concept score\")\n        plt.fill_between(\n            x,\n            mean_curve - sem_curve,\n            mean_curve + sem_curve,\n            alpha=0.3,\n            color=\"tab:blue\",\n            label=\"\u00b1 SEM across runs\",\n        )\n        if random_runs:\n            rand_means = [r.mean() for r in random_runs]\n            rmean = float(np.mean(rand_means))\n            rsem = (\n                float(np.std(rand_means, ddof=1) / np.sqrt(len(rand_means)))\n                if len(rand_means) > 1\n                else 0.0\n            )\n            plt.axhline(\n                rmean,\n                color=\"r\",\n                ls=\"--\",\n                label=f\"random baseline mean={rmean:.3f} \u00b1 {rsem:.3f}\",\n            )\n        plt.xlabel(\"Channel rank\")\n        plt.ylabel(\"Mean pairwise CLIP cos sim\")\n        plt.title(\n            f\"ImageNet-val / ResNet-50 layer4\\nSorted Per-Channel Concept Consistency (mean \u00b1 SEM, n_runs={n_runs})\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(\n                working_dir, \"imagenetval_resnet50_sorted_concept_scores_agg.png\"\n            ),\n            dpi=140,\n        )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: Summary metrics bar chart with SEM error bars across runs\ntry:\n    keys_of_interest = [\n        \"concept_consistency_score_mean\",\n        \"concept_consistency_score_median\",\n        \"random_baseline_mean\",\n        \"delta\",\n    ]\n    agg = {k: [] for k in keys_of_interest}\n    for m in metrics_runs:\n        for k in keys_of_interest:\n            if k in m:\n                try:\n                    agg[k].append(float(m[k]))\n                except Exception:\n                    pass\n    labels, means, sems = [], [], []\n    for k in keys_of_interest:\n        vals = agg[k]\n        if vals:\n            labels.append(k.replace(\"_\", \"\\n\"))\n            means.append(np.mean(vals))\n            sems.append(\n                np.std(vals, ddof=1) / np.sqrt(len(vals)) if len(vals) > 1 else 0.0\n            )\n    if means:\n        plt.figure(figsize=(7, 4))\n        x = np.arange(len(labels))\n        colors = [\"tab:blue\", \"tab:cyan\", \"tab:orange\", \"tab:green\"][: len(means)]\n        plt.bar(\n            x,\n            means,\n            yerr=sems,\n            color=colors,\n            capsize=5,\n            label=f\"mean \u00b1 SEM (n_runs={n_runs})\",\n        )\n        for i, (m, s) in enumerate(zip(means, sems)):\n            plt.text(i, m, f\"{m:.3f}\u00b1{s:.3f}\", ha=\"center\", va=\"bottom\", fontsize=9)\n        plt.xticks(x, labels)\n        plt.ylabel(\"Score\")\n        plt.title(\n            \"ImageNet-val / ResNet-50 layer4\\nAggregated Summary Metrics (CLIP-based Concept Consistency)\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"imagenetval_resnet50_summary_metrics_agg.png\"),\n            dpi=140,\n        )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Print aggregated evaluation metrics\nprint(f\"Aggregated evaluation metrics over {n_runs} run(s):\")\nfor k in [\n    \"concept_consistency_score_mean\",\n    \"concept_consistency_score_median\",\n    \"random_baseline_mean\",\n    \"delta\",\n]:\n    vals = [float(m[k]) for m in metrics_runs if k in m]\n    if vals:\n        mean_v = np.mean(vals)\n        sem_v = np.std(vals, ddof=1) / np.sqrt(len(vals)) if len(vals) > 1 else 0.0\n        print(f\"  {k}: mean={mean_v:.4f}, SEM={sem_v:.4f}, values={vals}\")\n"], "plot_plan": [null, null, "Brief plan: I'll load `experiment_data.npy` and produce a few standard plots for the ResNet-50 / ImageNet-val concept consistency experiment. Plot 1: overlaid histogram comparing per-channel concept consistency (top-k activating) vs random baseline CLIP cosine similarity. Plot 2: sorted per-channel concept consistency scores line plot with a horizontal line for the random baseline mean. Plot 3: bar chart of summary metrics (mean concept, median concept, random baseline mean, delta). Each plot is wrapped in its own try/except and saves a descriptively named PNG to `working_dir`, closing the figure afterwards.", null, null], "ablation_name": [null, null, null, null, null], "hyperparam_name": [null, null, null, null, null], "is_seed_node": [false, false, false, true, true], "is_seed_agg_node": [false, false, false, false, true], "parse_metrics_plan": ["", "", "Load the npy file from the working directory, extract the single dataset\n\"imagenet_val_resnet50\", and print its validation metrics from the val entry.", "Load the npy file from the working directory, extract the single dataset\n\"imagenet_val_resnet50\", and print its validation metrics from the val entry.", ""], "parse_metrics_code": ["", "", "import os\nimport numpy as np\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nexperiment_data = np.load(\n    os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n).item()\n\nfor ds_name, ds_data in experiment_data.items():\n    print(f\"Dataset: {ds_name}\")\n    val_metrics = ds_data.get(\"metrics\", {}).get(\"val\", [])\n    if val_metrics:\n        final = val_metrics[-1]\n        print(\n            f\"  concept consistency score (mean): {final['concept_consistency_score_mean']:.4f}\"\n        )\n        print(\n            f\"  concept consistency score (median): {final['concept_consistency_score_median']:.4f}\"\n        )\n        print(f\"  random baseline (mean): {final['random_baseline_mean']:.4f}\")\n        print(f\"  delta (concept - random): {final['delta']:.4f}\")\n        print(\n            f\"  validation loss proxy (1 - concept consistency mean): {1.0 - final['concept_consistency_score_mean']:.4f}\"\n        )\n", "import os\nimport numpy as np\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nexperiment_data = np.load(\n    os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n).item()\n\nfor ds_name, ds_data in experiment_data.items():\n    print(f\"Dataset: {ds_name}\")\n    val_metrics = ds_data.get(\"metrics\", {}).get(\"val\", [])\n    if val_metrics:\n        final = val_metrics[-1]\n        print(\n            f\"  concept consistency score (mean): {final['concept_consistency_score_mean']:.4f}\"\n        )\n        print(\n            f\"  concept consistency score (median): {final['concept_consistency_score_median']:.4f}\"\n        )\n        print(f\"  random baseline (mean): {final['random_baseline_mean']:.4f}\")\n        print(f\"  delta (concept - random): {final['delta']:.4f}\")\n        print(\n            f\"  validation loss proxy (1 - concept consistency mean): {1.0 - final['concept_consistency_score_mean']:.4f}\"\n        )\n", ""], "parse_term_out": ["", "", "['Dataset: imagenet_val_resnet50', '\\n', '  concept consistency score (mean):\n0.6588', '\\n', '  concept consistency score (median): 0.6413', '\\n', '  random\nbaseline (mean): 0.6056', '\\n', '  delta (concept - random): 0.0532', '\\n', '\nvalidation loss proxy (1 - concept consistency mean): 0.3412', '\\n', 'Execution\ntime: a moment seconds (time limit is 10 hours).']", "['Dataset: imagenet_val_resnet50', '\\n', '  concept consistency score (mean):\n0.6588', '\\n', '  concept consistency score (median): 0.6413', '\\n', '  random\nbaseline (mean): 0.6056', '\\n', '  delta (concept - random): 0.0532', '\\n', '\nvalidation loss proxy (1 - concept consistency mean): 0.3412', '\\n', 'Execution\ntime: a moment seconds (time limit is 10 hours).']", ""], "parse_exc_type": [null, null, null, null, null], "parse_exc_info": [null, null, null, null, null], "parse_exc_stack": [null, null, null, null, null], "completed_stages": ["Stage_1"]};
+
+// Add log directory path and stage info to the tree data
+treeStructData.log_dir_path = window.location.pathname.split('/').slice(0, -1).join('/');
+treeStructData.current_stage = window.location.pathname.includes('stage_')
+  ? window.location.pathname.split('stage_')[1].split('/')[0]
+  : 'Stage_1';
+
+// Initialize background color
+window.bgColCurrent = bgCol;
+
+// Function to set background color that can be called from the console
+function setBackgroundColor(color) {
+  // Update the global color
+  updateBackgroundColor(color);
+
+  // Refresh the current sketch to apply the new background color
+  if (currentStage) {
+    startSketch(currentStage);
+  }
+}
+
+// Load all stage data and initialize the visualization
+loadAllStageData(treeStructData);
+
+    </script>
+    <title>AI Scientist-v2 Visualization</title>
+    <style>
+      body,
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background-color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      #canvas-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 40vw;
+        height: 100vh;
+        background-color: inherit;
+        padding-top: 40px;
+      }
+      canvas {
+        float: left;
+        height: 100vh;
+        width: 100vw;
+      }
+      #text-container {
+        float: right;
+        height: 100vh;
+        width: 50vw;
+        background-color: #282c34;
+        overflow: auto;
+      }
+      #plan {
+        /* border-left: 2px solid #282c34; */
+        background-color: #282c34;
+        color: #f2f0e7;
+        min-height: 5rem;
+        padding: 1em 0 1em 1em;
+      }
+      #plot_plan {
+        background-color: #282c34;
+        color: #f2f0e7;
+        min-height: 5rem;
+        padding: 1em 0 1em 1em;
+        white-space: pre-wrap;
+      }
+      #exec_time_feedback {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #exec_time {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #exc_info {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #2c1f1f;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #metrics {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+      }
+      #vlm_feedback {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #1f2c2f;
+        color: #f2f0e7;
+        border-left: 3px solid #55ff55;
+      }
+      #vlm_feedback p {
+        margin: 0.5em 0;
+        white-space: pre-wrap;
+      }
+      .datasets_successfully_tested {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+        border-left: 3px solid #55ff55;
+      }
+      .plots-container {
+        float: right;
+        width: 50vw;
+        padding: 1rem;
+        background-color: #282c34;
+        margin-top: 1rem;
+      }
+
+      .plot-item {
+        flex: 1 1 300px;
+        max-width: 100%;
+        margin-bottom: 1rem;
+        white-space: pre-wrap;
+      }
+
+      .plot-item img {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: block;
+      }
+
+      .metric-group {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .metric-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      .metric-table th,
+      .metric-table td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid #ddd;
+      }
+
+      .metric-table th {
+        background-color: #363b44;
+      }
+
+      /* Styles for tabs */
+      .tabs-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 49vw;
+        background-color: #000000;
+        z-index: 10;
+        display: flex;
+        padding: 0;
+      }
+
+      .tab {
+        cursor: pointer;
+        padding: 10px 15px;
+        background-color: #333;
+        color: #f2f0e7;
+        border: none;
+        outline: none;
+        transition: background-color 0.3s;
+        flex: 1;
+        text-align: center;
+      }
+
+      .tab:hover {
+        background-color: #444;
+      }
+
+      .tab.active {
+        background-color: #4c76af;
+        font-weight: bold;
+      }
+
+      .tab.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #282c34;
+      }
+
+      .tab-content {
+        display: none;
+        padding-top: 40px; /* Space for tabs */
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .stage-info {
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+      }
+
+      .stage-status {
+        display: inline-block;
+        padding: 3px 6px;
+        border-radius: 3px;
+        margin-left: 8px;
+        font-size: 0.8em;
+      }
+
+      .stage-status.completed {
+        background-color: #4caf50;
+      }
+
+      .stage-status.in-progress {
+        background-color: #2196f3;
+      }
+
+      .stage-status.not-started {
+        background-color: #9e9e9e;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tabs-container" id="stage-tabs">
+      <button class="tab" data-stage="Stage_1" onclick="selectStage('Stage_1')">Stage 1</button>
+      <button class="tab" data-stage="Stage_2" onclick="selectStage('Stage_2')">Stage 2</button>
+      <button class="tab" data-stage="Stage_3" onclick="selectStage('Stage_3')">Stage 3</button>
+      <button class="tab" data-stage="Stage_4" onclick="selectStage('Stage_4')">Stage 4</button>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <pre id="text-container">
+        <div id="stage-info" class="stage-info"></div>
+        <div id="plan"></div>
+        <hr>
+        <div id="exc_info"></div>
+        <hr>
+        <div id="exec_time"></div>
+        <hr>
+        <div id="exec_time_feedback"></div>
+        <hr>
+        <div id="metrics"></div>
+        <hr>
+        <div id="plot_plan"></div>
+        <hr>
+        <div class="plots-container" id="plots"></div>
+        <hr>
+        <div id="vlm_feedback"></div>
+        <hr>
+        <div id="datasets_successfully_tested"></div>
+        <hr>
+        <code id="code" class="language-python"></code>
+        <hr>
+        <code id="plot_code" class="language-python"></code>
+    </pre>
+  </body>
+</html>

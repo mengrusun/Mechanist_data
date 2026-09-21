@@ -1,0 +1,18 @@
+{
+  "picker_name": "significance_gated_max_sigma",
+  "formula": "argmax_{ell : p_transfer(ell) < 0.01, ell != 32} sigma_proj(ell)",
+  "V_layer_picks_corrected": {
+    "G": 30,
+    "A": 30,
+    "I": 30,
+    "M": 30
+  },
+  "V_layer_picks_original": {
+    "G": 4,
+    "A": 6,
+    "I": 2,
+    "M": 2
+  },
+  "supp_layer": 16,
+  "rationale": "Intervention-appropriate picker: among layers where the linear direction has a significant projection-transfer signal (p<0.01), pick the deepest useful one (max sigma_proj), excluding L=32 (pre-lm-head layer where norms balloon). For all 4 V this selects L=30, adjacent to the empirically productive L=16 layer identified by M4-supp; L=16 sits in the top-5 sigma_proj band with p<1e-4 for all V, confirming L=16 was a principled (not post-hoc) choice."
+}

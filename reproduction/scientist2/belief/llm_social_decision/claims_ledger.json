@@ -1,0 +1,372 @@
+{
+  "project": "Steerable per-variable pure directions in Llama-3.1-8B-Instruct's dictator decision",
+  "direction": "Steerable social-variable directions in LLM decision making (task.md; Llama-3.1-8B-Instruct dictator game over gender G, age A, instruction framing I, meeting condition M)",
+  "date_range": {
+    "start": "2026-07-13",
+    "end": "2026-07-13"
+  },
+  "models": {
+    "claim": "claude-opus-4-7",
+    "experiment": "claude-opus-4-7",
+    "verify": "claude-sonnet-4-6",
+    "iteration": "claude-opus-4-7"
+  },
+  "pipeline_status": "completed",
+  "round_end": {
+    "qualifier": "",
+    "detail": "",
+    "remedy": "",
+    "see": "",
+    "partial_artifacts": [],
+    "next_round_options": []
+  },
+  "journey_summary": {
+    "claim": "given behavior (task.md) faithfully captured \u2192 4 falsifiable sub-claims (C1 linear encoding, C2 purity, C3 bidirectional steering, C4 selectivity) mapped to milestones M1-M7",
+    "mechanism_strategy": "Location \u2192 Causal Intervention",
+    "mechanism_routing": "family=Representation and Parameter Analysis, submethod=Steering Vectors (CAA); composition = paired-prompt CAA extractor \u2192 GS/LEACE decorrelation \u2192 signed activation-addition \u2192 4\u00d74 selectivity + baselines",
+    "experiment": "7 dispatched runs (sanity + main + M4-supp L={12,16} + M7 portability), ~2.5 GPU-hours, headline mixed: C1 supported, C2 supported (GS) / failed (LEACE at shallow layers), C3 under-powered at picked shallow layers but supported at supp L=16 (M sign-inverts, A/G amplify, I bidirectional), C4 not supported at picked layers (V=G collapse); M7 portability negative (DeepSeek outputs \u03c4=10 constant)",
+    "verify": "4 claim(s): 1 PASS / 0 FAIL / 0 INCONCLUSIVE / 0 ZEV / 3 INTEGRITY_ONLY (cap=3, swap_off=0); integrity[Phase2=WARN / Phase9=WARN]",
+    "iteration": "2/6 iterations, claim-reentries=0/2, score 6/10 verdict almost, termination=positive_verdict; 4 back-edge dispatches (~0.9 GPU-h); C3 strengthened by n=10 random-direction null at \u22652.5\u03c3 direction-specificity; C1 LOPO stress test confirmed shallow-layer phrasing-confound suspicion for V=M (LOPO=0.483 = chance); C4 L=16 selectivity ran for the first time (p=0.128, borderline)",
+    "figures": "8 across 4 claims; 0 judgment-skipped; 0 render-skipped, 0 errored"
+  },
+  "open_items": [
+    "verify+iteration: C1, C2, C4 remain INTEGRITY_ONLY (stage2_skip_reason: max_verify_claims_cap) \u2014 upgrade via `/auto-verify C{1,2,4} \u2014 resume: true` for full stress-test",
+    "iteration P3 (C2 raw-vs-pure conceptual mismatch): C3's causal success at L=16 uses raw v\u0302_V but C2 claims pure/decorrelated directions \u2014 the two are not empirically linked. Paper-scope fix: narrow C2 to 'GS-decorrelated basis with off-diag 0.506 residual coupling'; empirical fix: re-run C3-style steering at L=16 with GS-purified directions",
+    "narrative: 'bidirectional causal steering' should be reframed to 'sign-asymmetric direction-specific causal steering' (each V responds strongly to one signed \u03b1 direction, not symmetrically) \u2014 per iteration Section-8 reviewer recommendation",
+    "narrative: C4 selectivity headline needs restraint \u2014 L=16 permutation p=0.128 is better than shallow p=0.84 but not stat-sig with n=4 V; per-V ratio shows partial selectivity + substantial collateral coupling (V=I ratio 1.00 = non-selective; V=G collapses at +\u03c3)",
+    "narrative: C1 must disclose the LOPO failure at V=M ell=2 (LOPO=0.483 = chance) \u2014 shallow-layer C1 for V=M is a phrasing detector, not linear encoding of the underlying variable; productive layer band is [12-24]",
+    "experiment: M4-supp + M7 portability runs did not write cost.json (GPU-pin witness) \u2014 implementation gap in supp/portability wrappers, not a pin violation",
+    "experiment: M7 portability NEGATIVE (DeepSeek anchors at \u03c4=10 under DG-1000 prompt) \u2014 verify swapped to Meta-Llama-3-8B-Instruct instead"
+  ],
+  "iteration_summary": {
+    "score": 6.0,
+    "verdict": "almost",
+    "rounds_consumed": 2,
+    "max_rounds": 6
+  },
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "For each social/contextual variable V \u2208 {G, A, I, M}, a linear direction v\u0302_V in the Llama-3.1-8B-Instruct residual stream carries V's decision-relevant influence on the dictator-game transfer amount.",
+      "origin": "task.md Claim \u00a71 (linear encoding)",
+      "data": {
+        "provenance": "constructed",
+        "source": "DG-1000 dictator-game trials + 4\u00d71,000 paired-prompt partners (balanced 2\u00d72\u00d72\u00d72 over G/A/I/M; token-length-matched)",
+        "available_n": "5000 (1000 baseline + 4000 paired partners)",
+        "used_n": "5000 (full; 800 train / 200 held-out baseline) + iteration LOPO stress on cached activations",
+        "subset_note": ""
+      },
+      "models": [
+        "Llama-3.1-8B-Instruct"
+      ],
+      "method": "M2 \u2014 paired-prompt CAA difference-of-means direction v\u0302_V(layer); linear-probe cv_acc + projection-transfer OLS at picked ell_V*. Iteration \u24ea added Leave-One-Phrasing-Out cross-val at every layer as a lexical-confound stress test.",
+      "main_experiment": {
+        "verdict": "supported",
+        "key_stats": "probe cv_acc = 1.000 for all V; held_acc = 1.000; projection-transfer \u03b2 at ell_V*: G=-10.12 (p=0.002), A=-4.85 (p=0.059 marginal), I=+32.10 (p=1.5e-9), M=+41.28 (p=3.5e-5)",
+        "headline": "Linear encoding SUPPORTED at picked shallow layers ell_V* \u2208 {2,4,6}. Iteration LOPO stress narrows the claim: V=M at ell_V*=2 LOPO=0.483 (chance-level \u2014 phrasing detector, NOT linear encoding of the variable). Best LOPO layers per V are in mid-band 10-14 for V=I/M and 28-32 for V=G/A."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {
+          "method": "n/a",
+          "dataset": "n/a",
+          "model": "excluded"
+        },
+        "integrity": "WARN",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap"
+      },
+      "iteration": {
+        "final_reviewer_status": "almost \u2014 main-experiment integrity WARN; iteration LOPO stress narrows the shallow-layer claim significantly",
+        "changed": [
+          "added LOPO stress test caveat (iteration 2, \u24ea)",
+          "identified productive layer band 10-14 and 28-32 for LOPO generalization"
+        ],
+        "falsified": [
+          "'linear encoding of V=M at ell=2' is a phrasing-detector artifact per LOPO=0.483 (chance)"
+        ],
+        "narrowed_to": "Linear encoding holds at the productive mid- and late-layer bands (10-14, 28-32), not at the token-embedding-proximal picked ell_V* \u2208 {2,4,6}; the picked-layer positive result is partially a lexical/phrasing artifact"
+      },
+      "final_status": "\u26a0 narrowed \u2014 linear encoding holds at mid- to late-layers (10-14, 28-32) but the shallow picked ell_V* result is confounded by phrasing (V=M LOPO=0.483 = chance); swap-test deferred",
+      "caveats": [
+        "V=A projection-transfer \u03b2 marginal at p=0.06",
+        "picked ell_V* \u2208 {2,4,6} \u2014 token-embedding-proximal; iteration LOPO stress reveals phrasing-detector confound at V=M ell=2",
+        "Phase 2 audit: proxy GT (tau) not explicitly labeled; 48 unique prompt texts appear in both train/held splits",
+        "productive layer band per LOPO: 10-14 (V=I/M) and 28-32 (V=G/A)"
+      ],
+      "artifacts": [
+        "refine-logs/EXPERIMENT_PLAN.md#M2",
+        "runs/M_main_v1/artifacts/m2/",
+        "refine-logs/EXPERIMENT_RESULTS.md#M2",
+        "verify/C1_linear_encoding_social_vars/",
+        "runs/iteration_round_1/c1_lexical_stress_test.json",
+        "runs/iteration_round_1/corrected_layer_pick.json"
+      ],
+      "figures": [
+        {
+          "id": "c1_lopo_vs_probe_by_layer",
+          "type": "line",
+          "caption": "Per-layer 5-fold probe cv_acc (dashed) vs. leave-one-phrasing-out cv_acc (solid) per variable V \u2208 {G,A,I,M} on Llama-3.1-8B-Instruct \u2014 reveals the phrasing-detector artifact at shallow layers (V=M \u2113=2 LOPO=0.483 = chance) and the productive mid-layer bands 10-14 and 28-32.",
+          "png": "figures/C1/c1_lopo_vs_probe_by_layer.png",
+          "pdf": "figures/C1/c1_lopo_vs_probe_by_layer.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "runs/iteration_round_1/c1_lexical_stress_test.json + runs/M_main_v1/artifacts/m2/probe_accuracy.json",
+          "status": "ok"
+        },
+        {
+          "id": "c1_probe_transfer_stats",
+          "type": "table",
+          "caption": "C1 main-experiment probe cv_acc + projection-transfer \u03b2 at picked layers ell_V* (Llama-3.1-8B-Instruct)",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C1/c1_probe_transfer_stats.md",
+          "tex": "figures/C1/c1_probe_transfer_stats.tex",
+          "source_data": "refine-logs/EXPERIMENT_RESULTS.md",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "statement": "A pure direction \u1e7d_V (raw v\u0302_V minus its overlap with the other three variables' directions) linearly predicts V without predicting the other variables \u2014 a cross-leakage matrix diagonal \u226b off-diagonal under a pre-registered threshold.",
+      "origin": "task.md Claim \u00a72 (purity via decorrelation)",
+      "data": {
+        "provenance": "constructed",
+        "source": "DG-1000 held-out activations cached from M2",
+        "available_n": "5000",
+        "used_n": "1000 held (200 baseline + 800 partners)",
+        "subset_note": ""
+      },
+      "models": [
+        "Llama-3.1-8B-Instruct"
+      ],
+      "method": "M3 \u2014 Gram-Schmidt + LEACE decorrelators; 4\u00d74 cross-leakage probe matrix at ell_V*; predicates: diag mean \u2265 0.95\u00d7 raw diag AND off-diag max \u2264 chance+0.05 (0.55).",
+      "main_experiment": {
+        "verdict": "supported (Gram-Schmidt); not-supported (LEACE)",
+        "key_stats": "GS: diag mean 0.958, off-diag max 0.506; LEACE: diag mean 0.573, off-diag max 0.829, \u2016v\u0302_LEACE\u2016/\u2016v\u0302_raw\u2016 = 3.1-7.4",
+        "headline": "Purity SUPPORTED under Gram-Schmidt (diag 0.958, off-diag 0.506) at picked shallow layers. LEACE fails at those layers because it erases the joint categorical of the other three variables together with the target \u2014 dataset-specific pathology at layers 2-6, not a claim falsification."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {
+          "method": "n/a",
+          "dataset": "n/a",
+          "model": "excluded"
+        },
+        "integrity": "WARN",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap"
+      },
+      "iteration": {
+        "final_reviewer_status": "almost \u2014 largest unresolved conceptual concern (P3): C3's causal steering uses raw v\u0302_V while C2 claims pure/decorrelated directions; the two are not empirically linked at L=16",
+        "changed": [],
+        "falsified": [],
+        "narrowed_to": "'Pure directions free of confounds' should be narrowed to 'GS-decorrelated basis with off-diag 0.506 residual coupling' \u2014 a partially-decorrelated descriptive basis, not a strong disentanglement claim"
+      },
+      "final_status": "\u26a0 configuration-specific & narrowed \u2014 GS variant supports a partial decorrelation at shallow layers; LEACE fails at these layers; C3 causal evidence used raw v\u0302_V so this claim is not empirically bridged to the causal result",
+      "caveats": [
+        "LEACE fails at shallow picked layers \u2014 dataset-specific pathology",
+        "GS off-diag max 0.506 is borderline (threshold 0.55)",
+        "1-D scalar-projection cross-leakage probe is conservative",
+        "Reviewer's P3: C3's causal success at L=16 was demonstrated on raw v\u0302_V, not GS/LEACE-purified \u2014 so C2's purity claim is not empirically linked to the C3 causal claim; a future purity-intervention experiment at L=16 with GS directions is the natural closure"
+      ],
+      "artifacts": [
+        "refine-logs/EXPERIMENT_PLAN.md#M3",
+        "runs/M_main_v1/artifacts/m3/",
+        "refine-logs/EXPERIMENT_RESULTS.md#M3",
+        "verify/C2_purity_via_decorrelation/"
+      ],
+      "figures": [
+        {
+          "id": "c2_crossleakage_gs_vs_leace",
+          "type": "heatmap",
+          "caption": "4x4 cross-leakage probe accuracy matrix under GS vs LEACE decorrelators at Llama-3.1-8B-Instruct picked shallow layers \u2113_V*. Diagonal = target-self, off-diagonal = leakage. GS: diag mean 0.958 / off-diag max 0.506. LEACE: diag mean 0.573 / off-diag max 0.829.",
+          "png": "figures/C2/c2_crossleakage_gs_vs_leace.png",
+          "pdf": "figures/C2/c2_crossleakage_gs_vs_leace.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "runs/M_main_v1/artifacts/m3/leakage_matrix.json",
+          "status": "ok"
+        },
+        {
+          "id": "c2_purity_summary",
+          "type": "table",
+          "caption": "C2 decorrelation summary \u2014 GS vs LEACE at picked shallow layers (Llama-3.1-8B-Instruct)",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C2/c2_purity_summary.md",
+          "tex": "figures/C2/c2_purity_summary.tex",
+          "source_data": "refine-logs/EXPERIMENT_RESULTS.md",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "statement": "Activation-addition h \u2190 h + \u03b1 \u1e7d_V at signed \u03b1 \u2208 [-4\u03c3, +4\u03c3] causally and monotonically shifts the mean transfer amount, with at least one \u03b1<0 inverting V's baseline sign (bidirectional causal steering with a dose-response + inversion audit and a coherence gate on generation quality).",
+      "origin": "task.md Claim \u00a73 split part-a (bidirectional causal steering)",
+      "data": {
+        "provenance": "constructed",
+        "source": "DG-1000 held-out \u00d7 4 V \u00d7 signed-\u03b1 grid; supplementary L={12,16} on raw v\u0302_V; verify variant on Meta-Llama-3-8B-Instruct at L={0,10,16}; iteration L=16 random-direction null (n=3 initial \u2192 n=10 extended)",
+        "available_n": "5000",
+        "used_n": "56000 decode ops main + supp L={12,16} + verify variant compact n=10/cell + iteration random-null 4 V \u00d7 5 \u03b1 \u00d7 10 seeds at L=16",
+        "subset_note": "sites re-bound single (window3 descoped Phase 1.5); L=16 supp compensates for ell_V* under-power; iteration added the missing L=16 random-direction control"
+      },
+      "models": [
+        "Llama-3.1-8B-Instruct",
+        "Meta-Llama-3-8B-Instruct (verify)"
+      ],
+      "method": "M4 \u2014 Signed CAA activation-addition on \u1e7d_V at ell_V* + L={12,16} supp; verify variant: same on Meta-Llama-3-8B-Instruct L={0,10,16}. Iteration \u2461 added the L=16 random-direction control (10 seeds/setting) making direction-specificity \u03c3-quantifiable.",
+      "main_experiment": {
+        "verdict": "partial at ell_V* [provisional \u2014 layer-pick under-power]; SUPPORTED at L=16 across two models + strengthened by n=10 random null at \u22652.5\u03c3 direction-specificity",
+        "key_stats": "Main L=16 (Llama-3.1-8B-Instruct): V=M inverts (+0.71\u2192\u22120.31 at \u03b1=+2\u03c3), V=A amplifies 5.5\u00d7 (+0.11\u2192+0.58), V=G amplifies 2.5\u00d7 at \u03b1=\u22122\u03c3, V=I bidirectional (+46%/\u221222%). Verify variant (Meta-Llama-3-8B-Instruct L=16): V=M sign-inverts at \u03b1=+2 (matches main); V=G/A/I bidirectional. Iteration random-null at L=16 (n=10 seeds): V=M \u03b1=+2 inversion at 2.84\u03c3 direction-specificity (0/10 random seeds inverted); V=A \u03b1=+2 at 2.69\u03c3, V=G \u03b1=\u22122 at 4.30\u03c3, V=I \u03b1=\u22122 at 2.50\u03c3 \u2014 all four effects direction-specific.",
+        "headline": "Sign-asymmetric direction-specific causal steering at L=16 SUPPORTED across two models with a proper random-direction null control (\u22652.5\u03c3 direction-specificity for all four showcase effects); V=M cleanly sign-inverts at \u03b1=+2\u03c3. Under-powered at the max-probe-cv_acc-picked shallow layers ell_V* \u2014 a layer-pick heuristic issue, not a data/seed/grid shortfall."
+      },
+      "verify": {
+        "robustness": 1.0,
+        "axes": {
+          "method": "n/a",
+          "dataset": "n/a",
+          "model": "pass"
+        },
+        "integrity": "WARN",
+        "verdict": "PASS",
+        "stage2_skip_reason": null
+      },
+      "iteration": {
+        "final_reviewer_status": "PASS (held; strengthened by L=16 random-direction null n=10 at \u22652.5\u03c3 direction-specificity for all four showcase effects; V=M inversion at 2.84\u03c3)",
+        "changed": [
+          "iteration 1 \u2461: added L=16 random-direction control (3 seeds \u00d7 4 V \u00d7 5 \u03b1)",
+          "iteration 2 \u2460: extended random null to 10 seeds at 4 showcase settings \u2192 direction-specificity \u03c3-quantification",
+          "iteration 2 \u24ea: LOPO analysis retroactively justifies L=16 as principled representative of productive layer band [12-24]"
+        ],
+        "falsified": [],
+        "narrowed_to": "The word 'bidirectional' should be replaced with 'sign-asymmetric direction-specific'; each V responds strongly to one signed \u03b1 direction (V=G at \u03b1=\u22122\u03c3, V=A/M at \u03b1=+2\u03c3, V=I bidirectional), not symmetrically in both. Uses raw v\u0302_V (not GS/LEACE-purified), so this result does NOT empirically validate C2's purity narrative."
+      },
+      "final_status": "\u2713 holds (sign-asymmetric direction-specific causal steering at L=16 across two models, \u22652.5\u03c3 direction-specificity for all four showcase effects); provisional at picked shallow ell_V* due to layer-pick heuristic",
+      "caveats": [
+        "verify variant compact n_baseline=10/cell (main = 200) \u2014 qualitative PASS, quantitative n=200 re-run would confirm",
+        "L=16 uses raw v\u0302_V not GS/LEACE-purified; reviewer P3: does not empirically link to C2's purity claim",
+        "'bidirectional' narrowed to 'sign-asymmetric direction-specific' per iteration Section 8",
+        "under-powered at ell_V* \u2014 layer-pick heuristic root cause"
+      ],
+      "artifacts": [
+        "refine-logs/EXPERIMENT_PLAN.md#M4",
+        "runs/M_main_v1/artifacts/m4/",
+        "runs/M4_supp_deep_v1/m4/",
+        "runs/verify_C3_variant_model_swap_v1/artifacts/",
+        "runs/iteration_round_1/L16_random_control/",
+        "runs/iteration_round_1/L16_random_control_extended/",
+        "refine-logs/EXPERIMENT_RESULTS.md#M4",
+        "verify/C3_bidirectional_causal_steering/"
+      ],
+      "figures": [
+        {
+          "id": "c3_dose_response_L16",
+          "type": "grouped_bar",
+          "caption": "Mean transfer amount vs. signed alpha at L=16 per variable V \u2208 {G,A,I,M} \u2014 Llama-3.1-8B-Instruct main (M4-supp) vs Meta-Llama-3-8B-Instruct verify variant. V=M sign-inverts at alpha=+2 sigma in both models; V=A amplifies 5.5x; V=G amplifies 2.5x at alpha=-2 sigma; V=I bidirectional (+46% amplify at alpha=-2, -22% attenuate at alpha=+2).",
+          "png": "figures/C3/c3_dose_response_L16.png",
+          "pdf": "figures/C3/c3_dose_response_L16.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "runs/M4_supp_deep_v1/m4/ (via EXPERIMENT_RESULTS.md#M4) + runs/verify_C3_variant_model_swap_v1/artifacts/steer/summary.json",
+          "status": "ok"
+        },
+        {
+          "id": "c3_direction_specificity",
+          "type": "table",
+          "caption": "C3 direction-specificity sigma vs random-direction null at L=16 (n=10 seeds) \u2014 Llama-3.1-8B-Instruct main; >=2.5 sigma for all four showcase effects, V=M inversion at 2.84 sigma.",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C3/c3_direction_specificity.md",
+          "tex": "figures/C3/c3_direction_specificity.tex",
+          "source_data": "runs/iteration_round_1/L16_random_control_extended/ + review-stage/AUTO_ITERATION_FINAL_REPORT.md",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "statement": "Steering \u1e7d_V leaves the other three variables' effects on the transfer decision intact \u2014 a 4\u00d74 selectivity matrix M[V, W] has diagonal effect-magnitude significantly larger than off-diagonal (permutation test rejects diagonal = off-diagonal).",
+      "origin": "task.md Claim \u00a73 split part-b (selectivity), Claim \u00a74 support (targeted intervention)",
+      "data": {
+        "provenance": "constructed",
+        "source": "DG-1000 held-out reused across 4\u00d74 steer-V/measure-W cells at \u03b1 \u2208 {-2,0,+2}\u03c3 at ell_V*; iteration added L=16 4\u00d74 sweep",
+        "available_n": "5000",
+        "used_n": "12000 decode ops (main 12 grid points \u00d7 1000) + iteration L=16 12 grid points",
+        "subset_note": ""
+      },
+      "models": [
+        "Llama-3.1-8B-Instruct"
+      ],
+      "method": "M5 \u2014 4\u00d74 selectivity matrix M[V,W] at ell_V*, LEACE-pure, single-site; predicates: diag \u226b off-diag AND permutation-test p<0.05. Iteration \u2461 added the L=16 4\u00d74 selectivity sweep that was originally deferred.",
+      "main_experiment": {
+        "verdict": "not-supported at ell_V* [provisional \u2014 layer-pick under-power]; partially selective at L=16 with substantial collateral coupling",
+        "key_stats": "At ell_V*: max |off-diagonal|=0.455, min |diagonal|=0.000 (V=G at \u03b1=+2\u03c3_proj=0.076), c4_ratio=\u221e, permutation p=0.84 (H0 not rejected). At L=16 (iteration): permutation p=0.128 (order-of-magnitude improvement, still not sig with n=4 V); per-V diag/mean-off ratio at \u03b1=+2\u03c3: V=A 2.25, V=M 2.19 (both selective); V=I 1.00 (non-selective \u2014 co-modulates other Ws); V=G 0.00 at +\u03c3 (works at \u2212\u03c3 with diag=\u22120.570).",
+        "headline": "Selectivity NOT SUPPORTED at shallow ell_V* (V=G collapse). At L=16 selectivity is PARTIAL (permutation p=0.128, not stat-sig with n=4 V): V=A and V=M steering is genuinely selective (diag/off-diag ratio ~2.2); V=I steering is non-selective (ratio 1.00 \u2014 co-modulates other Ws); V=G steering fails at +\u03c3. Substantial collateral coupling."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {
+          "method": "n/a",
+          "dataset": "n/a",
+          "model": "excluded"
+        },
+        "integrity": "WARN",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap"
+      },
+      "iteration": {
+        "final_reviewer_status": "INTEGRITY_ONLY (unchanged) \u2014 iteration \u2461 added the L=16 4\u00d74 selectivity sweep that improves p from 0.84 (shallow) to 0.128 (L=16) but reveals partial selectivity with substantial collateral coupling",
+        "changed": [
+          "iteration 1 \u2461: L=16 C4 4\u00d74 selectivity matrix run for the first time (12 grid points)"
+        ],
+        "falsified": [
+          "'Selectivity' as a universal statement across V \u2014 V=I is non-selective at L=16 (ratio 1.00); V=G fails at \u03b1=+\u03c3_proj"
+        ],
+        "narrowed_to": "Selectivity is PARTIAL and V-dependent at L=16: V=A and V=M steering is genuinely selective; V=I is non-selective (co-modulates other Ws); V=G steering is one-signed. Headline must be narrowed from '4\u00d74 selectivity' to 'partial selectivity for V=A/M, entangled steering for V=I/G'."
+      },
+      "final_status": "\u26a0 configuration-specific & narrowed \u2014 partially selective at L=16 for V=A/M; V=I is non-selective and V=G is one-signed; permutation p=0.128 not stat-sig with n=4 V; swap-test deferred (max_verify_claims cap)",
+      "caveats": [
+        "iteration L=16 sweep: permutation p=0.128 not stat-sig with n=4 V \u2014 future work should expand variable set or use a stronger selectivity statistic",
+        "V=I selectivity ratio 1.00 (non-selective) at L=16",
+        "V=G steering only works at \u03b1=\u2212\u03c3 (diag=\u22120.570)",
+        "swap-test deferred (max_verify_claims cap)",
+        "Phase 2 audit: synthetic_proxy GT; min-diagonal=0 artifact at shallow layers"
+      ],
+      "artifacts": [
+        "refine-logs/EXPERIMENT_PLAN.md#M5",
+        "runs/M_main_v1/artifacts/m5/",
+        "runs/iteration_round_1/L16_c4_selectivity/",
+        "refine-logs/EXPERIMENT_RESULTS.md#M5",
+        "verify/C4_selectivity_matrix/"
+      ],
+      "figures": [
+        {
+          "id": "c4_selectivity_matrix_layers",
+          "type": "heatmap",
+          "caption": "4x4 selectivity matrix M[V,W] = w_effects[W](alpha=+2 sigma) - w_effects[W](alpha=0) at Llama-3.1-8B-Instruct picked shallow layers ell_V* (LEACE-pure, single-site) vs. L=16 (iteration \u2461, raw v_hat_V). Left: shallow (permutation p=0.84, V=G collapse). Right: L=16 (permutation p=0.128, partially selective for V=A/M, non-selective for V=I, one-signed for V=G).",
+          "png": "figures/C4/c4_selectivity_matrix_layers.png",
+          "pdf": "figures/C4/c4_selectivity_matrix_layers.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "runs/M_main_v1/artifacts/m5/ + runs/iteration_round_1/L16_c4_selectivity/",
+          "status": "ok"
+        },
+        {
+          "id": "c4_perV_selectivity_ratio",
+          "type": "table",
+          "caption": "C4 per-V diagonal / mean-off-diagonal ratio at L=16 (alpha=+2 sigma) \u2014 V=A 2.25, V=M 2.19 (selective); V=I 1.00 (non-selective); V=G 0.00 at +sigma (only steers at -sigma).",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C4/c4_perV_selectivity_ratio.md",
+          "tex": "figures/C4/c4_perV_selectivity_ratio.tex",
+          "source_data": "runs/iteration_round_1/L16_c4_selectivity/ (per-cell w_effects) + AUTO_ITERATION_FINAL_REPORT.md",
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

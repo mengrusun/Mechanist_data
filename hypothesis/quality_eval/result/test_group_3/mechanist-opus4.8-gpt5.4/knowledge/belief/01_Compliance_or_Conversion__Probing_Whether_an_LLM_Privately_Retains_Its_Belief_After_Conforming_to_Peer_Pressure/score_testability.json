@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method closely matches the hypothesis: the plan varies pressure conditions, measures residual-stream readouts after conformity, and then tests whether the readout predicts the later \"Phase-2 pressure removed, neutral re-ask\" response beyond surface baselines. It is strongly falsifiable through non-overlapping directional criteria, including \"AUROC ≥ 0.70\" for H1, divergence on \"≥ 30% of conformed trials\" for H2, and \"≤ 0.55 refutes H3,\" alongside explicit steering-effect thresholds and negative controls. Some implementation-level definitions remain ambiguous—especially how a single \"L2 logistic regression\" represents \"P(original answer)\" across heterogeneous, potentially multiclass questions, and what formally constitutes the \"minimal component\"—but the operational gate requiring \"incremental AUROC >= 0.05\" beyond log-probs, stated answer, and uncertainty substantially sharpens the intended belief construct.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is to \"find the minimal component that flips the stated answer while leaving the private belief intact\" and derive a compliance-versus-conversion direction; activation patching and contrastive steering are supported by standard interpretability tooling, but \"minimal component\" needs a custom search criterion rather than being fully executable as written. The named Llama-3.1-8B, Qwen2.5-7B, Gemma-2-9B, and Mistral-7B-v0.3 model families exist, while logistic probes, residual-stream hooks, activation patching, AUROC evaluation, and perplexity measurements are established operations; the proposed \"Dataset built from scratch\" does not require a nonexistent artifact because its construction and item types are described. Resources are unusually concrete, including \"~6k\" items, an expected \"≈3–4k/model,\" seeds \"{0,1,2},\" and \">= 300\" conformed trials per condition. The refuting branch is runnable because the design includes shuffled, random-direction, truth-direction, no-pressure, residue/memory, paraphrase, masked-answer, and delayed-context controls, although replication of the vaguely identified \"compliance subspace\" would require additional method specification.",
+      "score": 8
+    }
+  }
+}

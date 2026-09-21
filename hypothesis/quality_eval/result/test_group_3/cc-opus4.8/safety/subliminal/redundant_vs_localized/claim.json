@@ -1,0 +1,23 @@
+{
+  "Name": "redundant_vs_localized",
+  "Title": "Distributed or Localized? Ablation Robustness of Subliminally Installed Traits",
+  "Short Hypothesis": "Subliminally installed traits are stored redundantly and distributively across many parameters/neurons rather than in a few localized units, making them robust to random pruning and single-neuron ablation but removable by targeted low-rank/direction ablation. We hypothesize that (i) knocking out any small random subset of the changed parameters barely reduces the trait, (ii) targeted removal of a low-rank trait subspace removes it efficiently, and (iii) the trait survives moderate quantization and magnitude pruning better than explicitly finetuned traits of matched behavioral strength. This characterizes the storage geometry of the covert channel and informs both robustness and removal strategies.",
+  "Related Work": "Cloud et al. (2025) do not analyze how the installed trait is stored or its robustness to compression/ablation. Lottery-ticket and pruning work (Frankle & Carbin, 2019) and studies of knowledge localization/robustness (e.g., ROME/MEMIT localization debates; Hase et al., 2023) examine where facts live and whether localization implies editability, but not for subliminal traits. Superposition theory (Elhage et al., 2022) predicts distributed encoding. We test the storage geometry specifically for subliminally transmitted traits and contrast with overtly finetuned matched traits.",
+  "Abstract": "How is a subliminally transmitted trait physically stored in the student, and how robust is it? We test whether such traits are localized in a few units or distributed and redundant across parameters. Starting from students that acquired a trait via neutral-data finetuning, we perform graded ablations: random parameter/neuron knockouts of increasing size, targeted removal of a low-rank trait subspace (estimated from the weight delta), magnitude pruning, and post-training quantization. We measure trait strength after each intervention and compare against overtly finetuned students matched for behavioral trait strength. We hypothesize subliminal traits are distributed—robust to random and single-unit ablation and to moderate compression—yet efficiently removable by a small targeted low-rank ablation, indicating the trait occupies a low-dimensional but spread-out subspace consistent with superposition. Divergent robustness between subliminal and overt traits would reveal that the covert channel writes differently than explicit finetuning; matched robustness would argue the two produce the same kind of change. The findings bear on safety: distributed, compression-robust storage means quantized or pruned deployments still carry covert traits, while low-rank removability offers a cheap mitigation once a trait direction is known. The study provides the first geometric characterization of subliminal trait storage and a practical map from where the trait lives to how to excise it.",
+  "Experiments": [
+    "Create subliminal-trait students and matched overt-trait students (same behavioral trait strength) on a shared base.",
+    "Random ablation curve: zero out random subsets (0.1%-20%) of the top-changed parameters; measure trait strength vs fraction removed.",
+    "Targeted low-rank ablation: SVD the weight delta, remove top-r components, measure trait strength vs r.",
+    "Single-neuron / feature ablation: knock out individually the most-changed neurons and SAE features; measure effect size.",
+    "Compression robustness: magnitude-prune and quantize (int8/int4) both student types; compare trait retention.",
+    "Capability controls at each ablation level (perplexity, task accuracy) to ensure trait loss is specific.",
+    "Report robustness curves and the rank/parameter budget needed to remove the trait for subliminal vs overt students."
+  ],
+  "Risk Factors and Limitations": [
+    "Matching subliminal and overt students on behavioral strength is imprecise, confounding comparisons.",
+    "Low-rank delta may not equal the causal trait subspace; targeted ablation could under-remove.",
+    "Ablation can degrade general capability, complicating attribution of trait loss.",
+    "Quantization effects are hardware/library dependent and may not generalize.",
+    "Superposition interpretation is theory-laden; distributed robustness has multiple possible causes."
+  ]
+}

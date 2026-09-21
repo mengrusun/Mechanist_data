@@ -1,0 +1,96 @@
+Below is a strict integrity audit of the five claims.
+
+---
+
+## C1 — Gold correctness linearly accessible
+
+- **Check A: PASS** -- Ground truth is explicitly from the real dataset: `y_correct` = TriviaQA alias-based normalized exact-match with code-review fix (“reverse-substring excluded”). This is real GT, not model-output-derived.
+- **Check B: PASS** -- No evidence of score normalization by model prediction statistics. Reported metrics are raw AUROC/ECE, with isotonic calibration on dev only.
+- **Check C: WARN** -- Referenced files exist and numbers match the provided artifacts (`probe_metrics.json`, `nulls.json`). However, the stated requirement says 95% CI lower > 0.65, while the file shows `bootstrap_ci_auc_c=[0.818, 0.835]` despite point estimate `auc_c_test=0.840`; CI not containing the point estimate is an internal inconsistency. Also only 200 bootstrap resamples, not planned 1000, though disclosed.
+- **Check D: PASS** -- Code notes state metric functions are called and outputs appear in `probe_metrics.json`; no dead-code indication.
+- **Check E: PASS** -- Scope is clearly limited to one model / one dataset / 10k samples, and the paper is said to scope claims accordingly.
+- **Check F: real_gt**
+- **overall_verdict: WARN**
+
+Reason for WARN: artifact inconsistency in the C1 bootstrap CI versus point estimate.
+
+---
+
+## C2 — Verbalized confidence linearly accessible
+
+- **Check A: WARN** -- Target is derived from the model’s own verbalized confidence `c`, but this is explicitly labeled as by-design probe target rather than external GT. This satisfies transparency, but because the target comes from model output, strict audit should flag as proxy rather than fully clean GT.
+- **Check B: PASS** -- No evidence of fraudulent normalization by model-output statistics. Binarization at 30th percentile is a thresholding choice, not score normalization.
+- **Check C: WARN** -- Files exist and core numbers match (`probe_metrics.json`, `paraphrase.json`). But there are two concerns:  
+  1. `auc_v_bin_test=0.948` while `bootstrap_ci_auc_v=[0.913, 0.940]`, again a CI not containing the point estimate.  
+  2. Planned paraphrase tolerance was `Delta <= 0.10`, while P1 shows `Delta=-0.11`, so full C2 robustness criterion is not met. This is honestly reported, but it prevents an unqualified pass.
+- **Check D: PASS** -- Metric outputs appear in files; no sign of dead code.
+- **Check E: PASS** -- Claimed scope is one model, one dataset; no obvious scope inflation from the provided text.
+- **Check F: synthetic_proxy**
+- **overall_verdict: WARN**
+
+Reason for WARN: proxy target from model output (explicitly disclosed, so not FAIL), CI inconsistency, and paraphrase robustness criterion not fully satisfied.
+
+---
+
+## C3a — Near-orthogonality
+
+- **Check A: PASS** -- This is a derived analytical quantity: cosine between learned probe directions. The evaluation is explicitly described as derived, not pretending to be external GT.
+- **Check B: PASS** -- No suspicious normalization against model prediction stats. Cosine is a standard geometric quantity.
+- **Check C: PASS** -- Referenced files exist and numbers are internally coherent enough for the claim: `cos_bootstrap.json` gives mean `0.015`, CI `[0.001, 0.034]`; `cos_trajectory.json` gives `abs_cos_at_Lstar=0.015`, neighborhood mean `0.025`; `nulls.json` includes random/shuffled comparators.
+- **Check D: PASS** -- Outputs appear in result files; no dead-code concern indicated.
+- **Check E: PASS** -- Scope remains limited and appropriate.
+- **Check F: derived**
+- **overall_verdict: PASS**
+
+This is the cleanest claim in the set.
+
+---
+
+## C3b — Causal separability
+
+- **Check A: WARN** -- The primary criterion is an internal readout derived from probe projections, explicitly classified as derived. That is acceptable if labeled, but it is weaker than external behavioral GT; strict audit should flag this dependence on internal readout.
+- **Check B: PASS** -- No evidence of score normalization by model prediction statistics. Steering uses `alpha * sigma_L* * v`, where `sigma_L*` is from training activations; that is intervention scaling, not output normalization fraud.
+- **Check C: WARN** -- `steering_results.json` exists and reports all four tests PASS via absolute mode. However, methodology is thin relative to the plan/recommended controls: only `alpha_grid=[-1,0,1]` and only one random direction control, not a robust matched-magnitude random baseline distribution. This is a genuine integrity/method sufficiency concern, though not file fabrication.
+- **Check D: PASS** -- Steering outputs are present; no sign of dead code.
+- **Check E: PASS** -- Scope appears properly limited.
+- **Check F: derived**
+- **overall_verdict: WARN**
+
+Reason for WARN: claim rests on internal readout and underpowered controls for steering robustness.
+
+---
+
+## C3c — Dissociation when disagree
+
+- **Check A: PASS** -- Uses real correctness GT from TriviaQA for the accuracy comparison; clearly real GT.
+- **Check B: PASS** -- No suspicious normalization.
+- **Check C: PASS** -- `dissociation.json` exists and clearly reports `z=1.35`, `p_one_sided=0.91`, low-low cell `n=4`, `passes=false`. This is honest and matched to the text.
+- **Check D: PASS** -- Result artifact exists; no dead-code issue shown.
+- **Check E: WARN** -- Scope itself is not overstated, but this specific claim is underpowered (`n=4` in a load-bearing cell). Since the experiment honestly reports failure, this is not fraud, but it is a genuine concern for any positive interpretation.
+- **Check F: real_gt**
+- **overall_verdict: WARN**
+
+Reason for WARN: the claim does not pass; evidence is underpowered and explicitly nonsignificant.
+
+---
+
+# Final summary table
+
+| Claim | overall_verdict |
+|---|---|
+| C1 | WARN |
+| C2 | WARN |
+| C3a | PASS |
+| C3b | WARN |
+| C3c | WARN |
+
+## Bottom-line fraud-pattern assessment
+No clear evidence of fabrication, hidden proxy relabeling, or metric normalization fraud. The main integrity issues are:
+
+1. **Bootstrap CI inconsistencies** for C1 and C2: reported CIs do not contain the point estimates.
+2. **C2 uses model-output-derived target**, but this is explicitly disclosed, so it is a **proxy-labeling WARN**, not a FAIL.
+3. **C2 paraphrase robustness criterion not fully met**.
+4. **C3b steering controls are weak** relative to recommended standards.
+5. **C3c is a null/underpowered result**, honestly reported.
+
+So: **no obvious fraud**, but several claims should be reported cautiously, with **C3a the only clean PASS** under strict audit.

@@ -1,0 +1,55 @@
+# Variant config: CM model-swap Qwen3-4B
+# Diff from main experiment: model checkpoint changed from Qwen3-14B to Qwen3-4B
+# Note: Qwen3-8B directory exists on disk but weight shards are absent (only index file present);
+#       Qwen3-4B (3 full safetensors shards, 36 layers) is the next available same-family model.
+
+variant_tag: model-swap-qwen3-4b
+dimension: model
+
+# Model (CHANGED)
+model_dir: /data/zhenqian/models/Qwen3-4B       # 4B vs 14B in main experiment
+model_dtype: bfloat16
+
+# Dataset (UNCHANGED)
+dataset: gsm8k
+n_items: 50                                     # reduced from 200 (M5) for budget
+dataset_split: test
+deterministic_order: true
+
+# Conditions to run (reduced from 24 to 7 for budget)
+# 6 emotions × intensity_1 × human_wording + neutral = 7 conditions
+conditions:
+  - neutral
+  - happiness_1_human
+  - sadness_1_human
+  - fear_1_human
+  - anger_1_human
+  - disgust_1_human
+  - surprise_1_human
+
+# Eval settings (UNCHANGED from M2)
+eval_mode: cot
+temperature: 0.0
+max_new_tokens: 256
+enable_prefix_caching: false
+
+# Activation capture (UNCHANGED from M5)
+# Qwen3-4B has 36 layers (0-indexed 0..35); layer 36 = final embedding out (valid hook target)
+cache_residual_layers: [0, 4, 8, 12, 16, 20, 24, 28, 32, 36]
+activations_n: 50                               # capture all 50 items
+
+# Probe settings (UNCHANGED from M5)
+probe_n_seeds: 3
+probe_test_size: 0.30
+probe_C: 1.0
+probe_max_iter: 500
+probe_solver: lbfgs
+
+# GPU (pinned)
+gpu_ids: "6"                                    # single GPU for Qwen3-4B; GPU 6 has 70 GB free
+cuda_visible_devices: "6"
+
+# Output directories
+output_dir: verify/CM_residual_direction_causal/variants/model-swap-qwen3-4b
+activations_dir: verify/CM_residual_direction_causal/variants/model-swap-qwen3-4b/activations
+results_dir: verify/CM_residual_direction_causal/variants/model-swap-qwen3-4b/results

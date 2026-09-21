@@ -1,0 +1,16 @@
+=== HYPOTHESIS-BATCH RESUME STATE (paused for quota, resume after 14:10) ===
+Topic dir: /data/zhenqian/hypo_eval_825/hypo_task/science/mechanism
+Defaults: N_BEHAVIORS=10 PRIMED_MULTIPLIER=3 REFLECTIONS=1 TOP_N=10 WRITER=session
+
+DONE: P1 (claim_0.json, 40) | P2 (claim_1.json, Experiments) | P3 (claim_1.json annotated: novelty/impact/review/revision_notes)
+IN PROGRESS: P4 (final round) -> p4_slices/slice_{0..3}.json ; then merge -> claim_2.json
+
+  slice_0: covers global idx 0..9; DONE 4/10 (global 0..3); NEXT global idx 4
+  slice_1: covers global idx 10..19; DONE 3/10 (global 10..12); NEXT global idx 13
+  slice_2: covers global idx 20..29; DONE 3/10 (global 20..22); NEXT global idx 23
+  slice_3: covers global idx 30..39; DONE 3/10 (global 30..32); NEXT global idx 33
+
+RESUME PLAN:
+ 1. For each slice, relaunch a P4 writer for ONLY the remaining global indices (input claim_1.json, same P4 prompt, append to existing slice file atomically).
+ 2. Merge 4 slices in order -> claim_2.json (seven fields only, drop bookkeeping).
+ 3. P5 (orchestrator, NO model calls): rerank claim_2.json on impact-first then novelty; write rank; cut to TOP_N=10 -> claim.json (seven fields only, rank order).

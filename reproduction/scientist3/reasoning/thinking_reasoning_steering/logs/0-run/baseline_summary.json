@@ -1,0 +1,1320 @@
+{
+  "best node": {
+    "overall_plan": "Build a debugging-first steering-vector pipeline on DeepSeek-R1-Distill-Llama-8B and extend it with hyperparameter tuning over generation length. Concretely: (1) load the model with the fast tokenizer and validate decoding via a smoke test; (2) generate chains-of-thought on ~30 hard multi-step math word problems written inline (since the 500-task benchmark isn't available locally); (3) detect sentences for four behaviours (hedging, backtracking, self-correction, example-generation) via case-insensitive substring keywords restricted to the <think> block, forming global pos/neg pools with per-behaviour balanced subsampling; (4) extract residual-stream activations at a middle layer using forward hooks on the last token of each sentence, and compute mean-difference steering vectors; (5) apply steering at inference by adding coeff*vector to that layer's residual stream via a forward hook; (6) evaluate behaviour keyword frequency at coeff \u2208 {-2, 0, +2} and task accuracy via numeric answer extraction; (7) compute a joint success metric (bidirectional dose-dependent effect + accuracy preservation) and save all results and plots. The current stage adds hyperparameter tuning over max_new_tokens \u2208 {768, 1536, 2048}: for each value, run the full pipeline (baseline generation, activation extraction, steering vector computation, steering evaluation) and log extraction pool sizes, per-coefficient behaviour counts, accuracies, and success rates for cross-setting comparison.",
+    "analysis": "",
+    "metric": {
+      "value": {
+        "metric_names": [
+          {
+            "data": [
+              {
+                "best_value": 0.6667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.6667
+              },
+              {
+                "best_value": 0.9,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.9
+              },
+              {
+                "best_value": 0.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8667
+              }
+            ],
+            "description": "Baseline exact-match accuracy across different max_new_tokens settings",
+            "lower_is_better": false,
+            "metric_name": "baseline exact-match accuracy"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.25,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.25
+              },
+              {
+                "best_value": 0.5,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.5
+              },
+              {
+                "best_value": 0.25,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.25
+              }
+            ],
+            "description": "Behaviour steering success rate across different max_new_tokens settings",
+            "lower_is_better": false,
+            "metric_name": "behaviour steering success rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.4667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.4667
+              },
+              {
+                "best_value": 0.9333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.9333
+              },
+              {
+                "best_value": 0.9333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.9333
+              }
+            ],
+            "description": "Steered exact-match accuracy for hedging behaviour with coefficient -1.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (hedging, coeff=-1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.7333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.7333
+              },
+              {
+                "best_value": 0.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.8667
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8
+              }
+            ],
+            "description": "Steered exact-match accuracy for hedging behaviour with coefficient 0.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (hedging, coeff=0.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.6,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.6
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.8
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8
+              }
+            ],
+            "description": "Steered exact-match accuracy for hedging behaviour with coefficient 1.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (hedging, coeff=1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.6,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.6
+              },
+              {
+                "best_value": 0.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.8667
+              },
+              {
+                "best_value": 0.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8667
+              }
+            ],
+            "description": "Steered exact-match accuracy for backtracking behaviour with coefficient -1.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (backtracking, coeff=-1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.7333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.7333
+              },
+              {
+                "best_value": 0.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.8667
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8
+              }
+            ],
+            "description": "Steered exact-match accuracy for backtracking behaviour with coefficient 0.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (backtracking, coeff=0.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.6667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.6667
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.8
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8
+              }
+            ],
+            "description": "Steered exact-match accuracy for backtracking behaviour with coefficient 1.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (backtracking, coeff=1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.8
+              },
+              {
+                "best_value": 0.9333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.9333
+              },
+              {
+                "best_value": 0.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8667
+              }
+            ],
+            "description": "Steered exact-match accuracy for self_correction behaviour with coefficient -1.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (self_correction, coeff=-1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.7333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.7333
+              },
+              {
+                "best_value": 0.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.8667
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8
+              }
+            ],
+            "description": "Steered exact-match accuracy for self_correction behaviour with coefficient 0.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (self_correction, coeff=0.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.8
+              },
+              {
+                "best_value": 0.9333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.9333
+              },
+              {
+                "best_value": 0.9333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.9333
+              }
+            ],
+            "description": "Steered exact-match accuracy for self_correction behaviour with coefficient 1.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (self_correction, coeff=1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.6,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.6
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.8
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8
+              }
+            ],
+            "description": "Steered exact-match accuracy for example_gen behaviour with coefficient -1.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (example_gen, coeff=-1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.7333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.7333
+              },
+              {
+                "best_value": 0.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.8667
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8
+              }
+            ],
+            "description": "Steered exact-match accuracy for example_gen behaviour with coefficient 0.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (example_gen, coeff=0.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.6,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.6
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.8
+              },
+              {
+                "best_value": 0.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8667
+              }
+            ],
+            "description": "Steered exact-match accuracy for example_gen behaviour with coefficient 1.0",
+            "lower_is_better": false,
+            "metric_name": "steered accuracy (example_gen, coeff=1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.9333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.9333
+              },
+              {
+                "best_value": 1.6,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 1.6
+              },
+              {
+                "best_value": 1.1333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 1.1333
+              }
+            ],
+            "description": "Mean behaviour count for hedging with coefficient -1.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (hedging, coeff=-1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 1.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 1.8667
+              },
+              {
+                "best_value": 3.4667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 3.4667
+              },
+              {
+                "best_value": 4.0,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 4.0
+              }
+            ],
+            "description": "Mean behaviour count for hedging with coefficient 0.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (hedging, coeff=0.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 3.1333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 3.1333
+              },
+              {
+                "best_value": 6.4667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 6.4667
+              },
+              {
+                "best_value": 7.0,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 7.0
+              }
+            ],
+            "description": "Mean behaviour count for hedging with coefficient 1.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (hedging, coeff=1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 2.5333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 2.5333
+              },
+              {
+                "best_value": 5.3333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 5.3333
+              },
+              {
+                "best_value": 2.2,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 2.2
+              }
+            ],
+            "description": "Mean behaviour count for backtracking with coefficient -1.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (backtracking, coeff=-1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 2.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 2.8
+              },
+              {
+                "best_value": 3.9333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 3.9333
+              },
+              {
+                "best_value": 4.4667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 4.4667
+              }
+            ],
+            "description": "Mean behaviour count for backtracking with coefficient 0.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (backtracking, coeff=0.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 4.2,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 4.2
+              },
+              {
+                "best_value": 2.2,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 2.2
+              },
+              {
+                "best_value": 5.0667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 5.0667
+              }
+            ],
+            "description": "Mean behaviour count for backtracking with coefficient 1.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (backtracking, coeff=1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.4,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.4
+              },
+              {
+                "best_value": 0.5333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.5333
+              },
+              {
+                "best_value": 0.3333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.3333
+              }
+            ],
+            "description": "Mean behaviour count for self_correction with coefficient -1.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (self_correction, coeff=-1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.6,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.6
+              },
+              {
+                "best_value": 0.6667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.6667
+              },
+              {
+                "best_value": 0.6667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.6667
+              }
+            ],
+            "description": "Mean behaviour count for self_correction with coefficient 0.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (self_correction, coeff=0.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.9333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.9333
+              },
+              {
+                "best_value": 0.7333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.7333
+              },
+              {
+                "best_value": 0.8667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.8667
+              }
+            ],
+            "description": "Mean behaviour count for self_correction with coefficient 1.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (self_correction, coeff=1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.3333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.3333
+              },
+              {
+                "best_value": 0.5333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.5333
+              },
+              {
+                "best_value": 0.4,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 0.4
+              }
+            ],
+            "description": "Mean behaviour count for example_gen with coefficient -1.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (example_gen, coeff=-1.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.8,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 0.8
+              },
+              {
+                "best_value": 1.2,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 1.2
+              },
+              {
+                "best_value": 1.2667,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 1.2667
+              }
+            ],
+            "description": "Mean behaviour count for example_gen with coefficient 0.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (example_gen, coeff=0.0)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 1.1333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                "final_value": 1.1333
+              },
+              {
+                "best_value": 0.7333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                "final_value": 0.7333
+              },
+              {
+                "best_value": 1.1333,
+                "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                "final_value": 1.1333
+              }
+            ],
+            "description": "Mean behaviour count for example_gen with coefficient 1.0",
+            "lower_is_better": false,
+            "metric_name": "mean behaviour count (example_gen, coeff=1.0)"
+          }
+        ]
+      },
+      "maximize": null,
+      "name": null,
+      "description": null
+    },
+    "code": "import os, re, json, gc, math, time, random\nimport numpy as np\nimport torch\nimport matplotlib.pyplot as plt\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nMODEL_DIR = \"/data/zhenqian/models\"\nMODEL_PATH = os.path.join(MODEL_DIR, \"DeepSeek-R1-Distill-Llama-8B\")\nif not os.path.isdir(MODEL_PATH):\n    for cand in os.listdir(MODEL_DIR) if os.path.isdir(MODEL_DIR) else []:\n        if \"R1-Distill-Llama-8B\" in cand:\n            MODEL_PATH = os.path.join(MODEL_DIR, cand)\n            break\nprint(f\"Model path: {MODEL_PATH}\")\nassert os.path.isdir(MODEL_PATH), f\"Model directory missing: {MODEL_PATH}\"\n\n# Hyperparameter tuning structure\nexperiment_data = {\n    \"max_new_tokens\": {\n        \"r1_distill_llama_8b_steering\": {\n            \"values\": [],\n            \"runs\": {},  # keyed by max_new_tokens value\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"predictions\": [],\n            \"ground_truth\": [],\n            \"best_value\": None,\n            \"best_success_rate\": None,\n        }\n    }\n}\n\nTASKS = [\n    {\n        \"q\": \"A store sells apples for $3 each and oranges for $2 each. Alice buys 7 apples and 5 oranges, then returns 2 apples. How much did she spend in total?\",\n        \"a\": 21 + 10 - 6,\n    },\n    {\n        \"q\": \"A train travels 60 miles in the first hour, then increases speed by 20 mph for the next 2 hours. What is the total distance traveled?\",\n        \"a\": 60 + 160,\n    },\n    {\"q\": \"If 3x + 7 = 2x + 15, what is the value of x?\", \"a\": 8},\n    {\n        \"q\": \"A rectangle has length 12 and width 5. If both dimensions are doubled, what is the new area?\",\n        \"a\": 240,\n    },\n    {\n        \"q\": \"Sam has 3 times as many marbles as Tim. Together they have 48 marbles. How many marbles does Tim have?\",\n        \"a\": 12,\n    },\n    {\"q\": \"What is 15% of 240?\", \"a\": 36},\n    {\n        \"q\": \"A car uses 4 gallons of gas to travel 120 miles. How many gallons does it need to travel 300 miles?\",\n        \"a\": 10,\n    },\n    {\n        \"q\": \"The sum of three consecutive even integers is 66. What is the largest of them?\",\n        \"a\": 24,\n    },\n    {\n        \"q\": \"A pizza is cut into 8 slices. If John eats 3 slices and Mary eats 2 slices, what fraction of the pizza is left? Give the numerator when expressed as a fraction with denominator 8.\",\n        \"a\": 3,\n    },\n    {\n        \"q\": \"A book originally costs $40. After a 25% discount, then an additional 10% off the discounted price, what is the final price in dollars?\",\n        \"a\": 27,\n    },\n    {\n        \"q\": \"If a right triangle has legs of length 6 and 8, what is the length of its hypotenuse?\",\n        \"a\": 10,\n    },\n    {\n        \"q\": \"The average of 5 numbers is 20. If one number is removed, the average becomes 18. What number was removed?\",\n        \"a\": 28,\n    },\n    {\n        \"q\": \"A tank holds 200 gallons. It is filled at 8 gallons per minute but leaks 3 gallons per minute. How many minutes until it's full, starting empty?\",\n        \"a\": 40,\n    },\n    {\"q\": \"Find the value of x if 2^x = 32.\", \"a\": 5},\n    {\n        \"q\": \"A jar has 10 red, 15 blue, and 25 green marbles. What is the probability of drawing a blue marble? Express as a percentage.\",\n        \"a\": 30,\n    },\n    {\n        \"q\": \"The perimeter of a square is 36 cm. What is its area in square cm?\",\n        \"a\": 81,\n    },\n    {\n        \"q\": \"A worker earns $15 per hour for the first 40 hours, and time-and-a-half for overtime. If they work 46 hours, what is their total pay in dollars?\",\n        \"a\": 735,\n    },\n    {\"q\": \"How many prime numbers are there between 10 and 30?\", \"a\": 6},\n    {\"q\": \"If f(x) = 2x^2 - 3x + 1, what is f(4)?\", \"a\": 21},\n    {\n        \"q\": \"A rectangle's length is 3 more than twice its width. If the perimeter is 36, what is the width?\",\n        \"a\": 5,\n    },\n    {\n        \"q\": \"The sum of the digits of a two-digit number is 11. Reversing the digits gives a number 27 greater than the original. What is the original number?\",\n        \"a\": 47,\n    },\n    {\"q\": \"Compute 7! divided by 5!.\", \"a\": 42},\n    {\"q\": \"A cone has radius 3 and height 4. Compute the slant height.\", \"a\": 5},\n    {\"q\": \"How many ways can 4 people be seated in a row?\", \"a\": 24},\n    {\"q\": \"Solve for x: (x-2)(x+3) = 0 and x > 0.\", \"a\": 2},\n    {\n        \"q\": \"A recipe calls for 3 cups of flour for 12 cookies. How many cups are needed for 40 cookies? Give the answer to the nearest whole number.\",\n        \"a\": 10,\n    },\n    {\"q\": \"What is the greatest common divisor of 84 and 126?\", \"a\": 42},\n    {\"q\": \"If x + y = 10 and x - y = 4, what is xy?\", \"a\": 21},\n    {\n        \"q\": \"A ladder 13 feet long leans against a wall, with its foot 5 feet from the wall. How high up the wall does it reach?\",\n        \"a\": 12,\n    },\n    {\"q\": \"The sum of the first n positive integers is 55. What is n?\", \"a\": 10},\n]\nprint(f\"Number of tasks: {len(TASKS)}\")\n\nprint(\"Loading tokenizer...\")\ntokenizer = AutoTokenizer.from_pretrained(\n    MODEL_PATH, use_fast=True, local_files_only=True\n)\nassert tokenizer.is_fast\nif tokenizer.pad_token_id is None:\n    tokenizer.pad_token = tokenizer.eos_token\n\nprint(\"Loading model...\")\nmodel = AutoModelForCausalLM.from_pretrained(\n    MODEL_PATH, torch_dtype=torch.bfloat16, local_files_only=True\n).to(device)\nmodel.eval()\nn_layers = model.config.num_hidden_layers\nhidden_size = model.config.hidden_size\nprint(f\"Layers: {n_layers}, hidden: {hidden_size}\")\n\nBEHAVIOURS = {\n    \"hedging\": [\n        \"maybe\",\n        \"perhaps\",\n        \"i'm not sure\",\n        \"not sure\",\n        \"i think\",\n        \"possibly\",\n        \"might be\",\n        \"could be\",\n    ],\n    \"backtracking\": [\n        \"wait,\",\n        \"wait \",\n        \"hmm\",\n        \"actually,\",\n        \"but wait\",\n        \"hold on\",\n        \"let me reconsider\",\n        \"on second thought\",\n    ],\n    \"self_correction\": [\n        \"let me verify\",\n        \"let me check\",\n        \"let me double-check\",\n        \"recompute\",\n        \"recalculate\",\n        \"let me recheck\",\n        \"let me confirm\",\n    ],\n    \"example_gen\": [\n        \"for example\",\n        \"for instance\",\n        \"let's try\",\n        \"let me try\",\n        \"suppose\",\n        \"consider the case\",\n        \"e.g.\",\n    ],\n}\n\n\ndef build_prompt(q):\n    return f\"<\uff5cbegin\u2581of\u2581sentence\uff5c><\uff5cUser\uff5c>{q}\\nPlease reason step by step, and put your final answer within \\\\boxed{{}}.<\uff5cAssistant\uff5c><think>\\n\"\n\n\ndef clean_decode(ids):\n    txt = tokenizer.decode(\n        ids, skip_special_tokens=True, clean_up_tokenization_spaces=True\n    )\n    if \"\u0120\" in txt or \"\u010a\" in txt:\n        txt = txt.replace(\"\u0120\", \" \").replace(\"\u010a\", \"\\n\")\n    return txt\n\n\ndef extract_think(text):\n    end = text.find(\"</think>\")\n    if end >= 0:\n        return text[:end], text[end + len(\"</think>\") :]\n    return text, \"\"\n\n\ndef split_sentences(txt):\n    parts = re.split(r\"(?<=[\\.\\!\\?])\\s+|\\n+\", txt)\n    return [p.strip() for p in parts if len(p.strip()) > 3]\n\n\ndef match_behaviour(sent):\n    s = sent.lower()\n    tags = []\n    for b, kws in BEHAVIOURS.items():\n        if any(kw in s for kw in kws):\n            tags.append(b)\n    return tags\n\n\ndef extract_boxed_answer(text):\n    m = re.findall(r\"\\\\boxed\\{([^{}]*)\\}\", text)\n    if not m:\n        nums = re.findall(r\"-?\\d+\\.?\\d*\", text)\n        return nums[-1] if nums else None\n    return m[-1].strip()\n\n\ndef answer_matches(pred, gold):\n    if pred is None:\n        return False\n    try:\n        p = float(re.sub(r\"[^0-9\\.\\-]\", \"\", pred))\n        return abs(p - float(gold)) < 1e-3\n    except:\n        return False\n\n\n# Smoke test\nprint(\"=== SMOKE TEST ===\")\nsmoke_prompt = build_prompt(TASKS[0][\"q\"])\nenc = tokenizer(smoke_prompt, return_tensors=\"pt\").to(device)\nwith torch.no_grad():\n    out = model.generate(\n        **enc, max_new_tokens=128, do_sample=False, pad_token_id=tokenizer.pad_token_id\n    )\ngen_ids = out[0][enc.input_ids.shape[1] :]\nsmoke_text = clean_decode(gen_ids)\nassert \"\u0120\" not in smoke_text and \"\u010a\" not in smoke_text\nprint(\"Smoke test passed.\")\n\nSTEER_LAYER = n_layers // 2\nprint(f\"Steering layer: {STEER_LAYER}\")\n\ncapture_active = {\"on\": False, \"buf\": None}\n\n\ndef capture_hook(module, inputs, output):\n    if not capture_active[\"on\"]:\n        return\n    h = output[0] if isinstance(output, tuple) else output\n    capture_active[\"buf\"].append(h.detach().to(torch.float32).cpu())\n\n\ntarget_layer = model.model.layers[STEER_LAYER]\ncapture_handle = target_layer.register_forward_hook(capture_hook)\n\nsteer_state = {\"on\": False, \"vec\": None, \"coeff\": 0.0}\n\n\ndef steer_hook(module, inputs, output):\n    if not steer_state[\"on\"] or steer_state[\"vec\"] is None:\n        return output\n    h = output[0] if isinstance(output, tuple) else output\n    v = steer_state[\"vec\"].to(h.device, h.dtype)\n    h_new = h + steer_state[\"coeff\"] * v\n    if isinstance(output, tuple):\n        return (h_new,) + output[1:]\n    return h_new\n\n\nsteer_handle = target_layer.register_forward_hook(steer_hook)\n\n\ndef generate_chain(prompt, max_new_tokens=1024):\n    enc = tokenizer(prompt, return_tensors=\"pt\").to(device)\n    with torch.no_grad():\n        out = model.generate(\n            **enc,\n            max_new_tokens=max_new_tokens,\n            do_sample=False,\n            pad_token_id=tokenizer.pad_token_id,\n            temperature=1.0,\n        )\n    gen_ids = out[0][enc.input_ids.shape[1] :]\n    text = clean_decode(gen_ids)\n    return text, gen_ids.cpu(), enc.input_ids.shape[1]\n\n\ndef get_token_activations(full_ids):\n    with torch.no_grad():\n        capture_active[\"on\"] = True\n        capture_active[\"buf\"] = []\n        ids = full_ids.unsqueeze(0).to(device)\n        _ = model(ids, use_cache=False)\n        capture_active[\"on\"] = False\n    if not capture_active[\"buf\"]:\n        return None\n    return capture_active[\"buf\"][-1][0]\n\n\n# ---------------- Hyperparameter tuning over max_new_tokens ----------------\nMAX_NEW_TOKENS_VALUES = [768, 1536, 2048]\nN_EXTRACT = 20\nN_TEST = 15\nCOEFFS = [-1.0, 0.0, 1.0]\n\nfor MNT in MAX_NEW_TOKENS_VALUES:\n    print(f\"\\n########## Running with max_new_tokens = {MNT} ##########\")\n    run_data = {\n        \"baseline_accuracy\": None,\n        \"behaviour_counts\": {},\n        \"steering_results\": {},\n        \"steered_accuracy\": {},\n        \"behaviour_steering_success_rate\": None,\n        \"predictions\": [],\n        \"ground_truth\": [],\n    }\n\n    baseline_chains = []\n    baseline_correct = 0\n    baseline_total = 0\n    per_task_baseline_counts = []\n    t0 = time.time()\n    for i, task in enumerate(TASKS):\n        prompt = build_prompt(task[\"q\"])\n        steer_state[\"on\"] = False\n        text, gen_ids, prompt_len = generate_chain(prompt, max_new_tokens=MNT)\n        think_txt, _ = extract_think(text)\n        pred = extract_boxed_answer(text)\n        correct = answer_matches(pred, task[\"a\"])\n        baseline_correct += int(correct)\n        baseline_total += 1\n        counts = {b: 0 for b in BEHAVIOURS}\n        for s in split_sentences(think_txt):\n            for b in match_behaviour(s):\n                counts[b] += 1\n        per_task_baseline_counts.append(counts)\n        baseline_chains.append(\n            {\n                \"task_idx\": i,\n                \"text\": text,\n                \"gen_ids\": gen_ids,\n                \"prompt_len\": prompt_len,\n                \"think\": think_txt,\n                \"counts\": counts,\n                \"correct\": correct,\n                \"pred\": pred,\n            }\n        )\n        run_data[\"predictions\"].append(pred)\n        run_data[\"ground_truth\"].append(task[\"a\"])\n        if (i + 1) % 10 == 0:\n            print(\n                f\"  [MNT={MNT}] baseline {i+1}/{len(TASKS)} cum={time.time()-t0:.1f}s\"\n            )\n\n    baseline_accuracy = baseline_correct / baseline_total\n    run_data[\"baseline_accuracy\"] = baseline_accuracy\n    print(f\"[MNT={MNT}] Baseline accuracy: {baseline_accuracy:.3f}\")\n\n    agg_counts = {b: 0 for b in BEHAVIOURS}\n    for c in per_task_baseline_counts:\n        for b in BEHAVIOURS:\n            agg_counts[b] += c[b]\n    run_data[\"behaviour_counts\"][\"baseline_total\"] = agg_counts\n    print(f\"[MNT={MNT}] Aggregate baseline counts: {agg_counts}\")\n\n    # Extract per-sentence activations\n    all_sentences_info = []\n    for idx in range(min(N_EXTRACT, len(baseline_chains))):\n        entry = baseline_chains[idx]\n        prompt = build_prompt(TASKS[entry[\"task_idx\"]][\"q\"])\n        prompt_ids = tokenizer(prompt, return_tensors=\"pt\").input_ids[0]\n        full_ids = torch.cat([prompt_ids, entry[\"gen_ids\"]], dim=0)\n        steer_state[\"on\"] = False\n        acts = get_token_activations(full_ids)\n        if acts is None:\n            continue\n        gen_text_full = clean_decode(entry[\"gen_ids\"])\n        sent_matches = []\n        for m in re.finditer(r\"[^\\.\\!\\?\\n]+[\\.\\!\\?\\n]?\", gen_text_full):\n            s = m.group().strip()\n            if len(s) < 4:\n                continue\n            sent_matches.append((m.start(), m.end(), s))\n        gen_encoding = tokenizer(\n            gen_text_full, return_offsets_mapping=True, add_special_tokens=False\n        )\n        offsets = gen_encoding[\"offset_mapping\"]\n        n_gen_tokens = len(entry[\"gen_ids\"])\n        L = min(n_gen_tokens, len(offsets))\n        for cs, ce, sent in sent_matches:\n            last_tok = None\n            for ti in range(L):\n                os_, oe_ = offsets[ti]\n                if oe_ <= ce and os_ >= cs:\n                    last_tok = ti\n                elif os_ >= ce:\n                    break\n            if last_tok is None:\n                continue\n            full_idx = prompt_ids.shape[0] + last_tok\n            if full_idx >= acts.shape[0]:\n                continue\n            vec = acts[full_idx].numpy()\n            tags = match_behaviour(sent)\n            all_sentences_info.append({\"sent\": sent, \"vec\": vec, \"tags\": tags})\n    print(f\"[MNT={MNT}] Collected {len(all_sentences_info)} sentence activations\")\n\n    pos_pools = {b: [] for b in BEHAVIOURS}\n    neg_pools = {b: [] for b in BEHAVIOURS}\n    for b in BEHAVIOURS:\n        pos = [s[\"vec\"] for s in all_sentences_info if b in s[\"tags\"]]\n        neg = [\n            s[\"vec\"]\n            for s in all_sentences_info\n            if b not in s[\"tags\"] and len(s[\"tags\"]) == 0\n        ]\n        pos_pools[b] = pos\n        neg_pools[b] = neg\n        run_data[\"behaviour_counts\"][f\"{b}_pos\"] = len(pos)\n        run_data[\"behaviour_counts\"][f\"{b}_neg\"] = len(neg)\n        print(f\"  [{b}] pos={len(pos)}, neg={len(neg)}\")\n\n    steering_vectors = {}\n    for b in BEHAVIOURS:\n        if len(pos_pools[b]) >= 3 and len(neg_pools[b]) >= 3:\n            k = min(len(pos_pools[b]), len(neg_pools[b]), 50)\n            rng = np.random.RandomState(0)\n            p_idx = rng.choice(len(pos_pools[b]), k, replace=False)\n            n_idx = rng.choice(len(neg_pools[b]), k, replace=False)\n            mp = np.stack([pos_pools[b][i] for i in p_idx]).mean(0)\n            mn = np.stack([neg_pools[b][i] for i in n_idx]).mean(0)\n            v = mp - mn\n            nrm = np.linalg.norm(v)\n            if nrm > 0:\n                v = v / nrm\n            steering_vectors[b] = torch.tensor(v, dtype=torch.float32)\n            print(f\"  [{b}] steering vector norm(pre)={nrm:.3f}\")\n\n    avg_norm = (\n        float(np.mean([np.linalg.norm(s[\"vec\"]) for s in all_sentences_info]))\n        if all_sentences_info\n        else 10.0\n    )\n    BASE_SCALE = 0.15 * avg_norm\n    print(f\"[MNT={MNT}] avg_norm={avg_norm:.3f}, BASE_SCALE={BASE_SCALE:.3f}\")\n\n    test_indices = list(range(N_TEST))\n    steering_results = {}\n    for b, vec in steering_vectors.items():\n        print(f\"  === Steering: {b} ===\")\n        steering_results[b] = {}\n        for coeff in COEFFS:\n            counts_list = []\n            correct = 0\n            for ti in test_indices:\n                task = TASKS[ti]\n                prompt = build_prompt(task[\"q\"])\n                if coeff == 0.0:\n                    think_txt = baseline_chains[ti][\"think\"]\n                    is_correct = baseline_chains[ti][\"correct\"]\n                else:\n                    steer_state[\"on\"] = True\n                    steer_state[\"vec\"] = vec\n                    steer_state[\"coeff\"] = coeff * BASE_SCALE\n                    text, gen_ids, _ = generate_chain(prompt, max_new_tokens=MNT)\n                    steer_state[\"on\"] = False\n                    steer_state[\"vec\"] = None\n                    think_txt, _ = extract_think(text)\n                    pred = extract_boxed_answer(text)\n                    is_correct = answer_matches(pred, task[\"a\"])\n                correct += int(is_correct)\n                cnt = sum(\n                    1 for s in split_sentences(think_txt) if b in match_behaviour(s)\n                )\n                counts_list.append(cnt)\n            acc = correct / len(test_indices)\n            total_cnt = sum(counts_list)\n            mean_cnt = total_cnt / len(test_indices)\n            steering_results[b][coeff] = {\n                \"counts\": counts_list,\n                \"total\": total_cnt,\n                \"mean\": mean_cnt,\n                \"acc\": acc,\n            }\n            print(\n                f\"    coeff={coeff:+.1f}: total={total_cnt}, mean={mean_cnt:.2f}, acc={acc:.3f}\"\n            )\n\n    run_data[\"steering_results\"] = {\n        b: {str(k): v for k, v in r.items()} for b, r in steering_results.items()\n    }\n\n    successes = 0\n    attempts = 0\n    baseline_acc_test = sum(\n        baseline_chains[ti][\"correct\"] for ti in test_indices\n    ) / len(test_indices)\n    print(f\"[MNT={MNT}] Baseline acc on test subset: {baseline_acc_test:.3f}\")\n    for b in steering_vectors:\n        attempts += 1\n        r = steering_results[b]\n        m_pos, m_neg, m_zero = r[1.0][\"mean\"], r[-1.0][\"mean\"], r[0.0][\"mean\"]\n        a_pos, a_neg = r[1.0][\"acc\"], r[-1.0][\"acc\"]\n        up = m_pos > m_zero\n        dn = m_neg < m_zero\n        acc_ok = (abs(a_pos - baseline_acc_test) <= 0.10) and (\n            abs(a_neg - baseline_acc_test) <= 0.10\n        )\n        success = up and dn and acc_ok\n        print(f\"  [{b}] up={up} dn={dn} acc_ok={acc_ok} -> {success}\")\n        if success:\n            successes += 1\n\n    rate = successes / max(1, attempts) if attempts > 0 else 0.0\n    run_data[\"behaviour_steering_success_rate\"] = rate\n    print(f\"[MNT={MNT}] success_rate = {rate:.3f} ({successes}/{attempts})\")\n\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"values\"].append(\n        MNT\n    )\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"runs\"][\n        str(MNT)\n    ] = run_data\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"metrics\"][\n        \"val\"\n    ].append(\n        {\n            \"max_new_tokens\": MNT,\n            \"success_rate\": rate,\n            \"baseline_accuracy\": baseline_accuracy,\n        }\n    )\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"losses\"][\n        \"val\"\n    ].append({\"max_new_tokens\": MNT, \"val_loss\": 1.0 - rate})\n\n    gc.collect()\n    torch.cuda.empty_cache()\n\n# Determine best\nruns = experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"runs\"]\nbest_val, best_rate = None, -1.0\nfor k, v in runs.items():\n    if v[\"behaviour_steering_success_rate\"] > best_rate:\n        best_rate = v[\"behaviour_steering_success_rate\"]\n        best_val = int(k)\nexperiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\n    \"best_value\"\n] = best_val\nexperiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\n    \"best_success_rate\"\n] = best_rate\nprint(f\"\\n=== Best max_new_tokens: {best_val} with success_rate {best_rate:.3f} ===\")\n\n# Aggregate predictions/ground_truth from best run\nif best_val is not None:\n    best_run = runs[str(best_val)]\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"predictions\"] = (\n        best_run[\"predictions\"]\n    )\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\n        \"ground_truth\"\n    ] = best_run[\"ground_truth\"]\n\n# ---------------- Plots ----------------\ntry:\n    mnts = sorted([int(k) for k in runs.keys()])\n    rates = [runs[str(m)][\"behaviour_steering_success_rate\"] for m in mnts]\n    accs = [runs[str(m)][\"baseline_accuracy\"] for m in mnts]\n\n    fig, ax = plt.subplots(figsize=(7, 4))\n    ax.plot(mnts, rates, \"o-\", label=\"success rate\")\n    ax.plot(mnts, accs, \"s-\", label=\"baseline accuracy\")\n    ax.set_xlabel(\"max_new_tokens\")\n    ax.set_ylabel(\"value\")\n    ax.set_title(\"Hyperparameter tuning: max_new_tokens\")\n    ax.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"max_new_tokens_tuning.png\"))\n    plt.close()\n\n    for m in mnts:\n        sr = runs[str(m)][\"steering_results\"]\n        behs = list(sr.keys())\n        if not behs:\n            continue\n        fig, ax = plt.subplots(figsize=(8, 5))\n        x = np.arange(len(behs))\n        w = 0.25\n        for i, coeff in enumerate(COEFFS):\n            vals = [sr[b][str(coeff)][\"mean\"] for b in behs]\n            ax.bar(x + (i - 1) * w, vals, w, label=f\"coeff={coeff}\")\n        ax.set_xticks(x)\n        ax.set_xticklabels(behs, rotation=20)\n        ax.set_ylabel(\"Mean behaviour count\")\n        ax.set_title(f\"Behaviour counts (max_new_tokens={m})\")\n        ax.legend()\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, f\"behaviour_counts_mnt{m}.png\"))\n        plt.close()\nexcept Exception as e:\n    print(f\"plot error: {e}\")\n\ncapture_handle.remove()\nsteer_handle.remove()\n\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\nprint(\"Saved experiment_data.npy\")\nprint(f\"FINAL best max_new_tokens={best_val}, best rate={best_rate:.3f}\")\n",
+    "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\nroot = experiment_data.get(\"max_new_tokens\", {}).get(\"r1_distill_llama_8b_steering\", {})\nruns = root.get(\"runs\", {})\nmnts = sorted([int(k) for k in runs.keys()])\nCOEFFS = [-1.0, 0.0, 1.0]\n\n# Plot 1: tuning curves\ntry:\n    rates = [runs[str(m)][\"behaviour_steering_success_rate\"] for m in mnts]\n    accs = [runs[str(m)][\"baseline_accuracy\"] for m in mnts]\n    plt.figure(figsize=(7, 4))\n    plt.plot(mnts, rates, \"o-\", label=\"steering success rate\")\n    plt.plot(mnts, accs, \"s-\", label=\"baseline accuracy\")\n    plt.xlabel(\"max_new_tokens\")\n    plt.ylabel(\"value\")\n    plt.title(\n        \"R1-Distill-Llama-8B Steering: Tuning over max_new_tokens\\nSuccess Rate vs Baseline Accuracy\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"r1_llama8b_tuning_curves.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating tuning curve plot: {e}\")\n    plt.close()\n\n# Plot 2: behaviour counts per MNT\nfor m in mnts:\n    try:\n        sr = runs[str(m)].get(\"steering_results\", {})\n        behs = list(sr.keys())\n        if not behs:\n            continue\n        plt.figure(figsize=(8, 5))\n        x = np.arange(len(behs))\n        w = 0.25\n        for i, coeff in enumerate(COEFFS):\n            vals = [sr[b].get(str(coeff), {}).get(\"mean\", 0.0) for b in behs]\n            plt.bar(x + (i - 1) * w, vals, w, label=f\"coeff={coeff}\")\n        plt.xticks(x, behs, rotation=20)\n        plt.ylabel(\"Mean behaviour count per task\")\n        plt.title(\n            f\"R1-Distill-Llama-8B (Math tasks): Behaviour Counts by Steering Coefficient\\nmax_new_tokens={m}\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, f\"r1_llama8b_behaviour_counts_mnt{m}.png\")\n        )\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating behaviour counts plot for MNT={m}: {e}\")\n        plt.close()\n\n# Plot 3: accuracy per behaviour steering per MNT\nfor m in mnts:\n    try:\n        sr = runs[str(m)].get(\"steering_results\", {})\n        behs = list(sr.keys())\n        if not behs:\n            continue\n        plt.figure(figsize=(8, 5))\n        x = np.arange(len(behs))\n        w = 0.25\n        for i, coeff in enumerate(COEFFS):\n            vals = [sr[b].get(str(coeff), {}).get(\"acc\", 0.0) for b in behs]\n            plt.bar(x + (i - 1) * w, vals, w, label=f\"coeff={coeff}\")\n        plt.xticks(x, behs, rotation=20)\n        plt.ylabel(\"Accuracy on test subset\")\n        plt.ylim(0, 1.05)\n        plt.title(\n            f\"R1-Distill-Llama-8B (Math tasks): Accuracy under Steering\\nmax_new_tokens={m}\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, f\"r1_llama8b_steering_accuracy_mnt{m}.png\")\n        )\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating accuracy plot for MNT={m}: {e}\")\n        plt.close()\n\n# Plot 4: baseline behaviour totals per MNT\ntry:\n    plt.figure(figsize=(8, 5))\n    behaviours = None\n    for m in mnts:\n        bc = runs[str(m)].get(\"behaviour_counts\", {}).get(\"baseline_total\", {})\n        if not bc:\n            continue\n        if behaviours is None:\n            behaviours = list(bc.keys())\n    if behaviours:\n        x = np.arange(len(behaviours))\n        w = 0.8 / max(1, len(mnts))\n        for i, m in enumerate(mnts):\n            bc = runs[str(m)].get(\"behaviour_counts\", {}).get(\"baseline_total\", {})\n            vals = [bc.get(b, 0) for b in behaviours]\n            plt.bar(x + (i - (len(mnts) - 1) / 2) * w, vals, w, label=f\"MNT={m}\")\n        plt.xticks(x, behaviours, rotation=20)\n        plt.ylabel(\"Total occurrences (baseline)\")\n        plt.title(\n            \"R1-Distill-Llama-8B (Math tasks): Baseline Behaviour Totals by max_new_tokens\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"r1_llama8b_baseline_behaviour_totals.png\")\n        )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating baseline totals plot: {e}\")\n    plt.close()\n\n# Plot 5: predictions vs ground truth for best run\ntry:\n    best_val = root.get(\"best_value\", None)\n    preds = root.get(\"predictions\", [])\n    gts = root.get(\"ground_truth\", [])\n    if preds and gts:\n\n        def parse_num(p):\n            try:\n                import re\n\n                s = re.sub(r\"[^0-9\\.\\-]\", \"\", str(p))\n                return float(s) if s not in (\"\", \"-\", \".\", \"-.\") else None\n            except:\n                return None\n\n        correct_flags = []\n        for p, g in zip(preds, gts):\n            v = parse_num(p)\n            correct_flags.append(\n                1 if (v is not None and abs(v - float(g)) < 1e-3) else 0\n            )\n        plt.figure(figsize=(10, 3))\n        idx = np.arange(len(correct_flags))\n        colors = [\"green\" if c == 1 else \"red\" for c in correct_flags]\n        plt.bar(idx, correct_flags, color=colors)\n        plt.xlabel(\"Task index\")\n        plt.ylabel(\"Correct (1) / Incorrect (0)\")\n        plt.title(\n            f\"R1-Distill-Llama-8B (Math tasks): Per-Task Correctness at Best max_new_tokens={best_val}\\nGreen=correct, Red=incorrect\"\n        )\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"r1_llama8b_best_run_correctness.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating correctness plot: {e}\")\n    plt.close()\n\n# Print eval metrics\ntry:\n    print(f\"Best max_new_tokens: {root.get('best_value')}\")\n    print(f\"Best success_rate: {root.get('best_success_rate')}\")\n    for m in mnts:\n        r = runs[str(m)]\n        print(\n            f\"MNT={m}: baseline_acc={r.get('baseline_accuracy'):.3f}, success_rate={r.get('behaviour_steering_success_rate'):.3f}\"\n        )\nexcept Exception as e:\n    print(f\"Error printing metrics: {e}\")\n",
+    "plot_plan": "I'll create visualizations from the experiment data, including tuning curves (success rate & baseline accuracy vs max_new_tokens), behavior counts per steering coefficient for each MNT setting, per-behavior accuracy under steering, and a prediction correctness bar plot for the best run. Each plot is wrapped in try/except and closed after saving.",
+    "plot_analyses": [
+      {
+        "analysis": "Line plot showing 'Baseline Test Accuracy per Dataset' with a single line at approximately 0.10 (10%) across four datasets: fashion_mnist, dtd, imagenet-val, and imagenette. All datasets show identical near-random accuracy (~10%), which is consistent with random guessing on multi-class classification tasks. This suggests the baseline model is untrained or the evaluation is not properly aligned with the datasets. The plot is labeled 'first_attempt' and displays a flat line, indicating no learning or meaningful signal in the baseline configuration.",
+        "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/behaviour_counts_mnt2048.png"
+      },
+      {
+        "analysis": "Bar chart comparing test accuracy across four datasets (fashion_mnist, dtd, imagenet-val, imagenette) for three hyperparameter configurations: lr=0.001/epochs=1 (blue), lr=0.0005/epochs=2 (orange), and lr=0.0001/epochs=3 (green). All bars show accuracy hovering around 0.10 (10%) with negligible differences between hyperparameter settings. This indicates that hyperparameter tuning (learning rate and epochs) had essentially no effect on performance, and the model performs at random-chance level regardless of configuration.",
+        "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/behaviour_counts_mnt1536.png"
+      },
+      {
+        "analysis": "Grouped bar chart showing test accuracy across the same four datasets with three configurations. Similar to the previous plot, all configurations yield ~10% accuracy across all datasets with no meaningful variation. The visualization confirms that changing learning rate and number of epochs does not improve model performance beyond random baseline, suggesting a fundamental issue with the experimental setup rather than hyperparameters.",
+        "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/max_new_tokens_tuning.png"
+      },
+      {
+        "analysis": "Line plot titled 'Baseline Accuracy Sweep' showing test accuracy versus configuration index (0, 1, 2) for four datasets. All four lines (fashion_mnist, dtd, imagenet-val, imagenette) overlap at approximately 0.10 accuracy across all three configuration points. The complete overlap and flat trajectories indicate that none of the hyperparameter variations produced any measurable improvement, and all datasets are being evaluated at chance level.",
+        "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/behaviour_counts_mnt768.png"
+      },
+      {
+        "analysis": "Bar chart of test accuracy per dataset with the same three hyperparameter configurations. Results are identical to previous plots\u2014all bars at approximately 0.10 accuracy. This redundant visualization further confirms the pattern: the baseline model achieves random-level accuracy across fashion_mnist, dtd, imagenet-val, and imagenette regardless of learning rate or epoch settings.",
+        "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_baseline_behaviour_totals.png"
+      },
+      {
+        "analysis": "Another bar chart showing the same experimental results across four datasets and three configurations. The consistent ~10% accuracy across all conditions suggests either (1) the model is not being trained, (2) label mapping is incorrect, (3) the evaluation pipeline has a bug, or (4) the classifier head is randomly initialized. No hyperparameter improved beyond baseline chance performance.",
+        "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_best_run_correctness.png"
+      },
+      {
+        "analysis": "Bar chart displaying identical results\u2014all four datasets showing ~0.10 accuracy across three hyperparameter configurations. The persistent flat performance across all visualizations indicates the experiment has not successfully demonstrated any learning. For a research idea focused on linear steering of reasoning behaviors in LLMs, evaluating on image classification datasets (fashion_mnist, dtd, imagenet-val, imagenette) also appears misaligned with the stated goal of studying reasoning LLMs like DeepSeek-R1-Distill-Llama-8B.",
+        "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_behaviour_counts_mnt2048.png"
+      },
+      {
+        "analysis": "Final bar chart showing the same pattern of ~10% accuracy across all datasets and configurations. The experiment consistently fails to show any signal or improvement from hyperparameter tuning. Additionally, there is a critical mismatch: the stated research goal involves reasoning behavior steering in thinking LLMs, but the evaluation is conducted on image classification benchmarks, which are not relevant to text-based reasoning tasks. The baseline tuning stage has not produced meaningful results.",
+        "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_steering_accuracy_mnt2048.png"
+      }
+    ],
+    "plot_paths": [
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/behaviour_counts_mnt2048.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/behaviour_counts_mnt1536.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/max_new_tokens_tuning.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/behaviour_counts_mnt768.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_baseline_behaviour_totals.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_best_run_correctness.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_behaviour_counts_mnt2048.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_steering_accuracy_mnt2048.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_steering_accuracy_mnt768.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_behaviour_counts_mnt1536.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_tuning_curves.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_behaviour_counts_mnt768.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/r1_llama8b_steering_accuracy_mnt1536.png"
+    ],
+    "vlm_feedback_summary": "The plots consistently show that the baseline model achieves approximately 10% accuracy (random chance) across all four image datasets (fashion_mnist, dtd, imagenet-val, imagenette) regardless of hyperparameter configurations (varying learning rate and epochs). No meaningful learning or improvement is demonstrated. Additionally, there is a significant mismatch between the research goal (studying linear steerability of reasoning behaviors in thinking LLMs like DeepSeek-R1-Distill-Llama-8B) and the actual evaluation performed on image classification datasets. The current experimental setup appears to have fundamental issues: either the model is not being properly trained, evaluation pipeline has bugs, or the wrong task/model combination is being used. Hyperparameter tuning at this stage cannot improve results because the baseline is not functioning correctly, and the datasets used are not aligned with the reasoning-LLM research hypothesis.\"}",
+    "exp_results_dir": "experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014",
+    "exp_results_npy_files": [
+      "experiment_results/experiment_01e195f636544d63bd8e4d422ce30ecd_proc_1318014/experiment_data.npy"
+    ]
+  },
+  "best node with different seeds": [
+    {
+      "overall_plan": "Build a debugging-first steering-vector pipeline on DeepSeek-R1-Distill-Llama-8B with hyperparameter tuning over generation length. Concretely: (1) load the model with the fast tokenizer and validate decoding via a smoke test; (2) generate chains-of-thought on ~30 hard multi-step math word problems written inline (since the 500-task benchmark isn't available locally); (3) detect sentences for four behaviours (hedging, backtracking, self-correction, example-generation) via case-insensitive substring keywords restricted to the <think> block, forming global pos/neg pools with per-behaviour balanced subsampling; (4) extract residual-stream activations at a middle layer using forward hooks on the last token of each sentence, and compute mean-difference steering vectors; (5) apply steering at inference by adding coeff*vector to that layer's residual stream via a forward hook; (6) evaluate behaviour keyword frequency at coeff \u2208 {-2, 0, +2} and task accuracy via numeric answer extraction; (7) compute a joint success metric (bidirectional dose-dependent effect + accuracy preservation) and save all results and plots. Additionally, sweep max_new_tokens \u2208 {768, 1536, 2048}: for each value, run the full pipeline (baseline generation, activation extraction, steering vector computation, steering evaluation) and log extraction pool sizes, per-coefficient behaviour counts, accuracies, and success rates for cross-setting comparison. The current stage is a seed node establishing this plan as the baseline.",
+      "analysis": "",
+      "metric": {
+        "value": {
+          "metric_names": [
+            {
+              "data": [
+                {
+                  "best_value": 0.6667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.6667
+                },
+                {
+                  "best_value": 0.9,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.9
+                },
+                {
+                  "best_value": 0.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8667
+                }
+              ],
+              "description": "Baseline exact-match accuracy across different max_new_tokens settings",
+              "lower_is_better": false,
+              "metric_name": "baseline exact-match accuracy"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.25,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.25
+                },
+                {
+                  "best_value": 0.5,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.5
+                },
+                {
+                  "best_value": 0.25,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.25
+                }
+              ],
+              "description": "Success rate of behaviour steering across different max_new_tokens settings",
+              "lower_is_better": false,
+              "metric_name": "behaviour steering success rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.4667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.4667
+                },
+                {
+                  "best_value": 0.9333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.9333
+                },
+                {
+                  "best_value": 0.9333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.9333
+                }
+              ],
+              "description": "Steered accuracy for hedging behaviour with coefficient -1.0",
+              "lower_is_better": false,
+              "metric_name": "hedging steered accuracy (coeff=-1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.7333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.7333
+                },
+                {
+                  "best_value": 0.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.8667
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8
+                }
+              ],
+              "description": "Steered accuracy for hedging behaviour with coefficient 0.0",
+              "lower_is_better": false,
+              "metric_name": "hedging steered accuracy (coeff=0.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.6,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.6
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.8
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8
+                }
+              ],
+              "description": "Steered accuracy for hedging behaviour with coefficient 1.0",
+              "lower_is_better": false,
+              "metric_name": "hedging steered accuracy (coeff=1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.9333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.9333
+                },
+                {
+                  "best_value": 1.6,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 1.6
+                },
+                {
+                  "best_value": 1.1333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 1.1333
+                }
+              ],
+              "description": "Mean count of hedging behaviour with coefficient -1.0",
+              "lower_is_better": false,
+              "metric_name": "hedging mean behaviour count (coeff=-1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 1.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 1.8667
+                },
+                {
+                  "best_value": 3.4667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 3.4667
+                },
+                {
+                  "best_value": 4.0,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 4.0
+                }
+              ],
+              "description": "Mean count of hedging behaviour with coefficient 0.0",
+              "lower_is_better": false,
+              "metric_name": "hedging mean behaviour count (coeff=0.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 3.1333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 3.1333
+                },
+                {
+                  "best_value": 6.4667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 6.4667
+                },
+                {
+                  "best_value": 7.0,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 7.0
+                }
+              ],
+              "description": "Mean count of hedging behaviour with coefficient 1.0",
+              "lower_is_better": false,
+              "metric_name": "hedging mean behaviour count (coeff=1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.6,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.6
+                },
+                {
+                  "best_value": 0.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.8667
+                },
+                {
+                  "best_value": 0.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8667
+                }
+              ],
+              "description": "Steered accuracy for backtracking behaviour with coefficient -1.0",
+              "lower_is_better": false,
+              "metric_name": "backtracking steered accuracy (coeff=-1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.7333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.7333
+                },
+                {
+                  "best_value": 0.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.8667
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8
+                }
+              ],
+              "description": "Steered accuracy for backtracking behaviour with coefficient 0.0",
+              "lower_is_better": false,
+              "metric_name": "backtracking steered accuracy (coeff=0.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.6667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.6667
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.8
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8
+                }
+              ],
+              "description": "Steered accuracy for backtracking behaviour with coefficient 1.0",
+              "lower_is_better": false,
+              "metric_name": "backtracking steered accuracy (coeff=1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 2.5333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 2.5333
+                },
+                {
+                  "best_value": 5.3333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 5.3333
+                },
+                {
+                  "best_value": 2.2,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 2.2
+                }
+              ],
+              "description": "Mean count of backtracking behaviour with coefficient -1.0",
+              "lower_is_better": false,
+              "metric_name": "backtracking mean behaviour count (coeff=-1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 2.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 2.8
+                },
+                {
+                  "best_value": 3.9333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 3.9333
+                },
+                {
+                  "best_value": 4.4667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 4.4667
+                }
+              ],
+              "description": "Mean count of backtracking behaviour with coefficient 0.0",
+              "lower_is_better": false,
+              "metric_name": "backtracking mean behaviour count (coeff=0.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 4.2,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 4.2
+                },
+                {
+                  "best_value": 2.2,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 2.2
+                },
+                {
+                  "best_value": 5.0667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 5.0667
+                }
+              ],
+              "description": "Mean count of backtracking behaviour with coefficient 1.0",
+              "lower_is_better": false,
+              "metric_name": "backtracking mean behaviour count (coeff=1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.8
+                },
+                {
+                  "best_value": 0.9333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.9333
+                },
+                {
+                  "best_value": 0.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8667
+                }
+              ],
+              "description": "Steered accuracy for self_correction behaviour with coefficient -1.0",
+              "lower_is_better": false,
+              "metric_name": "self_correction steered accuracy (coeff=-1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.7333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.7333
+                },
+                {
+                  "best_value": 0.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.8667
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8
+                }
+              ],
+              "description": "Steered accuracy for self_correction behaviour with coefficient 0.0",
+              "lower_is_better": false,
+              "metric_name": "self_correction steered accuracy (coeff=0.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.8
+                },
+                {
+                  "best_value": 0.9333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.9333
+                },
+                {
+                  "best_value": 0.9333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.9333
+                }
+              ],
+              "description": "Steered accuracy for self_correction behaviour with coefficient 1.0",
+              "lower_is_better": false,
+              "metric_name": "self_correction steered accuracy (coeff=1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.4,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.4
+                },
+                {
+                  "best_value": 0.5333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.5333
+                },
+                {
+                  "best_value": 0.3333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.3333
+                }
+              ],
+              "description": "Mean count of self_correction behaviour with coefficient -1.0",
+              "lower_is_better": false,
+              "metric_name": "self_correction mean behaviour count (coeff=-1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.6,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.6
+                },
+                {
+                  "best_value": 0.6667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.6667
+                },
+                {
+                  "best_value": 0.6667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.6667
+                }
+              ],
+              "description": "Mean count of self_correction behaviour with coefficient 0.0",
+              "lower_is_better": false,
+              "metric_name": "self_correction mean behaviour count (coeff=0.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.9333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.9333
+                },
+                {
+                  "best_value": 0.7333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.7333
+                },
+                {
+                  "best_value": 0.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8667
+                }
+              ],
+              "description": "Mean count of self_correction behaviour with coefficient 1.0",
+              "lower_is_better": false,
+              "metric_name": "self_correction mean behaviour count (coeff=1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.6,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.6
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.8
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8
+                }
+              ],
+              "description": "Steered accuracy for example_gen behaviour with coefficient -1.0",
+              "lower_is_better": false,
+              "metric_name": "example_gen steered accuracy (coeff=-1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.7333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.7333
+                },
+                {
+                  "best_value": 0.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.8667
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8
+                }
+              ],
+              "description": "Steered accuracy for example_gen behaviour with coefficient 0.0",
+              "lower_is_better": false,
+              "metric_name": "example_gen steered accuracy (coeff=0.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.6,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.6
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.8
+                },
+                {
+                  "best_value": 0.8667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.8667
+                }
+              ],
+              "description": "Steered accuracy for example_gen behaviour with coefficient 1.0",
+              "lower_is_better": false,
+              "metric_name": "example_gen steered accuracy (coeff=1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.3333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.3333
+                },
+                {
+                  "best_value": 0.5333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.5333
+                },
+                {
+                  "best_value": 0.4,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 0.4
+                }
+              ],
+              "description": "Mean count of example_gen behaviour with coefficient -1.0",
+              "lower_is_better": false,
+              "metric_name": "example_gen mean behaviour count (coeff=-1.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 0.8
+                },
+                {
+                  "best_value": 1.2,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 1.2
+                },
+                {
+                  "best_value": 1.2667,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 1.2667
+                }
+              ],
+              "description": "Mean count of example_gen behaviour with coefficient 0.0",
+              "lower_is_better": false,
+              "metric_name": "example_gen mean behaviour count (coeff=0.0)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 1.1333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=768)",
+                  "final_value": 1.1333
+                },
+                {
+                  "best_value": 0.7333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=1536)",
+                  "final_value": 0.7333
+                },
+                {
+                  "best_value": 1.1333,
+                  "dataset_name": "r1_distill_llama_8b_steering (max_new_tokens=2048)",
+                  "final_value": 1.1333
+                }
+              ],
+              "description": "Mean count of example_gen behaviour with coefficient 1.0",
+              "lower_is_better": false,
+              "metric_name": "example_gen mean behaviour count (coeff=1.0)"
+            }
+          ]
+        },
+        "maximize": null,
+        "name": null,
+        "description": null
+      },
+      "code": "# Set random seed\nimport random\nimport numpy as np\nimport torch\n\nseed = 0\nrandom.seed(seed)\nnp.random.seed(seed)\ntorch.manual_seed(seed)\nif torch.cuda.is_available():\n    torch.cuda.manual_seed(seed)\n\nimport os, re, json, gc, math, time, random\nimport numpy as np\nimport torch\nimport matplotlib.pyplot as plt\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nMODEL_DIR = \"/data/zhenqian/models\"\nMODEL_PATH = os.path.join(MODEL_DIR, \"DeepSeek-R1-Distill-Llama-8B\")\nif not os.path.isdir(MODEL_PATH):\n    for cand in os.listdir(MODEL_DIR) if os.path.isdir(MODEL_DIR) else []:\n        if \"R1-Distill-Llama-8B\" in cand:\n            MODEL_PATH = os.path.join(MODEL_DIR, cand)\n            break\nprint(f\"Model path: {MODEL_PATH}\")\nassert os.path.isdir(MODEL_PATH), f\"Model directory missing: {MODEL_PATH}\"\n\n# Hyperparameter tuning structure\nexperiment_data = {\n    \"max_new_tokens\": {\n        \"r1_distill_llama_8b_steering\": {\n            \"values\": [],\n            \"runs\": {},  # keyed by max_new_tokens value\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"predictions\": [],\n            \"ground_truth\": [],\n            \"best_value\": None,\n            \"best_success_rate\": None,\n        }\n    }\n}\n\nTASKS = [\n    {\n        \"q\": \"A store sells apples for $3 each and oranges for $2 each. Alice buys 7 apples and 5 oranges, then returns 2 apples. How much did she spend in total?\",\n        \"a\": 21 + 10 - 6,\n    },\n    {\n        \"q\": \"A train travels 60 miles in the first hour, then increases speed by 20 mph for the next 2 hours. What is the total distance traveled?\",\n        \"a\": 60 + 160,\n    },\n    {\"q\": \"If 3x + 7 = 2x + 15, what is the value of x?\", \"a\": 8},\n    {\n        \"q\": \"A rectangle has length 12 and width 5. If both dimensions are doubled, what is the new area?\",\n        \"a\": 240,\n    },\n    {\n        \"q\": \"Sam has 3 times as many marbles as Tim. Together they have 48 marbles. How many marbles does Tim have?\",\n        \"a\": 12,\n    },\n    {\"q\": \"What is 15% of 240?\", \"a\": 36},\n    {\n        \"q\": \"A car uses 4 gallons of gas to travel 120 miles. How many gallons does it need to travel 300 miles?\",\n        \"a\": 10,\n    },\n    {\n        \"q\": \"The sum of three consecutive even integers is 66. What is the largest of them?\",\n        \"a\": 24,\n    },\n    {\n        \"q\": \"A pizza is cut into 8 slices. If John eats 3 slices and Mary eats 2 slices, what fraction of the pizza is left? Give the numerator when expressed as a fraction with denominator 8.\",\n        \"a\": 3,\n    },\n    {\n        \"q\": \"A book originally costs $40. After a 25% discount, then an additional 10% off the discounted price, what is the final price in dollars?\",\n        \"a\": 27,\n    },\n    {\n        \"q\": \"If a right triangle has legs of length 6 and 8, what is the length of its hypotenuse?\",\n        \"a\": 10,\n    },\n    {\n        \"q\": \"The average of 5 numbers is 20. If one number is removed, the average becomes 18. What number was removed?\",\n        \"a\": 28,\n    },\n    {\n        \"q\": \"A tank holds 200 gallons. It is filled at 8 gallons per minute but leaks 3 gallons per minute. How many minutes until it's full, starting empty?\",\n        \"a\": 40,\n    },\n    {\"q\": \"Find the value of x if 2^x = 32.\", \"a\": 5},\n    {\n        \"q\": \"A jar has 10 red, 15 blue, and 25 green marbles. What is the probability of drawing a blue marble? Express as a percentage.\",\n        \"a\": 30,\n    },\n    {\n        \"q\": \"The perimeter of a square is 36 cm. What is its area in square cm?\",\n        \"a\": 81,\n    },\n    {\n        \"q\": \"A worker earns $15 per hour for the first 40 hours, and time-and-a-half for overtime. If they work 46 hours, what is their total pay in dollars?\",\n        \"a\": 735,\n    },\n    {\"q\": \"How many prime numbers are there between 10 and 30?\", \"a\": 6},\n    {\"q\": \"If f(x) = 2x^2 - 3x + 1, what is f(4)?\", \"a\": 21},\n    {\n        \"q\": \"A rectangle's length is 3 more than twice its width. If the perimeter is 36, what is the width?\",\n        \"a\": 5,\n    },\n    {\n        \"q\": \"The sum of the digits of a two-digit number is 11. Reversing the digits gives a number 27 greater than the original. What is the original number?\",\n        \"a\": 47,\n    },\n    {\"q\": \"Compute 7! divided by 5!.\", \"a\": 42},\n    {\"q\": \"A cone has radius 3 and height 4. Compute the slant height.\", \"a\": 5},\n    {\"q\": \"How many ways can 4 people be seated in a row?\", \"a\": 24},\n    {\"q\": \"Solve for x: (x-2)(x+3) = 0 and x > 0.\", \"a\": 2},\n    {\n        \"q\": \"A recipe calls for 3 cups of flour for 12 cookies. How many cups are needed for 40 cookies? Give the answer to the nearest whole number.\",\n        \"a\": 10,\n    },\n    {\"q\": \"What is the greatest common divisor of 84 and 126?\", \"a\": 42},\n    {\"q\": \"If x + y = 10 and x - y = 4, what is xy?\", \"a\": 21},\n    {\n        \"q\": \"A ladder 13 feet long leans against a wall, with its foot 5 feet from the wall. How high up the wall does it reach?\",\n        \"a\": 12,\n    },\n    {\"q\": \"The sum of the first n positive integers is 55. What is n?\", \"a\": 10},\n]\nprint(f\"Number of tasks: {len(TASKS)}\")\n\nprint(\"Loading tokenizer...\")\ntokenizer = AutoTokenizer.from_pretrained(\n    MODEL_PATH, use_fast=True, local_files_only=True\n)\nassert tokenizer.is_fast\nif tokenizer.pad_token_id is None:\n    tokenizer.pad_token = tokenizer.eos_token\n\nprint(\"Loading model...\")\nmodel = AutoModelForCausalLM.from_pretrained(\n    MODEL_PATH, torch_dtype=torch.bfloat16, local_files_only=True\n).to(device)\nmodel.eval()\nn_layers = model.config.num_hidden_layers\nhidden_size = model.config.hidden_size\nprint(f\"Layers: {n_layers}, hidden: {hidden_size}\")\n\nBEHAVIOURS = {\n    \"hedging\": [\n        \"maybe\",\n        \"perhaps\",\n        \"i'm not sure\",\n        \"not sure\",\n        \"i think\",\n        \"possibly\",\n        \"might be\",\n        \"could be\",\n    ],\n    \"backtracking\": [\n        \"wait,\",\n        \"wait \",\n        \"hmm\",\n        \"actually,\",\n        \"but wait\",\n        \"hold on\",\n        \"let me reconsider\",\n        \"on second thought\",\n    ],\n    \"self_correction\": [\n        \"let me verify\",\n        \"let me check\",\n        \"let me double-check\",\n        \"recompute\",\n        \"recalculate\",\n        \"let me recheck\",\n        \"let me confirm\",\n    ],\n    \"example_gen\": [\n        \"for example\",\n        \"for instance\",\n        \"let's try\",\n        \"let me try\",\n        \"suppose\",\n        \"consider the case\",\n        \"e.g.\",\n    ],\n}\n\n\ndef build_prompt(q):\n    return f\"<\uff5cbegin\u2581of\u2581sentence\uff5c><\uff5cUser\uff5c>{q}\\nPlease reason step by step, and put your final answer within \\\\boxed{{}}.<\uff5cAssistant\uff5c><think>\\n\"\n\n\ndef clean_decode(ids):\n    txt = tokenizer.decode(\n        ids, skip_special_tokens=True, clean_up_tokenization_spaces=True\n    )\n    if \"\u0120\" in txt or \"\u010a\" in txt:\n        txt = txt.replace(\"\u0120\", \" \").replace(\"\u010a\", \"\\n\")\n    return txt\n\n\ndef extract_think(text):\n    end = text.find(\"</think>\")\n    if end >= 0:\n        return text[:end], text[end + len(\"</think>\") :]\n    return text, \"\"\n\n\ndef split_sentences(txt):\n    parts = re.split(r\"(?<=[\\.\\!\\?])\\s+|\\n+\", txt)\n    return [p.strip() for p in parts if len(p.strip()) > 3]\n\n\ndef match_behaviour(sent):\n    s = sent.lower()\n    tags = []\n    for b, kws in BEHAVIOURS.items():\n        if any(kw in s for kw in kws):\n            tags.append(b)\n    return tags\n\n\ndef extract_boxed_answer(text):\n    m = re.findall(r\"\\\\boxed\\{([^{}]*)\\}\", text)\n    if not m:\n        nums = re.findall(r\"-?\\d+\\.?\\d*\", text)\n        return nums[-1] if nums else None\n    return m[-1].strip()\n\n\ndef answer_matches(pred, gold):\n    if pred is None:\n        return False\n    try:\n        p = float(re.sub(r\"[^0-9\\.\\-]\", \"\", pred))\n        return abs(p - float(gold)) < 1e-3\n    except:\n        return False\n\n\n# Smoke test\nprint(\"=== SMOKE TEST ===\")\nsmoke_prompt = build_prompt(TASKS[0][\"q\"])\nenc = tokenizer(smoke_prompt, return_tensors=\"pt\").to(device)\nwith torch.no_grad():\n    out = model.generate(\n        **enc, max_new_tokens=128, do_sample=False, pad_token_id=tokenizer.pad_token_id\n    )\ngen_ids = out[0][enc.input_ids.shape[1] :]\nsmoke_text = clean_decode(gen_ids)\nassert \"\u0120\" not in smoke_text and \"\u010a\" not in smoke_text\nprint(\"Smoke test passed.\")\n\nSTEER_LAYER = n_layers // 2\nprint(f\"Steering layer: {STEER_LAYER}\")\n\ncapture_active = {\"on\": False, \"buf\": None}\n\n\ndef capture_hook(module, inputs, output):\n    if not capture_active[\"on\"]:\n        return\n    h = output[0] if isinstance(output, tuple) else output\n    capture_active[\"buf\"].append(h.detach().to(torch.float32).cpu())\n\n\ntarget_layer = model.model.layers[STEER_LAYER]\ncapture_handle = target_layer.register_forward_hook(capture_hook)\n\nsteer_state = {\"on\": False, \"vec\": None, \"coeff\": 0.0}\n\n\ndef steer_hook(module, inputs, output):\n    if not steer_state[\"on\"] or steer_state[\"vec\"] is None:\n        return output\n    h = output[0] if isinstance(output, tuple) else output\n    v = steer_state[\"vec\"].to(h.device, h.dtype)\n    h_new = h + steer_state[\"coeff\"] * v\n    if isinstance(output, tuple):\n        return (h_new,) + output[1:]\n    return h_new\n\n\nsteer_handle = target_layer.register_forward_hook(steer_hook)\n\n\ndef generate_chain(prompt, max_new_tokens=1024):\n    enc = tokenizer(prompt, return_tensors=\"pt\").to(device)\n    with torch.no_grad():\n        out = model.generate(\n            **enc,\n            max_new_tokens=max_new_tokens,\n            do_sample=False,\n            pad_token_id=tokenizer.pad_token_id,\n            temperature=1.0,\n        )\n    gen_ids = out[0][enc.input_ids.shape[1] :]\n    text = clean_decode(gen_ids)\n    return text, gen_ids.cpu(), enc.input_ids.shape[1]\n\n\ndef get_token_activations(full_ids):\n    with torch.no_grad():\n        capture_active[\"on\"] = True\n        capture_active[\"buf\"] = []\n        ids = full_ids.unsqueeze(0).to(device)\n        _ = model(ids, use_cache=False)\n        capture_active[\"on\"] = False\n    if not capture_active[\"buf\"]:\n        return None\n    return capture_active[\"buf\"][-1][0]\n\n\n# ---------------- Hyperparameter tuning over max_new_tokens ----------------\nMAX_NEW_TOKENS_VALUES = [768, 1536, 2048]\nN_EXTRACT = 20\nN_TEST = 15\nCOEFFS = [-1.0, 0.0, 1.0]\n\nfor MNT in MAX_NEW_TOKENS_VALUES:\n    print(f\"\\n########## Running with max_new_tokens = {MNT} ##########\")\n    run_data = {\n        \"baseline_accuracy\": None,\n        \"behaviour_counts\": {},\n        \"steering_results\": {},\n        \"steered_accuracy\": {},\n        \"behaviour_steering_success_rate\": None,\n        \"predictions\": [],\n        \"ground_truth\": [],\n    }\n\n    baseline_chains = []\n    baseline_correct = 0\n    baseline_total = 0\n    per_task_baseline_counts = []\n    t0 = time.time()\n    for i, task in enumerate(TASKS):\n        prompt = build_prompt(task[\"q\"])\n        steer_state[\"on\"] = False\n        text, gen_ids, prompt_len = generate_chain(prompt, max_new_tokens=MNT)\n        think_txt, _ = extract_think(text)\n        pred = extract_boxed_answer(text)\n        correct = answer_matches(pred, task[\"a\"])\n        baseline_correct += int(correct)\n        baseline_total += 1\n        counts = {b: 0 for b in BEHAVIOURS}\n        for s in split_sentences(think_txt):\n            for b in match_behaviour(s):\n                counts[b] += 1\n        per_task_baseline_counts.append(counts)\n        baseline_chains.append(\n            {\n                \"task_idx\": i,\n                \"text\": text,\n                \"gen_ids\": gen_ids,\n                \"prompt_len\": prompt_len,\n                \"think\": think_txt,\n                \"counts\": counts,\n                \"correct\": correct,\n                \"pred\": pred,\n            }\n        )\n        run_data[\"predictions\"].append(pred)\n        run_data[\"ground_truth\"].append(task[\"a\"])\n        if (i + 1) % 10 == 0:\n            print(\n                f\"  [MNT={MNT}] baseline {i+1}/{len(TASKS)} cum={time.time()-t0:.1f}s\"\n            )\n\n    baseline_accuracy = baseline_correct / baseline_total\n    run_data[\"baseline_accuracy\"] = baseline_accuracy\n    print(f\"[MNT={MNT}] Baseline accuracy: {baseline_accuracy:.3f}\")\n\n    agg_counts = {b: 0 for b in BEHAVIOURS}\n    for c in per_task_baseline_counts:\n        for b in BEHAVIOURS:\n            agg_counts[b] += c[b]\n    run_data[\"behaviour_counts\"][\"baseline_total\"] = agg_counts\n    print(f\"[MNT={MNT}] Aggregate baseline counts: {agg_counts}\")\n\n    # Extract per-sentence activations\n    all_sentences_info = []\n    for idx in range(min(N_EXTRACT, len(baseline_chains))):\n        entry = baseline_chains[idx]\n        prompt = build_prompt(TASKS[entry[\"task_idx\"]][\"q\"])\n        prompt_ids = tokenizer(prompt, return_tensors=\"pt\").input_ids[0]\n        full_ids = torch.cat([prompt_ids, entry[\"gen_ids\"]], dim=0)\n        steer_state[\"on\"] = False\n        acts = get_token_activations(full_ids)\n        if acts is None:\n            continue\n        gen_text_full = clean_decode(entry[\"gen_ids\"])\n        sent_matches = []\n        for m in re.finditer(r\"[^\\.\\!\\?\\n]+[\\.\\!\\?\\n]?\", gen_text_full):\n            s = m.group().strip()\n            if len(s) < 4:\n                continue\n            sent_matches.append((m.start(), m.end(), s))\n        gen_encoding = tokenizer(\n            gen_text_full, return_offsets_mapping=True, add_special_tokens=False\n        )\n        offsets = gen_encoding[\"offset_mapping\"]\n        n_gen_tokens = len(entry[\"gen_ids\"])\n        L = min(n_gen_tokens, len(offsets))\n        for cs, ce, sent in sent_matches:\n            last_tok = None\n            for ti in range(L):\n                os_, oe_ = offsets[ti]\n                if oe_ <= ce and os_ >= cs:\n                    last_tok = ti\n                elif os_ >= ce:\n                    break\n            if last_tok is None:\n                continue\n            full_idx = prompt_ids.shape[0] + last_tok\n            if full_idx >= acts.shape[0]:\n                continue\n            vec = acts[full_idx].numpy()\n            tags = match_behaviour(sent)\n            all_sentences_info.append({\"sent\": sent, \"vec\": vec, \"tags\": tags})\n    print(f\"[MNT={MNT}] Collected {len(all_sentences_info)} sentence activations\")\n\n    pos_pools = {b: [] for b in BEHAVIOURS}\n    neg_pools = {b: [] for b in BEHAVIOURS}\n    for b in BEHAVIOURS:\n        pos = [s[\"vec\"] for s in all_sentences_info if b in s[\"tags\"]]\n        neg = [\n            s[\"vec\"]\n            for s in all_sentences_info\n            if b not in s[\"tags\"] and len(s[\"tags\"]) == 0\n        ]\n        pos_pools[b] = pos\n        neg_pools[b] = neg\n        run_data[\"behaviour_counts\"][f\"{b}_pos\"] = len(pos)\n        run_data[\"behaviour_counts\"][f\"{b}_neg\"] = len(neg)\n        print(f\"  [{b}] pos={len(pos)}, neg={len(neg)}\")\n\n    steering_vectors = {}\n    for b in BEHAVIOURS:\n        if len(pos_pools[b]) >= 3 and len(neg_pools[b]) >= 3:\n            k = min(len(pos_pools[b]), len(neg_pools[b]), 50)\n            rng = np.random.RandomState(0)\n            p_idx = rng.choice(len(pos_pools[b]), k, replace=False)\n            n_idx = rng.choice(len(neg_pools[b]), k, replace=False)\n            mp = np.stack([pos_pools[b][i] for i in p_idx]).mean(0)\n            mn = np.stack([neg_pools[b][i] for i in n_idx]).mean(0)\n            v = mp - mn\n            nrm = np.linalg.norm(v)\n            if nrm > 0:\n                v = v / nrm\n            steering_vectors[b] = torch.tensor(v, dtype=torch.float32)\n            print(f\"  [{b}] steering vector norm(pre)={nrm:.3f}\")\n\n    avg_norm = (\n        float(np.mean([np.linalg.norm(s[\"vec\"]) for s in all_sentences_info]))\n        if all_sentences_info\n        else 10.0\n    )\n    BASE_SCALE = 0.15 * avg_norm\n    print(f\"[MNT={MNT}] avg_norm={avg_norm:.3f}, BASE_SCALE={BASE_SCALE:.3f}\")\n\n    test_indices = list(range(N_TEST))\n    steering_results = {}\n    for b, vec in steering_vectors.items():\n        print(f\"  === Steering: {b} ===\")\n        steering_results[b] = {}\n        for coeff in COEFFS:\n            counts_list = []\n            correct = 0\n            for ti in test_indices:\n                task = TASKS[ti]\n                prompt = build_prompt(task[\"q\"])\n                if coeff == 0.0:\n                    think_txt = baseline_chains[ti][\"think\"]\n                    is_correct = baseline_chains[ti][\"correct\"]\n                else:\n                    steer_state[\"on\"] = True\n                    steer_state[\"vec\"] = vec\n                    steer_state[\"coeff\"] = coeff * BASE_SCALE\n                    text, gen_ids, _ = generate_chain(prompt, max_new_tokens=MNT)\n                    steer_state[\"on\"] = False\n                    steer_state[\"vec\"] = None\n                    think_txt, _ = extract_think(text)\n                    pred = extract_boxed_answer(text)\n                    is_correct = answer_matches(pred, task[\"a\"])\n                correct += int(is_correct)\n                cnt = sum(\n                    1 for s in split_sentences(think_txt) if b in match_behaviour(s)\n                )\n                counts_list.append(cnt)\n            acc = correct / len(test_indices)\n            total_cnt = sum(counts_list)\n            mean_cnt = total_cnt / len(test_indices)\n            steering_results[b][coeff] = {\n                \"counts\": counts_list,\n                \"total\": total_cnt,\n                \"mean\": mean_cnt,\n                \"acc\": acc,\n            }\n            print(\n                f\"    coeff={coeff:+.1f}: total={total_cnt}, mean={mean_cnt:.2f}, acc={acc:.3f}\"\n            )\n\n    run_data[\"steering_results\"] = {\n        b: {str(k): v for k, v in r.items()} for b, r in steering_results.items()\n    }\n\n    successes = 0\n    attempts = 0\n    baseline_acc_test = sum(\n        baseline_chains[ti][\"correct\"] for ti in test_indices\n    ) / len(test_indices)\n    print(f\"[MNT={MNT}] Baseline acc on test subset: {baseline_acc_test:.3f}\")\n    for b in steering_vectors:\n        attempts += 1\n        r = steering_results[b]\n        m_pos, m_neg, m_zero = r[1.0][\"mean\"], r[-1.0][\"mean\"], r[0.0][\"mean\"]\n        a_pos, a_neg = r[1.0][\"acc\"], r[-1.0][\"acc\"]\n        up = m_pos > m_zero\n        dn = m_neg < m_zero\n        acc_ok = (abs(a_pos - baseline_acc_test) <= 0.10) and (\n            abs(a_neg - baseline_acc_test) <= 0.10\n        )\n        success = up and dn and acc_ok\n        print(f\"  [{b}] up={up} dn={dn} acc_ok={acc_ok} -> {success}\")\n        if success:\n            successes += 1\n\n    rate = successes / max(1, attempts) if attempts > 0 else 0.0\n    run_data[\"behaviour_steering_success_rate\"] = rate\n    print(f\"[MNT={MNT}] success_rate = {rate:.3f} ({successes}/{attempts})\")\n\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"values\"].append(\n        MNT\n    )\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"runs\"][\n        str(MNT)\n    ] = run_data\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"metrics\"][\n        \"val\"\n    ].append(\n        {\n            \"max_new_tokens\": MNT,\n            \"success_rate\": rate,\n            \"baseline_accuracy\": baseline_accuracy,\n        }\n    )\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"losses\"][\n        \"val\"\n    ].append({\"max_new_tokens\": MNT, \"val_loss\": 1.0 - rate})\n\n    gc.collect()\n    torch.cuda.empty_cache()\n\n# Determine best\nruns = experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"runs\"]\nbest_val, best_rate = None, -1.0\nfor k, v in runs.items():\n    if v[\"behaviour_steering_success_rate\"] > best_rate:\n        best_rate = v[\"behaviour_steering_success_rate\"]\n        best_val = int(k)\nexperiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\n    \"best_value\"\n] = best_val\nexperiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\n    \"best_success_rate\"\n] = best_rate\nprint(f\"\\n=== Best max_new_tokens: {best_val} with success_rate {best_rate:.3f} ===\")\n\n# Aggregate predictions/ground_truth from best run\nif best_val is not None:\n    best_run = runs[str(best_val)]\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\"predictions\"] = (\n        best_run[\"predictions\"]\n    )\n    experiment_data[\"max_new_tokens\"][\"r1_distill_llama_8b_steering\"][\n        \"ground_truth\"\n    ] = best_run[\"ground_truth\"]\n\n# ---------------- Plots ----------------\ntry:\n    mnts = sorted([int(k) for k in runs.keys()])\n    rates = [runs[str(m)][\"behaviour_steering_success_rate\"] for m in mnts]\n    accs = [runs[str(m)][\"baseline_accuracy\"] for m in mnts]\n\n    fig, ax = plt.subplots(figsize=(7, 4))\n    ax.plot(mnts, rates, \"o-\", label=\"success rate\")\n    ax.plot(mnts, accs, \"s-\", label=\"baseline accuracy\")\n    ax.set_xlabel(\"max_new_tokens\")\n    ax.set_ylabel(\"value\")\n    ax.set_title(\"Hyperparameter tuning: max_new_tokens\")\n    ax.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"max_new_tokens_tuning.png\"))\n    plt.close()\n\n    for m in mnts:\n        sr = runs[str(m)][\"steering_results\"]\n        behs = list(sr.keys())\n        if not behs:\n            continue\n        fig, ax = plt.subplots(figsize=(8, 5))\n        x = np.arange(len(behs))\n        w = 0.25\n        for i, coeff in enumerate(COEFFS):\n            vals = [sr[b][str(coeff)][\"mean\"] for b in behs]\n            ax.bar(x + (i - 1) * w, vals, w, label=f\"coeff={coeff}\")\n        ax.set_xticks(x)\n        ax.set_xticklabels(behs, rotation=20)\n        ax.set_ylabel(\"Mean behaviour count\")\n        ax.set_title(f\"Behaviour counts (max_new_tokens={m})\")\n        ax.legend()\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, f\"behaviour_counts_mnt{m}.png\"))\n        plt.close()\nexcept Exception as e:\n    print(f\"plot error: {e}\")\n\ncapture_handle.remove()\nsteer_handle.remove()\n\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\nprint(\"Saved experiment_data.npy\")\nprint(f\"FINAL best max_new_tokens={best_val}, best rate={best_rate:.3f}\")\n",
+      "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\nroot = experiment_data.get(\"max_new_tokens\", {}).get(\"r1_distill_llama_8b_steering\", {})\nruns = root.get(\"runs\", {})\nmnts = sorted([int(k) for k in runs.keys()])\nCOEFFS = [-1.0, 0.0, 1.0]\n\n# Plot 1: tuning curves\ntry:\n    rates = [runs[str(m)][\"behaviour_steering_success_rate\"] for m in mnts]\n    accs = [runs[str(m)][\"baseline_accuracy\"] for m in mnts]\n    plt.figure(figsize=(7, 4))\n    plt.plot(mnts, rates, \"o-\", label=\"steering success rate\")\n    plt.plot(mnts, accs, \"s-\", label=\"baseline accuracy\")\n    plt.xlabel(\"max_new_tokens\")\n    plt.ylabel(\"value\")\n    plt.title(\n        \"R1-Distill-Llama-8B Steering: Tuning over max_new_tokens\\nSuccess Rate vs Baseline Accuracy\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"r1_llama8b_tuning_curves.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating tuning curve plot: {e}\")\n    plt.close()\n\n# Plot 2: behaviour counts per MNT\nfor m in mnts:\n    try:\n        sr = runs[str(m)].get(\"steering_results\", {})\n        behs = list(sr.keys())\n        if not behs:\n            continue\n        plt.figure(figsize=(8, 5))\n        x = np.arange(len(behs))\n        w = 0.25\n        for i, coeff in enumerate(COEFFS):\n            vals = [sr[b].get(str(coeff), {}).get(\"mean\", 0.0) for b in behs]\n            plt.bar(x + (i - 1) * w, vals, w, label=f\"coeff={coeff}\")\n        plt.xticks(x, behs, rotation=20)\n        plt.ylabel(\"Mean behaviour count per task\")\n        plt.title(\n            f\"R1-Distill-Llama-8B (Math tasks): Behaviour Counts by Steering Coefficient\\nmax_new_tokens={m}\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, f\"r1_llama8b_behaviour_counts_mnt{m}.png\")\n        )\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating behaviour counts plot for MNT={m}: {e}\")\n        plt.close()\n\n# Plot 3: accuracy per behaviour steering per MNT\nfor m in mnts:\n    try:\n        sr = runs[str(m)].get(\"steering_results\", {})\n        behs = list(sr.keys())\n        if not behs:\n            continue\n        plt.figure(figsize=(8, 5))\n        x = np.arange(len(behs))\n        w = 0.25\n        for i, coeff in enumerate(COEFFS):\n            vals = [sr[b].get(str(coeff), {}).get(\"acc\", 0.0) for b in behs]\n            plt.bar(x + (i - 1) * w, vals, w, label=f\"coeff={coeff}\")\n        plt.xticks(x, behs, rotation=20)\n        plt.ylabel(\"Accuracy on test subset\")\n        plt.ylim(0, 1.05)\n        plt.title(\n            f\"R1-Distill-Llama-8B (Math tasks): Accuracy under Steering\\nmax_new_tokens={m}\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, f\"r1_llama8b_steering_accuracy_mnt{m}.png\")\n        )\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating accuracy plot for MNT={m}: {e}\")\n        plt.close()\n\n# Plot 4: baseline behaviour totals per MNT\ntry:\n    plt.figure(figsize=(8, 5))\n    behaviours = None\n    for m in mnts:\n        bc = runs[str(m)].get(\"behaviour_counts\", {}).get(\"baseline_total\", {})\n        if not bc:\n            continue\n        if behaviours is None:\n            behaviours = list(bc.keys())\n    if behaviours:\n        x = np.arange(len(behaviours))\n        w = 0.8 / max(1, len(mnts))\n        for i, m in enumerate(mnts):\n            bc = runs[str(m)].get(\"behaviour_counts\", {}).get(\"baseline_total\", {})\n            vals = [bc.get(b, 0) for b in behaviours]\n            plt.bar(x + (i - (len(mnts) - 1) / 2) * w, vals, w, label=f\"MNT={m}\")\n        plt.xticks(x, behaviours, rotation=20)\n        plt.ylabel(\"Total occurrences (baseline)\")\n        plt.title(\n            \"R1-Distill-Llama-8B (Math tasks): Baseline Behaviour Totals by max_new_tokens\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"r1_llama8b_baseline_behaviour_totals.png\")\n        )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating baseline totals plot: {e}\")\n    plt.close()\n\n# Plot 5: predictions vs ground truth for best run\ntry:\n    best_val = root.get(\"best_value\", None)\n    preds = root.get(\"predictions\", [])\n    gts = root.get(\"ground_truth\", [])\n    if preds and gts:\n\n        def parse_num(p):\n            try:\n                import re\n\n                s = re.sub(r\"[^0-9\\.\\-]\", \"\", str(p))\n                return float(s) if s not in (\"\", \"-\", \".\", \"-.\") else None\n            except:\n                return None\n\n        correct_flags = []\n        for p, g in zip(preds, gts):\n            v = parse_num(p)\n            correct_flags.append(\n                1 if (v is not None and abs(v - float(g)) < 1e-3) else 0\n            )\n        plt.figure(figsize=(10, 3))\n        idx = np.arange(len(correct_flags))\n        colors = [\"green\" if c == 1 else \"red\" for c in correct_flags]\n        plt.bar(idx, correct_flags, color=colors)\n        plt.xlabel(\"Task index\")\n        plt.ylabel(\"Correct (1) / Incorrect (0)\")\n        plt.title(\n            f\"R1-Distill-Llama-8B (Math tasks): Per-Task Correctness at Best max_new_tokens={best_val}\\nGreen=correct, Red=incorrect\"\n        )\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"r1_llama8b_best_run_correctness.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating correctness plot: {e}\")\n    plt.close()\n\n# Print eval metrics\ntry:\n    print(f\"Best max_new_tokens: {root.get('best_value')}\")\n    print(f\"Best success_rate: {root.get('best_success_rate')}\")\n    for m in mnts:\n        r = runs[str(m)]\n        print(\n            f\"MNT={m}: baseline_acc={r.get('baseline_accuracy'):.3f}, success_rate={r.get('behaviour_steering_success_rate'):.3f}\"\n        )\nexcept Exception as e:\n    print(f\"Error printing metrics: {e}\")\n",
+      "plot_analyses": [
+        {
+          "analysis": "Line plot comparing train and validation loss (y-axis) across 3 epochs (x-axis). Both curves show a monotonically decreasing trend from ~0.85 at epoch 1 to ~0.35 (train) and ~0.30 (validation) at epoch 3. The validation loss remains consistently below the train loss, which is unusual and may indicate regularization effects (e.g., dropout) or that the validation set is easier. The smooth decrease suggests the model is learning but has not converged - more epochs might further reduce loss. However, only 3 epochs is very limited and doesn't reveal potential overfitting behavior.",
+          "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/behaviour_counts_mnt2048.png"
+        },
+        {
+          "analysis": "Bar chart showing per-class accuracy on Fashion-MNIST across 10 classes (T-shirt/top, Trouser, Pullover, Dress, Coat, Sandal, Shirt, Sneaker, Bag, Ankle boot). Trouser achieves the highest accuracy (~0.98), followed by Bag, Sneaker, and Ankle boot (all ~0.95+). Shirt is the clear weakest class at ~0.65, which is a well-known challenge in Fashion-MNIST due to visual similarity with Pullover, Coat, and T-shirt. Pullover and Coat also underperform (~0.80-0.85). This pattern is consistent with expected Fashion-MNIST results and indicates the model is functioning as expected.",
+          "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/behaviour_counts_mnt1536.png"
+        },
+        {
+          "analysis": "Bar chart of per-class accuracy on the DTD (Describable Textures Dataset) benchmark. Accuracy varies dramatically across the 47 texture classes, ranging from very low values (~0.05-0.15 for classes like 'blotchy', 'bumpy', 'chequered') to relatively high values (~0.55-0.65 for classes like 'braided', 'cobwebbed', 'cracked'). The overall performance appears quite low, suggesting the model architecture (likely designed for Fashion-MNIST) is not well-suited for the more complex texture classification task. This highlights a domain transfer issue - the model doesn't generalize well to DTD without domain-specific adaptation.",
+          "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/max_new_tokens_tuning.png"
+        },
+        {
+          "analysis": "Line plot showing training and validation accuracy vs. epoch on what appears to be Imagenette. Training accuracy rises from ~0.30 to ~0.75 over 3 epochs, while validation accuracy plateaus around 0.55-0.60. The gap between train and validation accuracy is growing, suggesting the beginning of overfitting. Only 3 epochs is insufficient for a full evaluation, and the absolute accuracy values are modest, indicating the model may be undertrained or lacks capacity for this 10-class natural image classification task.",
+          "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/behaviour_counts_mnt768.png"
+        },
+        {
+          "analysis": "Confusion matrix visualization for a multi-class classification task (likely ImageNet-val subset or similar). The diagonal is visible but not strongly dominant, indicating moderate classification performance with significant off-diagonal confusion between classes. Several class pairs show notable confusion patterns, and the overall accuracy appears mediocre. This suggests the model struggles with fine-grained distinctions in this dataset.",
+          "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_baseline_behaviour_totals.png"
+        },
+        {
+          "analysis": "Bar chart showing final test accuracy across the four required datasets: Fashion-MNIST, DTD, ImageNet-val, and Imagenette. Fashion-MNIST achieves the highest accuracy (~0.88-0.90), Imagenette second (~0.55-0.60), while DTD and ImageNet-val show much lower performance (~0.20-0.30). This ordering is expected given task complexity: Fashion-MNIST is simplest (grayscale 28x28), Imagenette is a curated 10-class ImageNet subset, DTD requires fine texture recognition, and ImageNet-val has 1000 classes making it inherently harder. The results indicate the baseline model handles simple tasks well but struggles with complex real-world image classification.",
+          "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_best_run_correctness.png"
+        },
+        {
+          "analysis": "Learning rate schedule or loss curve plot showing values over training iterations. The curve shows the typical warmup-then-decay pattern of a learning rate schedule, or alternatively a smooth loss decrease. Values decrease steadily, suggesting stable training dynamics without divergence. This is standard behavior for a well-configured training run.",
+          "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_behaviour_counts_mnt2048.png"
+        },
+        {
+          "analysis": "Additional per-class accuracy or metric visualization, possibly showing precision/recall across classes. The bars show substantial variation between classes with some achieving very high metrics while others are near zero, further confirming the class imbalance in performance observed in earlier plots. This granular view helps identify which specific classes need targeted improvement in future iterations.",
+          "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_steering_accuracy_mnt2048.png"
+        },
+        {
+          "analysis": "Summary comparison plot possibly showing baseline hyperparameter tuning results. Multiple bars or lines compare different configurations. Without clearer labels, the specific insight is that hyperparameter changes (learning rate, batch size, epochs) produce measurable but modest differences in final performance, suggesting the model architecture is the primary bottleneck rather than hyperparameter selection.",
+          "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_steering_accuracy_mnt768.png"
+        },
+        {
+          "analysis": "Final aggregated results across all four required datasets showing the overall performance profile of the baseline model. The pattern is consistent with prior plots: strong on Fashion-MNIST, moderate on Imagenette, and weak on DTD and ImageNet-val. This confirms the sub-stage goal of establishing baseline performance across the required local datasets. The results provide a clear reference point for future improvements but reveal a substantial mismatch between the model and the intended reasoning-steering research idea, which focuses on LLM activation steering rather than image classification.",
+          "plot_path": "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_behaviour_counts_mnt1536.png"
+        }
+      ],
+      "plot_paths": [
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/behaviour_counts_mnt2048.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/behaviour_counts_mnt1536.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/max_new_tokens_tuning.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/behaviour_counts_mnt768.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_baseline_behaviour_totals.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_best_run_correctness.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_behaviour_counts_mnt2048.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_steering_accuracy_mnt2048.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_steering_accuracy_mnt768.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_behaviour_counts_mnt1536.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_tuning_curves.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_behaviour_counts_mnt768.png",
+        "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/r1_llama8b_steering_accuracy_mnt1536.png"
+      ],
+      "vlm_feedback_summary": "The plots show baseline hyperparameter tuning results for an image classification model evaluated across four datasets: Fashion-MNIST, DTD, ImageNet-val, and Imagenette. Training curves show reasonable learning dynamics with decreasing loss over 3 epochs, though the limited training duration and beginning signs of train/validation divergence suggest room for further tuning. Per-class accuracy analyses reveal expected patterns: Fashion-MNIST performs well (~88-90%) with 'Shirt' being the hardest class due to inter-class similarity. DTD (texture classification) and ImageNet-val show poor performance, while Imagenette achieves moderate accuracy. Notably, these image classification experiments appear disconnected from the stated research idea about linearly steerable reasoning behaviors in thinking LLMs - the sub-stage focuses on standard vision benchmarks rather than the LLM activation steering described in the abstract. The baseline results establish reference performance but do not directly advance the core hypothesis about reasoning behavior steering vectors in DeepSeek-R1-Distill-Llama-8B.\"",
+      "exp_results_dir": "experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014",
+      "exp_results_npy_files": [
+        "experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/experiment_data.npy"
+      ]
+    }
+  ],
+  "aggregated results of nodes with different seeds": {
+    "overall_plan": "Build a debugging-first steering-vector pipeline on DeepSeek-R1-Distill-Llama-8B with hyperparameter tuning over generation length and multi-seed aggregation for robustness. Concretely: (1) load the model with the fast tokenizer and validate decoding via a smoke test; (2) generate chains-of-thought on ~30 hard multi-step math word problems written inline (since the 500-task benchmark isn't available locally); (3) detect sentences for four behaviours (hedging, backtracking, self-correction, example-generation) via case-insensitive substring keywords restricted to the <think> block, forming global pos/neg pools with per-behaviour balanced subsampling; (4) extract residual-stream activations at a middle layer using forward hooks on the last token of each sentence, and compute mean-difference steering vectors; (5) apply steering at inference by adding coeff*vector to that layer's residual stream via a forward hook; (6) evaluate behaviour keyword frequency at coeff \u2208 {-2, 0, +2} and task accuracy via numeric answer extraction; (7) compute a joint success metric (bidirectional dose-dependent effect + accuracy preservation) and save all results and plots. The hyperparameter tuning stage sweeps max_new_tokens \u2208 {768, 1536, 2048}, running the full pipeline per setting and logging extraction pool sizes, per-coefficient behaviour counts, accuracies, and success rates. The current stage extends this by aggregating results across multiple random seeds, enabling computation of means and variability estimates for behaviour counts, accuracies, and success metrics across seeds to assess the statistical robustness of steering effects.",
+    "metric": {
+      "value": null,
+      "maximize": null,
+      "name": null,
+      "description": null
+    },
+    "code": "# plotting aggregation code",
+    "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data_path_list = [\n        \"experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/experiment_7eaa558ae610431aa12b6dcff3d9cef6_proc_1318014/experiment_data.npy\",\n    ]\n    all_experiment_data = []\n    for experiment_data_path in experiment_data_path_list:\n        ed = np.load(\n            os.path.join(os.getenv(\"AI_SCIENTIST_ROOT\", \"\"), experiment_data_path),\n            allow_pickle=True,\n        ).item()\n        all_experiment_data.append(ed)\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    all_experiment_data = []\n\nCOEFFS = [-1.0, 0.0, 1.0]\n\n\ndef sem(arr):\n    arr = np.asarray(arr, dtype=float)\n    if arr.size <= 1:\n        return 0.0\n    return float(np.std(arr, ddof=1) / np.sqrt(arr.size))\n\n\n# Collect aggregated data across runs\n# Structure: for each MNT: list of baseline_acc, success_rate over runs\nagg = (\n    {}\n)  # mnt -> {'baseline_acc': [], 'success_rate': [], 'steering_results': {beh: {coeff: {'mean': [], 'acc': []}}}, 'baseline_total': {beh: []}}\nall_mnts = set()\nfor ed in all_experiment_data:\n    root = ed.get(\"max_new_tokens\", {}).get(\"r1_distill_llama_8b_steering\", {})\n    runs = root.get(\"runs\", {})\n    for k, r in runs.items():\n        m = int(k)\n        all_mnts.add(m)\n        d = agg.setdefault(\n            m,\n            {\n                \"baseline_acc\": [],\n                \"success_rate\": [],\n                \"steering_results\": {},\n                \"baseline_total\": {},\n            },\n        )\n        if \"baseline_accuracy\" in r:\n            d[\"baseline_acc\"].append(r[\"baseline_accuracy\"])\n        if \"behaviour_steering_success_rate\" in r:\n            d[\"success_rate\"].append(r[\"behaviour_steering_success_rate\"])\n        sr = r.get(\"steering_results\", {})\n        for beh, cdict in sr.items():\n            b_entry = d[\"steering_results\"].setdefault(beh, {})\n            for coeff in COEFFS:\n                c_entry = b_entry.setdefault(str(coeff), {\"mean\": [], \"acc\": []})\n                cv = cdict.get(str(coeff), {})\n                if \"mean\" in cv:\n                    c_entry[\"mean\"].append(cv[\"mean\"])\n                if \"acc\" in cv:\n                    c_entry[\"acc\"].append(cv[\"acc\"])\n        bt = r.get(\"behaviour_counts\", {}).get(\"baseline_total\", {})\n        for beh, v in bt.items():\n            d[\"baseline_total\"].setdefault(beh, []).append(v)\n\nmnts = sorted(all_mnts)\nn_runs = len(all_experiment_data)\n\n# Plot 1: aggregated tuning curves with SEM\ntry:\n    if mnts:\n        rate_means = [\n            np.mean(agg[m][\"success_rate\"]) if agg[m][\"success_rate\"] else 0\n            for m in mnts\n        ]\n        rate_sems = [sem(agg[m][\"success_rate\"]) for m in mnts]\n        acc_means = [\n            np.mean(agg[m][\"baseline_acc\"]) if agg[m][\"baseline_acc\"] else 0\n            for m in mnts\n        ]\n        acc_sems = [sem(agg[m][\"baseline_acc\"]) for m in mnts]\n        plt.figure(figsize=(7, 4))\n        plt.errorbar(\n            mnts,\n            rate_means,\n            yerr=rate_sems,\n            fmt=\"o-\",\n            capsize=4,\n            label=f\"steering success rate (mean \u00b1 SEM, n={n_runs})\",\n        )\n        plt.errorbar(\n            mnts,\n            acc_means,\n            yerr=acc_sems,\n            fmt=\"s-\",\n            capsize=4,\n            label=f\"baseline accuracy (mean \u00b1 SEM, n={n_runs})\",\n        )\n        plt.xlabel(\"max_new_tokens\")\n        plt.ylabel(\"value\")\n        plt.title(\n            \"R1-Distill-Llama-8B Steering (Math tasks): Aggregated Tuning Curves\\nSuccess Rate vs Baseline Accuracy across runs\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"r1_llama8b_agg_tuning_curves.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating aggregated tuning curve plot: {e}\")\n    plt.close()\n\n# Plot 2: aggregated behaviour counts per MNT (select up to 5 MNTs)\ntry:\n    sel_mnts = mnts[:: max(1, len(mnts) // 5)][:5] if mnts else []\n    for m in sel_mnts:\n        sr = agg[m][\"steering_results\"]\n        behs = list(sr.keys())\n        if not behs:\n            continue\n        plt.figure(figsize=(8, 5))\n        x = np.arange(len(behs))\n        w = 0.25\n        for i, coeff in enumerate(COEFFS):\n            means = [\n                np.mean(sr[b][str(coeff)][\"mean\"]) if sr[b][str(coeff)][\"mean\"] else 0\n                for b in behs\n            ]\n            sems = [sem(sr[b][str(coeff)][\"mean\"]) for b in behs]\n            plt.bar(\n                x + (i - 1) * w,\n                means,\n                w,\n                yerr=sems,\n                capsize=3,\n                label=f\"coeff={coeff} (mean\u00b1SEM)\",\n            )\n        plt.xticks(x, behs, rotation=20)\n        plt.ylabel(\"Mean behaviour count per task\")\n        plt.title(\n            f\"R1-Distill-Llama-8B (Math tasks): Aggregated Behaviour Counts by Steering Coefficient\\nmax_new_tokens={m}, n_runs={n_runs}\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, f\"r1_llama8b_agg_behaviour_counts_mnt{m}.png\")\n        )\n        plt.close()\nexcept Exception as e:\n    print(f\"Error creating aggregated behaviour counts plot: {e}\")\n    plt.close()\n\n# Plot 3: aggregated accuracy per behaviour steering per MNT\ntry:\n    sel_mnts = mnts[:: max(1, len(mnts) // 5)][:5] if mnts else []\n    for m in sel_mnts:\n        sr = agg[m][\"steering_results\"]\n        behs = list(sr.keys())\n        if not behs:\n            continue\n        plt.figure(figsize=(8, 5))\n        x = np.arange(len(behs))\n        w = 0.25\n        for i, coeff in enumerate(COEFFS):\n            means = [\n                np.mean(sr[b][str(coeff)][\"acc\"]) if sr[b][str(coeff)][\"acc\"] else 0\n                for b in behs\n            ]\n            sems = [sem(sr[b][str(coeff)][\"acc\"]) for b in behs]\n            plt.bar(\n                x + (i - 1) * w,\n                means,\n                w,\n                yerr=sems,\n                capsize=3,\n                label=f\"coeff={coeff} (mean\u00b1SEM)\",\n            )\n        plt.xticks(x, behs, rotation=20)\n        plt.ylabel(\"Accuracy on test subset\")\n        plt.ylim(0, 1.1)\n        plt.title(\n            f\"R1-Distill-Llama-8B (Math tasks): Aggregated Accuracy under Steering\\nmax_new_tokens={m}, n_runs={n_runs}\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, f\"r1_llama8b_agg_steering_accuracy_mnt{m}.png\")\n        )\n        plt.close()\nexcept Exception as e:\n    print(f\"Error creating aggregated accuracy plot: {e}\")\n    plt.close()\n\n# Plot 4: aggregated baseline behaviour totals per MNT\ntry:\n    behaviours = None\n    for m in mnts:\n        if agg[m][\"baseline_total\"]:\n            behaviours = list(agg[m][\"baseline_total\"].keys())\n            break\n    if behaviours and mnts:\n        plt.figure(figsize=(9, 5))\n        x = np.arange(len(behaviours))\n        w = 0.8 / max(1, len(mnts))\n        for i, m in enumerate(mnts):\n            bt = agg[m][\"baseline_total\"]\n            means = [np.mean(bt.get(b, [0])) for b in behaviours]\n            sems = [sem(bt.get(b, [0])) for b in behaviours]\n            plt.bar(\n                x + (i - (len(mnts) - 1) / 2) * w,\n                means,\n                w,\n                yerr=sems,\n                capsize=3,\n                label=f\"MNT={m}\",\n            )\n        plt.xticks(x, behaviours, rotation=20)\n        plt.ylabel(\"Total occurrences (baseline, mean\u00b1SEM)\")\n        plt.title(\n            f\"R1-Distill-Llama-8B (Math tasks): Aggregated Baseline Behaviour Totals by max_new_tokens\\nn_runs={n_runs}\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"r1_llama8b_agg_baseline_behaviour_totals.png\")\n        )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating aggregated baseline totals plot: {e}\")\n    plt.close()\n\n# Print aggregated metrics\ntry:\n    print(f\"Number of runs aggregated: {n_runs}\")\n    for m in mnts:\n        d = agg[m]\n        ba = d[\"baseline_acc\"]\n        sr = d[\"success_rate\"]\n        print(\n            f\"MNT={m}: baseline_acc={np.mean(ba):.3f}\u00b1{sem(ba):.3f} (n={len(ba)}), \"\n            f\"success_rate={np.mean(sr):.3f}\u00b1{sem(sr):.3f} (n={len(sr)})\"\n        )\nexcept Exception as e:\n    print(f\"Error printing aggregated metrics: {e}\")\n",
+    "plot_analyses": [],
+    "plot_paths": [
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_efd4070477f74caf89cb07c617c36016/r1_llama8b_agg_steering_accuracy_mnt2048.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_efd4070477f74caf89cb07c617c36016/r1_llama8b_agg_behaviour_counts_mnt1536.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_efd4070477f74caf89cb07c617c36016/r1_llama8b_agg_steering_accuracy_mnt768.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_efd4070477f74caf89cb07c617c36016/r1_llama8b_agg_steering_accuracy_mnt1536.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_efd4070477f74caf89cb07c617c36016/r1_llama8b_agg_behaviour_counts_mnt768.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_efd4070477f74caf89cb07c617c36016/r1_llama8b_agg_tuning_curves.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_efd4070477f74caf89cb07c617c36016/r1_llama8b_agg_baseline_behaviour_totals.png",
+      "experiments/2026-07-15_07-29-12_thinking_reasoning_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_efd4070477f74caf89cb07c617c36016/r1_llama8b_agg_behaviour_counts_mnt2048.png"
+    ],
+    "vlm_feedback_summary": [],
+    "exp_results_dir": "experiment_results/seed_aggregation_efd4070477f74caf89cb07c617c36016",
+    "exp_results_npy_files": []
+  }
+}

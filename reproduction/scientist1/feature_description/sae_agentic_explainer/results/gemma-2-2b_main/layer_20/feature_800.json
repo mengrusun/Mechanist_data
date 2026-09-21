@@ -1,0 +1,412 @@
+{
+  "feature_idx": 800,
+  "max_act_ref": 82.28683471679688,
+  "trigger_threshold": 16.457366943359375,
+  "sage": {
+    "candidates": [
+      "A token boundary around punctuation in code/math expressions, especially immediately before member-access dots or underscores, as in `uv.x`, `c2.r`, and `_thread_id`.",
+      "The special marker token `<<<bos>>>` / beginning-of-sequence boundary, particularly when introducing a new document-like segment such as a Q/A header or comment block.",
+      "Whitespace immediately before a hexadecimal literal `0x...` in code-like or structured text, e.g. `cur: 0xf3`, `idx: 0x4`, `addr: 0xbeef`."
+    ],
+    "top": "A token boundary around punctuation in code/math expressions, especially immediately before member-access dots or underscores, as in `uv.x`, `c2.r`, and `_thread_id`.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on whitespace immediately preceding a hexadecimal literal like `0x..`, especially inside structured dump/code formats such as `{cur: 0xf3, idx:` or `code: 0x5c}`.",
+            "positive_probes": [
+              "{cur: 0xf3, idx: 7}",
+              "code: 0x5c, next: halt",
+              "value = 0x1a in dump",
+              "addr: 0xbeef, size: 4",
+              "flags {mask: 0xff, set: true}"
+            ],
+            "positive_acts": [
+              81.80753326416016,
+              81.80753326416016,
+              81.80753326416016,
+              81.80753326416016,
+              81.80753326416016
+            ],
+            "distractor_probes": [
+              "{cur:0xf3, idx: 7}",
+              "code: xf5c, next: halt",
+              "value = 31 in dump"
+            ],
+            "distractor_acts": [
+              81.37259674072266,
+              81.37259674072266,
+              81.37259674072266
+            ],
+            "score": 0.4349365234375
+          },
+          {
+            "hypothesis": "The feature responds to document or sequence boundary markers at the very start of a new chunk, such as `<<<bos>>>` before a title, comment, or Q/A block.",
+            "positive_probes": [
+              "<<<bos>>> Project Update: milestones and blockers.",
+              "<<<bos>>> User comment: this app crashes often.",
+              "<<<bos>>> Q: Why is the sky blue?",
+              "<<<bos>>> Chapter One: The Empty House.",
+              "<<<bos>>> Ticket #4821: login fails on mobile."
+            ],
+            "positive_acts": [
+              81.8075180053711,
+              81.8075180053711,
+              81.8075180053711,
+              81.8075180053711,
+              81.8075180053711
+            ],
+            "distractor_probes": [
+              "The marker <<<bos>>> appears mid-sentence here.",
+              "Please add a beginning-of-sequence token before titles.",
+              "Chapter One begins without any special marker."
+            ],
+            "distractor_acts": [
+              81.37259674072266,
+              81.37259674072266,
+              81.37259674072266
+            ],
+            "score": 0.4349212646484375
+          },
+          {
+            "hypothesis": "The feature fires on punctuation tokens used as field/property separators in programming syntax, including member access dots and identifier-joining underscores like `uv.x` or `existing_thread_id`.",
+            "positive_probes": [
+              "Read config.path before saving the file.",
+              "Update user.profile.name after validation passes.",
+              "existing_thread_id must match the stored record.",
+              "Set uv.x and uv.y to zero.",
+              "Return obj.value_from_cache when available."
+            ],
+            "positive_acts": [
+              81.37261962890625,
+              81.37261962890625,
+              81.37261962890625,
+              81.37261962890625,
+              81.37261962890625
+            ],
+            "distractor_probes": [
+              "Read the config path before saving.",
+              "Update the user profile after validation.",
+              "The existing thread ID matched records."
+            ],
+            "distractor_acts": [
+              81.49274444580078,
+              81.49274444580078,
+              81.49274444580078
+            ],
+            "score": -0.12012481689453125
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "Beginning-of-sequence marker `<<<bos>>>`, especially when it appears at the very start of a chunk/document before a title, Q/A prompt, comment, or ticket-like header.",
+            "positive_probes": [
+              "<<<bos>>> FAQ: How do I reset my password?",
+              "<<<bos>>> Ticket #4821: Login fails after update.",
+              "<<<bos>>> Comment: Please review the attached patch.",
+              "<<<bos>>> Title: Quarterly revenue forecast and risks.",
+              "<<<bos>>> Q: Why was my order canceled?"
+            ],
+            "positive_acts": [
+              81.8075180053711,
+              81.8075180053711,
+              81.8075180053711,
+              81.8075180053711,
+              81.8075180053711
+            ],
+            "distractor_probes": [
+              "The token <<<bos>>> appears mid-sentence here.",
+              "FAQ: <<<bos>>> How do I reset my password?",
+              "Reset instructions begin without any special marker."
+            ],
+            "distractor_acts": [
+              81.37259674072266,
+              81.37259674072266,
+              81.37259674072266
+            ],
+            "score": 0.4349212646484375
+          },
+          {
+            "hypothesis": "Whitespace immediately before a hexadecimal literal of the form `0x...`, often in structured/code-like text such as `{cur: 0xf3, idx: ...}` or `addr: 0xbeef`.",
+            "positive_probes": [
+              "Set addr to 0xbeef before continuing.",
+              "Record {cur: 0xf3, idx: 7} now.",
+              "Memory entry shows base 0x10 and size 4.",
+              "Use mask 0xff in this register.",
+              "Parsed token: 0xdead from input."
+            ],
+            "positive_acts": [
+              81.8075180053711,
+              81.8075180053711,
+              81.8075180053711,
+              81.8075180053711,
+              81.8075180053711
+            ],
+            "distractor_probes": [
+              "Set addr to0xbeef before continuing.",
+              "Record current value f3, index 7 now.",
+              "Use mask ff in this register."
+            ],
+            "distractor_acts": [
+              81.37259674072266,
+              81.37259674072266,
+              81.37259674072266
+            ],
+            "score": 0.4349212646484375
+          },
+          {
+            "hypothesis": "Code-token boundary punctuation inside identifiers/expressions, especially member-access dots and underscores in code-like contexts such as `uv.x` and `existing_thread_id`.",
+            "positive_probes": [
+              "Read uv.x before updating velocity.y.",
+              "Store existing_thread_id with pending_task_count.",
+              "The parser split config_value from user_input.",
+              "Call object.method after checking cache_hit.",
+              "Compare left_node.next with right_node.next."
+            ],
+            "positive_acts": [
+              81.80753326416016,
+              81.80753326416016,
+              81.80753326416016,
+              81.80753326416016,
+              81.80753326416016
+            ],
+            "distractor_probes": [
+              "Read the x value before updating y.",
+              "Store the existing thread identifier safely.",
+              "Call the method after checking the cache."
+            ],
+            "distractor_acts": [
+              81.49276733398438,
+              81.49276733398438,
+              81.49276733398438
+            ],
+            "score": 0.31476593017578125
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Whitespace immediately before a hexadecimal literal `0x...` in code-like or structured text, e.g. `cur: 0xf3`, `idx: 0x4`, `addr: 0xbeef`.",
+            "positive_probes": [
+              "cur: 0xf3 after parsing packet",
+              "idx: 0x4 in the lookup table",
+              "addr: 0xbeef for this memory page",
+              "mask= 0xff before applying filter",
+              "value -> 0x1a in structured output"
+            ],
+            "positive_acts": [
+              81.37261962890625,
+              81.37261962890625,
+              81.37261962890625,
+              81.37261962890625,
+              81.37261962890625
+            ],
+            "distractor_probes": [
+              "cur:0xf3 after parsing packet",
+              "idx equals four in the lookup table",
+              "addr: beef for this memory page"
+            ],
+            "distractor_acts": [
+              81.49276733398438,
+              81.49276733398438,
+              81.49276733398438
+            ],
+            "score": -0.120147705078125
+          },
+          {
+            "hypothesis": "A token boundary around punctuation in code/math expressions, especially immediately before member-access dots or underscores, as in `uv.x`, `c2.r`, and `_thread_id`.",
+            "positive_probes": [
+              "Set color from c2.r and c2.g.",
+              "Access uv.x before computing the gradient.",
+              "Log _thread_id for each worker task.",
+              "Normalize velocity using vec3.x and vec3_y.",
+              "Read config._name after parsing metadata."
+            ],
+            "positive_acts": [
+              81.80753326416016,
+              81.80753326416016,
+              81.80753326416016,
+              81.80753326416016,
+              81.80753326416016
+            ],
+            "distractor_probes": [
+              "Set color from c2 and g values.",
+              "Access uv coordinates before computing the gradient.",
+              "Log thread id for each worker task."
+            ],
+            "distractor_acts": [
+              81.49276733398438,
+              81.49276733398438,
+              81.49276733398438
+            ],
+            "score": 0.31476593017578125
+          },
+          {
+            "hypothesis": "The special marker token `<<<bos>>>` / beginning-of-sequence boundary, particularly when introducing a new document-like segment such as a Q/A header or comment block.",
+            "positive_probes": [
+              "<<<bos>>> Q: What causes rain?",
+              "<<<bos>>> Comment: Please review the attached patch.",
+              "<<<bos>>> Article begins with an abstract section.",
+              "<<<bos>>> User: I forgot my password.",
+              "<<<bos>>> Chapter 1: A Strange Arrival."
+            ],
+            "positive_acts": [
+              81.37261962890625,
+              81.37261962890625,
+              81.37261962890625,
+              81.37261962890625,
+              81.37261962890625
+            ],
+            "distractor_probes": [
+              "The token <<<bos>>> appears mid-sentence here.",
+              "What does bos mean in tokenization research?",
+              "Comment blocks often start with special markers."
+            ],
+            "distractor_acts": [
+              81.37259674072266,
+              81.37259674072266,
+              81.37259674072266
+            ],
+            "score": 2.288818359375e-05
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "scientists\nCategory:Living people\nCategory:American scientists of Chinese descent\nCategory:Year of birth missing (living people)<bos>Q:\n\nIn cross validation, higher the value of k, lesser the training data for this formula?\n\nIs it right",
+    "m still pinching myself after 20 years. I would like nothing better than someday dropping dead into a bottle of ink.\u201d<bos>OUR WORKER\n\nOur carpenters are well known worldwide, many of them have traveled to some parts of the world just to re",
+    "The recipe called for a pinch of saffron.",
+    "The train from Milan arrived twenty minutes late.",
+    "She whisked the eggs and folded them into the batter.",
+    "in a freelance capacity as a medical writer, analyst, and consultant. Follow Dr. Barbara Martin on Google + and Twitter.<bos>Response surface optimization and physicochemical properties of polysaccharides from Nelumbo nucifera leaves.\nDynamic high pressure microfluidization (",
+    "The engine cooled after the long climb.",
+    "3, idx: 0xc3},\n\t293: {cur: 0xf3, idx: 0xc3},\n\t294: {cur: 0xf3, idx: 0xc3},",
+    "He plotted the data on a log-log scale.",
+    "Rain drummed on the tin roof through the night.",
+    "(function(data, status, headers, config) {\n            alert(\"terrible error logging..\");\n        });\n\n<bos>Top Participants\n\nChallenge Walk MS: Door County 2015\n\n3-Days, 50 Miles (3",
+    "post-receptoral processes of the visual system.<bos>Pamela Tate\n\nPamela Tate is a justice of the Court of Appeal of the Supreme Court of Victoria in Australia. She was appointed"
+  ],
+  "heldout_true_acts": [
+    81.63584899902344,
+    81.63584899902344,
+    81.63584899902344,
+    81.63584899902344,
+    81.63584899902344,
+    81.63584899902344,
+    81.63584899902344,
+    81.63584899902344,
+    81.47405242919922,
+    81.47405242919922,
+    81.47405242919922,
+    81.47405242919922
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "formatting characters or structural elements in documents",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 81.8075180053711,
+        "sentences": [
+          "The heading is centered above the paragraph.",
+          "A bullet list follows the introductory sentence.",
+          "Each chapter begins with a numbered title.",
+          "Place the caption beneath the figure.",
+          "The table includes three columns and two rows.",
+          "Indent the first line of every section.",
+          "A horizontal rule separates the two parts.",
+          "The footer displays the page number."
+        ],
+        "activations": [
+          81.8075180053711,
+          81.8075180053711,
+          81.8075180053711,
+          81.8075180053711,
+          81.8075180053711,
+          81.8075180053711,
+          81.8075180053711,
+          81.8075180053711
+        ]
+      },
+      "predictive": {
+        "pearson": -8.680245730605582e-18,
+        "spearman": 0.0,
+        "preds": [
+          10.0,
+          8.0,
+          0.0,
+          0.0,
+          0.0,
+          8.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          10.0,
+          8.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "A token boundary around punctuation in code/math expressions, especially immediately before member-access dots or underscores, as in `uv.x`, `c2.r`, and `_thread_id`.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 81.35848236083984,
+        "sentences": [
+          "Use uv.x for the horizontal component.",
+          "Read c2.r before blending the color.",
+          "The _thread_id changes every dispatch.",
+          "Access obj.value through data.ptr.x.",
+          "Set pos_y using grid._width.",
+          "Compare v1.z with normal.x directly.",
+          "Log user._id after authentication succeeds.",
+          "Compute sum_total from arr[i].len."
+        ],
+        "activations": [
+          81.35848236083984,
+          81.35848236083984,
+          81.35848236083984,
+          81.35848236083984,
+          81.35848236083984,
+          81.35848236083984,
+          81.35848236083984,
+          81.35848236083984
+        ]
+      },
+      "predictive": {
+        "pearson": -0.0856313159605988,
+        "spearman": 0.09162708326722892,
+        "preds": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          8.0,
+          0.0,
+          0.0,
+          7.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 147.58285927772522,
+  "layer": 20,
+  "sae_info": {
+    "layer": 20,
+    "width": "16k",
+    "l0": 71,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_20/width_16k/average_l0_71/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "formatting characters or structural elements in documents"
+}

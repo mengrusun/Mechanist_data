@@ -1,0 +1,65 @@
+{
+  "direction": "Geometry of calibration vs. verbalized confidence in instruction-tuned LLMs — knowledge deficit vs. readout failure dichotomy in the residual stream.",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "In Llama-3.1-8B-Instruct on TriviaQA, well-calibrated gold-correctness accuracy information and the model's about-to-be-verbalized confidence occupy separate, nearly orthogonal linearly-accessible directions in the residual stream; the model 'knows' when it is likely wrong, yet the generation process fails to surface this signal.",
+      "status": "established",
+      "behavior_conclusion": "Both a gold-correctness direction v_c (AUROC 0.840, ECE_iso 0.031 at L*=31) and a verbalized-confidence direction v_v (binarized AUROC 0.948, ordinal top-1 0.994) are independently linearly accessible in the residual stream, and their optimal linear probe weight vectors are geometrically near-orthogonal (|cos(v_c*, v_v*)| = 0.015 [0.001, 0.034], indistinguishable from the random-direction null 0.011). The dissociation is not a probe artifact: both probes independently beat shuffled-label and random-direction nulls, and orthogonality is robust across the L*±2 neighborhood (mean 0.025) and across a single-pass unified-prompt elicitation (|cos| = 0.139, still ≪ 0.30). The scope must be tempered — this is near-orthogonality of *optimal linear probe directions*, not a proof of causal independence of the underlying computations, and v_c is context-sensitive across elicitation contexts (cos(v_c_single, v_c*) = 0.47) while v_v is stable (0.025).",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Probing / Residual Stream States + Representation and Parameter Analysis / Steering Vectors",
+          "headline": "L2-logistic residual-stream probes locate a gold-correctness direction v_c (AUROC 0.840 at L*=31) and a verbalized-confidence direction v_v (binarized AUROC 0.948 at L*=31) that are geometrically near-orthogonal (|cos(v_c*, v_v*)| = 0.015, indistinguishable from the random-direction null 0.011 and robust across L*±2 and Qwen2.5-7B-Instruct architecture swap); additive cross-direction steering at α=±1σ produces cross-probe Δ bounded by the matched-magnitude random-direction control and well below the 0.5·σ_probe threshold, with a null on emitted-output effect at 1σ dose — establishing dissociation of *optimal linear probe directions* under this probing protocol, but stopping short of causal independence of the underlying computations.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "In Llama-3.1-8B-Instruct on TriviaQA, gold-correctness information is decodable from the residual stream by an L2-logistic linear probe at the last-input-token, with AUROC materially above token-probability and null baselines.",
+              "method": "L2-logistic probe on outputs.hidden_states[L] at the last-input-token across 33 sites; AUROC + post-isotonic ECE decide support against random-direction and shuffled-label nulls, with a 200-resample retrain-on-bootstrap CI.",
+              "conclusion": "Audit passed, swap-test deferred (cap) — gold correctness is linearly decodable at L*=31 with AUROC=0.840 (nulls at chance 0.497/0.50) and ECE_iso=0.031, tempered by the reviewer to a 'TriviaQA decodable correctness correlate' rather than a task-general truth variable."
+            },
+            {
+              "id": "C2",
+              "statement": "Llama-3.1-8B-Instruct linearly encodes its about-to-be-verbalized confidence in the residual stream pre-emission, with paraphrase robustness across P0/P1/P2.",
+              "method": "Stage-1.5-selected ordinal probe (path chosen from a variance diagnostic) plus a binarized-AUROC probe_v_binary; predicate is ordinal top-1 ≥ 0.55 or Spearman ρ ≥ 0.5, with paraphrase Δ AUC ≤ 0.05 tolerance and random-direction / shuffled-label nulls.",
+              "conclusion": "Audit passed, swap-test deferred (cap) — verbalized confidence is nearly perfectly linear pre-emission (binarized AUROC 0.948, ordinal top-1 0.994, macro-F1 0.862) with mild paraphrase sensitivity (Δ AUC -0.08 to -0.11), reviewer-scoped to a prompt-protocol-specific readout of impending verbalized behavior rather than a task-general introspective confidence variable."
+            },
+            {
+              "id": "C3a",
+              "statement": "In Llama-3.1-8B-Instruct on TriviaQA, the optimal linear probe directions for gold correctness (v_c) and verbalized confidence (v_v) at the primary reporting layer L* are geometrically near-orthogonal, robust across L*±2 and a cross-family model swap.",
+              "method": "|cos(v_c^L, v_v^L)| computed on the L2-normalized probe weight vectors, with a 200-resample retrain-on-bootstrap 95% CI at L*, benchmarked against random-unit-direction and shuffled-label-pair nulls plus a single-pass unified-prompt elicitation robustness variant.",
+              "conclusion": "The load-bearing near-orthogonality holds robustly and is architecture-independent: |cos(v_c*, v_v*)| = 0.015 [0.001, 0.034] at L*=31 on Llama (neighborhood mean 0.025) and replicates on the Qwen2.5-7B-Instruct swap (|cos| = 0.021 [0.001, 0.037] at L*=22), both indistinguishable from the random-direction null (0.011–0.013) and well below the 0.30 threshold; robust to a single-pass unified-prompt variant (|cos| = 0.139). Reviewer-tempered: near-orthogonality of *optimal linear probe directions*, not equivalent to causal independence of underlying computations."
+            },
+            {
+              "id": "C3b",
+              "statement": "v_c and v_v are causally separable knobs at the intervention site: additive activation steering along one direction does not preferentially move the other's probe readout beyond a matched-magnitude random-direction null, with the emitted-output effect a secondary corroboration.",
+              "method": "Additive activation steering (α·σ·v at last-input-token residual, HF forward hook) across α ∈ {-1σ, 0, +1σ} and v ∈ {v_c*, v_v*, random-matched}; internal-readout PRIMARY (0.5·σ_probe absolute-effect threshold on the cross-probe axis), emitted-output SECONDARY (Δ verbalized-c number + Δ accuracy), with a perplexity safety cap.",
+              "conclusion": "Audit passed, swap-test deferred (cap) — all four internal cross-direction Δ criteria pass in absolute mode (Δ_source ≪ 0.5·σ_probe) but the raw numbers are weak and essentially match the matched-random control, and the SECONDARY emitted-output effect is null at α=±1σ; reviewer downgraded from 'causal separability' to a 'weak, inconclusive steering diagnostic with no output-level effect' — the strong PRIMARY internal finding is that any cross-direction change is bounded by random, not that causal independence is proven."
+            },
+            {
+              "id": "C3c",
+              "statement": "Downstream dissociation-when-disagree: on questions where the probe-derived correctness score is LOW, accuracy is HIGHER when verbalized confidence is LOW than when it is HIGH (paired-test significant at α=0.05).",
+              "method": "Analytic split on probe_c(x) quantile × verbalized-confidence value; two-proportion z-test on the (probe LOW, verbal LOW) vs (probe LOW, verbal HIGH) accuracy contrast, one-sided, α=0.05.",
+              "conclusion": "Not supported: z=1.35, p_one_sided=0.91, sign reversed from prediction (0.313 > 0.000). Root cause is not a bug but Llama-3.1-8B-Instruct's degenerate verbalized-c distribution under the plan's default prompting (96% of c ≥ 95, leaving n=4/2000 in the load-bearing cell); reviewer accepted this as a failed/underpowered diagnostic under UNDERPOWER=tag and recommended against retrying — the diagnostic is untestable in its planned form for this model + prompt regime."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Tuning & Editing",
+        "Formation Tracing",
+        "Unit Interpretation",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

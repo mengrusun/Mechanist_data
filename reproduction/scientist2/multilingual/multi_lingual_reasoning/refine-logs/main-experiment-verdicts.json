@@ -1,0 +1,26 @@
+{
+  "C1": {
+    "main_experiment_verdict": "not-supported",
+    "main_experiment_metric": "V_lang classifier=0.968 (PASS), complement classifier=0.49 (FAIL, threshold 0.20), median cos=0.11 (PASS) — partial: identifiability leg passes, orthogonal-decomposition leg fails",
+    "confidence": "high",
+    "notes": "EXPERIMENT_RESULTS.md §M1 verdict='partial'. For verify binary scheme: partial is mapped to not-supported (anything short of unambiguous support is not-supported). Iteration final state: INTEGRITY_ONLY (Phase 1 audit PASS; Stage 2 model-swap deferred by MAX_VERIFY_CLAIMS=1 cap). Upgrade command: /auto-verify C1 -- resume: true"
+  },
+  "C2": {
+    "main_experiment_verdict": "not-supported (original) → pass_by_construction (narrowed)",
+    "main_experiment_metric": "α=−1 macro_acc in {0.03, 0.07}, baseline=0.762, best Δ=−69.7 pp — Claim 2's ≥+3pp aggregate gain refuted at every (rank, k_top, layer_group) config",
+    "confidence": "high",
+    "notes": "EXPERIMENT_RESULTS.md §M2 verdict='not-supported'. Off-plan Gate G2 fired. Iteration ③ narrowed C2 to: 'null-space projection at rank ∈ {2,8} × k_top ∈ {4,8,12} on layer_group=mid uniformly degrades macro-accuracy by 50–73 pp; English generations show arithmetic breakdown — reasoning is entangled with V_lang, not orthogonal to it.' Narrowed claim is PASS_BY_CONSTRUCTION. See refine-logs/EXPERIMENT_PLAN.md 'Iteration ③ Narrowed Claims / C2'."
+  },
+  "C3": {
+    "main_experiment_verdict": "not-supported (refutation robust via iteration ①)",
+    "main_experiment_metric": "A(−1)=0.051, A(0)=0.744, A(+1)=0.000 — monotone A(−1)>A(0)>A(+1) refuted; Spearman(α,acc)<0 partially supported but 'removing improves' leg fails; random-subspace preserves 0.74 at α=−1",
+    "confidence": "high",
+    "notes": "EXPERIMENT_RESULTS.md §M3 verdict='not-supported (main) / partial (specificity)'. Iteration ① dispatched the missing random-subspace α-sweep on the DeepSeek-R1-Distill-LLaMA-8B variant; Phase 9 mech re-audited WARN (was FAIL); C3 upgraded from ZERO_ELIGIBLE_VARIANTS → PASS (robustness = 1/1 = 1.0). The refutation of C3's monotone-decrease diagnostic inequality is robust across model families (Qwen-3-4B-Thinking + DeepSeek-R1-Distill-LLaMA-8B)."
+  },
+  "C4": {
+    "main_experiment_verdict": "not-supported (original) → pass_by_construction (narrowed)",
+    "main_experiment_metric": "LoRA-SFT macro=0.558, baseline=0.762, Δ=−20.4 pp; κ_compute=0.04 (compute leg passes, accuracy match leg fails — both edit and SFT underperform baseline)",
+    "confidence": "high",
+    "notes": "EXPERIMENT_RESULTS.md §M4a verdict='not-supported'. M4b (RL) not run — off-plan gate G4 pre-emptive. Iteration ③ narrowed C4 to: 'LoRA-SFT at (r=32, α=32, targets={q,k,v,o}_proj, lr=2e-4, 1 epoch, 5001 examples = 6.8%) degrades MGSM by 20.4 pp; accuracy-match predicate is moot when both edit and SFT underperform baseline; proper C4 comparison requires positive-baseline SFT + positive-window training-free intervention.' Narrowed claim is PASS_BY_CONSTRUCTION. See refine-logs/EXPERIMENT_PLAN.md 'Iteration ③ Narrowed Claims / C4'."
+  }
+}

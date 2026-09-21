@@ -1,0 +1,23 @@
+{
+  "claim_id": "C2",
+  "family": "Causal Attribution / Ablation",
+  "mechanism_integrity_verdict": "WARN",
+  "mechanism_block": false,
+  "slot_A_coverage": "full",
+  "slot_A_alpha_values": [0.5, 1.0, 2.0],
+  "operator_findings": {
+    "ablation": {
+      "status": "WARN",
+      "spec": "per-stem mean over OTHER 5 emotion variants of the SAME stem",
+      "implemented": "global mean over ALL eval stems x OTHER 5 emotions (constant offset hook)",
+      "consequence": "substitution may raise activation rather than neutralize it, producing positive delta"
+    },
+    "enhancement": {
+      "status": "PASS_with_minor_warn",
+      "spec_deviation": "std computed from eval fold not train fold for neurons"
+    }
+  },
+  "non_monotonic_dose_response_emotions": ["anger", "surprise", "fear", "disgust"],
+  "admit_to_stage2_pool": true,
+  "note": "WARN on ablation operator scope. The wrong-sign finding may be operator-attributable. C2 would be INTEGRITY_ONLY under max_verify_claims=1 (C3 is priority pick for Stage 2)."
+}

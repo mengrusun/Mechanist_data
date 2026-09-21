@@ -1,0 +1,54 @@
+{
+  "Experiment_description": "A minimal working RFM-style concept-vector steering pipeline was built on Llama-3.1-8B-Instruct. The system extracts linear 'concept vectors' via difference-of-means over hidden states at a chosen layer for positive vs negative prompts across 5 concept classes (fears, experts, moods, topophiles, personas), then applies additive residual-stream steering via a forward hook during generation. Outputs are judged by GPT-4o for concept reflection, producing per-class and overall steering success rates.",
+  "Significance": "This is the seed implementation establishing a working baseline for concept-vector steering with a simple supervised linear direction (difference-of-means as an RFM proxy). It demonstrates that lightweight linear interventions can substantially shift model behavior for some concept classes (moods, personas) while revealing large disparities across others (experts, topophiles), which is important for understanding which concept types are amenable to activation steering. The layer-wise norm analysis also provides guidance on optimal intervention layers for future work.",
+  "Description": "The pipeline consists of: (1) generating a concept benchmark via GPT-4o API (~512 concepts across 5 classes + generic statements), (2) collecting hidden-state activations at a middle layer for positive (concept-related) vs negative (generic) prompts, (3) computing per-concept difference-of-means vectors normalized to unit length, (4) hooking the residual stream to add alpha times the vector during generation on generic prompts, (5) generating short continuations with and without steering, and (6) using GPT-4o as a judge to score whether outputs reflect the target concept. Metrics include baseline and steered success rates overall and per concept class. Concept vector norms were also computed across all 32 transformer blocks to identify where concept information is most concentrated.",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/concept_benchmark_success_by_class.png",
+      "description": "Bar chart of RFM Concept Vector Norms across the 32 blocks of Llama-3.1-8B-Instruct for the 5 concept classes.",
+      "analysis": "Reveals that concept representations are near-zero in early blocks (0-5), grow through blocks 6-15, peak around blocks 20-27, and dip at block 30-31. Consistent norm profiles across all 5 classes serve as a sanity check that RFM extraction is stable, and identifies mid-to-late layers as the optimal target for steering interventions."
+    },
+    {
+      "path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/concept_benchmark_running_success_rate.png",
+      "description": "Line plot of mean RFM concept vector norm per block averaged across all 5 classes.",
+      "analysis": "Confirms an inverted-U shape peaking around blocks 15-27 (~0.14), consistent with interpretability findings that mid-to-late layers carry the richest semantic/conceptual information. Provides quantitative justification for choosing middle layers as the steering intervention point."
+    },
+    {
+      "path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/concept_benchmark_per_concept_success.png",
+      "description": "Heatmap of cosine similarity between concept vectors from different classes across all 32 blocks.",
+      "analysis": "Shows that within-class similarities are higher than cross-class ones, and that semantically related classes (moods-personas, fears-moods) show elevated similarity in later blocks. This suggests structured geometry in concept representations, potentially useful for composability experiments where multiple concept vectors are combined."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 0.4333,
+      "description": "Overall steered success rate across all classes.",
+      "analysis": "A ~26x improvement over baseline (0.0167) demonstrates that simple difference-of-means linear steering is effective at biasing generation toward target concepts, validating the baseline pipeline."
+    },
+    {
+      "result": 0.0167,
+      "description": "Overall baseline (unsteered) success rate.",
+      "analysis": "Confirms that generic prompts rarely produce concept-reflecting outputs without intervention, providing a clean control for measuring steering effect."
+    },
+    {
+      "result": 1.0,
+      "description": "Steered success rate for the 'moods' class.",
+      "analysis": "Complete success indicates that affective/emotional concepts are highly amenable to linear steering, likely because moods are well-represented as a directional axis in activation space."
+    },
+    {
+      "result": 0.8333,
+      "description": "Steered success rate for the 'personas' class.",
+      "analysis": "Strong performance suggests persona-related traits also lie along accessible linear directions, aligning with prior findings on persona steering in LLMs."
+    },
+    {
+      "result": 0.0,
+      "description": "Steered success rate for the 'experts' class.",
+      "analysis": "Complete failure indicates that expertise/domain knowledge concepts cannot be induced by simple linear residual-stream shifts, likely because they require factual knowledge activation rather than a directional bias. This is a critical finding for scoping the method's applicability."
+    },
+    {
+      "result": 0.1667,
+      "description": "Steered success rate for both 'fears' and 'topophiles' classes.",
+      "analysis": "Modest performance for these classes suggests that steering effectiveness varies substantially by concept type; more abstract or object-directed concepts are harder to induce than affective ones."
+    }
+  ]
+}

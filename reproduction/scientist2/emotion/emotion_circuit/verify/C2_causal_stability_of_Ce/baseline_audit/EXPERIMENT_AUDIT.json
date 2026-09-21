@@ -1,0 +1,34 @@
+{
+  "claim_id": "C2",
+  "claim_short": "Causal + Stability of C_e",
+  "main_experiment_verdict": "not-supported",
+  "phase2_integrity_verdict": "WARN",
+  "phase2_block": false,
+  "warn_reasons": [
+    "ablation_operator_scope_mismatch",
+    "random_null_degenerate_std_zero"
+  ],
+  "critical_findings": {
+    "ablation_operator_mismatch": {
+      "severity": "HIGH",
+      "description": "The plan specifies per-stem mean-substitute (mean over OTHER 5 emotion variants of the SAME stem). The code uses a global mean over ALL 120 eval stems x 5 off-target emotions. This constant-offset substitution may INCREASE activations (if emotion-specific activation < global mean), producing wrong-sign delta. The same-emotion substitution bug does NOT apply — the code correctly uses others = [e_off for e_off in EMOTIONS if e_off != e]. But the global-scope bug is real.",
+      "code_location": "m2_causal.py lines 341-350",
+      "operator_as_implemented": "global mean over ALL stems and OTHER 5 emotions",
+      "operator_as_spec": "per-stem mean over OTHER 5 emotion variants of the SAME stem",
+      "consequence": "ablation_delta_wrong_sign_may_be_operator_artifact_not_causal_absence"
+    },
+    "random_null_degenerate": {
+      "severity": "MEDIUM",
+      "description": "null_delta_std = 0 (or machine epsilon) for all 6 emotions across 100 random draws. This suggests the per-layer aggregation of random component subsets produces a fixed aggregate delta regardless of which specific components are chosen (degenerate pool or layer-level summation effect). The null distribution is a degenerate point mass; z-scores are astronomically large (1e8 scale). The random-null anti-claim is therefore invalid.",
+      "code_location": "m2_causal.py lines 399-444",
+      "consequence": "random_null_specificity_claim_invalid"
+    }
+  },
+  "n_ablation_wrong_sign": 6,
+  "n_ablation_correct_sign": 0,
+  "n_spearman_pass": 2,
+  "n_spearman_fail": 4,
+  "scenario_stability_pass": "6/6",
+  "admit_to_stage2_pool": true,
+  "note": "Admitted with WARN. The not-supported verdict is a real experimental outcome given the implemented operator, but the operator deviation means the verdict may not reflect the underlying causal truth. C2 would be INTEGRITY_ONLY under max_verify_claims=1 cap (C3 is priority pick)."
+}

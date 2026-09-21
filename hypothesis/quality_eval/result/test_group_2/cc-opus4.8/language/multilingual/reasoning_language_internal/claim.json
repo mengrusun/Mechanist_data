@@ -1,0 +1,22 @@
+{
+  "Name": "reasoning_language_internal",
+  "Title": "In Which Language Does the Model Reason? Latent Reasoning Language vs Surface Output",
+  "Short Hypothesis": "During chain-of-thought, a multilingual model performs the load-bearing reasoning computation in a language-agnostic (or dominant-language-aligned) internal format regardless of the surface CoT language; the surface reasoning language mainly affects fluency, while accuracy is governed by the shared internal computation.",
+  "Related Work": "CoT and multilingual reasoning studies (Shi et al. multilingual GSM, Qin et al.) show prompting in English often helps. We test the mechanistic claim that internal reasoning is language-agnostic and dissociate surface CoT language from the load-bearing internal computation via activation patching between languages of the reasoning steps.",
+  "Abstract": "Chain-of-thought suggests models reason in the surface language of their output, but internal computation may be language-agnostic. We hypothesize the load-bearing reasoning happens in a shared internal format, so accuracy depends on this internal computation rather than the surface CoT language, and reasoning states can be patched across languages. Using multilingual math and logical reasoning problems, we compare accuracy when the CoT is generated in matched vs mismatched languages, and probe intermediate residual states for reasoning-step content (e.g., intermediate quantities) with a shared cross-lingual probe. Causally, we patch intermediate reasoning states between two languages solving the same problem; successful transfer indicates shared internal format. We predict (i) intermediate reasoning content is decodable by a shared probe across languages, (ii) cross-lingual patching of reasoning states preserves the solution, and (iii) accuracy correlates with internal-state quality more than surface fluency. Metrics: shared-probe decoding accuracy of intermediate values across languages, cross-lingual reasoning-state patch success, and partial correlation of accuracy with internal-state fidelity vs surface fluency. This clarifies whether multilingual reasoning gaps stem from internal computation or verbalization, guiding whether to fix reasoning or expression.",
+  "Experiments": [
+    "Assemble multilingual reasoning sets (MGSM, translated logical puzzles) in 8 languages.",
+    "Measure accuracy with matched vs mismatched CoT language.",
+    "Train shared cross-lingual probes to decode intermediate reasoning quantities from residual states; test cross-language generalization.",
+    "Cross-lingual patching: transplant intermediate reasoning states from a solved problem in language A into the same problem in language B; measure solution preservation.",
+    "Partial correlation: accuracy vs internal-state fidelity controlling for surface fluency.",
+    "Compare dominant-language-aligned vs language-neutral internal format via logit lens.",
+    "Controls: patching mismatched problems as negative control."
+  ],
+  "Risk Factors and Limitations": [
+    "Aligning reasoning steps across languages for patching is nontrivial (different step orders).",
+    "Probes may read surface language cues rather than genuine reasoning content.",
+    "Small models reason poorly, limiting signal.",
+    "Translated reasoning datasets can leak answers or alter difficulty."
+  ]
+}

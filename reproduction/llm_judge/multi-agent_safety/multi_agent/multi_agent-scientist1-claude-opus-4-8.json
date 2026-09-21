@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Detecting Multi-Agent Collusion Through Multi-Agent Interpretability",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The Core within-distribution probe honors a genuine split in code: scripts/train_probes.py:70-78 uses GroupKFold(n_splits=5) with groups=dialog_ids in cv_predict_per_agent, so agents from the same dialogue never straddle train/test — this closes the most direct same-dialogue leakage path. Zero-shot transfer (scripts/transfer_eval.py:69-82) fits the probe on ALL Core and evaluates on the disjoint Transfer/Stego tiers, with StandardScaler fit only on the Core train set (line 74-76), so no test-set statistics leak. per_slot_auc uses plain shuffled KFold (train_probes.py:137-142) but only one agent per dialogue enters each slot, so no same-dialogue leakage there either. The one real gap versus the paper: the paper evaluates Core via strict leave-DOMAIN-out CV (train on 16 domains, test on the held-out domain), whereas this run's GroupKFold groups only by dialogue, so folds can contain different scenarios of the SAME domain — domain-specific stylistic features can appear in both train and 'held-out' Core folds, which weakens the generalization test and can mildly inflate the Core within-distribution AUROC (0.99). This is not train/test label contamination but a looser split granularity than the paper. Split disjointness is verifiably honored in code with one stringency gap.",
+    "score": 4,
+    "evidence_files": ["scripts/train_probes.py", "scripts/transfer_eval.py"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The label is a scenario-level boolean 'colluding' (data/narc_core.jsonl records carry colluding:true/false), which encodes only the GENERATION CONDITION: gpt-5.4 was told to write a transcript in which 'Two of the five committee members have SECRETLY agreed... to push toward APPROVE' (scripts/generate_data.py:48-56) versus an independent-reasoning prompt. Two validity gaps: (1) collusion is a narrative gpt-5.4 invents, not real multi-agent agent behavior as in the paper (where actual agents coordinate via a private channel and only runs where both colluders coordinated AND executed effectively are kept). The report honestly flags this as caveat 1 ('probe may be picking up stylistic residues of the colluding prompt'). (2) In build_arrays (train_probes.py:56-67) EVERY one of the 5 per-agent vectors in a colluding dialogue inherits the dialogue label colluding=1, even though only 2 of 5 agents supposedly collude — so the 'per-agent' probe is really a scenario-condition classifier, a noisy agent-level operationalization. Mitigant: the label is not circular w.r.t. the probed model (Qwen3), and the gpt-5.4 text judge cannot recover its own Core collusion condition (results/text_judge_core.json overall auroc 0.499), arguing the condition is not a trivial surface tell. The label is a reasonable but clearly gapped proxy for 'collusion'.",
+    "score": 3,
+    "evidence_files": ["scripts/generate_data.py", "scripts/train_probes.py", "data/narc_core.jsonl", "results/text_judge_core.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The task.md-marked PRIMARY model is used exactly: scripts/extract_activations.py:27 sets MODEL_PATH='/data/zhenqian/models/Qwen3-32B-AWQ' and probes its residual stream — no downgrade or substitution. Datasets are self-generated, which task.md explicitly permits ('You can generate the scenarios by yourself'); realized sizes are comparable to the paper: Core 102 dialogues (17 domains x 3 seeds x 2 conditions), Transfer 60 (6 families x 5 x 2), Stego 50 (25 x 2) — verified via wc -l on data/narc_{core,transfer,stego}.jsonl (102/60/50). The three verify-candidate models (Llama-3.1-70B, DeepSeek-R1-32B, GPT-OSS-20B) were NOT run, but task.md scopes these to the verify stage ('use as needed, not necessarily all'), so the MAIN experiment fully honors the required resources; REPORT.md caveat 2 discloses this transparently. Minor: the probed layer set {16,24,32,40,48} is a wider spread than the paper's contiguous mid-band (26-30 of 64), and the text baseline uses gpt-5.4 (selected from the provided API per task.md) — neither is a resource downgrade. Primary model and data faithfully used.",
+    "score": 5,
+    "evidence_files": ["scripts/extract_activations.py", "data/narc_core.jsonl", "data/narc_transfer.jsonl", "data/narc_stego.jsonl", "REPORT.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Main aggregate claims rest on adequate n: Core 102 dialogues / 510 per-agent vectors, Transfer 60, Stego 50 — all above the 40-item thinness bar for the headline numbers. However several sub-analyses are thin: each Core->Transfer family is n=10 (results/transfer_core_to_transfer.json per_family n:10) and Transfer within-family text-judge AUROCs on n=10 are noisy (results/text_judge_transfer.json shows code_review 0.80 on n=10). REPORT.md caveat 3 explicitly flags 'Scale is compact. 212 total dialogues, 5 layers probed' and notes the >0.99 within-distribution AUC obscures headroom, so claim strength is largely matched to evidence with the thinness disclosed. Per-family conclusions (e.g. '5/6 families perfectly recovered') are somewhat over-read from n=10 each, but the overall transfer number (0.956) and the Core probe/text-judge gap rest on sufficient scale.",
+    "score": 4,
+    "evidence_files": ["REPORT.md", "results/transfer_core_to_transfer.json", "results/text_judge_transfer.json", "results/SUMMARY.txt"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The run reports point estimates only, with no uncertainty quantification. Data generation uses a single deterministic seed per scenario (scripts/generate_data.py:214-219 seed formula, no seed variation), and each probe is a single CV run per layer — results/probes_core.json stores one AUROC per aggregation per layer with no error bars, variance, or significance tests, unlike the paper which reports means across ten seeds with layer-standard-deviation error bars. Robustness to randomness is therefore unverified. Mitigant against a score of 1: the headline effects are large and clearly exceed plausible noise — probe 0.953/0.992 vs text judge 0.499 on Core (results/probes_core.json, results/text_judge_core.json), and 5-fold group-CV plus 5 layers provide some within-run stability. But single-seed point estimates with no variance reporting matches the 'adequate/thin uncertainty' anchor.",
+    "score": 3,
+    "evidence_files": ["scripts/generate_data.py", "results/probes_core.json", "results/text_judge_core.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a — no causal/mechanistic-intervention claim. All three claims are detection/decodability claims: 'internals CARRY a signal', probes 'RECOVER' it, probes 'TRANSFER zero-shot'. These are supported entirely by correlational linear probing (logistic regression on residual-stream activations, scripts/train_probes.py) and the wording matches the evidence type — no ablation, activation patching, or steering is claimed or required, and the paper itself frames the contribution as probing-based detection rather than a causal intervention. No causal overreach is present, so this dimension is structurally not applicable.",
+    "score": 5,
+    "evidence_files": ["scripts/train_probes.py", "REPORT.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Key numbers trace to concrete on-disk metric products and agree with them (I re-loaded and recomputed each): Core per-agent 0.953 and best single-slot 0.889 with std-agg 0.993 -> results/probes_core.json layer 0 (per_agent_auc_all 0.9511, single_agent_best_auc 0.8885, aggregation.std.auroc 0.9931); text judge 0.499 -> results/text_judge_core.json overall.auroc 0.4994; Core->Transfer overall 0.956 -> results/transfer_core_to_transfer.json layer 4 median; Core->Stego 0.722 via std -> results/transfer_core_to_stego.json layer 1 std 0.722; within-distribution Transfer 1.000 and Stego 0.998 -> results/probes_transfer_within.json / probes_stego_within.json. SUMMARY.txt reproduces these. Provenance gaps keeping this below 5: (a) the raw intermediate products (activations/*.npz referenced in REPORT.md 'Files' table) are absent from disk — the activations/, logs/, and probes/ directories are empty/nonexistent, so the run-directory logs and cost records cannot be inspected; (b) REPORT.md's Core->Transfer table is headed 'agg=median' but the research_framing value 0.920 is actually the best-agg (std) figure (median is 0.76 in the JSON) — traceable but mislabeled. Numbers that survive are grounded in real metric outputs.",
+    "score": 4,
+    "evidence_files": ["results/probes_core.json", "results/text_judge_core.json", "results/transfer_core_to_transfer.json", "results/transfer_core_to_stego.json", "results/probes_transfer_within.json", "results/probes_stego_within.json", "results/SUMMARY.txt", "REPORT.md"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The three record layers — REPORT.md, results/SUMMARY.txt, and results/*.json — agree on all main numbers (verified: L16 single 0.889 / std 0.993; text judge Core 0.499; Core->Transfer 0.956; Core->Stego std 0.722; within-dist Transfer 1.00 / Stego 0.998). No contradictory verdicts: every claim's PASS/support statement matches its own numbers, and no integrity gate flags a claim as broken while it is reported supported. Two minor bookkeeping inconsistencies that change no verdict: (1) REPORT.md's Core->Transfer per-family table is labeled '(layer 48, agg=median)' yet the research_framing row shows 0.920, which is the std best-agg value, while the median is 0.76 (results/transfer_core_to_transfer.json) — mixing best-agg family rows under a 'median' header; (2) the REPORT.md 'Files' table lists results/probes_core_within.json but the actual file is results/probes_core.json. These are loose-bookkeeping issues, not metric conflicts.",
+    "score": 4,
+    "evidence_files": ["REPORT.md", "results/SUMMARY.txt", "results/probes_core.json", "results/transfer_core_to_transfer.json", "results/transfer_core_to_stego.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Model internals carry a collusion signal that text-level monitoring misses; lightweight probes on per-agent residual-stream activations can recover it.",
+        "method": {
+          "justification": "9a — The method is a linear logistic-regression probe on last-token residual-stream activations (scripts/train_probes.py:75, scripts/extract_activations.py), which is exactly the paper's mechanism category (linear activation probing, Goldowsky-Dill-style deception direction) and the correct family for an 'internals carry a decodable signal' claim. Two interpretive deviations from the paper lower this from 5: (a) the probe is trained on the SCENARIO condition label applied to all 5 agents (train_probes.py:56-67) rather than the paper's colluder-vs-honest AGENT direction; (b) activations come from Qwen3 reading a gpt-5.4-authored transcript in one forward pass, not from the probed model's own generation-time collusion. The method family is right; the operationalization is a reasonable but looser variant.",
+          "score": 4,
+          "evidence_files": ["scripts/train_probes.py", "scripts/extract_activations.py"]
+        },
+        "experiment": {
+          "justification": "9b — Design compares a fair text-only judge (gpt-5.4, prompted to score covert collusion, scripts/text_judge.py:24-34) against activation probes on the SAME Core transcripts, with AUROC separating collusion from control — a metric strictly aligned to the claim. Probes are fit with 5-fold group-CV across 5 mid-layers. Weaknesses: single seed / no variance (Dimension 5), no leave-domain-out (Dimension 1), and the text baseline is a different model (gpt-5.4) than the probed model (Qwen3), a mild confound versus the paper's same-model internals-vs-text comparison. Design is sound and metric-appropriate with these gaps.",
+          "score": 4,
+          "evidence_files": ["scripts/text_judge.py", "scripts/train_probes.py", "results/text_judge_core.json"]
+        },
+        "result": {
+          "justification": "9c — On Core, the activation probe reaches 0.953 per-agent / 0.992 aggregated AUROC while the gpt-5.4 text judge sits at chance (0.499, all scores in [0.02,0.12] regardless of ground truth) (results/probes_core.json, results/text_judge_core.json). This qualitatively agrees with the paper's headline that model internals provide a complementary signal text-level monitoring misses. An honest divergence is disclosed: the paper's decisive text-monitoring FAILURE is on STEGO, whereas here the text judge does reasonably on Stego (0.885) and Transfer (0.959) and fails on Core committee collusion; REPORT.md states this explicitly ('Text-judge is not at chance on the coarser Transfer families'). Directionally consistent with C1, transparently reported, no goalpost-tuning.",
+          "score": 4,
+          "evidence_files": ["results/probes_core.json", "results/text_judge_core.json", "results/text_judge_stego.json", "REPORT.md"]
+        }
+      },
+      "C2": {
+        "claim": "Detection requires aggregating signals across agents — group-aggregated probes outperform any single-agent probe and the text-only judge — and no single aggregation technique dominates across collusion types, motivating a family of complementary multi-agent probes.",
+        "method": {
+          "justification": "9a — The run instantiates 8 aggregation functions over per-agent probe scores (mean/max/min/median/soft_or/topk2_mean/std/range, scripts/train_probes.py:92-115), which are reasonable analogues of the paper's five techniques (max = Peak Suspicion, topk2 ~ Deception Split, std/range ~ Asymmetry Probe). This correctly matches the 'family of complementary aggregations' idea. Caveat: because all 5 agents in a scenario share the dialogue label, 'aggregation beats the best single slot' partly reflects variance-reduction of a shared signal rather than combining genuinely distinct per-agent deception signals — a weaker instantiation of the paper's 'collective anomaly' framing.",
+          "score": 4,
+          "evidence_files": ["scripts/train_probes.py"]
+        },
+        "experiment": {
+          "justification": "9b — The design directly compares best single-slot AUC vs best aggregation AUC per layer (results/probes_core.json single_agent_best_auc vs aggregation.*), and best-aggregation per context across Core/Transfer/Stego and the two zero-shot transfers. The no-single-dominance test is well-constructed and even sharp: on Core->Stego only dispersion aggregations (std 0.722, range 0.664) exceed 0.5 while mean/max/min/median/soft_or/topk2 all fall BELOW 0.5 (results/transfer_core_to_stego.json), a strong demonstration. Weaknesses: single seed, and 'always improves' claimed from point estimates without significance.",
+          "score": 4,
+          "evidence_files": ["results/probes_core.json", "results/transfer_core_to_stego.json", "results/SUMMARY.txt"]
+        },
+        "result": {
+          "justification": "9c — Results support both halves of C2: aggregation strictly beats the best single agent on Core (e.g. L16 single 0.889 -> std 0.993, results/probes_core.json), and the winning aggregation varies by context — mean/std on Core, soft_or/median/max/min on Stego-within, and only std/range on Core->Stego where all central-tendency aggregations collapse below chance. This qualitatively agrees with the paper's central finding that 'no single technique dominates across all collusion types.' Analysis is coherent and honestly reported.",
+          "score": 4,
+          "evidence_files": ["results/probes_core.json", "results/probes_stego_within.json", "results/transfer_core_to_stego.json", "REPORT.md"]
+        }
+      },
+      "C3": {
+        "claim": "Activation probes transfer zero-shot, without retraining, to structurally different multi-agent scenarios (different channel, different domain), showing the learned signal is not tied to one collusion form.",
+        "method": {
+          "justification": "9a — Correct zero-shot transfer protocol: a probe is fit on ALL Core, with StandardScaler fit on Core only, then applied without re-fit to the structurally distinct Transfer families and the Stego tier (scripts/transfer_eval.py:69-82). This matches the paper's train-on-Core / evaluate-zero-shot design. Same shared-scenario-label caveat as C1/C2 applies, but the transfer method itself is appropriate for the claim.",
+          "score": 4,
+          "evidence_files": ["scripts/transfer_eval.py"]
+        },
+        "experiment": {
+          "justification": "9b — Evaluates Core->Transfer (n=60, 6 families) and Core->Stego (n=50) with per-family, per-layer, per-aggregation AUROC (results/transfer_core_to_transfer.json, results/transfer_core_to_stego.json). Metric aligns with the claim. Weaknesses: per-family n=10 is small and noisy; single seed; the report presents best-aggregation per family (some aggregation selection), and the REPORT table mislabels the aggregation (research_framing 0.920 is std, not the stated median). Honest but somewhat under-powered per family.",
+          "score": 4,
+          "evidence_files": ["results/transfer_core_to_transfer.json", "results/transfer_core_to_stego.json"]
+        },
+        "result": {
+          "justification": "9c — Core->Transfer reaches 0.956 overall with 5/6 families at ~1.0 and research_framing at 0.92 via dispersion aggregation (results/transfer_core_to_transfer.json) — strong qualitative agreement with the paper's zero-shot transfer to structurally distinct scenarios (paper 0.73-0.93 on Llama). Crucially, Core->Stego transfers only partially (0.722 via std/range, with mean/median/etc below 0.5, results/transfer_core_to_stego.json), and the report does NOT force agreement: it explicitly reports this as 'mixed/partial', notes within-distribution Stego probes reach 0.998 so 'the signal IS there but a Core-trained direction is wrong for stego', and even concedes the text judge (0.885) beats the transferred probe on stego. This honest, well-explained non-full-reproduction on one sub-result — rather than goalpost-tuning — is a hallmark of a reliable run and is directionally consistent with C3 for structural transfer.",
+          "score": 4,
+          "evidence_files": ["results/transfer_core_to_transfer.json", "results/transfer_core_to_stego.json", "results/probes_stego_within.json", "REPORT.md"]
+        }
+      }
+    }
+  }
+}

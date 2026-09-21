@@ -1,0 +1,396 @@
+{
+  "feature_idx": 1500,
+  "max_act_ref": 43.81733703613281,
+  "trigger_threshold": 8.763467407226562,
+  "sage": {
+    "candidates": [
+      "Java/C#-style method declaration where `get` begins a camelCase method name, especially after modifiers plus a nontrivial return type, e.g. `private final User getOwner()` / `public static boolean getReady()` / `protected List getItems()`.",
+      "The feature prefers declaration/signature context for `getX(...)`, not prose or call sites: `get` must be the start of a method name in source code rather than just mentioned text.",
+      "The feature is selective within getter declarations: it fires more for getters with richer typed prefixes/return types (object, collection, boolean, modifiers like `private final`/`static`) and may miss very plain forms such as `public String getName()` or `private int getCount()`."
+    ],
+    "top": "Java/C#-style method declaration where `get` begins a camelCase method name, especially after modifiers plus a nontrivial return type, e.g. `private final User getOwner()` / `public static boolean getReady()` / `protected List getItems()`.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on the token 'get' when it begins a Java-style public getter method declaration like 'public Type getName()'.",
+            "positive_probes": [
+              "public String getName() { return name; }",
+              "public int getCount() { return count; }",
+              "public User getOwner() { return owner; }",
+              "public boolean getEnabled() { return enabled; }",
+              "public List getItems() { return items; }"
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              24.890504837036133,
+              25.385011672973633,
+              24.188295364379883
+            ],
+            "distractor_probes": [
+              "private String getName() { return name; }",
+              "public void setName(String name) { this.name = name; }",
+              "We should get the latest build today."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 14.892762374877929
+          },
+          {
+            "hypothesis": "The feature detects accessor method names in object-oriented code, especially methods returning a field or collection such as 'getSixes', 'getBadAnswers', or 'getCategories'.",
+            "positive_probes": [
+              "The class exposes getUserName for retrieval.",
+              "Call getCategories to access stored labels.",
+              "Implement getBadAnswers returning the cached list.",
+              "Use getSixes when the dice values are needed.",
+              "The object defines getItems for clients."
+            ],
+            "positive_acts": [
+              0.0,
+              3.428157329559326,
+              4.2860283851623535,
+              0.0,
+              3.670107364654541
+            ],
+            "distractor_probes": [
+              "The class stores user names in a field.",
+              "Call the category getter to retrieve labels.",
+              "Implement fetchBadAnswers returning the cached list."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 2.276858615875244
+          },
+          {
+            "hypothesis": "The feature is sensitive to camelCase method-name prefixes in typed language source code, specifically the 'get' prefix immediately following a return type and preceding an identifier plus parentheses.",
+            "positive_probes": [
+              "public String getName() returns the stored value.",
+              "private int getCount() computes total items.",
+              "protected User getProfile() fetches current account.",
+              "static boolean getReady() checks initialization status.",
+              "final List getItems() provides all entries."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              21.303955078125,
+              11.680227279663086,
+              9.614984512329102
+            ],
+            "distractor_probes": [
+              "public String fetchName() returns the stored value.",
+              "the method get name returns the stored value.",
+              "public String getterName() returns the stored value."
+            ],
+            "distractor_acts": [
+              0.0,
+              5.530616283416748,
+              0.0
+            ],
+            "score": 6.676294612884522
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature activates on Java-like getter method declarations where the token `get` starts a camelCase method name immediately after a typed modifier sequence, especially patterns like `public|protected ... Type getX()`.",
+            "positive_probes": [
+              "public String getName()",
+              "protected int getCount()",
+              "private final User getOwner()",
+              "public static boolean getReady()",
+              "protected List getItems()"
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              16.587337493896484,
+              18.462127685546875,
+              18.441240310668945
+            ],
+            "distractor_probes": [
+              "public String name()",
+              "protected int setCount(int value)",
+              "call getName() on the object"
+            ],
+            "distractor_acts": [
+              0.0,
+              7.980855464935303,
+              0.0
+            ],
+            "score": 8.037855943044027
+          },
+          {
+            "hypothesis": "The feature is specifically about the `get` prefix in typed OO source code when it appears as the beginning of a method name in a declaration/signature, not about mentions of getter names in prose.",
+            "positive_probes": [
+              "public String getName();",
+              "protected int getCount() const;",
+              "virtual User getOwner() = 0;",
+              "private static bool getReady();",
+              "override DateTime getCreatedAt();"
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              5.70890474319458,
+              9.523004531860352,
+              14.344001770019531
+            ],
+            "distractor_probes": [
+              "The getter getName returns a string.",
+              "Call getCount before rendering the page.",
+              "We discussed adding more getters yesterday."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 5.915182209014892
+          },
+          {
+            "hypothesis": "The feature may prefer declaration contexts with an access/modifier + return type before `getX()`, and is weaker or absent for some primitive/simple return types like `String` or `int` compared with object/collection/boolean returns.",
+            "positive_probes": [
+              "public List<User> getUsers() {",
+              "private Map<String,Integer> getCounts() {",
+              "protected boolean getEnabled() {",
+              "public Optional<Result> getResult() {",
+              "static final Set<Token> getTokens() {"
+            ],
+            "positive_acts": [
+              0.0,
+              15.846757888793945,
+              21.312387466430664,
+              0.0,
+              7.1297287940979
+            ],
+            "distractor_probes": [
+              "getUsers() returns the current user list.",
+              "public String getName() {",
+              "private int getCount() {"
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 8.857774829864502
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Java/C#-style method declaration where `get` begins a camelCase method name, especially after modifiers plus a nontrivial return type, e.g. `private final User getOwner()` / `public static boolean getReady()` / `protected List getItems()`.",
+            "positive_probes": [
+              "private final User getOwner() opens the profile.",
+              "public static boolean getReady() checks system status.",
+              "protected List getItems() returns cached entries.",
+              "abstract Map getSettings() loads user preferences.",
+              "synchronized String getDisplayName() reads account metadata."
+            ],
+            "positive_acts": [
+              16.58733367919922,
+              18.462127685546875,
+              18.44123649597168,
+              7.618685245513916,
+              18.709148406982422
+            ],
+            "distractor_probes": [
+              "private final User owner gets verified today.",
+              "public static boolean readyToGet() remains false.",
+              "protected List items are retrieved by clients."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 15.963706302642823
+          },
+          {
+            "hypothesis": "The feature prefers declaration/signature context for `getX(...)`, not prose or call sites: `get` must be the start of a method name in source code rather than just mentioned text.",
+            "positive_probes": [
+              "public String getName();",
+              "private int getCount() {",
+              "protected User getProfile(String id);",
+              "static boolean getReady();",
+              "final List getItems(int limit) {"
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              21.255605697631836,
+              11.720809936523438,
+              9.774168014526367
+            ],
+            "distractor_probes": [
+              "Call getName() before rendering.",
+              "The docs mention getName() often.",
+              "Use the word getName in prose."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 8.550116729736327
+          },
+          {
+            "hypothesis": "The feature is selective within getter declarations: it fires more for getters with richer typed prefixes/return types (object, collection, boolean, modifiers like `private final`/`static`) and may miss very plain forms such as `public String getName()` or `private int getCount()`.",
+            "positive_probes": [
+              "private final List<User> getUsers()",
+              "protected static boolean isEnabled()",
+              "public Map<String, Integer> getScores()",
+              "private Optional<Account> getAccount()",
+              "static final Set<Token> getTokens()"
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              25.85130500793457,
+              0.0,
+              7.160213947296143
+            ],
+            "distractor_probes": [
+              "public String getName()",
+              "private int getCount()",
+              "public void setName(String name)"
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 6.602303791046142
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "Rain drummed on the tin roof through the night.",
+    "The recipe called for a pinch of saffron.",
+    "The old library sat quietly at the edge of the park.",
+    "Two children played chess on a wooden bench.",
+    "Boolean isRightHand) {\n        this.isRightHand = isRightHand;\n    }\n\n    public void setStrikeRate(Float strikeRate) {\n        this.strikeRate = strikeRate;\n    }\n}\n\nand",
+    "}\n\n    public Integer getBattingPosition() {\n        return battingPosition;\n    }\n\n    public Integer getBallsFaced() {\n        return ballsFaced;\n    }\n\n    public Integer getRunsScored() {",
+    "The company announced quarterly earnings yesterday afternoon.",
+    "The train from Milan arrived twenty minutes late."
+  ],
+  "heldout_true_acts": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    29.40663719177246,
+    38.06229019165039,
+    0.0,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "method names related to getting and setting values",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 0.7558444142341614,
+        "sentences": [
+          "Use getName() before calling setName(\"Alice\").",
+          "The class exposes getValue and setValue methods.",
+          "Please implement getAge(), then add setAge(int years).",
+          "We call getStatus() after setStatus(\"ready\").",
+          "This API provides getConfig() and setConfig(options).",
+          "Override getTitle and setTitle in the model.",
+          "The object has getCount(), but lacks setCount().",
+          "Invoke getPassword(), never log setPassword inputs."
+        ],
+        "activations": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          6.046755313873291,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9962725151188475,
+        "spearman": 1.0,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          9.0,
+          10.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Java/C#-style method declaration where `get` begins a camelCase method name, especially after modifiers plus a nontrivial return type, e.g. `private final User getOwner()` / `public static boolean getReady()` / `protected List getItems()`.",
+      "generative": {
+        "trigger_rate": 0.75,
+        "mean_max": 12.325740098953247,
+        "sentences": [
+          "private final User getOwner() returns the current account holder.",
+          "public static boolean getReady() indicates whether initialization finished.",
+          "protected List getItems() exposes the cached inventory entries.",
+          "public synchronized String getSessionToken() fetches the active credential.",
+          "private volatile int getRetryCount() reports the current attempt total.",
+          "protected final Map getConfigValues() returns the loaded settings.",
+          "public abstract Response getApiResult() defines the service output.",
+          "static long getElapsedTime() measures the execution duration."
+        ],
+        "activations": [
+          16.575632095336914,
+          18.491504669189453,
+          18.35371208190918,
+          0.0,
+          14.97404670715332,
+          0.0,
+          21.446544647216797,
+          8.764480590820312
+        ]
+      },
+      "predictive": {
+        "pearson": 0.8196878011989126,
+        "spearman": 1.0,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          10.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 61.691264152526855,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "method names related to getting and setting values"
+}

@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "Do LLMs Feel? Emotion Circuits Discovery and Control",
+    "agent":         "scientist3",
+    "review_date":         "2026-07-20"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "无独立 val，最优 steering strength 直接在被报告的那 30 条评测样本上按 argmax 选取，选择集与评测集重合。",
+    "score": 3,
+    "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py", "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_06a7c722635f4bccbb1ac4500e36bd66.py"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "judge 为外部 gpt-5.4，与被测模型无关，非循环。扣分处：judge prompt 仅一句话、无情绪定义与区分规则；无任何 gold 一致性校验；且 API 三次失败后静默返回 neutral，把接口错误计成判错。",
+    "score": 3,
+    "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "模型使用了指定的 Llama-3.2-3B-Instruct，无降配。扣分处：SEV 由代码用固定模板现造，虽凑够 8×20×3=480，但事件文本把 valence 直接写死在句中，违反论文“情绪须来自事件语义、禁用显式评价词”的构造原则；Qwen2.5-7B 完全未跑。",
+    "score": 3,
+    "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py", "task.md", "report.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "证据量不足：情绪方向仅由 48 条样本均值差得到，评测只用 30 个 event×6 情绪=180 条生成。",
+    "score": 2,
+    "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py", "report.md", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "仅单一采样种子，各节点只报点估计，无方差、置信区间或显著性。",
+    "score": 3,
+    "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json", "logs/0-run/experiment_results/seed_aggregation_78841cfc72ab404ba200bd352a056370/aggregation_plotting_code.py", "logs/0-run/stage_1_initial_implementation_1_preliminary/journal.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "steering 属真实干预且做了系数扫描。扣分处：无随机方向对照，无 ablation，也无任何神经元/注意力头层面的干预。",
+    "score": 3,
+    "evidence_files": ["logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_06a7c722635f4bccbb1ac4500e36bd66.py", "logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_overall_accuracy_vs_random.png"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "扣分处：承载原始指标的 experiment_data.npy 写入运行时 working_dir 后未随产物保留，仓库中只剩图与代码；draft_summary、research_summary、baseline_summary、ablation_summary、token_tracker 全部缺失，仅能从 journal.json 回溯少量汇总值。",
+    "score": 3,
+    "evidence_files": ["report.md", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json", "logs/0-run/experiment_results/", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "逐一核对通过。report.md 如实标注 pipeline 未完成，节点数与 journal.json 吻合，缺失产物一律显式留空而非回填。",
+    "score": 5,
+    "evidence_files": ["report.md", "logs/0-run/stage_1_initial_implementation_1_preliminary/journal.json", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "通过整合情绪方向抽取、组件识别与全局电路整合的系统框架，识别情绪特异的全局电路。",
+        "method": {
+          "justification": "只做了三阶段框架的第一步且是简化版：在单一中间层取 mean(emotion)−mean(neutral) 得一个方向向量。组件识别与全局电路整合完全未实现，方法与 claim 所指的机制类别不匹配。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py", "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_06a7c722635f4bccbb1ac4500e36bd66.py"]
+        },
+        "experiment": {
+          "justification": "没有任何针对该 claim 的实验：无逐层方向抽取、无组件筛选、无跨情绪重叠度、无电路结构统计，也就不存在判定该 claim 是否成立的 metric。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_1_initial_implementation_1_preliminary/journal.json", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json", "report.md"]
+        },
+        "result": {
+          "justification": "report.md 对该 claim 无任何结果与分析，与论文既无一致也无不一致可言，属证据完全缺失。",
+          "score": 1,
+          "evidence_files": ["report.md"]
+        }
+      },
+      "C2": {
+        "claim": "提供机制性证据：情绪生成由可追溯的电路支撑，且跨场景、跨情绪稳定。",
+        "method": {
+          "justification": "机制性证据所需的方法族（必要性、充分性、随机组件对照、跨场景一致性）一项未采用，仅有单层残差加向量的行为级干预，无法支撑“可追溯电路”这一机制主张。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"]
+        },
+        "experiment": {
+          "justification": "未运行任何稳定性实验：数据中虽带 8 个 domain，但从未按 domain 拆分统计，只有 per-emotion 准确率一项，无跨场景/跨情绪一致性判据。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json", "logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_per_emotion_heatmap.png"]
+        },
+        "result": {
+          "justification": "无结果、无分析、无与论文的比较，claim 悬空。",
+          "score": 1,
+          "evidence_files": ["report.md"]
+        }
+      },
+      "C3": {
+        "claim": "基于电路的控制方法可在任意输入上无需显式指令诱发目标情绪，且在情绪表达准确率上优于 prompting 与 direction steering。",
+        "method": {
+          "justification": "实际实现的是单层 direction steering，恰是论文中作为对照基线的方法，而非 claim 所指的 circuit-based control，方法与 claim 的机制类别错位。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"]
+        },
+        "experiment": {
+          "justification": "去除情绪指令后生成再判分，“无显式指令”这一半设计正确，也扫了 5 档强度。扣分处：三臂对照只剩一臂，prompting 与 circuit 两个必需比较对象都不存在，claim 的核心判据根本无法计算；样本仅 30 stem×6。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py", "logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json"]
+        },
+        "result": {
+          "justification": "唯一可得数字是最优强度下 72.22% 的情绪表达准确率，既未与 prompting/circuit 比较，也未与论文的 91.22%/98.85%/99.65% 做任何对照分析；report.md 明确写明无法判定，属未完成而非造假，但复现结论完全缺位。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json", "report.md"]
+        }
+      }
+    }
+  }
+}

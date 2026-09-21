@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-20",
+  "auditor": "expert-self-review (llm-chat MCP unavailable)",
+  "claim_id": "C2",
+  "linked_milestones": ["M1"],
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Weight-space Grassmann overlap — no external GT needed. Ctrl-B students serve as null baseline. Purely geometric/mathematical measurement."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "overlap_gap_k1 is a raw difference of geometric quantities bounded [0,1]. ratio_k1=11.30 is teacher/ctrl overlap ratio (independent denominators). top1_variance_fraction=0.300 is SVD-geometric, not self-normalized."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All claimed numbers verified in shortlist.json: b_star=47, ratio=11.300377, top1_variance_fraction=0.300111, shortlist_size=36, target=transformer_blocks.47.attn.to_out.0. Direction .pt files exist. Tracker m1_location=done."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "mechanism_location.py:main() called; all outputs on disk at runs/m1_location/."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "All 60 DiT blocks, 8+8 seed-matched LoRA adapters, k-grid={1,2,4,8}, 3 timestep buckets. Method re-bound from probe AUC to Grassmann overlap per MECHANISM_ROUTING.md — documented."
+    },
+    "eval_type": "self_supervised_proxy",
+    "eval_type_details": "Weight-space geometric analysis. Ctrl-B is an independent null baseline. No external GT required."
+  }
+}

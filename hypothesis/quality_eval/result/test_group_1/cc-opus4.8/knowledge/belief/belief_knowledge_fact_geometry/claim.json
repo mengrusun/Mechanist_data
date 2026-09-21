@@ -1,0 +1,21 @@
+{
+  "Name": "belief_knowledge_fact_geometry",
+  "Title": "Three Axes of Epistemics: The Representational Geometry of Belief, Knowledge, and Fact",
+  "Short Hypothesis": "Belief, knowledge, and fact are encoded as three related but distinguishable axes in activation space, with 'knowledge' geometrically approximating the conjunction (intersection) of the belief axis and the fact/truth axis, mirroring the philosophical 'justified true belief' relation.",
+  "Related Work": "The source paper argues LLMs conflate these three notions but treats them behaviorally. Truth-probe literature (Marks & Tegmark 2023; Li et al. 2023 ITI) studies only factuality. Epistemic-verb work in NLP (factive vs non-factive verbs) is behavioral/syntactic. We uniquely ask whether the *tripartite* structure is realized geometrically and whether knowledge = belief AND truth internally.",
+  "Abstract": "Epistemology distinguishes belief (an agent's held state), fact (the world state), and knowledge (justified true belief, i.e., belief that is also factive). The paper motivating this work shows LLMs cannot reliably keep these apart. We ask a sharper, mechanistic question: are these three notions even represented as distinct geometric objects, and if so, what is their relational structure? We construct a controlled corpus that independently varies (i) whether a proposition is attributed as believed, (ii) whether it is factually true, and (iii) whether it is framed with a factive knowledge verb. Probing residual streams, we recover a belief axis, a truth axis, and a knowledge axis, and test the central structural hypothesis that the knowledge axis lies approximately in the span of belief and truth and fires most strongly when both are positive. We quantify this with subspace-angle analysis, a conjunction-prediction test (does knowledge activation ~ min(belief, truth)?), and causal composition (steering belief-up and truth-up jointly should move the knowledge readout). Where the conjunction structure breaks—e.g. the model treats 'knows' as merely a stronger 'believes' without enforcing truth—we predict exactly the factivity failures reported behaviorally. The result is a geometric account of why belief/knowledge/fact collapse, and a diagnostic for which of the three axes a given model has failed to separate.",
+  "Experiments": [
+    "Construct a 2x2x2 factorial dataset over {attributed-belief +/-} x {factually-true +/-} x {verb: believe vs know}, ~4k items with matched surface form.",
+    "Train three probes (belief, truth, knowledge) on disjoint label splits; measure their per-layer separability.",
+    "Subspace analysis: compute principal angles between knowledge subspace and span(belief, truth); test whether knowledge lies largely within that span vs an independent direction.",
+    "Conjunction test: regress knowledge-probe score on (belief score, truth score, and their product); a significant positive interaction supports the AND structure.",
+    "Causal composition: jointly steer along belief and truth directions and check the knowledge readout tracks the conjunction; steer only truth-down under a 'know' verb and test whether the model behaviorally drops the factive commitment.",
+    "Cross-model comparison of how cleanly the conjunction holds, correlated with each model's KaBLE-style factivity accuracy."
+  ],
+  "Risk Factors and Limitations": [
+    "The 'knowledge = belief AND truth' structure is a strong hypothesis and may only hold approximately or in some layers.",
+    "Verb-based framing may create confounds with syntactic features rather than epistemic content.",
+    "Probe axes may be entangled; regularization and orthogonalization choices affect conclusions.",
+    "Philosophical JTB is contested; the geometric analogy is a modeling choice, not a claim about 'real' knowledge."
+  ]
+}

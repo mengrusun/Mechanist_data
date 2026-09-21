@@ -1,0 +1,110 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "How do LLMs Compute Verbal Confidence?",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "There IS a fitting/selection process (linear probes). The split is honored in code: in experiment_2d0947357395450d8631ff1e46644350_proc_329916/experiment_code.py:332-380 `train_test_split(..., test_size=0.3, random_state=42)` yields disjoint idx_train/idx_test; probes (`clf.fit(X_post_tr, conf_bins[idx_train])`) are trained on train and scored on the held-out 60-item test set, and the pre-answer control probe uses the same disjoint indices. So probe fitting and evaluation do not overlap. HOWEVER the headline number `cache_probe_accuracy=0.6167` is `nanargmax` over 17 layers computed ON THE TEST SET (experiment_code.py:396-421) with no separate selection split — i.e. best-layer selection on the reported test set. The run itself flags this: stage_4 stage_progress.json lists 'Single-layer selection risk: Reporting only \"best layer\" accuracy without holdout-based layer selection risks overfitting to validation noise.' A genuine but minor hygiene gap that inflates the reported best-layer figure.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_2d0947357395450d8631ff1e46644350_proc_329916/experiment_code.py",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Two labels are used. (1) Verbal confidence: derived as the expected value over digit-token logits at the confidence position (experiment_code.py:211-257, continuous_conf), then binned into `conf_bins` — this IS the very quantity the caching claim is about (the model's stated confidence), so probing hidden states to predict it is a valid operationalization; it is not circular in the harmful sense (the probe is a separate classifier, and the label is the model's output the claim concerns). It is a proxy (expected-value over digits, binned, rather than the literally generated confidence string). (2) Correctness: TriviaQA string/alias match (predictions vs ground_truth in experiment_data.npy show 'Pulsar' vs 'PULSAR' style matching), a valid but 85.5%-imbalanced label the run acknowledges is 'uninformative' (stage_progress.json). Labels reasonably characterize the target with documented proxy gaps.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_2d0947357395450d8631ff1e46644350_proc_329916/experiment_code.py",
+      "logs/0-run/experiment_results/experiment_c150f7421fd54adda13e6b8eb759ef5f_proc_2071921/experiment_data.npy",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The task specifies model gemma-3-27b-pt (62 layers) and dataset TriviaQA. Both are used exactly: experiment_code.py:64 loads `os.path.join(MODEL_DIR, 'gemma-3-27b-pt')` and experiment_code.py:47-52 loads `mandarjoshi/trivia_qa`, config `rc.nocontext`, split `validation`. draft_summary.json confirms 'Gemma-3-27b-pt (pretrained only, no instruction-tuned variant available)'. Dataset key throughout is `triviaqa_gemma3_27b_pt`. N_SAMPLES=200 (a subset of TriviaQA validation, standard for probing). No silent model downgrade. The optional Qwen-2.5-7B verify variant was never run, but that is an explicitly optional robustness probe ('use as needed'), so it is exempt. Main-experiment resources are faithful.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_2d0947357395450d8631ff1e46644350_proc_329916/experiment_code.py",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "N_SAMPLES=200 (experiment_code.py:58), with test_size=0.3 → all reported probe accuracies are computed on only ~60 held-out items (0.6167 = 37/60; per-layer values are multiples of 1/60). This is a thin evidentiary base for a strong mechanistic caching claim. The run partially flags the thinness: stage_progress.json notes 'Small sample size (~200 examples) yields high variance ... differences of ~0.02 may not be statistically significant' and recommends scaling to 500-1000. Yet the same stage still writes 'supporting the confidence caching hypothesis' on this 60-item evidence. Direction is stated but over-specified relative to the data; caveats are present but not fully binding on the conclusion.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_2d0947357395450d8631ff1e46644350_proc_329916/experiment_code.py",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Single seed (ds.shuffle(seed=42), train_test_split random_state=42; experiment_code.py:59,333). experiment_data.npy stores a single val record (metrics/val len=1, epoch 0) with no variance. The four `seed_aggregation_*` directories are misleading: each aggregation_plotting_code.py loads a single-element `experiment_data_path_list` (n_runs=1), so its SEM is `np.zeros_like(mean)` — no genuine multi-seed aggregation and no error bars. No significance testing. The run itself concedes 'differences of ~0.02 may not be statistically significant' yet still draws the caching conclusion, and the key post-vs-control gap (0.6167 vs 0.6333 across layers) is within plausible n=60 noise. Point estimates only; robustness to randomness unverified.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_2d0947357395450d8631ff1e46644350_proc_329916/experiment_data.npy",
+      "logs/0-run/experiment_results/seed_aggregation_1d2bb763fe874d5fa0877bc9e6a627b0/aggregation_plotting_code.py",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The reproduced claim is explicitly causal/mechanistic ('written into hidden states ... later retrieved from that cache'). The paper establishes it via genuine interventions (activation steering, patching, noising, swap, attention blocking). The reproduction, however, used ONLY correlational linear probing plus a pre-answer control comparison. No real intervention was executed: grep of every experiment_code.py finds no forward hooks / residual-stream patching / steering; the single 'gemma3_27b_causal_patch.png' (in experiment_b706422...) is a non-functional stub — draft_summary.json states its values are 'exactly 0.0 across every layer ... the causal patching intervention was not actually executed (a stub/placeholder)'. stage_progress.json lists 'Causal intervention' only under future work. Thus a causal claim rests on correlational evidence with no working intervention. The run does honestly label probing as correlational (mitigating over-claim), but the mechanism itself was never causally demonstrated.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/experiment_results/experiment_b706422aaa3e416780b1cf58c1352582_proc_1899480/experiment_code.py",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number traces to on-disk products and agrees. experiment_2d0947.../experiment_data.npy holds cache_probe_accuracy=0.6166..., majority_baseline_conf=0.335, majority_baseline_corr=0.855, per_layer_control_conf_acc (max 0.6333), best_layer_conf=28 — matching research_summary.json / baseline_summary.json (0.6167 post, 0.6333 control, 0.335 majority) and the stage_4 answer_span_mean_pooling npy (cache_probe_accuracy=0.65, val_loss=0.35) matching stage_progress.json. raw_confidences (len 200) and predictions/ground_truth (len 200) are present as real per-item outputs. No sourceless or back-filled numbers were found; the one degenerate product (zeros patching plot) is honestly disclosed as a stub rather than reported as a result.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_2d0947357395450d8631ff1e46644350_proc_329916/experiment_data.npy",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/experiment_c150f7421fd54adda13e6b8eb759ef5f_proc_2071921/experiment_data.npy"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Numeric consistency is strong: 0.6167 post / 0.6333 control / 0.335 majority / 0.85 correctness recur identically across draft_summary.json, research_summary.json, baseline_summary.json, the npy products, and stage_progress.json. The inconsistency is interpretive: draft_summary.json 'Significance' concludes 'pre-answer control probes match post-answer probe accuracy, indicating the current design cannot yet isolate a caching signal', whereas stage_4 stage_progress.json states the layer-matched control gap (0.65 vs 0.5167) 'confirms that confidence information emerges/consolidates after answer generation' and is 'supporting the confidence caching hypothesis' — the two artifacts reach opposite framings of the same result without reconciling that the across-layer best control (0.6333) still nearly equals the best post-answer probe (0.65). report.md meanwhile leaves the verdict as 'Requires human review'. Numbers agree; the conclusion/verdict is not consistently propagated. Loose interpretive bookkeeping rather than a numeric contradiction.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json",
+      "report.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "When an LLM is asked to verbalize its confidence after answering, the confidence value is not freshly computed at the moment of verbalization; instead, it is written into hidden states immediately following the answer and is later retrieved from that cache when the model speaks the confidence token.",
+        "method": {
+          "justification": "9a — The claim is causal (cache written post-answer, later retrieved). The paper answers it with causal interventions (steering at PANL vs CC, activation patching, noising, swap, attention blocking). The reproduction chose linear probing of post-answer vs pre-answer-control hidden states plus a majority baseline (experiment_code.py:332-391). Probing can show WHERE confidence is linearly decodable but structurally cannot establish caching/retrieval (a causal, temporal-precedence mechanism); the planned causal patching was left as a zeros stub (draft_summary.json). The pre-answer control is a thoughtful design element, but the method family is the wrong one for the causal caching claim and departs from every mechanistic tool the paper relies on. Partially informative for localization, misaligned for the causal core.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_2d0947357395450d8631ff1e46644350_proc_329916/experiment_code.py",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "9b — Design has reasonable pieces: post-answer vs pre-answer control, majority-class baseline, full 62-layer sweep, an answer-span-mean-pooling ablation (0.6167→0.65) and a probe max_iter sweep (experiment_c33cb95.../experiment_code.py, MAX_ITER_GRID=[1000,2000,5000,10000]). But it is under-powered and does not test the claim's mechanism: n=60 held-out items, single seed, no significance, best layer selected on the test set, correctness probe uninformative from 85% imbalance, and — critically — the paper's actual hyperparameters/interventions (steering coefficient sweep, patching source/target positions, layer-wise recovery) were never attempted; the one causal_patch artifact is a non-executed stub. The judgment metric (best-layer probe accuracy vs baseline) does not correspond to the caching claim, which requires demonstrating post-answer precedence causally. Honest but insufficient to discriminate caching from mere decodability.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_c33cb95f7dae4305ba0795d3031a6f69_proc_1757903/experiment_code.py",
+            "logs/0-run/experiment_results/experiment_c150f7421fd54adda13e6b8eb759ef5f_proc_2071921/experiment_data.npy",
+            "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json"
+          ]
+        },
+        "result": {
+          "justification": "9c — The paper's conclusion is strong: confidence is cached at answer-adjacent positions and retrieved (convergent causal evidence). The reproduction's core numeric result is ambiguous and only weakly directional: post-answer confidence probe 0.6167 (later 0.65) barely exceeds the across-layer pre-answer control 0.6333, so it does NOT cleanly reproduce post-answer-specific caching; the layer-28 peak occurring after the correctness peak (layer 20) is weakly consistent with the paper's directional story. The analysis is largely honest and caveated (draft_summary.json explicitly says the design 'cannot yet isolate a caching signal'; stage_progress.json lists small-n, selection risk, no calibration). No fabrication or quietly relaxed thresholds. The deduction is that stage_4 nonetheless upgrades the framing to 'supporting the confidence caching hypothesis' on within-noise evidence, and the run's own artifacts disagree on whether the signal was isolated — a partial/ambiguous non-reproduction whose deviation (control matching post-answer) is disclosed in one place but glossed in another, rather than a fully reliable honest NOT-REPRODUCED.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/research_summary.json",
+            "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json"
+          ]
+        }
+      }
+    }
+  }
+}

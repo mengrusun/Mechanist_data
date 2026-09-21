@@ -1,0 +1,88 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Mechanistic Understanding of Large AI Models with SemanticLens",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The pipeline fits no classifier/probe/threshold: it selects each component's top-K=9 maximally-activating images (code/build_component_vectors.py: np.argsort on activations), embeds them with a frozen CLIP, and measures set-level properties. There is no learned parameter that could overfit, and the random baseline is drawn from the SAME 10k probe pool (code/claim1_faithfulness.py lines 76-85 rng.integers(0,N); code/claim2_queryability.py baseline_retrieval), making top-K vs random an apples-to-apples comparison rather than a train/eval leak. No fitting/selection process requires a held-out split. n/a — no fitting/selection process with a leakage path; splits are not applicable and none is violated.",
+    "score": 5,
+    "evidence_files": ["code/build_component_vectors.py", "code/claim1_faithfulness.py", "code/claim2_queryability.py"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Two ground-truth signals are used. (a) ImageNet class labels (label=gid, derived from the parquet 'label' column in code/common.py) are an independent, external label used for class purity and for text->component retrieval/labeling correctness — non-circular w.r.t. the CLIP system under test. (b) CLIP semantic coherence uses the foundation model's own embeddings, which is mildly self-referential for C1, but it is paired with a proper random baseline and complemented by the independent purity metric. Key gap: class purity only captures OBJECT-class concepts; a component faithful to a non-class concept (color/texture) would score low, so the label under-covers the full 'concept-faithful' space — the report itself notes CNN>ViT effects consistent with this. Valid, documented proxy with a coverage gap.",
+    "score": 4,
+    "evidence_files": ["code/claim1_faithfulness.py", "code/common.py", "results.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "Main experiment uses exactly the specified ResNet-50 (models/resnet-50 -> /data/zhenqian/models/resnet-50, extract_features.py loads 'models/resnet-50', 2048 layer4 channels), the frozen CLIP image tower (models/clip -> clip-vit-base-patch32, 512-d), and ImageNet as the probe dataset. Verify stage uses ViT-B/16 (models/vit-b16 -> vit-base-patch16-224), a listed candidate; VGG-16/EfficientNet-B0 are symlinked but unused, which is allowed ('use as needed, not necessarily all'). The only deviation is that the probe set is a disclosed 10k ImageNet-val subset (10 imgs/class, eval_subset_10k.txt) rather than full ImageNet — explicitly documented in results.md and reasonable; no model or component was downgraded. No silent swap/shrink of a specified resource.",
+    "score": 5,
+    "evidence_files": ["code/extract_features.py", "code/common.py", "results.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Scale is ample: N=10000 images (extract.log 'N=10000'), 2048 ResNet channels + 768+768 ViT neurons all evaluated (claim1_results.json num_components), and all 1000 ImageNet class prompts (claim2.log 'text emb shape: (1000, 512)'). Conclusions rest on population-level statistics over thousands of components, not a handful of cherry-picked cases, and the report calibrates strength honestly — softening the verbatim 'for every component' claim to 'the vast majority (73-84% coherence, 60-73% purity)'. Claim strength matches evidence strength.",
+    "score": 5,
+    "evidence_files": ["outputs/claim1_results.json", "outputs/claim2_results.json", "logs/extract.log", "logs/claim2.log"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Uncertainty is reported: claim1 uses 95% bootstrap CIs (2000 resamples, code/claim1_faithfulness.py _bootstrap_ci) over components and a 500-draw random baseline; claim2 baseline averages 5 seeds (BASELINE_SEEDS=5). The top-K vs random CIs are non-overlapping and the effect vastly exceeds noise (ResNet coherence 0.5548 [0.5514,0.5581] vs random 0.4822 [0.4821,0.4823]; retrieval lift 507x vs chance). The primary top-K estimate is deterministic (no multi-seed of the model pass), but that stage has no stochasticity, and cross-component uncertainty is properly bootstrapped. Differences clearly exceed plausible noise.",
+    "score": 5,
+    "evidence_files": ["code/claim1_faithfulness.py", "code/claim2_queryability.py", "outputs/claim1_results.json", "outputs/claim2_results.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a — no causal claim. Both claims are representational: C1 asserts that top-K activating inputs SUMMARISE what a component encodes, and C2 that pooled CLIP embeddings PLACE the component in a joint image-text space. Neither claims a causal intervention (no ablation, activation patching, or steering), and the pipeline runs none; the paper's third CRP relevance mapping is not among these two claims. The report's wording (coherence, purity, retrieval, labeling) is correlational/representational and does not overreach into causal language, so no causal-rigor requirement applies.",
+    "score": 5,
+    "evidence_files": ["results.md", "code/claim2_queryability.py"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Provenance is strong but incomplete. Every reported number in results.md matches outputs/claim1_results.json and outputs/claim2_results.json, which in turn match the run logs verbatim (logs/claim1.log, logs/claim2.log — e.g. ResNet coherence 0.5548, purity 0.340, retrieval M=1 0.3604 lift 506.9x). I independently recomputed class purity from the surviving outputs/components/*.npz and got 0.3401/0.2046/0.2277, matching the reported 0.340/0.205/0.228 exactly — no fabrication. Gap: the raw product outputs/features/eval10k.npz (activations + CLIP image embeddings), which results.md lists as an artifact and which claim scripts load, is absent (outputs/features/ is an empty directory), so the coherence and retrieval numbers cannot be re-derived from raw features — only from the derived components npz and the logs. Traceability is incomplete, not contradicted.",
+    "score": 4,
+    "evidence_files": ["results.md", "outputs/claim1_results.json", "outputs/claim2_results.json", "logs/claim1.log", "logs/claim2.log", "outputs/components/resnet50_layer4.npz"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Numbers and the PASS verdicts are consistent across report, JSON, and logs — results.md tables, claim1_results.json/claim2_results.json, and claim1.log/claim2.log all agree (coherence, purity, retrieval, lift, text-labeling fractions), and the qualitative_examples.md rows match the report's highlighted cases (comp 33 coucal purity 0.89, comp 690 rapeseed x9). Two trivial bookkeeping issues, neither changing any verdict: (i) claim1_faithfulness.py's docstring says '200 random draws' while the code and report both use 500 (N_RAND_DRAWS=500); (ii) results.md lists outputs/features/eval10k.npz as a deliverable that no longer exists on disk. No metric mismatch or contradicted conclusion.",
+    "score": 4,
+    "evidence_files": ["results.md", "outputs/claim1_results.json", "outputs/claim2_results.json", "outputs/qualitative_examples.md", "code/claim1_faithfulness.py"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "For every component c in a trained vision model, a small set of reference inputs that strongly drive c is a concept-faithful summary of what c encodes.",
+        "method": {
+          "justification": "9a — The method (per-component top-K=9 maximally-activating images via argsort on spatial-max ResNet channel activations / CLS/mean-patch ViT activations, code/build_component_vectors.py) is exactly SemanticLens's mapping 1 (concept examples = maximally activating inputs selected from the test dataset, paper Sec 3 / Feature Visualization). It correctly matches the mechanism category the claim is about. It omits the paper's CRP-based cropping of full images to concept patches (paper: cropping reduces distracting features), which is a refinement of the same method rather than a different family — a minor deviation.",
+          "score": 4,
+          "evidence_files": ["code/build_component_vectors.py", "code/extract_features.py"]
+        },
+        "experiment": {
+          "justification": "9b — Design is sound: two complementary metrics (CLIP pairwise-cosine coherence and ImageNet class purity), each with a same-pool random-K baseline, bootstrap 95% CIs, run over all 2048 ResNet channels and 768+768 ViT neurons across two architectures (claim1_faithfulness.py). Limitations: class purity covers only object-class concepts (a facet, not the full 'concept-faithful' notion), and CLIP coherence is partly self-referential to the foundation model; no patch-level control. Reasonable and adequately powered, one metric-coverage gap.",
+          "score": 4,
+          "evidence_files": ["code/claim1_faithfulness.py", "outputs/claim1_results.json"]
+        },
+        "result": {
+          "justification": "9c — Top-K exemplars beat random on both metrics for the majority of components (ResNet coherence 0.555 vs 0.482, 83.7% beat random; purity 0.340 vs 0.115 chance, ~3x, 72.9% beat random; ViT smaller but still above chance). The report honestly downgrades the verbatim 'for every component' to 'the vast majority' and reads the CNN>ViT gap plausibly. This qualitatively agrees with the paper's finding that maximally-activating concept examples are concept-faithful. Conclusion genuinely obtained, not engineered.",
+          "score": 5,
+          "evidence_files": ["outputs/claim1_results.json", "results.md", "outputs/qualitative_examples.md"]
+        }
+      },
+      "C2": {
+        "claim": "Embedding those reference inputs with a frozen multi-modal foundation model and pooling the embeddings yields a single vector v_c placing c in the foundation model's joint image-text semantic space.",
+        "method": {
+          "justification": "9a — v_c = normalize(mean_i CLIP(x_i)) over top-K exemplars (build_component_vectors.py), then queried with the frozen CLIP TEXT tower using 'a photo of a <class>' prompts (claim2_queryability.py encode_text). This is precisely SemanticLens's mapping 2 (concept examples -> CLIP semantic space -> vector theta) plus its 'search' (textual identification of neurons) and 'describe' (labeling) capabilities. The method matches the claim's mechanism category directly.",
+          "score": 5,
+          "evidence_files": ["code/build_component_vectors.py", "code/claim2_queryability.py"]
+        },
+        "experiment": {
+          "justification": "9b — Design tests joint-space membership two ways: text->component retrieval@M (M=1,3,5,10) with a random-component baseline over 5 seeds, and text-based labeling (argmax class name vs actual top-K image labels), across all 1000 class prompts (claim2_queryability.py). The correctness metric (fraction of retrieved components' top-K images whose GT label = query class) is a valid, strict operationalization. Gap vs paper: labeling is restricted to nearest ImageNet class name rather than the paper's open-vocabulary LLM-generated descriptions, so it under-tests the full 'describe' capability; still a legitimate, conservative test. Baselines and lift are properly reported.",
+          "score": 4,
+          "evidence_files": ["code/claim2_queryability.py", "outputs/claim2_results.json", "logs/claim2.log"]
+        },
+        "result": {
+          "justification": "9c — A single class-name text query retrieves the correct-concept component's exemplars at 0.360 for ResNet (chance 0.0007, 507x lift) and 0.069-0.085 for ViT (80x lift), with text-labeling matching top-K images for 43.8% of ResNet channels; qualitative cases (e.g. 'green field'->rapeseed comp 690, comp 33->coucal) illustrate genuine text-readability. This qualitatively reproduces the paper's search/describe capability (theta lives in CLIP's joint image-text space). Effects are orders of magnitude above chance and honestly reported; conclusion genuinely obtained.",
+          "score": 5,
+          "evidence_files": ["outputs/claim2_results.json", "results.md", "outputs/qualitative_examples.md"]
+        }
+      }
+    }
+  }
+}

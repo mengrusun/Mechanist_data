@@ -1,0 +1,59 @@
+{
+  "date": "2026-07-18",
+  "auditor": "gpt-5.4 (external LLM reviewer)",
+  "claim_id": "C2",
+  "linked_milestones": ["M1", "M2"],
+  "overall_verdict": "fail",
+  "integrity_status": "fail",
+  "trigger_scan": {
+    "check_A": {
+      "triggered": true,
+      "trigger_match": [
+        "scripts/steer_and_eval.py: h_new = h + alpha_actual * u_t (additive hook)",
+        "EXPERIMENT_PLAN.md M2: '7-point alpha-sweep dose-response', 'CAA-style additive push'",
+        "scripts/ablate_and_eval.py: make_add_hook (steering variant)"
+      ]
+    }
+  },
+  "checks": {
+    "A_steering_coefficient_sweep": {
+      "status": "fail",
+      "triggered": true,
+      "trigger_match": ["steer_and_eval.py:h_new = h + alpha_actual * u_t", "M2.2b 7-alpha sweep"],
+      "intervention_type": "CAA",
+      "sweep_grid": [-2, -1, -0.5, 0, 0.5, 1, 2],
+      "sigma_proj_scaling": true,
+      "capability_metric": null,
+      "plateau_range": null,
+      "locked_alpha": null,
+      "alpha_position": "n/a",
+      "random_baseline": {"run": true, "n_random": 1, "passed": null},
+      "sign_pattern": "broken",
+      "output_case_spotcheck": {
+        "cases_available": false,
+        "verdict": "no_cases_logged",
+        "note": "per_item key exists in per-run JSONs but no text-output spot-check was included in reviewer prompt"
+      },
+      "evidence": [
+        "scripts/steer_and_eval.py:31-100",
+        "scripts/launch_m1_m2.sh:88-153",
+        "results/mech/M2_2b_alpha0_seed42.json",
+        "results/MECHANISM_VERDICT.json:spearman_rho_per_seed"
+      ],
+      "fail_reasons": [
+        "Q4: no independent capability/coherence metric logged at any sweep alpha point (only acc_steered in per-run JSON)",
+        "Q8: sign pattern broken — expected negative Spearman rho (positive alpha lowers acc), observed median rho=+0.371; 2/3 seeds show positive rho"
+      ],
+      "warn_reasons": [
+        "Q2: sweep spans only factor 4 (alpha in {0.5,1,2} sigma_proj), not >=3 orders of magnitude",
+        "Q7: n_random=1 per seed in specificity control, below recommended >=30"
+      ],
+      "details": "Two hard-fail criteria triggered: (1) no capability metric at any alpha point — OOD collapse undetectable; (2) sign pattern broken — 2/3 seeds show positive Spearman rho (acc rises with positive alpha) contrary to expected direction. These protocol violations are consistent with the BOUNDED NULL scientific conclusion: the mechanism does not work as hypothesized. The violations reflect absent controls, not fraud."
+    },
+    "B_reserved": {"status": "not_implemented"},
+    "C_reserved": {"status": "not_implemented"},
+    "D_reserved": {"status": "not_implemented"},
+    "E_reserved": {"status": "not_implemented"},
+    "F_reserved": {"status": "not_implemented"}
+  }
+}

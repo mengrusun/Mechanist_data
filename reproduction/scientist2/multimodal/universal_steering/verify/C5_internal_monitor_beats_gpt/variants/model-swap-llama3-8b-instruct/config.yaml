@@ -1,0 +1,44 @@
+# Variant config — C5 model-swap: Meta-Llama-3-8B-Instruct (RLHF, non-reasoning)
+# Diff from main experiment (C5_monitoring): model_path only.
+# Diff from DeepSeek variant: model swapped to Meta-Llama-3-8B-Instruct.
+
+# ---- CHANGED vs main experiment ----
+model_path: /data/zhenqian/models/Meta-Llama-3-8B-Instruct/Meta-Llama-3-8B-Instruct
+
+# ---- FROZEN vs main experiment ----
+run_id: verify_C5_llama3_8b_instruct
+out_dir: /data/zhenqian/Reproduction1/mechanica/multimodal/universal_steering/verify/C5_internal_monitor_beats_gpt/variants/model-swap-llama3-8b-instruct/results
+
+# Data sources (same as C5_monitoring / DeepSeek variant)
+halueval_path: /data/zhenqian/data/monitoring/hegen/data.jsonl
+toxicchat_path: /data/zhenqian/data/monitoring/toxicchat/data.jsonl
+halueval_n: 2000
+toxicchat_n: 584
+
+# Reuse exact same test splits from main experiment for fair comparison
+reuse_splits_from: /data/zhenqian/Reproduction1/mechanica/multimodal/universal_steering/runs/C5_monitoring
+
+# Reuse GPT-4o judge scores (same (prompt,response) pairs, judge is model-agnostic)
+reuse_gpt4o_from: /data/zhenqian/Reproduction1/mechanica/multimodal/universal_steering/runs/C5_baselines
+
+# Training/eval params (frozen)
+batch_size: 8
+max_length: 512
+rfm_iters: 3
+dtype: bfloat16
+device: cuda
+seed: 42
+
+# Split ratios (frozen)
+split_ratios: [0.6, 0.2, 0.2]
+
+# CUDA device (HARD constraint: GPU IDs in {0,1,2,3})
+cuda_visible_devices: "0,1"
+
+# Rationale for adding this variant (iteration 1 of AUTO_REVIEW loop):
+# The DeepSeek-R1-Distill variant failed ToxicChat (0.858 < 0.882) because it is
+# reasoning-distilled (no RLHF harmlessness). This Llama-3-8B-Instruct variant
+# tests whether ANOTHER RLHF-tuned 8B model beats GPT-4o on both benchmarks —
+# supporting the narrowed claim "C5 holds for RLHF-tuned models". Same Llama arch
+# as the main experiment (32 blocks × 4096-d), so any difference isolates the
+# RLHF-vs-reasoning training regime, not architecture.

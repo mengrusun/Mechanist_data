@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "gpt-5.4 (external LLM reviewer, dmxapi/llm-chat-equivalent)",
+  "claim_id": "C2",
+  "linked_milestones": ["M4", "M4.stab"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "GT loaded from dataset JSONL 'answer' field per corruption type (corrupt_fact, corrupt_rule, corrupt_answer), deterministically set by build_propositional_dataset.py. Role labels (fact/rule/answer) are structural properties of the corruption generator, not derived from model output."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "S[c, r] = Recovery_r(c) = (patch_ld - corr_ld) / (clean_ld - corr_ld). Denominator is clean-corrupt logit-diff delta, not model max/mean. Modularity metrics (dominance ratio, dissociation) derived from S. No normalization fraud."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "results/M4_roles.json exists: median_dominance=1.197, dissociation={fact:0.089, rule:0.027, answer:0.026}, null_shuffle_p={fact:0.05, rule:1.0, answer:1.0}, success_C2=false. results/M4stab.json exists: Jaccard fact=0.750, answer=0.769, rule=0.364, success_C2_stability=false. results/M1_top40_for_M4.json exists. All values match EXPERIMENT_RESULTS.md. Tracker DONE."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All metric functions (compute_S_matrix, compute_modularity, null_shuffle_pvalue, jaccard) are called in role_dissociation.py and produce output fields in M4_roles.json and M4stab.json. No dead or decorative metric code found."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "C2 plan specifies role-dissociation over 'the shortlisted components' (158 total). M4 and M4.stab ran on top-40 of 158 components (25% of shortlist) for budget reasons. Scope reduction is explicitly disclosed in EXPERIMENT_RESULTS.md (M4 entry, Notes) and EXPERIMENT_TRACKER.md. Justified via M2 dose-response (top-31 recovers 0.946 of effect). The claim predicate as written covers all 158 components, so there is a scope mismatch. WARN rather than FAIL because reduction is disclosed, documented, and defensible — but the C2 verdict is strictly conditioned on top-40, not all 158."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

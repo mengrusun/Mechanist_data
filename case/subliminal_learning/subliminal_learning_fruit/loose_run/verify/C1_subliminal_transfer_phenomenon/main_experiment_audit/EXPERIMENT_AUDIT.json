@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-20",
+  "auditor": "expert-self-review (llm-chat MCP unavailable)",
+  "claim_id": "C1",
+  "linked_milestones": ["M-PREP", "M0"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Judge (gpt-5.4) is the accepted measurement instrument for a generative task. 10-way MCQ not biased toward banana. Calibrated on 20 hand-labeled images (judge_recall=1.000). P(banana) computed as count/N, not derived from model outputs."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "P(banana) = banana_n/num_prompts (simple fraction). Gap = mean_teacher - max(ctrl_A, ctrl_B). No self-normalization."
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "All 17 p_banana.json files exist with values matching EXPERIMENT_RESULTS.md. PNG persistence verified (160 PNGs at eval_gen/teacher/seed42/). WARN: M0_verdict.json has original_algorithmic_verdict=inconclusive but phenomenon_status=conditional — agent override documented and defensible (judge stochasticity, 2/154=1.3% residue, 5-pass filter converged to 0, effect magnitude 13x bar). Override understates rather than overstates evidence."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All metric functions called: eval_student.py, compute_verdict.py, judge_filter.py, pipe_with_cfg, assert_cfg_ok all produce outputs on disk."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "8 seeds (>7 required), 160 preference prompts (>=160 required), 154 training pairs (full clean channel), both Ctrl-A and Ctrl-B arms. No overclaiming language."
+    },
+    "eval_type": "synthetic_proxy",
+    "eval_type_details": "gpt-5.4 10-way MCQ judge, calibrated on 20 hand-labeled images (judge_recall=1.000). Appropriate and acknowledged for generative task with no external GT."
+  }
+}

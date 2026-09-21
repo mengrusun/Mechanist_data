@@ -1,0 +1,16 @@
+{
+  "date": "2026-07-14",
+  "auditor": "gpt-5.4 via dmxapi (cross-model)",
+  "claim_id": "C4",
+  "linked_milestones": ["M4a", "M4b"],
+  "overall_verdict": "fail",
+  "integrity_status": "fail",
+  "checks": {
+    "gt_provenance": {"status": "pass", "details": "Real MGSM gold answers from dataset parquet files; same pipeline as M2/M3."},
+    "score_normalization": {"status": "pass", "details": "macro_acc = mean(per-lang correct/n_problems) with n_problems=50, raw accuracy. Baseline=0.762 consistent across milestones."},
+    "result_existence": {"status": "warn", "details": "M4a result (results/m4a/eval.jsonl, macro=0.558) exists. M4b not run; no results/m4b/ directory. Claim's >=85% predicate requires both legs."},
+    "dead_code": {"status": "pass", "details": "mlr/m4_eval.py compute_macro_accuracy() called; output present in results/m4a/eval.jsonl."},
+    "scope": {"status": "fail", "details": "M4b (training-free leg) never run. LoRA training used 5001/73559 examples (6.8%). Eval n=50/lang vs planned 250/lang. The >=85% relative-gain predicate cannot be evaluated."},
+    "eval_type": "real_gt"
+  }
+}

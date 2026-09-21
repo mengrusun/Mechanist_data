@@ -1,0 +1,225 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Zhenqian Xu",
+    "paper_title":         "Toward Universal Steering and Monitoring of AI Models",
+    "agent":         "scientist3",
+    "review_date":         "2026-07-19"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径（相对 scientist3/multimodal/universal_steering）。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "这个 run 里没有需要 train/test 划分的地方",
+    "score": "n/a",
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_data.npy",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/ablation_summary.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签源于benchmark和llm judge评估,但llm judge时每个概念只有 3 条评测 prompt。其余四条 claim 没有产生任何标签（根本没跑），谈不上标签有效性。",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_data.npy",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "C2-C5完全没做，也没有用相应的数据集",
+    "score": 2,
+    "evidence_files": [
+      "idea.md",
+      "report.md",
+      "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_data.npy",
+      "logs/0-run/baseline_summary.json"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "证据严重不足。真正跑出来的只有 Claim1，而且只有 20 个概念 × 3 条 prompt（每个概念类才 4 个概念左右",
+    "score": 1,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/experiment_results/",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "claim1的严谨性较好，多seed+对照组+随机性统计，但只覆盖了claim1",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/experiment_ae1f1ee8c19c4caa8d642478e49828f9_proc_4033862/experiment_data.npy",
+      "logs/0-run/baseline_summary.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "Claim1 的因果干预设计较合理： 是真正的 forward-hook 干预，并配了未 steer 基线、prompt-based 基线、alpha sweep、layer sweep，以及 off-target/distractor 指标来防止『加任意大向量都变』。唯一缺的是随机方向对照。。",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/experiment_data.npy"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Claim1 的关键数字能溯源且对得上：overall steered 0.4333 / baseline 0.0167、moods 1.0 / personas 0.833 / experts 0.0 / fears=topophiles 0.167，都能在 concept_benchmark 的 experiment_data.npy 和 draft_summary 里核到。但 research_summary.json 里存在明显无来源的内容：它描述了『跨语种 EN/ZH/FR/ES 迁移柱状图』『Python-to-C++ 方法对比图』『六个 benchmark(FAVABENCH/HE-Gen/HE-Wild/PubMedQA/RAGTruth/ToxicChat) 上 RFM Probe 匹配或超过 GPT-4o 的监控图』——而 experiment_results 里既没有对应 PNG、也没有任何对应 npy 数据（8 个 npy 全是 Claim1 相关，唯一的 compos 只是 composite_score 评分项，不是组合性）。这些是 summary/report 层凭空生成的图注，属于描述了不存在的实验结果。",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "各产物之间存在实质性矛盾。落盘 npy + draft_summary 表明只跑了 Claim1（『What the agent actually ran』在 report.md 里五条 claim 下贴的是同一段 Claim1 pipeline 文字），但 report.md 的 verdict 表把五条都标成『supported』，research_summary 又描述了 C2/C3/C5 的图。也就是说：数据只有 Claim1，叙述却宣称覆盖并支持了全部五条。这是记录自相打架，而非小笔误。",
+    "score": 2,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "RFM 可从大模型内部激活中抽出 per-block 线性概念向量，加到激活上可在推理时定向 steering（示例：anti-refusal / political / honesty）。",
+        "method": {
+          "justification": "用的是 difference-of-means，作者自己也写明只是『RFM proxy』，并没有实现 claim 明确点名的 RFM（核机 + AGOP）。另外测的是抽象概念类（moods/personas/experts/topophiles/fears），不是 claim 举例的 anti-refusal/political/honesty 场景。",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_data.npy"
+          ]
+        },
+        "experiment": {
+          "justification": "设计较完整，有未 steer 基线 + prompt-based 基线 + alpha 扫描 + layer 扫描 + 多 seed + off-target/perplexity 过度 steering 检测，judge 用 GPT-4o。弱点是规模小，每个概念就3个prompt",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/research_summary.json",
+            "logs/0-run/ablation_summary.json",
+            "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "不同概念类可 steer 性结果差异大。实验数据量太少，且用diff-of-means 代理而非 RFM，说服力低。",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/experiment_results/experiment_9aa5f7633ec04f038b7e05d7b99ab0a8_proc_1241075/experiment_data.npy",
+            "report.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "C++ 概念向量可提高 HackerRank 上算法题的 test-case pass rate，胜过默认 Python 与 'Answer in C++' prompt。",
+        "method": {
+          "justification": "没有实现。8 个 experiment_data.npy 里没有任何 cpp / HackerRank / 代码评测数据，pipeline 描述里也只有概念 steering。research_summary 里的『Python-to-C++ 方法对比图』没有对应落盘产物。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "该 claim 的实验完全没跑：无 g++ 编译、无 test-case、无三条件对照、无 alpha。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "没有结果，却在 report.md 的 verdict 表里被标为『partially or fully supported』，且 research_summary 描述了不存在的对比图——用无实验的方式给了肯定结论。",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "英文 paired data 抽出的概念向量可以直接迁移到中文/法文/西班牙文 prompts 上做 steering。",
+        "method": {
+          "justification": "没有实现。任何 npy 里都没有跨语种/多语言数据，只有英文概念 steering。research_summary 提到的『EN/ZH/FR/ES 迁移柱状图』无对应产物。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "跨语种实验完全没跑。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "无结果却被 verdict 表计为支持，summary 层还编造了迁移图，属无实验下结论。",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "多个概念向量可线性组合，同时对多个概念进行 steering。",
+        "method": {
+          "justification": "没有实现。npy 里唯一的 compos 是 composite_score（成功率+连贯性的综合评分项），与组合性 steering 无关；没有任何双向量相加的实验。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_ae1f1ee8c19c4caa8d642478e49828f9_proc_4033862/experiment_data.npy",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "组合 steering 实验完全没跑，无双概念条件、无分别测量。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "无结果却被计为支持，属无实验下结论。",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      },
+      "C5": {
+        "claim": "内部特征（RFM 概念向量或线性 probe）分类器在 hallucination / toxicity 监控上比 LLM judge 更准，即便来自较小的 8B 开源模型。",
+        "method": {
+          "justification": "没有实现。没有任何 probe 训练、没有监控 benchmark、没有 AUROC 数据。research_summary 里那张『六 benchmark 上 RFM Probe 匹配/超过 GPT-4o』的图没有对应 PNG 或 npy，是 summary 层凭空生成的。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "监控实验完全没跑：无 FAVABENCH/HE-Gen/HE-Wild/PubMedQA/RAGTruth/ToxicChat 任何一项数据。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "无结果却被 verdict 表计为支持，且 summary 编造了『RFM Probe 全面匹配/超过 GPT-4o』的结论，属无实验下结论 + 无来源数字。",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      }
+    }
+  }
+}

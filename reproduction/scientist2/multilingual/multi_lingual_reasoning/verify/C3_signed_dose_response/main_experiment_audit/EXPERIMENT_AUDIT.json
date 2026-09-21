@@ -1,0 +1,16 @@
+{
+  "date": "2026-07-14",
+  "auditor": "gpt-5.4 via dmxapi (cross-model)",
+  "claim_id": "C3",
+  "linked_milestones": ["M3"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {"status": "pass", "details": "Real MGSM gold answers from dataset parquet files."},
+    "score_normalization": {"status": "pass", "details": "macro_acc = mean(per-lang correct/n_problems) with fixed n_problems=50. All reported numbers verified to match."},
+    "result_existence": {"status": "pass", "details": "All 18 M3 result files verified: A(-1)=0.0509, A(0)=0.7436, A(+1)=0.000; random-subspace A(-1)=0.7400."},
+    "dead_code": {"status": "pass", "details": "SteeringHooks active; α-dependent variation in macro_acc across 9 values confirms intervention is live."},
+    "scope": {"status": "warn", "details": "1 seed, n=50/lang vs planned 3 seeds, n=250/lang. Qualitative conclusions valid but bootstrap CI significance tests not met. 9-value signed α sweep with matched random control is complete."},
+    "eval_type": "real_gt"
+  }
+}

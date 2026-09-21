@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Computational Basis of LLM's Decision Making in Social Simulation",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "There IS a fitting/selection process (linear probes fit per layer, and the layer pick argmax cv_acc), so this dimension applies. The split is genuinely honored in code: scripts/m2_extract_and_probe.py separates train_rows (split=='train') and held_rows (split=='held') (lines 257-258); the probe uses 5-fold CV on the 4000 train rows and reports held_acc on the disjoint 200-baseline held set (fit_layer_probes, lines 150-176; clf_all.fit(X,y) then score on Xh). data/dg1000_prompts.jsonl.stats.json confirms n_train=4000 / n_held=1000 stratified by cell, partners inherit the parent's split, so no pair straddles the boundary. However there is a real, disclosed hygiene gap: the corpus has only 48 unique prompt texts (16 cells x 3 phrasings), so ALL 48 surface texts appear in BOTH train and held (verify/C1_linear_encoding_social_vars/main_experiment_audit/EXPERIMENT_AUDIT.md check E: 'ALL 48 unique texts appear in both train and held'). A probe memorising surface token identity (David->male) can therefore reach held_acc=1.0 (results_summary.json m2.best_probe_held all 1.0) without generalising out-of-template. This is a genuine leakage-of-surface-form path that inflates the C1 held metric. The run did not paper over it: iteration added a Leave-One-Phrasing-Out control (runs/iteration_round_1/c1_lexical_stress_test.json) that exposed the confound (V=M ell=2 LOPO=0.483 = chance). Split is honored, main metric is on a held trial-id set, but the surface-text overlap is a real minor hygiene gap that partly drives the headline probe accuracy.",
+    "score": 3,
+    "evidence_files": ["scripts/m2_extract_and_probe.py", "data/dg1000_prompts.jsonl.stats.json", "verify/C1_linear_encoding_social_vars/main_experiment_audit/EXPERIMENT_AUDIT.md", "runs/iteration_round_1/c1_lexical_stress_test.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Two label types. (1) Probe labels G/A/I/M are drawn from the constructed balanced-design metadata in data/dg1000_prompts.jsonl (real, non-circular GT of the manipulated variable); the experiment audit rates this PASS ('Real dataset GT from constructed balanced design'). (2) The dependent variable tau (transfer amount) used as the projection-transfer OLS target and for baseline/steering effects is decoded from Llama-3.1-8B-Instruct itself via greedy generation (m2_extract_and_probe.py parse_transfer/greedy_transfer, lines 51-79, 180-215). The audit flags this as a synthetic_proxy that is reported without an explicit proxy label (EXPERIMENT_AUDIT.md check A/F, WARN). This is NOT fraudulent circularity: the model's own decision IS the phenomenon the paper studies (the paper's DV is precisely the LLM-dictator's transfer D), so using the model's decoded transfer as the outcome is the correct operationalization, matching the paper exactly. The only deficiency is the missing 'proxy' labelling in the summary. Labels validly capture the target behaviour; minor documentation gap.",
+    "score": 4,
+    "evidence_files": ["data/dg1000_prompts.jsonl", "scripts/m2_extract_and_probe.py", "verify/C1_linear_encoding_social_vars/main_experiment_audit/EXPERIMENT_AUDIT.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The task.md specifies model Llama-3.1-8B-Instruct and 1,000 baseline dictator-game trials (endowment $20, fair split $10, variables G/A/I/M) plus paired difference-vector prompts. The main experiment uses exactly these: claims_ledger.json and runs/M_main_v1/results_summary.json run on 'Llama-3.1-8B-Instruct' at bf16 (m2_extract_and_probe.py loads torch.bfloat16), and data/dg1000_prompts.jsonl.stats.json shows n_baseline=1000 + n_partner=4000 = 5000 rows, the exact spec (male<->female = David<->Anna, young<->old = ~25/~65, give<->take, meet<->no-meet, endowment $20, fair-split $10 all present in the sampled prompts). Used_n is full (5000 for C1, 1000 held for C2, 56000 decode ops for C3, 12000 for C4). The paper's cited portability target was DeepSeek; the run tried DeepSeek-R1-Distill-Llama-8B (runs/M7_portability_v1) and honestly reported it anchors to tau=10 constant (negative portability), then used Meta-Llama-3-8B-Instruct for the C3 model-swap verify variant — a verify-stage robustness swap, which is exempt from resource-fidelity scoring. No silent downgrade of the main model or dataset. Full fidelity.",
+    "score": 5,
+    "evidence_files": ["claims_ledger.json", "runs/M_main_v1/results_summary.json", "data/dg1000_prompts.jsonl.stats.json", "scripts/build_dg1000.py", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Scale is adequate for most claims: C1 probe on 4000 train / 200 held with projection-transfer OLS n=200 (results_summary m2.projection_transfer_at_ell_star n=200 per V); C2 on 1000 held activations; C3 main dose-response 56,000 decode ops over a 7-point alpha grid plus a supplementary L=16 sweep; C4 selectivity 12 grid points x 1000. Claim strength is matched to evidence and thinness is flagged: EXPERIMENT_RESULTS.md and claims_ledger explicitly attach caveats (C3 'suspected_under_power' at picked layers; C4 'not-supported'). The one genuinely thin spot is the C3 model-swap verify variant at n_baseline=10/cell vs planned 200 (INTEGRITY_AUDIT.md Phase 9 finding 3: 'SE(v_effect) ~ 1.9 at n=10 ... most individual shifts <2 SEs'), which is openly disclosed and the PASS is labelled qualitative pattern-match, not a full replication. No conclusion is asserted without having run the corresponding experiment. Adequate with disclosed thinness on one auxiliary variant.",
+    "score": 4,
+    "evidence_files": ["runs/M_main_v1/results_summary.json", "verify/INTEGRITY_AUDIT.md", "verify/VERIFY_REPORT.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Uncertainty handling is above average for a reproduction run. The C3 direction-specificity is quantified against a random-direction null with 10 seeds (runs/iteration_round_1/L16_random_control_extended/summary.json: V=M alpha=+2 gives random v_effects ~0.27-0.99 while the real direction inverts to -0.31, yielding the reported 2.84 sigma; G=4.30 sigma, A=2.69 sigma, I=2.50 sigma). C4 uses a 5000-permutation test (results_summary m5.perm_test n_perm=5000, p=0.84 at shallow, p=0.128 at L=16). Projection-transfer regressions report se/t/p (G p=0.002, I p=1.5e-9, M p=3.5e-5, A p=0.059 marginal). The main C3 dose-response effects come from single greedy (deterministic) decodes so within-cell run variance is not bootstrapped, but the key inferential comparison (direction vs random null) carries multi-seed variance, and honest borderline states (C4 p=0.128 'not stat-sig with n=4 V') are reported rather than glossed. Solid, with the one gap being single-run point estimates for the raw dose-response magnitudes.",
+    "score": 4,
+    "evidence_files": ["runs/iteration_round_1/L16_random_control_extended/summary.json", "runs/M_main_v1/results_summary.json", "figures/C3/c3_direction_specificity.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C3/C4 are causal/mechanistic (activation-addition steering). The claim rests on a GENUINE intervention (h <- h + alpha*proj, m2_extract_and_probe.py greedy_transfer apply_hooks + scripts/m4_steer_and_m5_selectivity.py), not on correlational probing dressed up as causal. Necessary controls are present: (a) a random-direction null baseline — initially missing at L=16 (flagged in VERIFY_REPORT.md note 2 as 'the single most important methodological gap'), then ADDED in iteration with 10 seeds (L16_random_control_extended), establishing >=2.5 sigma direction-specificity; (b) a coefficient sweep (main 7-point alpha in {-4,-2,-1,0,1,2,4}sigma per results_summary m4; L=16 5-point); (c) a coherence gate (format_ok_rate=1.0) so effects are not decode collapse; (d) cross-model replication of the V=M sign-inversion on Meta-Llama-3-8B. Causal wording was tightened to match the evidence ('bidirectional' -> 'sign-asymmetric direction-specific'). Deductions: the showcase L=16 random-null was only run at the single alpha=+/-2sigma showcase settings rather than a full grid, and the L=16 layer itself was a post-hoc choice (retroactively justified via LOPO). Genuine controlled intervention with the essential controls in place.",
+    "score": 4,
+    "evidence_files": ["scripts/m4_steer_and_m5_selectivity.py", "runs/iteration_round_1/L16_random_control_extended/summary.json", "verify/VERIFY_REPORT.md", "verify/C3_bidirectional_causal_steering/variant_audit/MECHANISM_AUDIT.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number traces to a concrete on-disk product and agrees. Spot-checks: EXPERIMENT_RESULTS.md C1 betas (G=-10.12, A=-4.85, I=+32.10, M=+41.28 with p=0.002/0.059/1.5e-9/3.5e-5) match runs/M_main_v1/results_summary.json m2.projection_transfer_at_ell_star exactly; probe cv_acc=1.0/held=1.0 match m2.best_probe_acc/best_probe_held; C2 GS off-diag max 0.506 and LEACE off-diag 0.829 match m3.max_offdiag; norm ratios 3.1-7.4 match m3.norm_audit leace_ratio (4.71/4.07/4.92/7.44); C4 perm p=0.84 and c4_ratio=inf (min_diag=0) match m5.perm_test and m5.matrix; C3 V=M shift 0.713->0.309 traces to m4 dose_response and the random-null summary. The experiment audit independently confirmed file existence (EXPERIMENT_AUDIT.md check C: probe_accuracy.json, projection_transfer.json, layer_pick.json, baseline_transfer.json all present, 5000-line jsonl). No sourceless or back-filled numbers found.",
+    "score": 5,
+    "evidence_files": ["runs/M_main_v1/results_summary.json", "refine-logs/EXPERIMENT_RESULTS.md", "claims_ledger.json", "verify/C1_linear_encoding_social_vars/main_experiment_audit/EXPERIMENT_AUDIT.md"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Verdicts propagate consistently across artifacts: C3=PASS and C1/C2/C4=INTEGRITY_ONLY (cap) appear identically in VERIFY_REPORT.md, refine-logs/main-experiment-verdicts.json, claims_ledger.json, and INTEGRITY_AUDIT.md; C4 'not-supported' at ell_V* and 'partial at L=16 (p=0.128)' is stated the same everywhere; no claim is PASS in one file yet flagged broken elsewhere (integrity WARN is uniformly propagated, and WARN correctly does not exclude from N_eligible). Prose matches numbers. One minor stale-number inconsistency: the GS diagonal mean is reported as 0.958 in EXPERIMENT_RESULTS.md / claims_ledger.json / figure captions, but runs/M_main_v1/results_summary.json m3.diag_mean.gs = 0.971 (mean of gs diagonal 1.0/0.884/1.0/1.0); both clear the >=0.95 preservation predicate so no verdict changes, but the reported 0.958 does not match the on-disk 0.971. Largely self-consistent with one immaterial numeric drift.",
+    "score": 4,
+    "evidence_files": ["verify/VERIFY_REPORT.md", "refine-logs/main-experiment-verdicts.json", "claims_ledger.json", "runs/M_main_v1/results_summary.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "For each social/contextual variable (e.g., gender, age, instruction framing, meeting condition), the LLM encodes its influence on decision making as a linearly extractable direction in the residual stream.",
+        "method": {
+          "justification": "9a: The chosen method — paired-prompt CAA difference-of-means direction v_hat_V per layer plus a linear logistic probe (scripts/m2_extract_and_probe.py) — is exactly the right mechanistic family for a 'linearly extractable direction' claim and matches the paper's 'vector of variable variation' (paper Sec 2.2) and probing framing. Linear probe + linear difference-vector directly test linear encodability. Method fully matches the claim's mechanism category.",
+          "score": 5,
+          "evidence_files": ["scripts/m2_extract_and_probe.py", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "experiment": {
+          "justification": "9b: Design is reasonable — per-layer probe cv_acc + held_acc, projection-transfer OLS onto the DV, and (added in iteration) a Leave-One-Phrasing-Out control across all layers. The judgment metric (probe accuracy of recovering V + significant projection-transfer beta) corresponds to the claim. Weaknesses that cap it below 5: layer pick by argmax(cv_acc) selects token-embedding-proximal layers (2,4,6) where the direction can be a surface-form detector, and held_acc=1.0 is computed on only 48 unique prompt texts shared across splits, so the raw headline is partly a lexical artifact. The LOPO stress test is the correct remedy and was actually run, distinguishing genuine mid-layer encoding (bands 10-14, 28-32) from the shallow phrasing detector.",
+          "score": 4,
+          "evidence_files": ["runs/M_main_v1/results_summary.json", "runs/iteration_round_1/c1_lexical_stress_test.json", "verify/C1_linear_encoding_social_vars/main_experiment_audit/EXPERIMENT_AUDIT.md"]
+        },
+        "result": {
+          "justification": "9c: Qualitatively agrees with the paper, which treats social variables as approximately linear residual-stream directions (paper Sec 3.2, Fig 3, Discussion). The run confirms linear encoding (probe cv_acc=1.0 all V; proj-transfer significant for 3/4) and, going beyond the paper, honestly narrows it: LOPO reveals V=M ell=2 is a phrasing detector (0.483=chance) and locates the productive mid/late bands. Analysis is careful, caveated, and non-inflated — an honest, faithful reproduction of the linear-encoding finding.",
+          "score": 5,
+          "evidence_files": ["runs/iteration_round_1/c1_lexical_stress_test.json", "claims_ledger.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        }
+      },
+      "C2": {
+        "claim": "A \"pure\" variable direction, obtained by removing overlapping components with other variables, isolates the unique effect of that variable, free of confounding from co-varying factors.",
+        "method": {
+          "justification": "9a: Gram-Schmidt orthogonalization of v_hat_V against the other three variables' directions is exactly the paper's 'partial steering vector' construction (paper Sec 2.2.2, projection-subtraction formula). The run additionally implements LEACE as an alternative concept-erasure decorrelator. Both are appropriate methods for a purity/disentanglement claim. Method matches the claim.",
+          "score": 5,
+          "evidence_files": ["scripts/m3_decorrelate.py", "runs/M_main_v1/results_summary.json"]
+        },
+        "experiment": {
+          "justification": "9b: A 4x4 cross-leakage probe matrix with pre-registered predicates (diag mean >= 0.95x raw AND off-diag max <= chance+0.05) is a sensible operationalization of 'isolates the unique effect' (results_summary m3, c2). Deductions: the 1-D scalar-projection cross-leakage probe is conservative (acknowledged); GS off-diag max 0.506 is borderline vs the 0.55 threshold; and the purity directions were never re-injected causally — C3's causal success used raw v_hat_V, so C2's purity is not empirically bridged to the intervention (open-item P3). Design is adequate but leaves the purity->causality link untested.",
+          "score": 4,
+          "evidence_files": ["runs/M_main_v1/results_summary.json", "verify/C2_purity_via_decorrelation/main_experiment_audit/EXPERIMENT_AUDIT.md", "claims_ledger.json"]
+        },
+        "result": {
+          "justification": "9c: Broadly agrees with the paper's orthogonality conclusion (paper Sec 3.4: manipulations of one IV largely leave others unaffected; 88.75% robust). The GS result (diag preserved, off-diag cut to 0.506 below chance+0.05) supports partial decorrelation, and the run honestly reports LEACE FAILING at the shallow picked layers as a dataset-specific pathology rather than disguising it. It appropriately narrows 'pure/free of confounds' to a 'partially decorrelated basis with 0.506 residual coupling'. One-sided limitation (raw-vs-pure link unclosed) keeps it from a 5, but the direction matches and deviations are disclosed.",
+          "score": 4,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "figures/C2/c2_purity_summary.md", "claims_ledger.json"]
+        }
+      },
+      "C3": {
+        "claim": "Injecting these directions into the model at inference time causally and substantially alters the relationship between the targeted variable and the model's decision output, while leaving other variables' effects intact.",
+        "method": {
+          "justification": "9a: Signed activation-addition of the (projected) direction into the residual stream (scripts/m4_steer_and_m5_selectivity.py) is exactly the paper's injection method (paper Sec 2.5, r~(l) = r(l) + alpha*Proj_D). For the 'leaving other variables intact' half, a 4x4 selectivity matrix M[V,W] with a permutation test is the correct mechanism-level design. Method matches both halves of the claim.",
+          "score": 5,
+          "evidence_files": ["scripts/m4_steer_and_m5_selectivity.py", "runs/M_main_v1/results_summary.json"]
+        },
+        "experiment": {
+          "justification": "9b: The causal half is strongly designed — alpha dose-response grid, coherence gate, random-direction null (10 seeds, >=2.5 sigma direction-specificity), and cross-model replication. The selectivity half (M5 4x4 matrix + 5000-perm test) is present but under-powered: at shallow ell_V* min-diag=0 gives a degenerate c4_ratio and p=0.84, and even the iteration L=16 sweep only reaches p=0.128 with n=4 variables and shows substantial collateral coupling (V=I ratio 1.00 non-selective). The alpha exploration is sigma-scaled and narrower than the paper's raw +/-30 grid, and the picked-layer under-power is a real design shortfall (mitigated by the L=16 supplementary run). Design is sound and honestly diagnosed but the 'intact' facet is only partially established.",
+          "score": 4,
+          "evidence_files": ["runs/M_main_v1/results_summary.json", "runs/iteration_round_1/L16_random_control_extended/summary.json", "verify/C4_selectivity_matrix/main_experiment_audit/EXPERIMENT_AUDIT.md"]
+        },
+        "result": {
+          "justification": "9c: The 'causally and substantially alters' half qualitatively agrees with the paper (paper abstract/Sec 3.3: manipulating vectors substantially alters how variables relate to the decision) — L=16 shows V=M sign-inversion in two models, V=A 5.5x amplification, V=I bidirectional, all direction-specific vs the random null. The 'leaving other variables intact' half only PARTIALLY holds (selective for V=A/M, non-selective for V=I, substantial coupling; p=0.128) — a genuine deviation from the strong claim, but honestly disclosed and consistent with the paper's own admission of a Female<->Meet interaction (paper Sec 3.4). Broad directional agreement with one clearly-reported sub-result deviation.",
+          "score": 4,
+          "evidence_files": ["figures/C3/c3_dose_response_L16.png", "runs/iteration_round_1/L16_random_control_extended/summary.json", "claims_ledger.json", "verify/VERIFY_REPORT.md"]
+        }
+      },
+      "C4": {
+        "claim": "The same mechanism supports both directions of intervention — amplifying a variable's effect or attenuating/inverting it — yielding a practical handle for alignment and debiasing of LLM-based social agents.",
+        "method": {
+          "justification": "9a: The mechanism used is signed activation-addition with alpha of both signs (m4_steer_and_m5_selectivity.py; results_summary m4 dose_response spans alpha in {-4..+4}sigma), which is precisely the handle the claim describes for amplify (alpha>0) vs attenuate/invert. Same single mechanism, both directions — method matches the claim.",
+          "score": 5,
+          "evidence_files": ["scripts/m4_steer_and_m5_selectivity.py", "runs/M_main_v1/results_summary.json"]
+        },
+        "experiment": {
+          "justification": "9b: Signed alpha grids at L=16 demonstrate both regimes empirically — amplification (V=A +0.11->+0.58 at +2sigma, V=G 2.5x at -2sigma) and attenuation/inversion (V=M inverts +0.71->-0.31, V=I -22% attenuate/+46% amplify) — with a random-direction null establishing these are direction-specific. Deduction: the effect is sign-ASYMMETRIC (each V responds strongly to one signed direction, not symmetrically to both), and the 'practical handle for alignment/debiasing' is demonstrated only in-principle within-model, with no external/human benchmark (which the paper itself flags as out of scope). Reasonable design that tests both directions.",
+          "score": 4,
+          "evidence_files": ["runs/M_main_v1/results_summary.json", "runs/iteration_round_1/L16_random_control_extended/summary.json", "figures/C3/c3_direction_specificity.md"]
+        },
+        "result": {
+          "justification": "9c: Qualitatively agrees with the paper's alignment/debiasing framing (paper abstract + Sec 4.1: injecting small controlled perturbations along a construct's direction to amplify or reduce its effect). The run shows the same mechanism produces both amplification and attenuation/inversion across variables, supporting the practical-handle claim. It honestly narrows 'both directions' to 'sign-asymmetric direction-specific' — a disclosed deviation from perfect symmetric bidirectionality — rather than overclaiming. Direction matches with a transparently reported caveat; no goalpost-tuning or fabrication.",
+          "score": 4,
+          "evidence_files": ["claims_ledger.json", "review-stage/AUTO_ITERATION_FINAL_REPORT.md", "figures/C3/c3_dose_response_L16.png"]
+        }
+      }
+    }
+  }
+}

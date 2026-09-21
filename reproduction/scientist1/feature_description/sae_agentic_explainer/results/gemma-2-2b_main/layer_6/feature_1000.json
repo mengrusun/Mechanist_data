@@ -1,0 +1,400 @@
+{
+  "feature_idx": 1000,
+  "max_act_ref": 14.89646053314209,
+  "trigger_threshold": 2.979292106628418,
+  "sage": {
+    "candidates": [
+      "Compact product/specification tokens: concrete numeric measurements, ratings, or model-size strings written in dense number+unit form in catalog/hardware text (e.g., 120mm, 250V 10A, 3.5mm, 7.4V 2200mAh, 4K60, 12MP).",
+      "Numeric size/capacity specifications in product-style text, especially hardware dimensions and equipment ratings expressed as a number followed by a unit or spec token (e.g., 120 mm, 25 mm, 12 kW, 50 liters, M8).",
+      "Alternative-size or converted-dimension expressions inside specs, especially side-by-side equivalent sizes such as imperial/metric restatements or close alternatives (e.g., 1/2 inch (13mm), 3/4\\\" or 19mm, 14 or 15mm)."
+    ],
+    "top": "Compact product/specification tokens: concrete numeric measurements, ratings, or model-size strings written in dense number+unit form in catalog/hardware text (e.g., 120mm, 250V 10A, 3.5mm, 7.4V 2200mAh, 4K60, 12MP).",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on the first digit of a multi-digit measurement immediately followed by a unit like mm or watt (e.g., 120mm, 2250 watt, 170 injection units).",
+            "positive_probes": [
+              "Install a 120mm cooling fan here.",
+              "The heater draws 2250 watt during startup.",
+              "Administer 170 injection units before breakfast.",
+              "Use a 35mm lens for portraits.",
+              "Cut two pieces of 450mm tubing."
+            ],
+            "positive_acts": [
+              12.782403945922852,
+              9.697183609008789,
+              4.29464864730835,
+              8.611238479614258,
+              12.32572078704834
+            ],
+            "distractor_probes": [
+              "Install a cooling fan measuring 120 millimeters.",
+              "The heater draws 2250 watts during startup.",
+              "Administer 170 units before breakfast."
+            ],
+            "distractor_acts": [
+              14.027087211608887,
+              9.68660831451416,
+              4.326287746429443
+            ],
+            "score": 0.19557800292968786
+          },
+          {
+            "hypothesis": "The feature responds to numeric size/dimension specifications in product-description text, especially when giving hardware or equipment capacities such as fan diameter, bolt size, webbing width, or burner power.",
+            "positive_probes": [
+              "Includes a 120 mm cooling fan for airflow.",
+              "Uses M8 bolts for secure mounting.",
+              "Features 25 mm nylon webbing straps.",
+              "Equipped with a 12 kW gas burner.",
+              "Tank capacity rated at 50 liters."
+            ],
+            "positive_acts": [
+              11.58393383026123,
+              5.487661838531494,
+              6.367471694946289,
+              13.399953842163086,
+              10.266328811645508
+            ],
+            "distractor_probes": [
+              "Includes a powerful cooling fan for airflow.",
+              "Uses sturdy bolts for secure mounting.",
+              "Features durable nylon webbing straps."
+            ],
+            "distractor_acts": [
+              2.9733753204345703,
+              0.0,
+              0.0
+            ],
+            "score": 8.429944896697998
+          },
+          {
+            "hypothesis": "The feature fires on digits inside parenthetical or comparative unit-conversion expressions where an imperial size is restated in metric form (e.g., 1\" (25mm) or 14 or 15mm).",
+            "positive_probes": [
+              "Use a 3/8\" (10mm) wrench here.",
+              "The pipe measures 1/2\" (13mm) outside diameter.",
+              "Choose the 5/8\" or 16mm socket.",
+              "Install a 1\" (25mm) conduit fitting.",
+              "A 9/16\" or 14mm wrench should work."
+            ],
+            "positive_acts": [
+              13.175536155700684,
+              11.258525848388672,
+              14.72061824798584,
+              15.865577697753906,
+              14.78158187866211
+            ],
+            "distractor_probes": [
+              "Use a 10mm wrench on this bolt.",
+              "The bracket is 25mm wide overall.",
+              "Choose between 14mm and 15mm sockets."
+            ],
+            "distractor_acts": [
+              7.798793792724609,
+              9.361443519592285,
+              14.955914497375488
+            ],
+            "score": 3.254984029134116
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "Numeric size/capacity specifications in product-style text: measurements or ratings written as a number plus unit/model-size token, especially hardware dimensions and equipment power/capacity (e.g., 120 mm, 25 mm, 12 kW, 50 liters, M8).",
+            "positive_probes": [
+              "Cooling fan, 120 mm diameter, black housing.",
+              "Hydraulic press rated at 12 kW output.",
+              "Reservoir capacity: 50 liters, stainless steel tank.",
+              "Use M8 bolts for the mounting bracket.",
+              "Panel thickness is 25 mm across edges."
+            ],
+            "positive_acts": [
+              15.092625617980957,
+              12.964008331298828,
+              5.699265003204346,
+              4.286529541015625,
+              10.96379566192627
+            ],
+            "distractor_probes": [
+              "The fan is small and very quiet.",
+              "This press delivers strong and reliable performance.",
+              "Use standard bolts for the mounting bracket."
+            ],
+            "distractor_acts": [
+              2.6113948822021484,
+              2.6288280487060547,
+              3.0863819122314453
+            ],
+            "score": 7.025709883371988
+          },
+          {
+            "hypothesis": "Imperial-to-metric or alternative-size comparison expressions in specifications, especially parenthetical or 'or' restatements like 1\" (25mm) or 14 or 15mm.",
+            "positive_probes": [
+              "Use a 1/2 inch (13mm) drill bit.",
+              "Panel thickness: 3/4\" or 19mm nominal.",
+              "Gap should be 14 or 15mm wide.",
+              "Pipe diameter is 2 inches (50mm) outside.",
+              "Choose 5/16\" or 8mm anchors."
+            ],
+            "positive_acts": [
+              12.737832069396973,
+              15.725841522216797,
+              5.046403408050537,
+              10.197203636169434,
+              15.003341674804688
+            ],
+            "distractor_probes": [
+              "Use a 15mm drill bit for metal.",
+              "Panel thickness is approximately nineteen millimeters.",
+              "Gap should be fifteen millimeters wide."
+            ],
+            "distractor_acts": [
+              8.918851852416992,
+              6.211336135864258,
+              2.072852611541748
+            ],
+            "score": 6.00777759552002
+          },
+          {
+            "hypothesis": "The feature targets measurement/rating spec tokens centered on compact number+unit formatting, especially when embedded in catalog or hardware descriptions; activation is driven more by the presence of a concrete specification than by the exact first digit of the number.",
+            "positive_probes": [
+              "Steel bracket rated 250V 10A, panel mount.",
+              "Camera module supports 4K60, 12MP sensor, USB-C.",
+              "Order the 3.5mm jack, gold-plated, stereo.",
+              "Heatsink dimensions: 120mm x 40mm x 15mm.",
+              "Battery pack listed at 7.4V 2200mAh capacity."
+            ],
+            "positive_acts": [
+              15.640811920166016,
+              14.924424171447754,
+              9.09758472442627,
+              15.37961196899414,
+              15.871465682983398
+            ],
+            "distractor_probes": [
+              "The bracket feels sturdy and mounts easily.",
+              "The camera delivers sharp footage for travel videos.",
+              "Order the jack soon; supplies are running low."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 14.182779693603516
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Compact product/specification tokens: concrete numeric measurements, ratings, or model-size strings written in dense number+unit form in catalog/hardware text (e.g., 120mm, 250V 10A, 3.5mm, 7.4V 2200mAh, 4K60, 12MP).",
+            "positive_probes": [
+              "Cooling fan supports 120mm mounts and 250V 10A switching.",
+              "Camera records 4K60 video with a sharp 12MP sensor.",
+              "Headset uses a 3.5mm jack and 32\u03a9 drivers.",
+              "Battery pack outputs 7.4V 2200mAh for RC drones.",
+              "Laptop includes a 15.6in display and 512GB SSD."
+            ],
+            "positive_acts": [
+              18.35944938659668,
+              11.324727058410645,
+              16.03601837158203,
+              15.813241958618164,
+              11.873313903808594
+            ],
+            "distractor_probes": [
+              "The battery lasts seven hours on moderate use.",
+              "This camera captures very detailed photos and smooth video.",
+              "The headset plug is standard size and lightweight."
+            ],
+            "distractor_acts": [
+              3.843177318572998,
+              0.0,
+              5.615283966064453
+            ],
+            "score": 11.528529707590739
+          },
+          {
+            "hypothesis": "Numeric size/capacity specifications in product-style text, especially hardware dimensions and equipment ratings expressed as a number followed by a unit or spec token (e.g., 120 mm, 25 mm, 12 kW, 50 liters, M8).",
+            "positive_probes": [
+              "Cooling fan size: 120 mm diameter.",
+              "Pump motor rated at 12 kW output.",
+              "Tank capacity listed as 50 liters.",
+              "Bracket uses M8 mounting bolts.",
+              "Panel thickness measures 25 mm exactly."
+            ],
+            "positive_acts": [
+              15.410940170288086,
+              13.464775085449219,
+              8.537073135375977,
+              7.422628402709961,
+              9.187233924865723
+            ],
+            "distractor_probes": [
+              "The cooling fan is surprisingly quiet.",
+              "This pump delivers strong performance daily.",
+              "The bracket uses standard mounting bolts."
+            ],
+            "distractor_acts": [
+              0.0,
+              2.395322799682617,
+              5.419368743896484
+            ],
+            "score": 8.19963296254476
+          },
+          {
+            "hypothesis": "Alternative-size or converted-dimension expressions inside specs, especially side-by-side equivalent sizes such as imperial/metric restatements or close alternatives (e.g., 1/2 inch (13mm), 3/4\\\" or 19mm, 14 or 15mm).",
+            "positive_probes": [
+              "Use 1/2 inch (13 mm) tubing.",
+              "Fits 3/4\\\" or 19 mm bolts.",
+              "Choose 14 or 15 mm wrench size.",
+              "Panel thickness: 0.8 in / 20 mm.",
+              "Accepts 5/16\\\" (8 mm) fasteners."
+            ],
+            "positive_acts": [
+              12.491157531738281,
+              14.064902305603027,
+              6.211617469787598,
+              13.056425094604492,
+              11.93801212310791
+            ],
+            "distractor_probes": [
+              "Use a 13 mm tubing wrench.",
+              "Fits 19 mm bolts securely.",
+              "Panel thickness is 20 mm exactly."
+            ],
+            "distractor_acts": [
+              9.89926528930664,
+              8.436488151550293,
+              11.681411743164062
+            ],
+            "score": 1.546701176961264
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "The company announced quarterly earnings yesterday afternoon.",
+    "0pf cap to the scl line right next to the chip. I also added another cap in parallel with the 100pf on the interrupt line. I spent about 1/2 hour tonight running 3G data apps in the same location",
+    "sponges. The pump was modified with a 12.5 mm--by--300 mm vertical pipe with 6-mm holes added to provide horizontal flow.",
+    "The mountain trail wound past three small lakes.",
+    "The senator refused to comment before the hearing.",
+    "She whisked the eggs and folded them into the batter.",
+    "X 2TB NL SATA 6Gbps 3.5\" G2HS\n\n-   Java version: OpenJDK 1.8\n\n-   Spark version:",
+    "He plotted the data on a log-log scale.",
+    "The bakery opened at seven every morning."
+  ],
+  "heldout_true_acts": [
+    0.0,
+    13.606546401977539,
+    13.63322925567627,
+    0.0,
+    0.0,
+    0.0,
+    14.49181842803955,
+    0.0,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "technical specifications and measurements related to hardware components",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 11.3162122964859,
+        "sentences": [
+          "The CPU runs at 3.6 GHz with 8 cores.",
+          "This SSD offers 1 TB capacity and 3500 MB/s reads.",
+          "A 27-inch monitor displays 2560x1440 resolution at 144 Hz.",
+          "The GPU has 12 GB VRAM and a 192-bit bus.",
+          "Its power supply delivers 750 watts with 80 Plus Gold efficiency.",
+          "The motherboard supports DDR5 memory up to 128 GB.",
+          "Each RAM module operates at 5600 MT/s and 1.25 volts.",
+          "A 120 mm fan spins at 1800 RPM."
+        ],
+        "activations": [
+          10.817575454711914,
+          12.109755516052246,
+          9.953185081481934,
+          13.341879844665527,
+          14.140710830688477,
+          10.830410957336426,
+          10.995573997497559,
+          8.340606689453125
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9715588174649988,
+        "spearman": 0.9002613999474232,
+        "preds": [
+          0.0,
+          9.0,
+          6.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Compact product/specification tokens: concrete numeric measurements, ratings, or model-size strings written in dense number+unit form in catalog/hardware text (e.g., 120mm, 250V 10A, 3.5mm, 7.4V 2200mAh, 4K60, 12MP).",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 13.262079000473022,
+        "sentences": [
+          "Includes a 120mm PWM fan and 240mm radiator.",
+          "Input rating: 250V 10A, output 12V 2A.",
+          "Features a 3.5mm jack and 6.35mm adapter.",
+          "Battery pack: 7.4V 2200mAh Li-ion rechargeable.",
+          "Records video at 4K60 with HDR10 support.",
+          "Camera module offers 12MP resolution and f/1.8 optics.",
+          "This SSD delivers 3500MB/s reads over PCIe 4.0.",
+          "Compatible with M.2 2280 slots and 80mm drives."
+        ],
+        "activations": [
+          15.968069076538086,
+          15.053342819213867,
+          14.493162155151367,
+          16.963680267333984,
+          7.23255729675293,
+          11.678900718688965,
+          9.942312240600586,
+          14.764607429504395
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9891858700485603,
+        "spearman": 1.0,
+        "preds": [
+          0.0,
+          7.0,
+          8.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 59.324116230010986,
+  "layer": 6,
+  "sae_info": {
+    "layer": 6,
+    "width": "16k",
+    "l0": 70,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_6/width_16k/average_l0_70/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "technical specifications and measurements related to hardware components"
+}

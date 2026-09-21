@@ -1,0 +1,61 @@
+# Claim Ledger — Verbal Confidence Cache Hypothesis — cached mid-generation, not computed on demand
+
+**Direction**: When an LLM is asked to verbalize its confidence after answering, the confidence value is not freshly computed at the moment of verbalization; instead, it is written into hidden states immediately following the answer and is later retrieved from that cache when the model speaks the confidence token.
+**Date**: 2026-07-13 → 2026-07-14
+**Pipeline**: completed | **Iteration**: 7/10 "ready" (4/6)
+**Models**: claim=claude-opus-4-7, experiment=claude-opus-4-7, verify=claude-sonnet-4-6, iteration=claude-opus-4-7
+**Updated after**: iteration:final
+
+| Claim | Main experiment | Verify | Post-Iteration | Final |
+|-------|-----------------|--------|----------------|-------|
+| C1 verbal-confidence cache | partial (2/5 predicates) | 🟡 INCONCLUSIVE (Phase 2 mech=FAIL) | ready 7/10 — 4 back-edges closed argmax / sub-argmax / site-narrowness / distributed loopholes | ⚠ narrowed — decodability HOLDS strongly, strong causal cache-and-retrieve FALSIFIED; correct framing: "decodable but not strongly controllable under tested interventions" |
+
+---
+## C1 — Verbal-confidence cache hypothesis (Location + Causal Intervention)
+- **Statement**: For a decoder-only LLM asked to (i) answer a question then (ii) verbalize a confidence value about that answer, the residual-stream hidden states at the post-answer positions already carry a linearly-decodable representation that determines the eventual verbalized confidence value, and this representation is causally used by the confidence-generation step (as opposed to the confidence being freshly computed at the confidence token from token log-probabilities or a fresh reading of the answer).
+- **Origin**: task.md (verbatim capture); given behavior, faithfully translated into H1 with predicates P1-P5
+- **Data**: TriviaQA validation split (rc.nocontext) — provenance=existing; available=17944, used=1500 × 3 seeds = 4500 (M1); further per-milestone subsetting per plan; iteration re-runs used 40 items × 9 α × 3 seeds on the top-5 sites + joint
+- **Models**: gemma-3-27b-pt (62 layers)
+- **Method**: Location (per-position × per-layer ridge probe: 5 positions × 12 layers with log-prob-only baseline) → Causal Intervention (M3 residual-stream patching at top-3 M2 cache sites, M4 attention-block from cache→conf-gen across layer band, M5 direction-steering α ∈ {-16..+16} × {diff_of_means, LDA}) → Specificity/Nulls (M6 matched non-cache-position control, within-recall-bin, log-prob-restatement null, answer-accuracy preservation); iteration added capability probe on unrelated-continuation NLL, n=8 random-direction controls, locked α*, logit-level E[first_digit], top-5-site sweep, joint 5-site MultiSiteSteeringHook — composition: screen (M2 probe) → intervene (M3/M4/M5/M5-v2/M5-v3/M5-v3-joint) → verify (M6 controls & nulls)
+- **Main experiment**: partial (2/5 predicates: P1 Location & P5 Specificity pass; P2 Sufficiency, P3 Retrieval path, P4 Steering fail) — P1: top R²=0.541 at (E4, L10) with Spearman ρ=0.696, ΔR² over log-prob-only = +0.542; C0 conf-gen probe best R²=0.321. P2: top-site signed effect 0.55–0.75 vs. MID-question control 3.07; main/control ratio ≈ 0.24 (plan requires ≥3). P3: cache→conf-gen block mean shift only +0.19, KL(blocked ‖ prior)=0.066 (no collapse). P4: diff_of_means α-span = −0.98, LDA α-span = −0.58 (both flat and wrong-signed on avg). P5: matched non-cache control effect ≈ 3.07 (larger, not smaller — but the log-prob-null falsification holds: frozen-answer patch still shifts confidence by +1.83). Answer accuracy preserved throughout (Δ log-prob ≈ 0).
+- **Verify**: robustness=undefined (variants never dispatched) — method n/a / dataset excluded / model excluded; integrity=FAIL (Phase 2 combined: exp=WARN, mech=FAIL — driven by mech-FAIL: M5 steering lacks independent capability metric, effect span ~1.5 units within noise floor ~41, no locked α, no random-direction control); verdict=INCONCLUSIVE. Qwen 2.5 7B swap never deployed (Stage 2 gated by Phase 2 FAIL).
+- **Iteration**: ready (score 7/10) — mechanism-audit gate certified as PASS for narrowed dissociation claim; falsified: strong causal cache-and-retrieve at argmax (E4L10 3 seeds × 8 random dirs, span < 0.01), sub-argmax logit-level at E4L10 (E[first_digit] span < 0.01), site-generalization across top-5 sites (max span < 0.15), joint 5-site distributed_null (max span 0.32 < 0.5); narrowed_to: decodability holds strongly but strong causal control does NOT — 'decodable but not strongly controllable under tested interventions', with a small distributed joint effect (~0.32 first-digit units, ≈3.2 verbal-conf-score points) left open for future exploration
+- **Final**: ⚠ narrowed — decodability of verbal confidence from post-answer residuals HOLDS strongly (P1: probe R²=0.541 at E4L10 vs log-prob-only ≈0 baseline), but the strong causal cache-and-retrieve claim is FALSIFIED across four intervention modes (argmax, sub-argmax logit, top-5 site sweep, joint 5-site) — a small distributed joint effect (~0.32 first-digit units) below threshold is preserved as a caveat. Correct framing: 'decodable but not strongly controllable under tested interventions', NOT 'not causally used'. On-disk verify/VERIFY_REPORT.md still shows INCONCLUSIVE (iteration cannot rewrite it); reviewer-certified mech-audit PASS is on record.
+- **Caveats**:
+  - seed2024 M6c cross-seed values [3.57, 0.10, 0.43] fail variance gate → P5 log-prob-null 'falsification' downgraded to HOLD; retained as caveat within narrowed framing.
+  - Base pretrained model saturates zero-shot confidence at 100 — a fixed 6-example few-shot prefix was inserted to induce variable elicitation (identical across items/seeds; stays within T0 scientific intent per Phase 1.5 reconciliation).
+  - M6(a) MID-question control produced a LARGER effect than the cache site (ratio 0.24), which is itself a partial falsification of the localization claim — the top-K probe cache site is NOT the causally privileged position for verbalization.
+  - Iteration completed on reviewer certification but the on-disk `verify/VERIFY_REPORT.md` was not rewritten by the iteration loop (iteration cannot modify verify artifacts); a follow-up `/auto-verify C1 — resume: false, swap_variants: true, dimensions: model` would formally close the state and deploy the Qwen 2.5 7B swap.
+  - PAPER-WRITING CAUTION: frame as "Decodable but Not Strongly Controllable: A Dissociation Between Confidence Readout and Single-Site Causal Steering". Do NOT write "confidence is not causally used" / "causal null" / "epiphenomenal representation".
+- **Artifacts**: idea-stage/IDEA_REPORT.md, refine-logs/{FINAL_PROPOSAL,EXPERIMENT_PLAN,EXPERIMENT_TRACKER,MECHANISM_ROUTING,EXPERIMENT_RESULTS,EXPERIMENT_TIPS}.md, results/{m1..m6,m5_v2,m5_v3,m5_v3_joint}/, results/all_summary{,_v2}.json, runs/{*,iteration_round_1..4/*}/cost.json (GPU-pin witnesses; all runs on subset of {1,2,3,5} ⊂ {1,2,3,5,6}), verify/VERIFY_REPORT.md + verify/INTEGRITY_AUDIT.md + verify/STAGE2_PICK.json + verify/C1_verbal_confidence_cache/{main_experiment_audit, ROBUSTNESS.md}, review-stage/{AUTO_REVIEW,REVIEWER_MEMORY,AUTO_ITERATION_FINAL_REPORT}.md + review-stage/REVIEW_STATE.json
+- **Figures**:
+  - ![M2 Location probe — per-(position × layer) ridge R² for verbal confidence in Gemma-3-27B-pt on TriviaQA (rc.nocontext) validation; strong signal at post-answer positions E1-E4 in layers 5-10 (peak R²=0.541 at E4L10, marked red) clearly exceeds the log-prob-only baseline R²≈0. Grounds P1 Location PASS.](figures/C1/c1_m2_probe_heatmap.png) — vector: `figures/C1/c1_m2_probe_heatmap.pdf`
+  - ![M5-v2 steering at E4L10 (Gemma-3-27B-pt on TriviaQA): mean verbal confidence vs α ∈ [-16, +16] for the trained direction (diff-of-means) and n=8 random-direction controls, averaged across seeds 42/123/2024 (min-max envelope shaded). Both curves are flat while the capability-preservation NLL delta (right panel) stays well below the 0.3-nat/token tolerance — the intervention IS applied but yields no downstream effect on greedy confidence decode. Grounds P4 Steering FAIL / argmax null.](figures/C1/c1_m5v2_alpha_trained_vs_random.png) — vector: `figures/C1/c1_m5v2_alpha_trained_vs_random.pdf`
+  - #### Top-5 cache-site sweep and joint 5-site steering (M5-v3, logit-level E[first_digit] across α ∈ [-16, +16], 3 seeds × 40 items × 9 α). Single-site max |span| for E4L10, E1L5, E2L5, E3L10, E3L5 and joint 5-site max |span| per seed. All single-site spans < 0.15; joint spans (0.14, 0.20, 0.32) below the 0.5 first-digit-units threshold. Grounds dissociation_generalizes + distributed_null verdicts and the paper's central negative finding.
+
+    | Intervention target | seed 42 | seed 123 | seed 2024 | max across seeds | verdict |
+    |---|---:|---:|---:|---:|---|
+    | single-site: E4L10 | 0.009 | 0.003 | 0.009 | 0.009 | distributed_null (< 0.5) |
+    | single-site: E1L5 | 0.084 | 0.146 | 0.141 | 0.146 | distributed_null (< 0.5) |
+    | single-site: E2L5 | 0.045 | 0.047 | 0.000 | 0.047 | distributed_null (< 0.5) |
+    | single-site: E3L10 | 0.002 | 0.000 | 0.016 | 0.016 | distributed_null (< 0.5) |
+    | single-site: E3L5 | 0.009 | 0.001 | 0.005 | 0.009 | distributed_null (< 0.5) |
+    | joint top-5 (MultiSiteSteeringHook) | 0.326 | 0.285 | 0.326 | 0.326 | distributed_null (< 0.5) |
+
+    Source `.tex`: `figures/C1/c1_top5_site_and_joint_sweep.tex`
+
+---
+## Journey Summary
+- **Claim**: 1 given behavior faithfully captured → single unified claim C1 (verbal-confidence cache hypothesis); mechanism_strategy = Location → Causal Intervention
+- **Mechanism strategy**: Location → Causal Intervention
+- **Mechanism routing**: family=Probing/Residual Stream States + Causal Attribution/Patching + Causal Attribution/Ablation + Representation and Parameter Analysis/Steering Vectors (canonical composed chain)
+- **Experiment**: ~14 runs (sanity + M1×3 + M2 + M3×3sites×2seeds + M4×2seeds + M5×2methods×2seeds + M6 a/b/c/d ×2seeds), ~3.7 GPU-hours, headline = partial (probe decodability confirmed strongly, causal mediation fails on single-site interventions)
+- **Verify**: 1 claim: 0 PASS / 0 FAIL / 1 INCONCLUSIVE / 0 ZEV / 0 INTEGRITY_ONLY; integrity[Phase2=FAIL/Phase9=skipped]; Qwen 2.5 7B swap never deployed (Stage 2 gated by Phase 2 FAIL — driven by M5 mechanism-audit); iteration back-edge = verify-inconclusive
+- **Iteration**: 4/6 iterations (+ 1 narrative-closure ⓪) consumed, claim-reentries=0/2, score 7/10 verdict ready, termination=positive_verdict; ~2.29 GPU-hours; all four back-edges were type ② main-experiment-script fixes progressively closing argmax/sub-argmax/site-narrowness/distributed-multi-site loopholes
+- **Figures**: 3 across 1 claim; 0 judgment-skipped; 0 render-skipped, 0 errored
+
+## Open Items
+- seed2024 downstream still running at experiment-stage return; iteration completed seed2024 M6c during iteration 1 (values [3.57, 0.10, 0.43] — cross-seed variance gate HOLD, retained as acceptable caveat within narrowed dissociation framing).
+- On-disk `verify/VERIFY_REPORT.md` still shows C1 = verify_inconclusive because iteration cannot rewrite VERIFY_REPORT. Iteration-loop reviewer (gpt-5.4) CERTIFIED mechanism-audit gate as PASS at score 7/10 verdict ready. Recommended next action: user invokes `/auto-verify C1 — resume: false, swap_variants: true, dimensions: model` to formally close the on-disk state and deploy the Qwen 2.5 7B swap.
+- PAPER-WRITING CAUTION: the recommended framing per the iteration-loop reviewer is 'Decodable but Not Strongly Controllable: A Dissociation Between Confidence Readout and Single-Site Causal Steering'. Do NOT write 'confidence is not causally used' / 'causal null' / 'epiphenomenal representation' — a small distributed joint effect (~0.32 first-digit units at joint top-5 steering) was detected below threshold and leaves the door open for 'weak distributed causal sensitivity without strong steering leverage'.
+- P5 M6c cross-seed variability persists as caveat [3.57, 0.10, 0.43 across seeds 42/123/2024]; reviewer certified as acceptable within the narrowed dissociation framing but the paper should report it transparently as a HOLD verdict, not a clean PASS.

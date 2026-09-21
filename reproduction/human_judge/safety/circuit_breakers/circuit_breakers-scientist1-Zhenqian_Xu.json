@@ -1,0 +1,93 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Zhenqian Xu",
+    "paper_title":         "Improving Alignment and Robustness with Circuit Breakers",
+    "agent":         "scientist1",
+    "review_date":         "2026-07-20"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "数据划分卫生干净。",
+    "score": 5,
+    "evidence_files": ["results/RESULTS.md", "src/train_rr.py", "logs/train_rr_v1.log"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "ASR 的 ground truth 由独立的 LLM judge判定是否合适",
+    "score": 5,
+    "evidence_files": ["results/judge_baseline_prefix_v2.json", "results/judge_baseline_prefix.json", "results/judge_rr_prefix_v2.json", "src/judge.py", "results/RESULTS.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "资源基本遵循task.md，但是有攻击面简化。",
+    "score": 4,
+    "evidence_files": ["results/RESULTS.md", "src/generate_harmbench.py", "src/train_rr.py"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "各 claim 的 used_n 都足够，但数据覆盖广度不够，没有其他攻击。",
+    "score": 4,
+    "evidence_files": ["results/RESULTS.md", "results/judge_baseline_prefix_v2.json", "results/mmlu_rr.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "单次运行、单种子，未报告方差/误差棒/显著性（train_rr_v1.log、各 results JSON 均为单点估计）。好的一面是效应量明确超噪声：prefix ASR 36.5%(58/159)→0%(0/159) 是大幅且落到地板的变化，训练中 L_cb 收敛到 0.0000 也是清晰信号。但对随机性的稳健性未验证，MMLU −7pp 也是单跑。符合『点估计、效应非平凡、不确定性单薄』的合格档。",
+    "score": 3,
+    "evidence_files": ["logs/train_rr_v1.log", "results/judge_rr_prefix_v2.json", "results/mmlu_rr.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "不是典型的因果claim",
+    "score": "n/a",
+    "evidence_files": ["src/train_rr.py", "logs/train_rr_v1.log", "results/benign_rr.json", "results/gen_rr_prefix.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字均可回溯且一致。没有无来源或与日志矛盾的数字，结果扎根于真实执行。",
+    "score": 5,
+    "evidence_files": ["results/judge_baseline_prefix_v2.json", "results/judge_rr_prefix_v2.json", "results/mmlu_rr.json", "logs/train_rr_v1.log"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "RESULTS.md 的数字与落盘 JSON、训练日志一致",
+    "score": 5,
+    "evidence_files": ["results/RESULTS.md", "results/mmlu_rr.json", "results/judge_baseline_prefix.json", "results/judge_baseline_prefix_v2.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Harmful-output behaviour in an instruction-tuned LLM corresponds to identifiable internal representations that can be rerouted to an orthogonal, non-harmful subspace using only paired benign/harmful data, without exposure to any attack prompts.",
+        "method": {
+          "justification": "机理方法同论文一致，训练representiations,将输出推离有害方向，靠近retain方向。但loss函数有缺陷：调度方向与论文相反（论文 cb 系数递减/retain 递增，此处 cb 递增/retain 递减）",
+          "score": 4,
+          "evidence_files": ["src/train_rr.py", "results/RESULTS.md"]
+        },
+        "experiment": {
+          "justification": "loss 函数有缺陷，cb 递增/retain 递减",
+          "score": 4,
+          "evidence_files": ["logs/train_rr_v1.log", "results/benign_rr.json", "src/train_rr.py"]
+        },
+        "result": {
+          "justification": "有害数据输入时模型输出乱码，这是由于loss函数有缺陷，后期与retain偏离loss越小，诱导输出乱码。",
+          "score": 3,
+          "evidence_files": ["logs/train_rr_v1.log", "results/gen_rr_prefix.json", "results/RESULTS.md"]
+        }
+      },
+      "C2": {
+        "claim": "A model fine-tuned with Representation Rerouting (RR) achieves substantially lower attack success rates than refusal-trained or adversarial-trained baselines across a wide range of unseen attacks, while preserving standard capability benchmarks.",
+        "method": {
+          "justification": "方法是 RR vs refusal-trained base 在 HarmBench 上比 ASR ，在MMLU 上比能力。",
+          "score": 5,
+          "evidence_files": ["results/RESULTS.md", "src/generate_harmbench.py"]
+        },
+        "experiment": {
+          "justification": "只尝试了一种攻击",
+          "score": 3,
+          "evidence_files": ["src/generate_harmbench.py", "results/judge_baseline_prefix_v2.json", "results/mmlu_rr.json", "results/RESULTS.md"]
+        },
+        "result": {
+          "justification": "prefix 攻击 ASR 36.5%→0%（大幅下降到地板），MMLU 0.677→0.607（能力大体保持，−7pp），但是asr的增益乱码短路而非拒答。结论由单一攻击支撑，较单薄。",
+          "score": 4,
+          "evidence_files": ["results/judge_rr_prefix_v2.json", "results/mmlu_baseline.json", "results/mmlu_rr.json", "results/RESULTS.md"]
+        }
+      }
+    }
+  }
+}

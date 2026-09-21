@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name":   "Haoxiong Wang",
+    "paper_title":   "Computational Basis of LLM's Decision Making in Social Simulation",
+    "agent":         "scientist1",
+    "review_date":   "2026-07-15"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "train / validation / test 三个划分保持了互不相交，但是 probes_baseline.py:34-35 计算标准化 mu/sd 时使用了全部样本而非只用训练集，即测试集的统计数据出现了泄漏，但测试集本身没有泄露，对结论无实质影响。",
+    "score": 4,
+    "evidence_files": ["src/probes_baseline.py", "src/generate_dataset.py", "src/intervene.py", "data/pairs.json", "data/trials.jsonl"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签是数据生成时直接随机赋值并记录下来的，无歧义。",
+    "score": 5,
+    "evidence_files": ["src/generate_dataset.py", "src/baseline_batched.py", "data/trials.jsonl", "results.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "严格用了任务指定的 Llama-3.1-8B 和 DeepSeek，两个模型都跑满 1000 条、每个变量 400 对，和 task.md 要求一致。",
+    "score": 5,
+    "evidence_files": ["task.md", "src/baseline_batched.py", "src/extract_directions.py", "src/intervene.py", "src/run_deepseek.sh", "results/baseline_llama.jsonl", "results/baseline_deepseek.jsonl", "data/pairs.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "样本量充足：每模型 1000 条随机 trials 用于 baseline 回归与干预打分，每变量 400 对用于方向提取，并在 33 个残差位置做探针。claim 强度与证据匹配。",
+    "score": 5,
+    "evidence_files": ["data/pairs.json", "results/baseline_llama.jsonl", "results/final_summary.txt", "results.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "只用了一个随机种子，没有多次重复、没有误差棒、没有置信区间。",
+    "score": 3,
+    "evidence_files": ["src/generate_dataset.py", "src/probes_baseline.py", "results/intervention_llama.json", "results/final_summary.txt"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "复现证明了因果性，但缺少随机对照 baseline；只干预了一层，没有逐层扫描。",
+    "score": 3,
+    "evidence_files": ["src/intervene.py", "results/intervention_llama.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "results.md 每个关键数字都与落盘产物对应。",
+    "score": 5,
+    "evidence_files": ["results.md", "results/probe_baseline_accs.json", "results/final_summary.txt", "results/intervention_llama.json", "results/intervention_deepseek.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "两处小瑕疵：(a) results.md:132 称 DeepSeek instruction “drop it back to 0.08 at α=−6”，但 intervention_deepseek.json 为 0.039(raw)/0.051(pure)，均非 0.08；(b) results.md:79 述 meeting 衰减 “to +0.47”（α=−3），而其自身 sweep 表 results.md:122 与 JSON 均为 +0.50/0.501。两处均为小误差，不改变 claim 判定。",
+    "score": 3,
+    "evidence_files": ["results.md", "results/final_summary.txt", "results/intervention_deepseek.json", "results/intervention_llama.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "对每个社会/情境变量（gender、age、instruction framing、meeting），LLM 将其对决策的影响编码为残差流中一条线性可提取的方向。",
+        "method": {
+          "justification": "复现用线性探针 + 差分均值提取方向，方法和论文相同。",
+          "score": 5,
+          "evidence_files": ["src/probes_baseline.py", "src/extract_directions.py", "paper/belief/llm_social_decision/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "四变量逐层的 CV 探针，100% 探针精度平凡，指标偏弱。",
+          "score": 4,
+          "evidence_files": ["src/probes_baseline.py", "results/probe_baseline_accs.json", "results/probe_baseline_deepseek.json"]
+        },
+        "result": {
+          "justification": "四变量 100% 线性可分，而且回归复现了论文的定性排序（措辞最强、开会次之、性别/年龄接近零），与原文相符。",
+          "score": 4,
+          "evidence_files": ["results/final_summary.txt", "results.md", "paper/belief/llm_social_decision/paper.pdf"]
+        }
+      },
+      "C2": {
+        "claim": "通过移除与其他变量重叠的分量得到的 “纯” 变量方向，能隔离该变量的独特效应、免除共变因子混淆。",
+        "method": {
+          "justification": "提纯采用 Gram-Schmidt 正交化，与论文方法对应。",
+          "score": 5,
+          "evidence_files": ["src/pure_directions.py", "paper/belief/llm_social_decision/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "验证方式合理，但主要拿性别来演示，而性别本身效应较弱，方向分离后指标虽然正向，但波动小。",
+          "score": 4,
+          "evidence_files": ["src/pure_directions.py", "results/final_summary.txt", "results.md"]
+        },
+        "result": {
+          "justification": "与论文结果相同。",
+          "score": 5,
+          "evidence_files": ["results.md", "results/final_summary.txt", "paper/belief/llm_social_decision/paper.pdf"]
+        }
+      },
+      "C3": {
+        "claim": "在推理时注入这些方向，会因果地、实质地改变目标变量与模型决策输出之间的关系，同时保持其他变量的效应不变。",
+        "method": {
+          "justification": "activation steering 是正确的方法。",
+          "score": 5,
+          "evidence_files": ["src/intervene.py", "paper/belief/llm_social_decision/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "注入实验仅单层（原论文多层），无随机方向对照，无显著性检验。",
+          "score": 3,
+          "evidence_files": ["src/intervene.py", "results/intervention_llama.json"]
+        },
+        "result": {
+          "justification": "注入 instruction/meeting 方向强烈，gender/age 注入微弱。与论文结论一致。",
+          "score": 5,
+          "evidence_files": ["results/intervention_llama.json", "results.md", "paper/belief/llm_social_decision/paper.pdf"]
+        }
+      },
+      "C4": {
+        "claim": "同一机制既支持放大变量效应、也支持衰减/反转，形成对齐与去偏的实用把手。",
+        "method": {
+          "justification": "对同一 steering 机制双向扫 α∈{−6…+6}，与论文 α>0 放大、α<0 衰减/反转一致。",
+          "score": 5,
+          "evidence_files": ["src/intervene.py", "paper/belief/llm_social_decision/paper.pdf"]
+        },
+        "experiment": {
+          "justification": "results.md:143 称 “每个变量都呈单调 α-反应、一侧放大另一侧衰减/近反转”，而其自身 gender/age 数据（Δ≈0.07-0.12、无清晰反应）并不支持；“每个”的绝对表述未得到验证。",
+          "score": 3,
+          "evidence_files": ["src/intervene.py", "results/intervention_llama.json", "results.md"]
+        },
+        "result": {
+          "justification": "与论文一致。",
+          "score": 5,
+          "evidence_files": ["results/intervention_llama.json", "results.md", "paper/belief/llm_social_decision/paper.pdf"]
+        }
+      }
+    }
+  }
+}

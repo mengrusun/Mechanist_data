@@ -1,0 +1,32 @@
+# Variant config — model-swap-olmo-1b
+# Diff from main experiment: model only
+variant_tag: model-swap-olmo-1b
+dimension: model
+
+# Changed from main experiment:
+model: olmo-1b
+model_path: /mnt/quarkfs/share_model/OLMo/OLMo-1B-hf
+model_class: OlmoForCausalLM
+
+# Unchanged from main experiment:
+data_root: /data/xuhaoming/belief_loc/data/derived/belief_core
+ppl_sample: refine-logs/artifacts/ppl_sample.pt
+fisher_filter_person: [james, mary]
+fisher_n_attributed: 454
+fisher_n_personal: 454
+fisher_n_knowledge: 227
+top_target_fraction: 0.001
+top_knowledge_fraction: 0.01
+max_heads_search: 30
+grad_dtype: fp32
+eval_dtype: fp16
+random_head_seeds: [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119]
+random_mask_seeds: [200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219]
+criteria:
+  C2a_target_drop_threshold: 0.30
+  C2b_sigma_multiplier: 2
+  C2c_offtarget_threshold: 0.10
+  C2d_ppl_ratio_threshold: 1.05
+
+# Output paths:
+output_dir: verify/C2_belief_heads_localization/variants/model-swap-olmo-1b

@@ -1,0 +1,108 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "A Implies B: Circuit Analysis in LLMs for Propositional Logical Reasoning",
+    "agent":         "scientist3",
+    "review_date":         "2026-07-19"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "电路由 patching recovery 排名的 top-K 选出、faithfulness 又在同一数据上评估，无留出划分。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "ground truth 为逻辑精确的 True/False 答案 token，logit-diff 非循环。",
+    "score": 5,
+    "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/draft_summary.json", "scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验用 Mistral-7B 与自建命题逻辑数据集，与要求一致。",
+    "score": 5,
+    "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/report.md", "scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "'K=5 稀疏可信电路'结论主要靠 mean-ablation 的 faithfulness，而其自身 patching recovery 仅 0.18、单头 knockout 掉 0.0 指向分布式；报告却判'partially or fully supported'，结论强于证据。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json", "scientist3/reasoning/propositional_logic_circuit/report.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "有多种子聚合，但未报告显著性/置信区间，关键效应(patching recovery ~0.18)偏弱、近噪声。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "有真实 patching/knockout 干预，但充分性用 mean-ablation(替换为 clean 均值、几乎不扰动)判定，属弱对照、会虚高电路'可信度'，且缺 resample/random-circuit 严格对照，因果不足。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字在各 summary 中可追溯。",
+    "score": 5,
+    "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json", "scientist3/reasoning/propositional_logic_circuit/logs/0-run/baseline_summary.json", "scientist3/reasoning/propositional_logic_circuit/logs/0-run/draft_summary.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "跨阶段结论矛盾：draft 称'分布式、无单头必要、语料腐蚀信号弱'，research 却报'K=5、faithfulness 0.98、稀疏 0.995'的干净稀疏电路；且 clean logit-diff 在 draft(≈7.0)与 research(0.908)间不符，报告未加调和即判偏正面。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/draft_summary.json", "scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json", "scientist3/reasoning/propositional_logic_circuit/report.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "A sparse subset of attention heads and MLP components jointly implements the minimal propositional-logic task (circuit small relative to the full model).",
+        "method": {
+          "justification": "用 activation patching 排名 + greedy top-K + faithfulness，方法族对；但 faithfulness 以 mean-ablation 实现，属弱操作化。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+        },
+        "experiment": {
+          "justification": "最大 patching recovery 仅 0.18、单头 knockout 掉 0.0，却据 mean-ablation faithfulness 断定 K=5 稀疏电路，判据虚高、缺 random-circuit 对照。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+        },
+        "result": {
+          "justification": "research 报 K=5、faithfulness 0.98 表面与论文'稀疏电路'一致，但被自身弱 patching/零 knockout 与 draft'分布式'结论抵触，为不稳健/未调和的表面一致。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json", "scientist3/reasoning/propositional_logic_circuit/logs/0-run/draft_summary.json"]
+        }
+      },
+      "C2": {
+        "claim": "The circuit decomposes into modular sub-circuits with distinct functional roles (fact / rule / answer).",
+        "method": {
+          "justification": "仅按预设层带统计 top-20 组件落点，未做角色特异 corruption/dissociation 检验，模块化探测方法偏弱。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+        },
+        "experiment": {
+          "justification": "只得组件层带分布(mid_rule 16、late 4、early_fact 0)，无角色分离/null 检验，无法判定'不同功能模块'。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+        },
+        "result": {
+          "justification": "层带计数不能建立模块化(early_fact 甚至为 0)，未给出论文所述角色分离的实质证据，C2 基本未被有效检验。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+        }
+      },
+      "C3": {
+        "claim": "Activation-patching shows the identified components are both necessary and sufficient.",
+        "method": {
+          "justification": "patching + knockout(必要)与 mean-ablation faithfulness(充分)，方法族对但充分性操作化弱。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+        },
+        "experiment": {
+          "justification": "recovery 仅 0.18、knockout 掉 0.0(无单组件必要)，充分性靠 mean-ablation、无 matched-control 与跨模型，证据弱且部分自相矛盾。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json"]
+        },
+        "result": {
+          "justification": "必要性未成立(分布式)、充分性仅由弱 mean-ablation'通过'，既未干净复现论文'必要且充分'；draft 诚实指出局限，但 research/报告转为偏正面且未调和，属未干净复现的表面部分一致。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/propositional_logic_circuit/logs/0-run/research_summary.json", "scientist3/reasoning/propositional_logic_circuit/logs/0-run/draft_summary.json"]
+        }
+      }
+    }
+  }
+}

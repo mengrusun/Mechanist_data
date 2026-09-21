@@ -1,0 +1,198 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "Two Stages of Folding: Convergent Mechanisms in AI Protein Folding Trunks",
+    "agent": "scientist2",
+    "review_date": "2026-07-19"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "主实验里真正涉及拟合的只有 M3a 的 charge 线性探针，其划分是链级、不重叠的。整体划分卫生干净。",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/science/esmfold_mechanism/scripts/m3a_probe.py",
+      "scientist2/science/esmfold_mechanism/results/M3a/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/results/M3b/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/refine-logs/EXPERIMENT_RESULTS.md"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "ground truth 严格用 DSSP 对 ESMFold 预测结构做二级结构判定来定义 β-hairpin 形成。M3a 的电荷标签由氨基酸身份直接定义（P={K,R,H} 正电、N={D,E} 负电）。",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/science/esmfold_mechanism/scripts/esmfold_lib.py",
+      "scientist2/science/esmfold_mechanism/scripts/stage0_esmfold_worker.py",
+      "scientist2/science/esmfold_mechanism/refine-logs/EXPERIMENT_RESULTS.md"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验模型确为 ESMFold（esmfold_lib.py: ESMFOLD_PATH=/data/zhenqian/models/esmfold_v1，含 ESM-2 backbone + 48-block trunk + structure module 全链路），无静默替换或降配；数据取自 task.md 指定的 PISCES cull 列表（12,055 链），主实验取 200 条链子集，task.md 未强制规模、且子集为 cost-aware 且明确披露，属可接受偏差。CATH 分层仅是 verify 阶段的候选资源（豁免），且因 cath_label 全 null 而退化，不影响主实验保真度。",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/science/esmfold_mechanism/scripts/esmfold_lib.py",
+      "scientist2/science/esmfold_mechanism/scripts/stage0_esmfold_worker.py",
+      "scientist2/science/esmfold_mechanism/refine-logs/EXPERIMENT_RESULTS.md",
+      "scientist2/science/esmfold_mechanism/task.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": " M3a 规模太小，test/val数据量不够，别的实验可以。",
+    "score": 4,
+    "evidence_files": [
+      "scientist2/science/esmfold_mechanism/refine-logs/EXPERIMENT_RESULTS.md",
+      "scientist2/science/esmfold_mechanism/CLAIMS_LEDGER.md",
+      "scientist2/science/esmfold_mechanism/results/M1/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/results/M2/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/results/M3a/summary_stats.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "结果普遍带显著性检验，稳健性总体可接受。",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/science/esmfold_mechanism/results/M1/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/results/M3a/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/results/M3b/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/verify/INTEGRITY_AUDIT.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "三条 claim 均为因果/机制主张，且都用真正的干预支撑而非把相关性包装成因果，steer系数存在扫描，patching的对照组设计合理，可惜M2的对照组没有跑完。",
+    "score": 4,
+    "evidence_files": [
+      "scientist2/science/esmfold_mechanism/results/M1/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/refine-logs/MECHANISM_ROUTING.md",
+      "scientist2/science/esmfold_mechanism/results/M3b/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/verify/VERIFY_REPORT.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "报告中的关键数字都能原样回溯到落盘产物",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/science/esmfold_mechanism/CLAIMS_LEDGER.md",
+      "scientist2/science/esmfold_mechanism/results/M1/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/results/M1/early_window.json",
+      "scientist2/science/esmfold_mechanism/results/M2/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/results/M3a/summary_stats.json",
+      "scientist2/science/esmfold_mechanism/results/M3b/summary_stats.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "跨 CLAIMS_LEDGER / EXPERIMENT_RESULTS / VERIFY_REPORT / INTEGRITY_AUDIT 四份产物，数字与判定高度自洽",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/science/esmfold_mechanism/CLAIMS_LEDGER.md",
+      "scientist2/science/esmfold_mechanism/refine-logs/EXPERIMENT_RESULTS.md",
+      "scientist2/science/esmfold_mechanism/verify/VERIFY_REPORT.md",
+      "scientist2/science/esmfold_mechanism/verify/INTEGRITY_AUDIT.md",
+      "scientist2/science/esmfold_mechanism/results/M3b/summary_stats.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Folding decisions for β-hairpin structures are localized in the early blocks of the folding trunk, and the sequence representation s is the active locus of that decision during this early window.",
+        "method": {
+          "justification": "选用 activation patching，通过在各层steer将beta-蛋白破坏",
+          "score": 5,
+          "evidence_files": [
+            "scientist2/science/esmfold_mechanism/refine-logs/MECHANISM_ROUTING.md",
+            "scientist2/science/esmfold_mechanism/scripts/m1_worker.py",
+            "scientist2/science/esmfold_mechanism/results/M1/summary_stats.json"
+          ]
+        },
+        "experiment": {
+          "justification": "除了主实验外做了三个有说服力的对照组：1.同一个早期窗口，改成覆盖 z（成对表征），不动 s，说明是s不是z起了作用 2.同 donor，但 patch 的是同链上一段非 hairpin 的等长残基，反驳了是「泛化破坏」而非「hairpin决策就在目标残基的 s 里」3.late-window s-patching：patch 的还是 s，但换到晚期窗口",
+          "score": 5,
+          "evidence_files": [
+            "scientist2/science/esmfold_mechanism/scripts/m1_worker.py",
+            "scientist2/science/esmfold_mechanism/results/M1/summary_stats.json",
+            "scientist2/science/esmfold_mechanism/refine-logs/EXPERIMENT_RESULTS.md",
+            "scientist2/science/esmfold_mechanism/verify/C1_early_block_s_localization/ROBUSTNESS.md"
+          ]
+        },
+        "result": {
+          "justification": "早期 band b_0_3 s-patch Δ=-0.862（p=2.25e-36），而同窗 z-patch 仅 Δ=-0.011（早期的 1.3%）、late-window s-patch 仅 -0.085（9.8%），呈现清晰的『早期 s 主导、晚期 z 才起作用』结构，与论文『sequence patch 早期有效、pairwise patch 晚期有效、s 是早期决策活跃位』的两阶段结论定性完全一致。结果分析合理且诚实。",
+          "score": 5,
+          "evidence_files": [
+            "scientist2/science/esmfold_mechanism/results/M1/summary_stats.json",
+            "scientist2/science/esmfold_mechanism/CLAIMS_LEDGER.md",
+            "scientist2/science/esmfold_mechanism/verify/VERIFY_REPORT.md",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The early-block seq2pair pathway is the critical channel through which the β-hairpin folding decision is transferred from s into z.",
+        "method": {
+          "justification": "选用 seq2pair 通路消融（Causal Attribution / Patching），机理家族与『s→z 关键通道』claim 匹配，方向正确。。",
+          "score": 5,
+          "evidence_files": [
+            "scientist2/science/esmfold_mechanism/refine-logs/MECHANISM_ROUTING.md",
+            "scientist2/science/esmfold_mechanism/scripts/m2_worker.py",
+            "scientist2/science/esmfold_mechanism/refine-logs/EXPERIMENT_PLAN.md"
+          ]
+        },
+        "experiment": {
+          "justification": "3个对照组有设计(pair2seq_donor,seq2pair_zero, seq2pair_matched_ctrl)，但最终没跑。证据不够充分。对于主实验：scientist2是独立干预，在原生 hairpin 上，单独把 seq2pair 输出换成 donor值——因为原生蛋白的决策在 s 里已多处编码、下游还会重新写 z，只换 seq2pair效果不显著。而原论文是耦合干预，先把 hairpin donor 的序列 patch 进一个螺旋靶蛋白（诱导hairpin），再在此过程中冻结/消融 seq2pair，看诱导被不被阻断——测的是「seq2pair对诱导是否必要」。patch了多个block做的不错。",
+          "score": 3,
+          "evidence_files": [
+            "scientist2/science/esmfold_mechanism/scripts/m2_worker.py",
+            "scientist2/science/esmfold_mechanism/results/M2/summary_stats.json",
+            "scientist2/science/esmfold_mechanism/verify/C2_seq2pair_causal_channel/baseline_audit/EXPERIMENT_AUDIT.md",
+            "scientist2/science/esmfold_mechanism/CLAIMS_LEDGER.md"
+          ]
+        },
+        "result": {
+          "justification": "论文结论是『早期 seq2pair 消融把 hairpin 形成压到近零、pair2seq 消融几乎无影响』——即 seq2pair 确为关键早期通道。本复现唯一跑成的 seq2pair_donor 只有 Δ=-1.7%，效果不显著。可能原因是s表示已经携带了大量的hairpin信息，只消融seq2pair不显著。但 scientist2 没有伪装成一致，而是老实标为 evidence-incomplete / INCONCLUSIVE，并把 bug 与修复路径写清。属诚实的『未复现』，原因（hook 形状 bug）可靠且已记录；扣分在于它据此附带了一句『决策主要经 s 残差流而非 seq2pair 桥』的解读——这是基于破损证据、且与论文相反的过度引申，虽已注明需修复后确认。",
+          "score": 3,
+          "evidence_files": [
+            "scientist2/science/esmfold_mechanism/refine-logs/EXPERIMENT_RESULTS.md",
+            "scientist2/science/esmfold_mechanism/results/M2/summary_stats.json",
+            "scientist2/science/esmfold_mechanism/verify/VERIFY_REPORT.md",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Charge is a linearly encoded chemical feature in early blocks of ESMFold and causally influences β-hairpin formation (opposite-charge on facing strands favors pairing; same-charge increases cross-strand distance).",
+        "method": {
+          "justification": "M3a 用线性 3 类电荷探针（Probing / Residual Stream）证线性可解码，M3b 用电荷方向的加性 steering（Steering Vectors）测因果，但缺陷在于论文用『difference-in-means 电荷方向 + 沿其 steering』思路。，本复现从探针权重（正类减负类权重、L2 归一）导出方向，同族但非同一构造。",
+          "score": 4,
+          "evidence_files": [
+            "scientist2/science/esmfold_mechanism/scripts/m3a_probe.py",
+            "scientist2/science/esmfold_mechanism/scripts/m3b_worker.py",
+            "scientist2/science/esmfold_mechanism/refine-logs/MECHANISM_ROUTING.md",
+            "source_code/science/esmfold_mechanism/ProteinFolding/README.md"
+          ]
+        },
+        "experiment": {
+          "justification": "M3b方法错了，电荷是从氨基酸身份平凡解码，而不是从charge角度解码。用probe找到的direction可能不够干净。steer系数以σ（标准差）为单位，量级对齐论文，steer的block数只有1个，太少了，最后指标只用是否是hairpin判断，而没有用更准确的连续跨链距离判断",
+          "score": 2,
+          "evidence_files": [
+            "scientist2/science/esmfold_mechanism/scripts/m3b_worker.py",
+            "scientist2/science/esmfold_mechanism/results/M3b/summary_stats.json",
+            "scientist2/science/esmfold_mechanism/verify/INTEGRITY_AUDIT.md",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        },
+        "result": {
+          "justification": "编码半边与论文一致：M3a bacc=1.0、p<0.001 复现了『charge 线性可解码』。但因果干预实验失败，并且report分析时没有把失败归因于实验设计不够",
+          "score": 2,
+          "evidence_files": [
+            "scientist2/science/esmfold_mechanism/refine-logs/EXPERIMENT_RESULTS.md",
+            "scientist2/science/esmfold_mechanism/results/M3a/summary_stats.json",
+            "scientist2/science/esmfold_mechanism/results/M3b/summary_stats.json",
+            "scientist2/science/esmfold_mechanism/CLAIMS_LEDGER.md",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        }
+      }
+    }
+  }
+}

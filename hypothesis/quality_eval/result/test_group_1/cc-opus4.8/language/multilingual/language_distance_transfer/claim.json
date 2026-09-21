@@ -1,0 +1,22 @@
+{
+  "Name": "language_distance_transfer",
+  "Title": "Typology Predicts Transfer: Language Distance Governs Feature and Circuit Reuse",
+  "Short Hypothesis": "The degree to which a learned feature, steering vector, or circuit transfers from a source to a target language is a monotone function of typological distance (syntactic, phonological, lexical) between them, and different feature types depend on different distance dimensions (semantics on lexical/genetic distance, syntax on word-order distance).",
+  "Related Work": "Cross-lingual transfer studies (Pires et al. mBERT, Lauscher et al.) correlate downstream transfer with language similarity at the task level. We move to the mechanistic level: predicting transfer of specific interpretable components (SAE features, steering vectors, circuit activations) from typological sub-distances, and dissociating which distance dimension governs which mechanism.",
+  "Abstract": "Cross-lingual transfer is known to degrade with language dissimilarity, but which mechanisms transfer and along which typological axes remains unclear. We hypothesize that transfer of interpretable model components is governed by structured typological distance, and crucially that different components track different distance dimensions: semantic/concept features by lexical and genetic distance, syntactic/agreement circuits by word-order and morphological distance. We extract a battery of components in a source language (steering vectors for sentiment/formality, SAE concept features, an agreement circuit) and measure their transfer to 25 target languages, quantifying transfer as retained causal effect. We regress transfer on URIEL typological sub-distances. We predict distinct regression profiles per component type, providing a mechanistic map of what transfers and why. Metrics: per-component transfer score (target-language causal effect / source effect), and variance in transfer explained by each distance dimension, with dominance analysis to attribute. We further test asymmetry: transfer high-to-low resource vs reverse. Confirmation yields a predictive theory of cross-lingual mechanism reuse and identifies which languages will fail to inherit which capabilities, informing targeted multilingual improvement.",
+  "Experiments": [
+    "Extract components in source (English): sentiment/formality steering vectors, top-k SAE concept features, and a subject-verb agreement circuit via path patching.",
+    "Define transfer score per component in 25 targets: apply the source component and measure retained causal effect (steering success, feature activation on matched concepts, circuit necessity).",
+    "Compute URIEL/lang2vec distances (syntactic, phonological, genetic, inventory) source-to-target.",
+    "Regress transfer on distance dimensions; dominance analysis to attribute variance per component type.",
+    "Test dissociation: semantic components ~ lexical/genetic distance; syntactic components ~ word-order distance.",
+    "Asymmetry test: repeat with a low-resource source; compare transfer direction.",
+    "Report per-component R^2 and dimension attribution."
+  ],
+  "Risk Factors and Limitations": [
+    "Typological distance metrics (URIEL) are incomplete and noisy, capping explainable variance.",
+    "Resource level confounds typological distance; hard to separate.",
+    "Component extraction quality varies by language (tokenization, corpus), biasing transfer scores.",
+    "Linear steering vectors may not exist cleanly in all languages, limiting the battery."
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (GPT-5.4 via DMX, T=0)",
+  "audit_type": "mechanism",
+  "claim_id": "C3",
+  "linked_milestones": ["M3", "M1"],
+  "triggered_checks": ["A"],
+  "overall_verdict": "fail",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "fail",
+      "triggered": true,
+      "trigger_match": [
+        "src/run_M3_steer.py:176 (coef = alpha * d['sigma_proj'])",
+        "src/run_M3_steer.py:23 (ALPHA_GRID = [-3.0, -2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0, 3.0])",
+        "src/model_utils.py (SteeringHook class)"
+      ],
+      "intervention_type": "CAA",
+      "sweep_grid": [-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0],
+      "sigma_proj_scaling": true,
+      "capability_metric": "coherence_rate + accuracy_rate",
+      "plateau_range": null,
+      "locked_alpha": 0.5,
+      "alpha_position": "edge",
+      "random_baseline": {"run": false, "n_random": null, "passed": null},
+      "sign_pattern": "preserved (uncertainty) / broken (validation-examples) / undefined (backtracking, self-correction)",
+      "output_case_spotcheck": {
+        "cases_available": true,
+        "verdict": "metric_text_consistent",
+        "note": "At alpha=0.5sigma chains are coherent; effect barely detectable at n=60. At alpha=2sigma coherence drops to 0.65 matching metric."
+      },
+      "evidence": [
+        "src/run_M3_steer.py:176 (coef = alpha * d['sigma_proj'])",
+        "runs/M3_steer/part_A/results_summary.json (analysis section)",
+        "runs/M3_steer/part_A/cost.json (alphas field)"
+      ],
+      "details": "FAIL: (1) α range ±2σ does not span 3 orders of magnitude required by catalogue. (2) No random-direction control at locked α (required by FAIL criterion). (3) α_op=0.5σ placed at plateau edge — effect is within ±0.06 noise floor at n=60, plateau not established. (4) 3 of 4 behaviours show zero response across all α. Spearman rho=-0.05 (p=0.93) for expressing_uncertainty (the only behaviour with sign check passing). The dose-response causal control claim is not established by this sweep."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

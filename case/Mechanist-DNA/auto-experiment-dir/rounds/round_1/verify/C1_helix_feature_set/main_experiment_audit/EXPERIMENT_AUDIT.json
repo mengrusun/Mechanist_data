@@ -1,0 +1,22 @@
+{
+  "date": "2026-07-18",
+  "auditor": "llm-chat (gpt-5.4)",
+  "claim_id": "C1",
+  "linked_milestones": ["M0"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {"status": "pass", "details": "Real DSSP labels from experimental PDB, no reverse-translation; CDS accepted only if own translation == UniProt sequence."},
+    "score_normalization": {"status": "pass", "details": "Rank-based AUROC (Mann-Whitney); combiner standardization fit on train only, applied to held-out. No self-referential normalization."},
+    "result_existence": {"status": "pass", "details": "m0_feature_set.json and the 6 per-config run JSONs match EXPERIMENT_RESULTS.md's M0 table numbers exactly (rounding-consistent). Caveat: EXPERIMENT_RESULTS.md omits adverse fields (seed_jaccard=0.0, per_config_best_test_auroc=0.0) present in the artifacts."},
+    "dead_code": {"status": "warn", "details": "seed_jaccard field is degenerate (jaccard(empty,empty)=0.0 because S_features is empty in all 6 runs); the actual steering set (relaxed_S_features) is not measured for Jaccard despite being ~0.7-0.8 stable by reviewer's own calculation. Single-feature verdict path (tau_auc=0.75) never succeeds in any of 6 configs -- verdict always routes through the alternate set_established path."},
+    "scope": {"status": "fail", "details": "established (strongest 4-state verdict) overclaims: (1) undisclosed substitution of the pre-registered seed-robustness statistic (Jaccard=0.0, degenerate) for a different favorable statistic (AUROC stability); (2) post-hoc pass-criterion drift onto a non-pre-registered set-level statistic (tau_set=0.55 fitted combiner) after the plan's only literal pass bar (single-feature AUROC>=0.75) failed in all 6 configs; (3) missing multi-organism robustness axis (holds_multi_organism=false, eukaryote leg pending) presented as if the prokaryote leg alone satisfies the plan's paraphrase/organism robustness requirement."},
+    "eval_type": "real_gt"
+  },
+  "reviewer_rationale": "Underlying evidence (confound controls AUROC~0.5, BH-FDR 321-380 sig features, shuffle nulls, and reviewer-computed cross-seed relaxed-set Jaccard ~0.7-0.8) supports a real, promising phenomenon, but the 'established' label is not fully earned given undisclosed statistic-substitution on seed-robustness, pass-criterion drift, and a missing robustness axis presented as satisfied. A 'conditional' framing per the plan's own four-state semantics would be more honest. Not evidence of fabrication -- overclaim/goalpost-moving/dead-metric pattern.",
+  "action_items": [
+    "Compute and report Jaccard overlap on the actual steering set (relaxed_S_features) across seeds; likely ~0.7-0.8, would strengthen the claim once disclosed correctly.",
+    "Either amend EXPERIMENT_PLAN.md to explicitly pre-register the set-level statistic as an alternative pass path, or downgrade current verdict from established to conditional per the plan's own semantics.",
+    "Complete or explicitly drop/re-scope the eukaryote cross-organism leg before claiming the paraphrase robustness axis is satisfied."
+  ]
+}

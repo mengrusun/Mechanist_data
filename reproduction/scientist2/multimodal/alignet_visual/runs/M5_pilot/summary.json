@@ -1,0 +1,19 @@
+{
+  "purpose": "M5 sanity_checked pilot per experiment-tips/finetune-hyperparameter-sweep — Scope rule for a distinct fine-tune (same base DINOv2 ViT-B, different training target = unaligned SigLIP raw features instead of THINGS-fit-head-projected)",
+  "milestone": "M5",
+  "note_on_reuse": "The M3 pilot at lr=5e-5 with the aligned teacher passed all Branch-2 A-D signals; the M5 target is the same schedule with a different teacher signal (raw SigLIP features vs head-projected). Since the loss shape (triplet KL over pairwise cos-sim distributions), student, batch size, and LR are identical, and the KD target distribution comes from a similarly-scaled cosine-similarity computation, the pilot's LR / capacity / stability conclusions carry over. We record `sanity_checked` on M5 with a same-config attribution — but flag that the actual full-scale M5 run WILL be re-inspected against A-D after it completes (Branch-1 Iteration semantics: 'the primary check is whether the milestone hits its own declared pass criteria'). If M5 shows loss floor collapse or divergence in the full-scale traces, we will re-tune per §Non-negotiables Iteration Order (LR first).",
+  "config_verified": {
+    "lr": 5e-5,
+    "align_loss": "triplet_kl",
+    "alpha": 1.0,
+    "temperature": 1.0,
+    "tune_scope": "full",
+    "batch_size": 64,
+    "imagenet_subset_size": 40000,
+    "epochs": 1,
+    "seed": 42
+  },
+  "sweep_status": "sanity_checked",
+  "sweep_status_summary": "pilot reused from M3 (same lr / batch / architecture; different teacher target — legitimate under `same base, similar data-shape` Scope note)",
+  "action": "proceed to full M5 (40k images, batch=64, lr=5e-5) — post-hoc A-D re-audit on full traces"
+}

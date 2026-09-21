@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Computational Basis of LLM's Decision Making in Social Simulation",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The only fitted/selection component is the Claim-1 linear probe; the pure-direction step is a deterministic OLS orthogonalization (no eval selection) and the main intervention experiment has NO fitting at all (it adds a fixed alpha*direction to the residual stream and re-scores, src/intervene.py). The probe (src/probes_baseline.py) uses a proper StratifiedKFold(n_splits=5, shuffle=True, random_state=0) train/test split with the classifier fit only on the train fold (lines 36-41). Directions are extracted from 400 paired prompts (data/pairs.json) and applied to a disjoint 1000-trial baseline set (results/baseline_llama.jsonl, 1000 lines), so no fit/eval overlap on the causal side. One minor hygiene gap: z-scoring statistics (mu/sd) are computed on the FULL layer matrix Xl BEFORE the CV split (probes_baseline.py lines 34-36), so test-fold statistics leak into standardization. Because probe accuracy is a trivial 1.00 (the prompts literally contain the variable tokens, e.g. 'man'/'woman', 'a 22-year-old'/'a 65-year-old'), this leakage is immaterial to the conclusion. No label leakage or tuned-and-reported-on-same-split path exists.",
+    "score": 4,
+    "evidence_files": ["src/probes_baseline.py", "src/intervene.py", "src/pure_directions.py", "data/pairs.json", "results/baseline_llama.jsonl"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Labels are the randomized experimental variable assignments (gender/age/instruction/meeting), which are ground-truth by construction and non-circular: they are set by src/generate_dataset.py (random.seed(0)) and stored per trial in results/baseline_llama.jsonl (keys gender,age,instruction,meeting). For Claim 1 the probe target is the variable value itself — a valid, independent operationalization of 'linearly extractable direction'. For Claims 3/4 the decision label is E[transfer] = expectation over the next-token distribution across integer tokens 0..20 (intervene.py score_trials), and the 'variable effect' = mean E[transfer] gap between the variable's two classes (intervene.py summary()) — a valid operationalization of 'the variable's relationship with the decision'. The reproduction justifies using E[transfer] over argmax to avoid the degeneracy that Llama always argmaxes 10 and DeepSeek 0 (results.md line 7), which is a reasonable, documented choice. One caveat: the paper's DV is a binary transfer/no-transfer logistic coefficient, whereas the reproduction uses continuous E[transfer]; both are faithful measures of the amount-transferred behavior, so this is a valid re-operationalization rather than a mislabel.",
+    "score": 5,
+    "evidence_files": ["src/generate_dataset.py", "src/intervene.py", "results/baseline_llama.jsonl", "results.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The base model is exactly the specified Llama-3.1-8B-Instruct (intervene.py/extract_directions.py default '/data/zhenqian/models/Llama-3.1-8B-Instruct'; final_summary.txt header). Data size is exactly 1000 dictator trials (results/baseline_llama.jsonl = 1000 lines) with endowment $20 and fair-split $10 as specified (generate_dataset.py). The paired-prompt extraction set (400 pairs/variable) is present (data/pairs.json). The DeepSeek verify variant uses DeepSeek-R1-Distill-Llama-8B, matching the task's cited portability target. Two deviations from the paper's operationalization: (a) the 'instruction' variable is implemented as neutral vs. fair-share-prime (INSTR_TEXT A/B in generate_dataset.py) rather than the paper's give/take framing — the paper's give/take is its single most central IV and structurally changes the DV range to [-20,20]; dropping the 'take' condition is a real simplification. (b) age uses only {22, 65} rather than the paper's continuous 20-60 (65 is outside the paper's stated range). The canonical task.md leaves the instruction phrasing and age range unspecified ('game-instruction phrasing I', 'age A ... randomized'), so no user-specified resource was downgraded; but the departures from the paper's own construction are undocumented in-run and mildly reduce fidelity.",
+    "score": 4,
+    "evidence_files": ["src/generate_dataset.py", "src/intervene.py", "src/extract_directions.py", "results/baseline_llama.jsonl", "results/final_summary.txt"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Scale is generous and matches claim strength. Baseline = 1000 trials (baseline_llama.jsonl); direction extraction uses 400 paired prompts per variable (pairs.json); the intervention sweeps 7 alphas x 4 variables x {raw,pure} x 2 models, each re-scoring all 1000 trials (intervention_llama.json has target_layer 16, n 1000, and a full conditions[] list; intervention_deepseek.json likewise). Baseline linear regression explains 93% (Llama R^2=0.928) / 97% (DeepSeek R^2=0.965) of E[transfer] variance (final_summary.txt), so the DV is well-behaved at this n. The reproduction does not overclaim on thin data: it explicitly flags that gender and age effects are small (results.md 'Gender and age effects are small in both') and that DeepSeek meeting/gender are weak. No conclusion is asserted without running the corresponding experiment.",
+    "score": 5,
+    "evidence_files": ["results/baseline_llama.jsonl", "results/intervention_llama.json", "results/intervention_deepseek.json", "results/final_summary.txt", "results.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "All experiments run on a single fixed seed (generate_dataset.py random.seed(0); probes_baseline.py random_state=0) with no repetition across seeds and no error bars / confidence intervals / significance tests on the intervention delta effects. Each intervention condition is a single 1000-trial point estimate (intervention_llama.json summary/delta_summary_vs_base); the report presents point deltas (e.g. meeting +3 -> meet effect +2.34) with no uncertainty. Partial mitigations: n=1000 per condition lends stability, and the alpha sweep exhibits a coherent monotone dose-response then saturation (results.md sweep table; verified against intervention_llama.json: meet effect 0.10/0.50/0.87/1.37/2.04/2.34/0.63), which is an internal-consistency form of robustness. But small effects (gender -0.17, age +0.22) are reported without any significance test to distinguish them from noise, and no random-seed variance is quantified. Single-run point estimates with no variance/significance -> adequate but under-quantified.",
+    "score": 3,
+    "evidence_files": ["src/generate_dataset.py", "src/probes_baseline.py", "results/intervention_llama.json", "results.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "Claims 3/4 are genuinely causal and are tested by a real intervention: src/intervene.py registers a forward hook (ResidualAdder) that adds alpha*unit_direction to the decoder-layer-16 residual output at every token position and re-scores all trials, then compares to a no-hook baseline. This is an intervention, not correlation. Controls present: a bidirectional coefficient sweep (alphas -6..+6 including a 0 baseline), a raw-vs-pure-direction contrast, and an off-target specificity ratio (|delta_target|/max|delta_other|) reported per condition (final_summary.txt). Key missing control: NO random-direction / norm-matched baseline is run to show effects are variable-specific rather than generic activation disruption. This matters because injection causes large collateral collapse of mean E[transfer] (e.g. meeting +3 -> mean drops from 8.11 to 4.28; +6 -> 0.85; instruction -3 -> mean 8.11+... delta -2.96 in intervention_llama.json), consistent with partial generic degradation; without a random-direction control the 'causally alters' attribution is not fully isolated. An intervention with a sweep but a missing core control -> adequate.",
+    "score": 3,
+    "evidence_files": ["src/intervene.py", "results/intervention_llama.json", "results/final_summary.txt"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every key number traces to a concrete on-disk product and agrees exactly. Spot-checks I verified directly against JSON: baseline effects {gender -0.174, age +0.224, instruction +1.980, meeting +1.371, mean 8.113} in intervention_llama.json match results.md and final_summary.txt; the meeting alpha sweep (meet effect 0.099/0.501/0.865/[1.371]/2.042/2.341/0.626 and mean 10.315/9.596/9.032/8.113/6.526/4.279/0.847) reproduces the results.md sweep table to the reported precision; specificity ratios (gender +3 raw 0.12, pure 0.61; instruction +3 1.88) match final_summary.txt; DeepSeek instruction sweep (mean E 0.039->9.405 across -6..+6) matches intervention_deepseek.json; probe accuracies (acc@0 ~0.51, best 1.00, final 1.00 for all four variables, 33 layers) match probe_baseline_accs.json. Run logs (logs/intervene.log tail) show the same per-condition lines being emitted during real execution. No sourceless or back-filled numbers found.",
+    "score": 5,
+    "evidence_files": ["results/intervention_llama.json", "results/intervention_deepseek.json", "results/probe_baseline_accs.json", "results/final_summary.txt", "logs/intervene.log", "results.md"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The three narrative/aggregate artifacts (results.md, results/final_summary.txt) are mutually consistent with the raw JSON products (intervention_llama.json, intervention_deepseek.json, probe_baseline_accs.json). The per-claim verdict table in results.md ('Supported' for C1-C4) is backed by the same numbers reported elsewhere; the purification reduction factors (gender->instruction 8.3x from -0.58 to -0.07; gender -3 33x from +0.67 to -0.02; DeepSeek meeting off-target 0.256->0.046 = 5.5x) are all consistent between results.md and the raw raw/pure delta tables in final_summary.txt. Baseline regression coefficients (male -0.138, old +0.183, instrB +1.960, meeting +1.359, R^2 0.928) appear identically in final_summary.txt and results.md. No metric mismatch, no prose-vs-number contradiction, and no integrity state that is PASS in one artifact and broken in another was found.",
+    "score": 5,
+    "evidence_files": ["results.md", "results/final_summary.txt", "results/intervention_llama.json", "results/intervention_deepseek.json", "results/probe_baseline_accs.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "For each social/contextual variable (e.g., gender, age, instruction framing, meeting condition), the LLM encodes its influence on decision making as a linearly extractable direction in the residual stream.",
+        "method": {
+          "justification": "9a: The method is a 5-fold-CV L2 logistic-regression linear probe over the 33 residual positions (probes_baseline.py) plus mean-difference direction extraction (extract_directions.py). Linear probing is the canonical and correct method category for 'linearly extractable direction'; it is in fact a more direct test of linear decodability than the paper's own cosine/dot-product mean-diff geometry, and the interpretive assumption (linear separability => linear direction) is standard in the representation-probing literature. Well matched to the claim.",
+          "score": 5,
+          "evidence_files": ["src/probes_baseline.py", "src/extract_directions.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design is reasonable — 4 variables x 33 layers x 2 models, proper stratified CV, base-rate reported (~0.50), and an interpretable acc@0 (chance, ~0.51) vs deep-layer (1.00) contrast (probe_baseline_accs.json). Two limitations: (a) the global z-score before the CV split is a minor preprocessing leak; (b) probe accuracy saturates at a trivial 1.00 because the prompt literally contains the variable tokens, so the probe demonstrates 'the variable is linearly decodable from context' more than 'the decision-relevant component is a linear direction' — a slightly weaker test than the claim's 'encodes its influence on decision making'. Solid but slightly over-easy.",
+          "score": 4,
+          "evidence_files": ["src/probes_baseline.py", "results/probe_baseline_accs.json"]
+        },
+        "result": {
+          "justification": "9c: All four variables reach 1.00 CV accuracy from mid-network layers in BOTH Llama and DeepSeek (final_summary.txt CLAIM 1 block; probe_baseline_accs.json best=1.00 for each), and the embedding layer is at chance — qualitatively agreeing with the paper's finding that social variables are approximately linear directions in the residual stream (paper Sec 3.2, Discussion). Honest and directionally consistent; the only caveat is the triviality of 100% separability, which the report does not flag as a ceiling.",
+          "score": 5,
+          "evidence_files": ["results/probe_baseline_accs.json", "results/final_summary.txt", "results.md"]
+        }
+      },
+      "C2": {
+        "claim": "A \"pure\" variable direction, obtained by removing overlapping components with other variables, isolates the unique effect of that variable, free of confounding from co-varying factors.",
+        "method": {
+          "justification": "9a: pure_directions.py residualizes each per-layer direction against the span of the other three via OLS projection (a = (OO^T)^{-1} O d_v; P[v]=d_v - a.others), which is exactly the paper's partial steering vector construction (paper Sec 2.2.2, v_{X1|X2} = v_X1 - <v_X1,v_X2>/||v_X2||^2 v_X2, extended to multiple controls). Correct method, faithful to the paper.",
+          "score": 5,
+          "evidence_files": ["src/pure_directions.py"]
+        },
+        "experiment": {
+          "justification": "9b: The design validates purification two ways — (i) cosine matrices before/after (pure becomes orthogonal to the others by construction, logged in pure_directions.py) and (ii) the downstream causal specificity test (raw vs pure off-target intervention effect in intervene.py / final_summary.txt). This is a reasonable design that tests the operational consequence, not just the geometry. Limitation: the 'isolates unique effect' benefit is only strongly exercised on the one genuinely confounded case (gender vs instruction); for the near-orthogonal dominant variables purification is inert by construction, so the general claim is demonstrated on limited coverage. Adequate-to-good.",
+          "score": 4,
+          "evidence_files": ["src/pure_directions.py", "src/intervene.py", "results/final_summary.txt"]
+        },
+        "result": {
+          "justification": "9c: Purification reduces the gender->instruction off-target confound ~8.3x (raw -0.58 -> pure -0.07) and 33x at alpha -3, and lifts the gender specificity ratio from 0.12 to 0.61, while leaving already-orthogonal instruction/meeting essentially unchanged (final_summary.txt; verified in raw/pure tables). This qualitatively agrees with the paper's orthogonality analysis that steering vectors are largely independent (paper Sec 3.4, ~88.75% orthogonal manipulations). Honest, correctly bounded interpretation ('purification only removes confounds that exist').",
+          "score": 5,
+          "evidence_files": ["results/final_summary.txt", "results.md"]
+        }
+      },
+      "C3": {
+        "claim": "Injecting these directions into the model at inference time causally and substantially alters the relationship between the targeted variable and the model's decision output, while leaving other variables' effects intact.",
+        "method": {
+          "justification": "9a: Activation steering via residual-stream injection (intervene.py ResidualAdder at layer 16) is the correct causal-method family and matches the paper's Step 5 'Manipulate'. However, there is a real method deviation: the paper injects the PROJECTION of the partial IV vector onto the DV direction (paper Sec 2.5.2, alpha*Proj_D(v_{X|others}), chosen explicitly 'to favor precision'), whereas the reproduction injects the FULL unit direction alpha*d_v/||d_v|| (raw or pure), never projected onto the decision axis. Injecting the whole direction directly undercuts the 'leaving other variables intact' half of the claim and is the likely cause of the poor observed specificity. Right family, but a precision-relevant departure from the paper's specific operator.",
+          "score": 3,
+          "evidence_files": ["src/intervene.py"]
+        },
+        "experiment": {
+          "justification": "9b: The design has an alpha sweep, raw-vs-pure contrast, off-target specificity ratio, and two models. But three weaknesses bear on THIS claim: (a) only a single injection layer (16, layer_frac=0.5) is tested, whereas the paper found layer strongly modulates specificity and swept layers 1-31 — a true-negative on 'intact' cannot be separated from under-exploration of layer; (b) no random-direction/norm-matched control, while injection produces large collateral mean-E collapse (meeting +3 mean 8.11->4.28), so 'causally alters the RELATIONSHIP' is confounded with generic disruption; (c) the reproduction's own specificity numbers directly contradict 'leaving other variables intact' (gender +3 raw ratio 0.12 — off-target LARGER than target). Honest but under-powered on the layer axis and missing the disruption control.",
+          "score": 3,
+          "evidence_files": ["src/intervene.py", "results/intervention_llama.json", "results/final_summary.txt"]
+        },
+        "result": {
+          "justification": "9c: Instruction and meeting show strong, causally-clear effects (instruction effect collapses toward 0; meeting effect reshaped by ~+70%/-66% at +/-3), while gender/age are weak with poor specificity — which the reproduction honestly states ('Meeting and gender show weaker causal effects'). This is qualitatively consistent with the paper, whose own Female-steering result is itself weak and patternless (paper Sec 3.3.2: only 16.92% significant, |r|<0.05) and whose framing variable dominates. So the direction agrees with the paper. Deduction: the report's blanket 'Supported' for C3 is somewhat generous given that the 'while leaving other variables' effects intact' clause is only partially met (only via pure directions, and even then off-target effects persist), a nuance the summary glosses. Broadly consistent, mildly overstated on the specificity sub-clause.",
+          "score": 4,
+          "evidence_files": ["results.md", "results/final_summary.txt", "results/intervention_llama.json"]
+        }
+      },
+      "C4": {
+        "claim": "The same mechanism supports both directions of intervention — amplifying a variable's effect or attenuating/inverting it — yielding a practical handle for alignment and debiasing of LLM-based social agents.",
+        "method": {
+          "justification": "9a: Bidirectionality is tested by the same steering operator with signed coefficient +/-alpha (intervene.py loops alphas -6..+6), which is exactly the right method to probe amplify-vs-attenuate and matches the paper's coefficient-sign framing (paper Sec 2.5.3/2.6, alpha controls sign and magnitude). Same full-direction-vs-DV-projection deviation as C3, but for a bidirectionality test that deviation is largely immaterial. Well matched.",
+          "score": 4,
+          "evidence_files": ["src/intervene.py"]
+        },
+        "experiment": {
+          "justification": "9b: A genuine dose-response design — sweep alpha in {-6,-3,-1.5,0,+1.5,+3,+6} and report both the target variable effect and mean E per alpha (intervention_llama.json) — which mirrors the paper's coefficient-sweep philosophy (paper expands |alpha| up to 30). Design is reasonable for demonstrating bidirectionality. Limitations: clean bidirectional dose-response is only demonstrable on instruction/meeting (gender/age effects are too weak to trace a bidirectional curve), and only one layer is explored, so 'the same mechanism' is shown for the strong variables rather than universally.",
+          "score": 4,
+          "evidence_files": ["src/intervene.py", "results/intervention_llama.json"]
+        },
+        "result": {
+          "justification": "9c: The meeting alpha sweep (verified in intervention_llama.json) rises from baseline effect +1.37 to +2.34 at alpha +3 (amplify) and falls to +0.10 at alpha -6 (attenuate), with saturation at +6 as the model hits the $0 floor; instruction can be driven from +1.98 to ~+0.02. This demonstrates bidirectional amplify/attenuate with a monotone dose-response, qualitatively consistent with the paper's claim that steering can up- and down-regulate a variable's impact. Caveat honestly labeled as 'attenuation/near-inversion': true sign-inversion is not achieved (effects shrink toward 0 rather than flipping negative), so the 'inverting' word slightly overreaches the evidence, but the report hedges it. Directionally faithful.",
+          "score": 4,
+          "evidence_files": ["results/intervention_llama.json", "results.md", "results/final_summary.txt"]
+        }
+      }
+    }
+  }
+}

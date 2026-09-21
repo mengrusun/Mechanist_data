@@ -1,0 +1,129 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Zhenqian Xu",
+    "paper_title":         "Aligning Machine and Human Visual Representations across Abstraction Levels",
+    "agent":         "scientist3",
+    "review_date":         "2026-07-19"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "存在 train/val 三元组划分。",
+    "score": 5,
+    "evidence_files": ["logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_486a902f4a9e4caca14be7278ce9a010.py"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "ground truth 用的是真实 THINGS 人类三元组 odd-one-out 判断。",
+    "score": 5,
+    "evidence_files": ["logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_486a902f4a9e4caca14be7278ce9a010.py"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验指定的资源基本忠实使用：student=DINOv2 ViT-B、teacher=SigLIP-So400m（stage_4 第 128、194 行 find_model_dir siglip-so400m；student DINOv2 特征提取），数据=THINGS 1852 concept 全量真实三元组，均与 task.md 一致，但问题在于没用THINGS数据训teacher。",
+    "score": 2,
+    "evidence_files": ["logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_486a902f4a9e4caca14be7278ce9a010.py", "report.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "样本规模够,但实验没跑起来。",
+    "score": 3,
+    "evidence_files": ["logs/0-run/draft_summary.json", "report.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "有多种子聚合， 完全无 CI，这里有种子层面的方差意识。扣分：并未对『空结果 vs 噪声』给出显式显著性检验。",
+    "score": 4,
+    "evidence_files": ["logs/0-run/baseline_summary.json", "logs/0-run/research_summary.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a —— 无（成立的）因果主张。",
+    "score": "n/a",
+    "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_aec0d5421d47461a9209faeb7fb12579.py"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "核心数字可溯源且一致：baseline DINOv2 OOO=0.4139、teacher SigLIP OOO=0.4359、aligned best≈0.4397、alignment MSE≈0.012 见 draft_summary Key_numerical_results，且 0.4139 在 baseline/research_summary 的 metric.value 中逐 N_EPOCHS 复现、ablation OOO≈0.4356-0.4377 亦落盘。但存在无据数字：ablation 的 plot_analyses / vlm_feedback_summary 报出『Full Model ~0.63、No RSA ~0.61、No KL ~0.60、Cosine Only ~0.55、No Distillation 0.48』——而最终代码只有单一 MSE 成对相似损失（stage_4 第 295 行 F.mse_loss(pair_sims...)），根本没有 RSA/KL/Cosine-only 这些配置，grep 落盘 experiment_results 也找不到 0.6x 的 Spearman。即这些 0.63/0.48 是 VLM 叙事凭空生成、与真实运行（OOO≈baseline）矛盾。真实指标可溯源，但审计叙事里混入了伪造/幻觉数字。",
+    "score": 3,
+    "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/ablation_summary.json", "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_486a902f4a9e4caca14be7278ce9a010.py"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "存在实质性不一致。诚实的一手记录 draft_summary 说 alignment『produces essentially no measurable improvement』、Spearman 约 coarse 0.32/mid 0.30/fine 0.28、OOO≈0.41-0.44；而 ablation_summary 的 vlm_feedback_summary/plot_analyses 却宣称『Full alignment model achieves the best Spearman (~0.63) and consistently outperforms unaligned baseline (~0.48), confirming that alignment injects human-like similarity structure』——两者对『对齐是否有效』给出完全相反的结论，且 0.63/0.48 不见于任何代码或落盘数据。report.md 的启发式判定又写『Partially or fully supported』，与一手空结果不符。多份产物互相打架，且方向性结论被自动叙事悄悄翻正。",
+    "score": 2,
+    "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/ablation_summary.json", "report.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "task.md Claim 1：拟合到 THINGS 人类 triplet 判断的教师模型能捕捉人类相似性结构，好到可对大规模无标注图库合成跨多个抽象层级的人类式相似性判断。",
+        "method": {
+          "justification": "机理方法与 claim 错位：论文 Claim 1 的核心是『先把教师（SigLIP）对齐/拟合到人类三元组判断』，但 scientist3 全程没有拟合任何教师头——所有 stage 的 best_solution 里 teacher 都是原始 SigLIP",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_486a902f4a9e4caca14be7278ce9a010.py"]
+        },
+        "experiment": {
+          "justification": "只测了原始 SigLIP 的 OOO=0.4359 vs 学生 0.4139（stage_1 第 282-283 行甚至自带 WARNING: teacher<=baseline），并未针对『拟合后的教师是否更捕捉人类结构、能否在 ImageNet 上合成多层级判断』设计任何实验。判定 metric 与 Claim 1 目标不对应——教师从未被拟合，也没做 ImageNet 合成三元组的层级评估。",
+          "score": 2,
+          "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_aec0d5421d47461a9209faeb7fb12579.py"]
+        },
+        "result": {
+          "justification": "无实验支持。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/draft_summary.json"]
+        }
+      },
+      "C2": {
+        "claim": "task.md Claim 2：通过专用对齐损失把人类式相似性结构蒸馏进预训练视觉基础模型（主实验 DINOv2 ViT-B），可在多个抽象层级显著提升与人类相似性判断的 Spearman 相关。",
+        "method": {
+          "justification": "蒸馏方向大致对（冻结学生 + 投影头以 MSE 匹配教师成对相似度，stage_4 第 267-295 行），属表示蒸馏家族。但致命失配：被蒸馏的『教师』是原始 SigLIP、其相似性结构并不携带经人类三元组对齐后的信号，因此即便蒸馏完美也无人类结构可注入。。",
+          "score": 2,
+          "evidence_files": ["logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_486a902f4a9e4caca14be7278ce9a010.py"]
+        },
+        "experiment": {
+          "justification": "蒸馏的是未训练的教师。",
+          "score": 2,
+          "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/research_summary.json"]
+        },
+        "result": {
+          "justification": "无实验支持。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/ablation_summary.json"]
+        }
+      },
+      "C3": {
+        "claim": "task.md Claim 3：对齐后的学生模型比未对齐版本更准确地再现人类的行为模式与不确定性。",
+        "method": {
+          "justification": "Claim 3 基本未触及：全流程只做了 OOO 准确率与 coarse/mid/fine Spearman，没有任何针对人类『不确定性』（反应时/两工人一致性/熵-校准）或行为分布匹配的方法设计。用于回答 claim 的机理方法缺失。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/draft_summary.json"]
+        },
+        "experiment": {
+          "justification": "没有对应实验——draft_summary 与各 stage best_solution 均无不确定性/行为匹配的度量（如 model-human KL、熵 Pearson、RSA-to-human）。Claim 3 未被实验覆盖。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_486a902f4a9e4caca14be7278ce9a010.py"]
+        },
+        "result": {
+          "justification": "无结果可分析：Claim 3 既未测量也未下结论，等同于该 claim 未复现且未尝试。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/draft_summary.json"]
+        }
+      },
+      "C4": {
+        "claim": "task.md Claim 4：对齐后的学生模型在多样下游任务上匹配或超过原模型，并改善分布外（OOD）鲁棒性。",
+        "method": {
+          "justification": "方法本身恰当：draft_summary 记载用 task 指定的 Birds/UC Merced/Colon/Fine-grained 做 one-shot 下游、并用 ImageNet-A 测 OOD 鲁棒性，读出方式合理、数据集未替换。",
+          "score": 3,
+          "evidence_files": ["logs/0-run/draft_summary.json"]
+        },
+        "experiment": {
+          "justification": "但因为没训教师模型+蒸馏无效，实验失败。",
+          "score": 2,
+          "evidence_files": ["logs/0-run/draft_summary.json"]
+        },
+        "result": {
+          "justification": "没训教师模型+蒸馏无效，实验失败。",
+          "score": 1,
+          "evidence_files": ["logs/0-run/draft_summary.json"]
+        }
+      }
+    }
+  }
+}

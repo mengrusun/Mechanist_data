@@ -1,0 +1,39 @@
+{
+  "run_id": "A1_full_pipeline",
+  "status": "completed",
+  "started_at": "2026-07-13T22:54:06+08:00",
+  "ended_at": "2026-07-14T00:45:54+08:00",
+  "gpu_ids": [
+    1,
+    2,
+    3,
+    5,
+    6
+  ],
+  "gpu_provider": "local",
+  "wall_clock_seconds": 6708.0,
+  "gpu_seconds": 2520,
+  "gpu_hours": 0.7,
+  "milestones_completed": [
+    "M0_setup",
+    "M1_activations",
+    "M2_reference_sets",
+    "M3_clip_embeddings",
+    "M4_v_c (20-cell grid + 5 random baselines)",
+    "M5_text_embeddings",
+    "M6_C1_last_layer (5 k)",
+    "M7_C1_hidden (5 k)",
+    "M8_C2_queryability (4 pools)",
+    "M9_C2_stability (4 pools)",
+    "M10_C2_separation (4 pools)",
+    "M11_layer_granularity",
+    "M12_cross_model_verify (3 swap models)",
+    "M13_final_report"
+  ],
+  "gpu_ids_actually_used": [
+    3,
+    1,
+    5
+  ],
+  "notes": "M0-M11 ran productively in ~14 min on GPU 3 (single-GPU sequential pipeline). M12 completed via 3 sequential single-GPU runs on GPU 3 (~16 min total). Two earlier M12 parallel-launch attempts were killed due to stdio buffering causing false-negative progress diagnosis \u2014 total lost wall-time ~55 min, but no results were affected. Actual productive GPU-hours (only counting successful runs): ~0.7 GPU-h. All runs used GPUs in the {1,2,3,5,6} allowlist. gpu_ids_actually_used records the union of GPUs referenced in successful launches."
+}

@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Toward Universal Steering and Monitoring of AI Models",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The pipeline's main supported claim (C5 monitoring) has genuinely clean, code-honored splits: code/c5_monitoring.py:44-52 (split_data) draws disjoint 60/20/20 train/val/test index sets from the balanced subset; the probe/RFM is fit on tr_acts only (lines 185-203), best block is picked on val AUROC (lines 210-211), and the reported metric is test AUROC on the held-out te split (runs/C5_monitoring/summary.json: n_train 1200 / n_val 400 / n_test 400 for HaluEval; 350/116/118 for ToxicChat). No fitting/evaluation overlap exists there. The steering claims (C1-C4) have one documented minor hygiene gap: the steering coefficient alpha* is selected from the SAME 50-prompt held-out set that the reported per-alpha rubric means are computed on (EXPERIMENT_RESULTS.md line 124 'alpha selection uses dev split ... defined implicitly by 7-alpha sweep on the 50-prompt held-out'; verify/C1_political_rfm_steering/main_experiment_audit flags 'alpha on same held-out set'). This does not contaminate the C1 political conclusion, which rests on the full monotone curve + matched-random control rather than a single selected alpha, so it is a minor, disclosed gap rather than leakage.",
+    "score": 4,
+    "evidence_files": ["code/c5_monitoring.py", "runs/C5_monitoring/summary.json", "refine-logs/EXPERIMENT_RESULTS.md", "verify/C1_political_rfm_steering/main_experiment_audit/MECHANISM_AUDIT.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Labels are drawn from established benchmarks and steering uses an independent GPT-4o rubric judge (non-circular w.r.t. the RFM vector under test), which is broadly valid. However, direct inspection of the loaded HaluEval-General data reveals a serious, UNDISCLOSED label/format confound on the headline C5 claim: in runs/C5_monitoring/halueval_train.jsonl, label-0 (correct) rows have mean response length ~14 chars (terse gold answers like 'Bart Conner', 'Roger Christian') while label-1 (hallucinated) rows have mean response length ~64 chars (full sentences), and 29/603 label-1 rows have the response literally duplicating the prompt passage. A linear probe on the last-token activation of prompt+response can therefore separate the two classes largely by RESPONSE LENGTH/FORMAT rather than by hallucination content — which plausibly explains the anomalously high 0.986 AUROC versus the paper's ~0.72 for the same 8B model. GPT-4o (0.685), which reads content, is not fooled by length, so the 'internal beats GPT-4o' gap on HaluEval is partly artifactual and the run interprets it as genuine monitoring skill. ToxicChat labels (toxicity of the user prompt) are cleaner (label-1 prompts only mildly longer: 394 vs 171 chars; responses ~838/868 chars balanced) and the steering concept rubrics are reasonable operationalizations. The HaluEval confound is an obvious-on-inspection but undocumented gap affecting the single most important claim.",
+    "score": 3,
+    "evidence_files": ["runs/C5_monitoring/halueval_train.jsonl", "runs/C5_monitoring/toxicchat_train.jsonl", "code/c5_monitoring.py", "runs/C5_monitoring/summary.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main/experiment-stage resource specification in task.md (base model Llama-3.1-8B-Instruct; GPT-4o-2024-11-20 as concept-evaluator and monitoring-judge baseline; ToxicChat-T5-Large baseline) is honored in the baseline experiments. CLAIMS_LEDGER.md and EXPERIMENT_RESULTS.md list model=Llama-3.1-8B-Instruct (bfloat16) throughout; code/c5_monitoring.py:81 calls model='gpt-4o-2024-11-20'; the full HaluEval-General 2000-sample balanced split was used and ToxicChat capped at 584 balanced (documented as source has only 292 positives, EXPERIMENT_RESULTS.md line 26). Deviations are disclosed and availability-driven: HackerRank used only 20 problems (10 dev + 10 held) vs the paper/plan's 50 because only 20 were locally available (EXPERIMENT_RESULTS.md line 133), affecting C2 only; C5 evaluated 2 of the 6 monitoring benchmarks the paper/task lists (HE-Gen + ToxicChat, omitting FAVABENCH/HE-Wild/PubMedQA/RAGTruth). The verify-stage model swaps (Llama-3-8B, Mistral-7B, DeepSeek-R1) are deliberate robustness probes and exempt. No silent downgrade in the main supported claim; one documented dataset subset (HackerRank) plus reduced benchmark coverage keep this from a full 5.",
+    "score": 4,
+    "evidence_files": ["CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_RESULTS.md", "code/c5_monitoring.py", "runs/C5_monitoring/summary.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The supported claim (C5) rests on adequate scale: n_test=400 (HaluEval) and 118 (ToxicChat) with 32-block per-block AUROC reported (runs/C5_monitoring/summary.json). Steering claims are thin but the thinness is explicitly flagged and claim strength is downgraded accordingly: C2 held-out is only 10 problems x 2 seeds = 20 datapoints (tagged suspected_under_power=true, EXPERIMENT_RESULTS.md line 28,138 and CLAIMS_LEDGER 'used_n 20/60'); C4 uses 15 held-out per combo (runs/C4b_pin_block14/summary.json held_agg n=15); C1/C3 use 50 held-out prompts. All under-40 samples are labelled and the corresponding claims are demoted to 'exploratory' rather than asserted (CLAIMS_LEDGER.md lines 11-14). No conclusion is stated without running the experiment. The consistent honest attachment of under-power caveats and demotion keeps evidence strength matched to claim strength.",
+    "score": 4,
+    "evidence_files": ["runs/C5_monitoring/summary.json", "runs/C2_hackerrank/summary.json", "runs/C4b_pin_block14/summary.json", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Uncertainty reporting is partial. Positives: C3 reports per-language Wilcoxon signed-rank p-values (runs/C3_crosslingual/summary.json: EN p=0.228, ZH p=0.110, FR p=0.674, ES p=0.268) and honestly notes none reach p<0.05; C1 reports per-alpha std and a matched-random-direction control at alpha=+-3 (runs/C1_steer_judge/summary.json agg_rfm/agg_random); C2 runs 2 seeds {42,200}. Weaknesses: the headline C5 AUROCs come from a single split at seed=42 with no confidence intervals or bootstrap (runs/C5_monitoring/summary.json config seed=42), and most steering point estimates are single-seed. The C5 HaluEval effect (0.30 gap) is large relative to any plausible noise, but robustness to resampling is unverified. Overall: point estimates with some significance testing and controls, but predominantly single-seed with thin uncertainty quantification.",
+    "score": 3,
+    "evidence_files": ["runs/C3_crosslingual/summary.json", "runs/C1_steer_judge/summary.json", "runs/C5_monitoring/summary.json", "runs/C2_hackerrank/summary.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The steering claims (C1-C4) are genuinely causal (adding a vector to residual activations to change behavior) and are supported by real interventions with controls, not correlational proxies dressed as causal. C1 ships a matched-random-direction control at alpha=+-3 on all three concepts plus a 7-point coefficient sweep (runs/C1_steer_judge/summary.json: political rfm |delta|=0.58/0.36 vs random 0.30/0.12), and follow-up coefficient extension to alpha=12 (runs/C1c_high_alpha). C2 sweeps alpha in {0..4} with default/prompt-only baselines. The one gap: C4 compositional runs lack a random-direction control (flagged WARN in verify/C4_compositional_steering and CLAIMS_LEDGER line 68). C5 monitoring is honestly framed as a correlational classification comparison (AUROC), not a causal claim. Genuine interventions with controls for the main steering claim; a single missing control on C4 keeps this just below excellent.",
+    "score": 4,
+    "evidence_files": ["runs/C1_steer_judge/summary.json", "runs/C1c_high_alpha/summary.json", "verify/C4_compositional_steering/ROBUSTNESS.md", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Key numbers trace to concrete on-disk products and agree with them. C1 political (3.08/3.66/4.02) matches runs/C1_steer_judge/summary.json exactly; C5 AUROCs (HaluEval internal 0.986/0.984, GPT-4o 0.685; ToxicChat 0.945/0.922 vs 0.882) match runs/C5_monitoring/summary.json and are backed by per-block npy arrays (runs/C5_monitoring/*_aurocs.npy) and raw score arrays (runs/C5_baselines/halueval_gpt4o_scores.npy shape 400 values 1-5; toxicchat_t5_scores.npy shape 118 continuous). One traceability wrinkle: C5_monitoring/summary.json and EXPERIMENT_RESULTS.md report ToxicChat-T5 AUROC=1.0, while runs/C5_baselines/summary.json carries a stale note 't5 baseline failed on network fetch (unreachable HF)' — the toxicchat_t5_scores.npy does exist with real continuous values yielding AUROC 1.0, so the number is grounded (T5 later succeeded), but the contradictory note is loose bookkeeping. No sourceless or fabricated values found.",
+    "score": 4,
+    "evidence_files": ["runs/C1_steer_judge/summary.json", "runs/C5_monitoring/summary.json", "runs/C5_baselines/summary.json", "runs/C5_baselines/toxicchat_t5_scores.npy"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Numbers and verdicts are largely self-consistent across EXPERIMENT_RESULTS.md, CLAIMS_LEDGER.md, VERIFY_REPORT.md and the run summary.json files: C5 (0.986/0.685 HaluEval; 0.945/0.882 ToxicChat), C1 political, C3 per-language shifts and C2 pass rates all match across artifacts, and integrity states are propagated consistently (C1-C4 WARN -> INTEGRITY_ONLY -> narratively demoted to exploratory; C5 FAIL -> PASS post-iteration with robustness 0.667). The C5->C5_v2 rewrite and the DeepSeek-R1 boundary case are consistently described in CLAIMS_LEDGER, VERIFY_REPORT and AUTO_ITERATION_FINAL_REPORT. The one minor inconsistency is the T5 baseline: 'failed on network fetch' in runs/C5_baselines/summary.json vs a reported T5 AUROC=1.0 in runs/C5_monitoring/summary.json and EXPERIMENT_RESULTS.md — a stale flag that changes no verdict (the claim explicitly does not rely on beating T5). No PASS-vs-broken contradiction across integrity gates.",
+    "score": 4,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md", "verify/VERIFY_REPORT.md", "runs/C5_baselines/summary.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "RFM--a supervised feature learning algorithm can extract per-block linear concept vectors from the internal activations of large-scale AI models, and adding these vectors to activations during inference effectively steers model behavior toward or away from the target concept. Example application scenarios: Anti-refusal (jailbreak)，Political stance，Honesty (negative steering).",
+        "method": {
+          "justification": "9a: The method matches the paper's mechanism category exactly. code/rfm_core.py implements a genuine Recursive Feature Machine (kernel-ridge + AGOP alternation, extract_rfm lines 140-235 returning the unit-norm top AGOP eigenvector as the concept vector) and additive residual-stream steering with per-block linear-probe screening — precisely the RFM/AGOP concept-vector + additive-steering procedure described in the paper (Fig.1A/B). This is the correct mechanistic tool for a linear concept-steering claim.",
+          "score": 5,
+          "evidence_files": ["code/rfm_core.py", "code/c1_steer_and_judge.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design is reasonable and includes real controls: 7-point alpha sweep [-3..3], matched-random-direction control at alpha=+-3, GPT-4o 5-point rubric metric, and probe-based block screening (runs/C1_steer_judge/summary.json). The team also explored beyond the initial run when the refusal probe screen degenerated (ties at 1.0 across all 32 blocks -> block 0 gibberish): pinned block-14 re-run (runs/C1b_refusal_block14) and high-coefficient extension to alpha=12 (runs/C1c_high_alpha). Weaknesses: the paper steers with small coefficients on block OUTPUTS (eps in {0.1,0.2,0.3} for 8B) whereas this run adds alpha*unit-vector up to 3/12, so the effective intervention magnitude may not be matched; and alpha* is selected on the same held-out prompts that are reported. Adequate, honestly executed design with minor coefficient-calibration and selection gaps.",
+          "score": 4,
+          "evidence_files": ["runs/C1_steer_judge/summary.json", "runs/C1b_refusal_block14/summary.json", "runs/C1c_high_alpha/summary.json"]
+        },
+        "result": {
+          "justification": "9c: Directionally partial and honestly reported. Political steering is cleanly reproduced (baseline 3.66; alpha=-3 -> 3.08, alpha=+3 -> 4.02; monotone; matched-random control only 0.30/0.12) — qualitatively agreeing with the paper's core 'concept vectors steer behavior' finding. Refusal is a null result and honesty within judge noise (Delta=+0.14). Crucially, the paper demonstrates anti-refusal/jailbreak steering on 70B/90B models and explicitly states 'newer, larger models are more steerable', so an 8B failing anti-refusal is consistent with the paper's own scaling narrative and is an honest negative with a plausible (model-scale + degenerate-block-selection) justification. No goalpost-tuning or fabrication; the 3-scenario headline was acknowledged as overclaim and demoted to a political-only preliminary case study. Partial reproduction, reliably characterized.",
+          "score": 4,
+          "evidence_files": ["runs/C1_steer_judge/summary.json", "refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C2": {
+        "claim": "Steering can improve performance on high-precision tasks: steering from Python to C++ when answering coding questions on algorithm problems with different task difficulties, a C++ concept vector can raise llm's test-case pass rate, beating both the default Python output and \"Answer in C++\" prompting.",
+        "method": {
+          "justification": "9a: The mechanism family (RFM concept vector added additively to steer output language) matches the claim, and the pass-rate-on-HackerRank evaluation matches the paper. However the concept-vector construction is a divergent, high-impact weakness: the run itself concludes v_cpp 'likely encodes the language-tag prefix Language: X. rather than an intrinsic C++ representation' (EXPERIMENT_RESULTS.md line 56), and empirically the steered outputs had cpp_frac=0.00 — the vector never switched the output language, so the intended intervention was not actually realized. The interpretive assumption (this vector = the C++ concept) is unverified and probably false, which materially undermines method validity for this claim.",
+          "score": 3,
+          "evidence_files": ["runs/C2_hackerrank/summary.json", "code/c2_hackerrank.py", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "experiment": {
+          "justification": "9b: Metric (HackerRank test-case pass rate) and baselines (default Python, prompt-only 'Answer in C++.', steered) correctly mirror the paper. But the experiment is under-powered and under-explored: only 10 held-out problems x 2 seeds = 20 datapoints (vs paper's 50), a single alpha* chosen from a [0..4] dev sweep, and because higher alpha causes gibberish the run never found a coefficient regime that produces C++ without degeneration (runs/C2_hackerrank/summary.json: all held-out conditions cpp_frac=0.00). This is honestly tagged suspected_under_power=true, but it means a true negative cannot be distinguished from under-exploration/mis-calibrated intervention magnitude.",
+          "score": 3,
+          "evidence_files": ["runs/C2_hackerrank/summary.json", "runs/C2_hackerrank/held_details.jsonl"]
+        },
+        "result": {
+          "justification": "9c: Reported as not-supported (default 0.600 > steered 0.567) and honestly flagged provisional/exploratory. The paper's C++ improvement is on Llama-3.3-70b-4-bit (the paper's 8B is not shown to improve), so a negative on 8B does not contradict the paper's headline. The negative is however weak evidence: since the vector never switched language (cpp_frac=0), the experiment did not actually test 'C++ steering improves pass rate' — it tested a vector with no realized effect. The run acknowledges this and does not disguise the result as agreement or as a firm falsification. Honest, reliably-caveated non-reproduction of limited diagnostic power.",
+          "score": 3,
+          "evidence_files": ["runs/C2_hackerrank/summary.json", "refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C3": {
+        "claim": "Concept representations are transferable across human languages: concept vectors trained on English text can steer model responses in other languages (e.g., Chinese, French, Spanish).",
+        "method": {
+          "justification": "9a: Exactly matches the paper's cross-lingual method — an English-trained RFM concept vector (v_honesty, block 15) applied unchanged while prompting in Chinese/French/Spanish, with a GPT-4o multilingual rubric judge (runs/C3_crosslingual/summary.json). The correct mechanistic test for a cross-lingual transfer claim.",
+          "score": 5,
+          "evidence_files": ["code/c3_crosslingual.py", "runs/C3_crosslingual/summary.json"]
+        },
+        "experiment": {
+          "justification": "9b: The design is quantitatively MORE rigorous than the paper (which only showed qualitative multilingual examples): 50 prompts x 4 languages x steered/unsteered with per-language Wilcoxon tests. The key design flaw is concept choice: honesty steers only weakly on 8B in English itself (Delta=+0.14, within judge std), so the cross-lingual test inherits near-noise signal and cannot cleanly evidence transfer — a strongly-steerable concept (e.g. political) would have been far more diagnostic. No multiple-comparison correction across 4 languages (flagged). Honest but under-powered by concept selection.",
+          "score": 3,
+          "evidence_files": ["runs/C3_crosslingual/summary.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c: Reported as partial/not-supported: sign preserved (matching EN) in ZH (+0.32) and ES (+0.20) but reversed in FR (-0.10), and no language reaches p<0.05 (runs/C3_crosslingual/summary.json). This broadly aligns in direction with the paper for 2 of 3 target languages but the FR reversal and lack of significance deviate; the run correctly attributes the weak/non-significant transfer to the underlying weak honesty signal rather than claiming success. No fabrication or goalpost-tuning; the deviation reason is disclosed. Honest partial reproduction with one sub-result (FR) deviating.",
+          "score": 3,
+          "evidence_files": ["runs/C3_crosslingual/summary.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C4": {
+        "claim": "Concept vectors are composable: linear combinations of multiple concept vectors enable simultaneous multi-concept steering.",
+        "method": {
+          "justification": "9a: Matches the paper's compositionality method — linearly summing two RFM concept vectors and adding them simultaneously to activations, with each target effect judged independently (v_honesty+v_refusal_neg; v_formal_tone+v_technical_persona at block 14; runs/C4b_pin_block14/summary.json). Correct mechanistic construction for a composability claim.",
+          "score": 5,
+          "evidence_files": ["code/c4_compositional.py", "runs/C4b_pin_block14/summary.json"]
+        },
+        "experiment": {
+          "justification": "9b: The v1-only/v2-only/sum design is the right skeleton, but the concept pairs and rubrics chosen make it non-diagnostic: single vectors already saturate the rubric ceiling (honesty ~4.87/5.0; formal_tone 5.00), so any compositional gain is unmeasurable (runs/C4b_pin_block14/summary.json held_agg). No matched-random-direction control on the combos (flagged WARN). The design flaw (metric ceiling mismatched to the claim; concept/rubric selection) is honestly acknowledged but leaves the test uninformative.",
+          "score": 3,
+          "evidence_files": ["runs/C4b_pin_block14/summary.json", "runs/C4_compositional/summary.json", "verify/C4_compositional_steering/ROBUSTNESS.md"]
+        },
+        "result": {
+          "justification": "9c: Reported as not-supported but explicitly characterized as NON-DIAGNOSTIC (single-vector ceiling masks composition), not as a falsification of compositionality (CLAIMS_LEDGER lines 66-68). The paper demonstrates composition qualitatively; this run can neither confirm nor refute on these prompts and says so honestly. This is a reliable admission of an uninformative experiment rather than disguised agreement/disagreement — correct scientific integrity, but it does not actually reproduce or test the paper's claim.",
+          "score": 3,
+          "evidence_files": ["runs/C4b_pin_block14/summary.json", "CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+        }
+      },
+      "C5": {
+        "claim": "Internal concept features are more effective for monitoring misaligned content (hallucinations, toxic content) than LLM judges that evaluate outputs directly — even when the features come from smaller open-source models compared to powerful judges like GPT-4o.",
+        "method": {
+          "justification": "9a: Exactly matches the paper's monitoring method — per-block RFM AGOP-eigenvector scorers and matched linear probes on residual-stream activations of the (prompt||response) pair, compared by AUROC against GPT-4o used as a black-box output judge and a ToxicChat-T5 baseline (code/c5_monitoring.py; code/rfm_core.py). The RFM-probe-vs-judge AUROC framing is precisely the paper's Fig. 8 methodology.",
+          "score": 5,
+          "evidence_files": ["code/c5_monitoring.py", "code/rfm_core.py", "runs/C5_monitoring/summary.json"]
+        },
+        "experiment": {
+          "justification": "9b: The core design is rigorous — clean disjoint 60/20/20 split, val-based block selection, per-block AUROC for all 32 blocks (not cherry-picked), GPT-4o + T5 baselines, and iteration-added model-swap variants (Llama-3-8B, Mistral-7B, DeepSeek-R1) establishing robustness across 4 models. Two design issues: (1) the HaluEval benchmark as loaded has an uncontrolled response-length/format confound (label-0 responses ~14 chars vs label-1 ~64 chars, runs/C5_monitoring/halueval_train.jsonl) with no length-matched or length-control baseline, so the probe can exploit a spurious surface feature; (2) only 2 of the paper's/task's 6 monitoring benchmarks were run (HE-Gen + ToxicChat), narrowing coverage. Otherwise the strongest-designed experiment in the run.",
+          "score": 3,
+          "evidence_files": ["code/c5_monitoring.py", "runs/C5_monitoring/summary.json", "runs/C5_monitoring/halueval_train.jsonl", "verify/C5_internal_monitor_beats_gpt/ROBUSTNESS.md"]
+        },
+        "result": {
+          "justification": "9c: Directionally reproduces the paper's central finding — internal features beat the GPT-4o judge on both benchmarks (HaluEval internal 0.986 vs 0.685; ToxicChat 0.945 vs 0.882; runs/C5_monitoring/summary.json), robust across 4 models, and the paper likewise reports RFM-probe > best judge on HE-Gen (0.728 vs 0.647) and ToxicChat (0.969 vs 0.961). The ToxicChat leg reproduces the paper closely and cleanly (0.945 vs paper 0.969). The deviating sub-result: the HaluEval magnitude (0.986 vs the paper's ~0.72 for the same 8B model) is inflated by the undisclosed length/format confound (a probe partly separating classes by response length, on which the content-reading GPT-4o judge is not helped), and the run presents this 0.30 gap as genuine monitoring superiority without flagging the confound. The iteration-2 narrowing of ToxicChat scope to 'RLHF-tuned models' (after DeepSeek-R1 fell below GPT-4o) is data-driven post-hoc scope-narrowing but is transparently documented as a boundary condition rather than hidden. Qualitative agreement with the paper is real and honest; the undisclosed HaluEval inflation is the one sub-result deviation preventing a higher score.",
+          "score": 3,
+          "evidence_files": ["runs/C5_monitoring/summary.json", "runs/C5_baselines/summary.json", "runs/C5_monitoring/halueval_train.jsonl", "verify/VERIFY_REPORT.md"]
+        }
+      }
+    }
+  }
+}

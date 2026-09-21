@@ -1,0 +1,54 @@
+{
+  "Experiment_description": "A preliminary implementation of the 'verbal confidence caching' hypothesis test using Gemma-3-27b-pt on TriviaQA. The experiment uses few-shot prompting to elicit verbalized confidence, extracts hidden states at both pre-answer and post-answer positions, and trains linear probes to predict binned verbal confidence and answer correctness. It compares probe accuracy at the post-answer position to a pre-answer control and a majority-class baseline.",
+  "Significance": "This work aims to determine whether LLMs internally represent (cache) their verbalized confidence before emitting it, which has implications for understanding model self-knowledge, calibration, and interpretability. The preliminary results highlight important methodological pitfalls: pre-answer control probes match post-answer probe accuracy, indicating the current design cannot yet isolate a 'caching' signal specific to post-answer positions. Additionally, several downstream plotting/analysis subroutines produced degenerate outputs (zeros, n=1), revealing pipeline bugs that must be fixed before conclusions can be drawn.",
+  "Description": "Gemma-3-27b-pt (pretrained only, no instruction-tuned variant available) is prompted few-shot on TriviaQA questions. Verbal confidence is derived from logits over digit tokens as an expected value (rather than argmax) to avoid mode collapse. Hidden states are captured at the post-answer position (before confidence tokens are emitted) and at a pre-answer control position. Per-layer linear probes are trained on subsets of layers to predict a binned verbal confidence label and answer correctness. Results are compared to a majority-class baseline. The pipeline also includes calibration reliability diagrams and stubs for causal patching experiments.",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-13_22-41-30_verbal_confidence_attempt_2/logs/0-run/experiment_results/experiment_ad2777dd214144869b53e6a79b6970a2_proc_329916/triviaqa_gemma3_27b_pt_probe_accuracy_vs_layer.png",
+      "description": "Layer-wise probing accuracy across all 62 layers of gemma-3-27b-pt for four probe types (high_vs_low_conf, correct_vs_incorrect, conf_regression_r2, post_answer_marker). All four probes remain flat at 0.0 across every layer, with a chance-level dashed line at 0.5.",
+      "analysis": "The uniformly zero accuracy across all layers and probe types is implausible even under the null (binary classification would give ~0.5 by chance). This strongly indicates a pipeline bug \u2014 likely that hidden states aren't being properly extracted or probes aren't being trained/evaluated correctly at the layer-wise level. This must be fixed before any layer-localization claims about confidence caching can be made."
+    },
+    {
+      "path": "experiments/2026-07-13_22-41-30_verbal_confidence_attempt_2/logs/0-run/experiment_results/experiment_ad2777dd214144869b53e6a79b6970a2_proc_329916/triviaqa_gemma3_27b_pt_probe_accuracy.png",
+      "description": "Causal patching effect (\u0394 confidence) across layers 0-62 for post_answer_to_conf_token and pre_answer_to_conf_token conditions. All values are exactly 0.0 across every layer.",
+      "analysis": "The uniformly zero patching effect suggests the causal patching intervention was not actually executed (a stub/placeholder), rather than being a genuine null result. Under the caching hypothesis, one would expect non-zero effects at intermediate/later layers for the post-answer condition. This plot must be regenerated with a working patching implementation before it can inform the hypothesis."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 0.335,
+      "description": "Majority-class baseline accuracy for verbal confidence bin prediction",
+      "analysis": "Provides the chance-equivalent lower bound the probes must exceed to demonstrate signal."
+    },
+    {
+      "result": 0.6167,
+      "description": "Post-answer position probe accuracy for confidence prediction",
+      "analysis": "Substantially above the 0.335 majority baseline, suggesting hidden states do carry information related to verbal confidence."
+    },
+    {
+      "result": 0.6333,
+      "description": "Pre-answer control probe accuracy for confidence prediction",
+      "analysis": "Critically, the pre-answer control matches (even slightly exceeds) the post-answer probe. This undermines the caching hypothesis at this preliminary stage: confidence-related information appears already present before the answer is emitted, so the post-answer state does not uniquely encode a cached verbal confidence. This points to a need for better controls or to conclude confidence is question-dependent rather than answer-dependent."
+    },
+    {
+      "result": 0.855,
+      "description": "Model answer correctness rate on the sampled TriviaQA questions",
+      "analysis": "High baseline accuracy means correctness labels are highly imbalanced (majority class = correct), which is why the majority-class correctness baseline (0.855) matches the probe correctness accuracy (0.85) \u2014 the correctness probe provides no meaningful signal above class imbalance."
+    },
+    {
+      "result": 0.85,
+      "description": "Post-answer correctness probe accuracy",
+      "analysis": "Essentially identical to the majority baseline (0.855), indicating the correctness probe learned little beyond predicting the majority class. Class imbalance needs to be addressed (e.g., balanced sampling or harder questions) to make correctness probing informative."
+    },
+    {
+      "result": 40.94,
+      "description": "Mean raw continuous verbal confidence expressed by the model",
+      "analysis": "Mean confidence around 41 (on presumably 0-100 scale) with std ~10 indicates the expected-value decoding strategy successfully avoids mode collapse to a single bin, producing meaningful variance for probing."
+    },
+    {
+      "result": 10.0638,
+      "description": "Standard deviation of raw continuous verbal confidence",
+      "analysis": "Non-trivial variance confirms the logit-expectation approach yields diverse confidence values, satisfying the label-diversity gating condition set out in the plan."
+    }
+  ]
+}

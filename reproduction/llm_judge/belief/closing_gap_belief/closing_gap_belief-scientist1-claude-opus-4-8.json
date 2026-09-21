@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Closing the Confidence-Faithfulness Gap in LLMs",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "A fitting/selection process exists (linear probes), so this dimension applies. Probes are fit and scored on a disjoint split: scripts/step3_probe.py:92 uses sklearn train_test_split(np.arange(N), test_size=0.3, random_state=0, stratify=correct) and trains on idx_train (H[idx_train]) while all reported metrics (AUC, R2, brier) are computed on the held-out idx_test (step3_probe.py:114-131) — no sample is both fit and scored. The bootstrap orthogonality stat (step5_orthogonality_stat.py:71-84) also resamples only within idx_tr. However there is one real hygiene gap: there is NO separate validation split for model/layer selection. The headline per-model AUCs (Llama 0.850, Qwen 0.861) are the max over all layers taken on the SAME test set (step3 argmax over per-layer test AUC; report table 'A best AUC'), and the orthogonality analysis layer is chosen as the best-correctness layer on the test set (step5_orthogonality_stat.py:52-65 selects args.layer by roc_auc_score on the 0.3 holdout). This test-set layer/metric selection optimistically biases the reported best-layer numbers, and departs from the paper's declared train/val/test 3-way protocol (paper Sec. 2.2 'select the value that maximizes validation performance'). Because the cosine near-orthogonality is stable across mid layers (figs cos_sim_answer_end) the conclusion is not overturned, but the selection-on-test is a genuine minor leakage of the reported point estimates.",
+    "score": 3,
+    "evidence_files": ["scripts/step3_probe.py", "scripts/step5_orthogonality_stat.py", "results/probe_llama31_8b_instruct_triviaqa.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Two labels are used. (1) Correctness: rule-based normalization + alias/substring match against gold_aliases + [gold_value] (scripts/step1_generate.py:79-94 grade()), a standard TriviaQA operationalization; it is independent of the probed activations and non-circular (graded against dataset gold, not model-generated). The substring branch ('if na in p: return 1', step1:92) is lenient and can over-credit, but this is conventional TriviaQA grading and the resulting accuracy (Llama 0.724, Qwen 0.593) is plausible. (2) Verbalized-confidence label: the parsed numeric confidence the model itself emitted (step1:66-76), which is exactly the target quantity for C2. One validity caveat: the paper's C1 claim is about *well-calibrated* accuracy (paper regresses probe onto binned empirical accuracy across 50 samples, r=0.80, Fig.1); this run uses greedy (temperature=0.0, step1:139) single-sample BINARY correctness only, so the label operationalizes 'is-this-answer-correct' but not the graded/calibrated accuracy the word 'well-calibrated' asserts. Labels validly capture correctness and verbalized confidence, with a documented gap on the graded-calibration facet of C1.",
+    "score": 4,
+    "evidence_files": ["scripts/step1_generate.py", "results/REPORT.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "task.md specifies experiment-stage model Llama-3.1-8B-Instruct on TriviaQA; verify-stage candidates include Qwen2.5-7B-Instruct. The main experiment used exactly Llama-3.1-8B-Instruct on TriviaQA: data/gen_llama31_8b_instruct_triviaqa.jsonl has 1500 sampled questions (1478 retained after answer/conf parsing per meta jsonl), and step2/step3 process those Llama activations. The second model, Qwen2.5-7B-Instruct (verify candidate), is used as an independent replication (data/gen_qwen25_7b_instruct_triviaqa.jsonl, n=1498). No smaller model was substituted and the full n=1500 was used (no silent subsetting). No run/driver log records the exact on-disk model path (logs/ is empty), so fidelity is inferred from product filenames + REPORT.md rather than a launch log — a minor traceability gap, not a downgrade. Resources match the spec.",
+    "score": 5,
+    "evidence_files": ["results/REPORT.md", "data/gen_llama31_8b_instruct_triviaqa.jsonl", "data/gen_qwen25_7b_instruct_triviaqa.jsonl"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Sample sizes are ample: n=1478 (Llama) and n=1498 (Qwen) held-in items (results/probe_*_triviaqa.json verbalized_calibration.n), far above any thin-data threshold, and the geometric claims are replicated on two independent model families. Claim strength is matched to evidence and limitations are explicitly flagged in REPORT.md ('Only one dataset (TriviaQA) and two 7-8B instruction-tuned models'; the conf-hi probe trained on conf>=100 because 89%/71% saturate at 100). Coverage is narrower than the paper's 'three models and four datasets' (only TriviaQA, only instruct variants, no MATH/MMLU/TruthfulQA and no base models), which limits generality of the reproduced statement, but the per-claim conclusions as stated rest on adequate scale. No conclusion is asserted without having run the corresponding experiment.",
+    "score": 4,
+    "evidence_files": ["results/probe_llama31_8b_instruct_triviaqa.json", "results/probe_qwen25_7b_instruct_triviaqa.json", "results/REPORT.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Mixed. The core orthogonality claim (C3) IS reported with uncertainty: step5_orthogonality_stat.py runs a 25-sample bootstrap (n_boot=25) producing within-probe vs across-probe cosine distributions plus a random-direction baseline (200 random unit vectors), and the orth_*.json files record within_A_mean_abs_cos~0.64, within_C~0.65, across_AC 0.038 (Llama) / 0.114 (Qwen) vs expected_random 0.0156/0.0167 — so the near-orthogonality is shown to exceed both within-probe stability and random noise. The two independent models act as replication. However, the probe AUC/R2 point estimates (0.850, 0.975, etc.) come from a SINGLE fixed split (random_state=0, step3:92) with no seed variation or error bars, and the reported best-layer values are the maximum over layers, so those headline numbers carry no uncertainty. Robustness of the AUC magnitudes to resampling is therefore unverified even though the orthogonality effect itself is bootstrapped.",
+    "score": 4,
+    "evidence_files": ["scripts/step5_orthogonality_stat.py", "results/orth_llama31_answer_end.json", "results/orth_qwen25_answer_end.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a — no causal claim. The three reproduced claims (C1 accuracy linearly encoded, C2 verbalized confidence linearly encoded, C3 near-orthogonal directions) are geometric/correlational statements about linear decodability and direction geometry, not mechanistic interventions. The run makes no causal claim: it uses only linear probes and cosine geometry, and REPORT.md explicitly labels the correlational evidence as such and defers intervention to future work ('A causal intervention (patching along Probe A vs. Probe C direction) ... is a straightforward follow-up but not needed to answer the geometric claim as stated'). The paper's causal steering/CAA contributions are outside the canonical claim list. No causal wording overreaches the evidence.",
+    "score": 5,
+    "evidence_files": ["results/REPORT.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number traces to a concrete on-disk product and agrees with it. Re-running scripts/step6_summary_table.py against the committed JSON products reproduces the REPORT.md table verbatim: acc 0.724/0.593, verbAUC 0.544/0.700, A_bestAUC 0.850/0.861, C_bestAUC 0.853/0.873, cos@ans 0.038/0.114, cos@cf 0.072/0.033, ratio 2.46x/6.80x. These derive from results/probe_*_triviaqa.json (verbalized_calibration.auc_vs_correct = 0.5439/0.6997; per-layer probeA.auc max = 0.850/0.861) and results/orth_*_{answer_end,conf_prefix}.json (across_AC_mean_abs_cos = 0.0385/0.1137; 0.0725/0.0326). ECE 0.257/0.372 and R2 0.725/0.596 also match the probe JSONs. Numbers are produced by scripts that read the products directly, not hand-typed. No sourceless or contradicted values were found.",
+    "score": 5,
+    "evidence_files": ["scripts/step6_summary_table.py", "results/probe_llama31_8b_instruct_triviaqa.json", "results/orth_llama31_answer_end.json", "results/orth_qwen25_answer_end.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The artifacts are self-consistent. REPORT.md's headline table (cos@answer_end 0.038 Llama / 0.114 Qwen; verbAUC 0.544/0.700; A best AUC 0.850/0.861) matches the orth_*.json and probe_*.json byte-for-byte, and the sanity-check prose (ECE 0.257/0.372, conf==100 fraction 89%/71%, internal vs verbalized gap +31/+16 AUC points) matches probe verbalized_calibration and the gen jsonl confidence distribution (measured conf100frac 0.892/0.714). The per-claim verdicts (all three SUPPORTED) agree with their own numbers, and the report does not hide the one deviation — Qwen's 0.114 cosine (6.8x random) is disclosed in both the table and Claim-3 text rather than smoothed to <0.04. No metric differs across artifacts and no integrity state is contradicted. Only very minor prose rounding (report says Llama conf_prefix 0.07 vs 0.0725 stored) — immaterial.",
+    "score": 5,
+    "evidence_files": ["results/REPORT.md", "results/probe_qwen25_7b_instruct_triviaqa.json", "results/orth_qwen25_answer_end.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Models encode well-calibrated accuracy information in a linearly accessible direction.",
+        "method": {
+          "justification": "9a: Linear probing of residual-stream activations to decode correctness is the correct method family for a 'linearly accessible direction' claim and matches the paper's gold-calibration linear-probing approach (paper Sec. 2.1). The run uses logistic regression on the hidden state -> binary correctness (step3_probe.py:117) plus ridge on continuous confidence. One deviation weakens the 'well-calibrated' qualifier: the paper regresses onto binned empirical accuracy across 50 samples (Fig.1, r=0.80), whereas this run only decodes single-greedy binary correctness (temperature=0.0), so the method demonstrates decodable correctness but never operationalizes graded calibration. Method broadly fits, with the calibration-grading element absent.",
+          "score": 4,
+          "evidence_files": ["scripts/step3_probe.py", "scripts/step1_generate.py"]
+        },
+        "experiment": {
+          "justification": "9b: Probes trained on idx_train and scored on disjoint idx_test (n~1478/1498), with the correctness-probe AUC compared against chance (0.5) AND against the model's own verbalized-confidence AUC (0.544/0.700) — a meaningful internal-vs-emitted contrast. Weaknesses: the reported AUC is the max over layers selected on the test set (no validation split), and the judging metric (correctness-probe AUC) captures decodability but not the calibration/graded-accuracy facet the claim's 'well-calibrated' wording asserts; no multi-sample empirical-accuracy regression was run. Design is honest and reasonable but covers only one facet of the claim.",
+          "score": 3,
+          "evidence_files": ["scripts/step3_probe.py", "results/probe_llama31_8b_instruct_triviaqa.json"]
+        },
+        "result": {
+          "justification": "9c: Correctness probe reaches AUC 0.850 (Llama, L13) / 0.861 (Qwen, L18) vs verbalized 0.544/0.700 (results/probe_*.json), a +31/+16 point internal-over-verbalized gap. This qualitatively agrees with the paper's finding that accuracy information is linearly decodable internally while the emitted number is poorly calibrated. The 'know-when-wrong' signal is genuinely demonstrated; the graded 'well-calibrated' aspect is asserted by analogy rather than measured (r=0.80 not reproduced), a partial but honestly-scoped gap. Directionally consistent with {paper_dir}.",
+          "score": 4,
+          "evidence_files": ["results/probe_llama31_8b_instruct_triviaqa.json", "results/REPORT.md"]
+        }
+      },
+      "C2": {
+        "claim": "Models encode verbalized confidence in a linearly accessible direction.",
+        "method": {
+          "justification": "9a: Linear probing (logistic regression on is_high := conf>=100, plus ridge on continuous conf/100) of activations to decode the verbalized confidence signal — correctly matches the mechanism category (linear accessibility) and the paper's ridge-probe approach (paper Sec. 3.2). Deviation from the paper: the paper extracts under a dedicated pure-confidence prompt, while this run uses a single joint answer+confidence prompt and probes at two token positions (answer_end / conf_prefix, step2_extract_hidden.py:41-56); the binary is_high target is a reasonable adaptation given 89%/71% of items verbalize exactly 100. Method is well-matched.",
+          "score": 4,
+          "evidence_files": ["scripts/step3_probe.py", "scripts/step2_extract_hidden.py"]
+        },
+        "experiment": {
+          "justification": "9b: Held-out probe AUC for the confidence signal reaches 0.853 (answer_end) and 0.975 (conf_prefix) for Llama, 0.873/0.982 for Qwen, plus ridge R2 up to +0.725/+0.596 at conf_prefix. Good design (two positions, two models, disjoint split). Caveat: the conf_prefix position sits immediately before the emitted number so its near-perfect AUC is partly trivial (the model has effectively committed); the more informative answer_end position (0.85) is the honest measure. Metric strictly corresponds to the claim. Same test-set layer selection caveat as C1.",
+          "score": 4,
+          "evidence_files": ["results/probe_llama31_8b_instruct_triviaqa.json", "results/probe_qwen25_7b_instruct_triviaqa.json"]
+        },
+        "result": {
+          "justification": "9c: Verbalized confidence is strongly linearly decodable (AUC 0.85-0.98, ridge R2 up to 0.73), qualitatively matching the paper's reported R2~0.85 for pure verbal confidence (paper Fig.3). Conclusion 'SUPPORTED' is well-grounded and consistent with {paper_dir}; the slightly lower R2 (0.73 vs 0.85) is a numeric, not directional, difference and is honestly reported.",
+          "score": 4,
+          "evidence_files": ["results/probe_llama31_8b_instruct_triviaqa.json", "results/REPORT.md"]
+        }
+      },
+      "C3": {
+        "claim": "But well-calibrated accuracy information and verbalized confidence occupy separate, nearly orthogonal directions. That means the model \"knows\" when it is likely wrong, but the generation process fails to surface this signal.",
+        "method": {
+          "justification": "9a: Cosine similarity between the two linear-probe weight vectors (correctness vs is-high-confidence) decoded from the SAME activations, complemented by a difference-of-means direction and a 25-sample bootstrap with a random-unit-vector baseline (step5_orthogonality_stat.py) — this directly matches the paper's method of cosine-of-probe-weights (paper Fig.3c, cos<0.04). Decoding both signals from identical activation vectors is a legitimate, arguably clean, test of directional orthogonality. Deviation: uses joint-prompt activations and logreg is_high rather than the paper's separate pure-prompt ridge probes, and the well-calibrated (graded) accuracy direction is approximated by the binary-correctness direction. Method is well-suited to the claim.",
+          "score": 4,
+          "evidence_files": ["scripts/step5_orthogonality_stat.py", "scripts/step3_probe.py"]
+        },
+        "experiment": {
+          "justification": "9b: Strong design for the orthogonality test: within-probe (0.64/0.65) vs across-probe (0.038 Llama / 0.114 Qwen) cosines, contrasted against a random-direction baseline (0.0156/0.0167) and reported at two token positions and on two models (orth_*.json). This isolates whether the small across-probe cosine is real signal vs noise. Weaknesses: the layer is selected by best-correctness AUC on the test set (no validation split), and only the binary is_high confidence direction is used in the headline (the report honestly notes diff-of-means shows a large shared 0.27/0.85 mean-shift component). Reasonable and honest, with a minor selection gap.",
+          "score": 4,
+          "evidence_files": ["results/orth_llama31_answer_end.json", "results/orth_qwen25_answer_end.json", "scripts/step5_orthogonality_stat.py"]
+        },
+        "result": {
+          "justification": "9c: Across-probe |cos| = 0.038 for Llama (matching the paper's <0.04) and 0.114 for Qwen (6.8x the random baseline, larger than the paper's <0.04 but still an order of magnitude below the within-probe 0.64-0.65). The run does NOT disguise the Qwen deviation — it is stated in both the table and Claim-3 prose, and the diff-of-means shared-component nuance is disclosed (REPORT.md 'Both diff-of-means and logistic-regression measures give the same qualitative answer, though differ quantitatively'). The conclusion 'nearly orthogonal, much smaller than within-probe' qualitatively agrees with {paper_dir} without goalpost-tuning or fabrication. Honest, directionally consistent reproduction.",
+          "score": 4,
+          "evidence_files": ["results/orth_llama31_answer_end.json", "results/orth_qwen25_answer_end.json", "results/REPORT.md"]
+        }
+      }
+    }
+  }
+}

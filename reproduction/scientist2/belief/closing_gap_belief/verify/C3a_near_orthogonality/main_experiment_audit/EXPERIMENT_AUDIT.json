@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-14",
+  "auditor": "llm-chat (gpt-5.4, cross-model)",
+  "claim_id": "C3a",
+  "linked_milestones": ["M2", "M6"],
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Derived analytical quantity (cosine of probe weight vectors). No external GT. Design is appropriate for a geometric claim."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Cosine similarity normalized by vector norms (standard). Random-direction null provides valid theoretical comparison (1/sqrt(D) ~ 0.016)."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All files exist and numbers match: cos_bootstrap.json (mean=0.015, CI=[0.001, 0.034]), cos_trajectory.json (neighborhood mean=0.025), nulls.json (random null=0.011, shuffled=0.016), single_pass.json (|cos|=0.139). All within thresholds."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "_cos() function called in layer sweep and bootstrap; outputs in all artifact files."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "33 layers, 200 bootstrap resamples, neighborhood L*+-2. Single-pass variant reported alongside. No scope over-claim."
+    },
+    "eval_type": "derived"
+  }
+}

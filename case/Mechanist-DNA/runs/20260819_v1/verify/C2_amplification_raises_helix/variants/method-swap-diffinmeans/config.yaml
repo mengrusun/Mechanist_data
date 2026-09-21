@@ -1,0 +1,18 @@
+variant: method-swap-diffinmeans
+dimension: method
+claim: C2
+# DIFF from main experiment (only the steering DIRECTION-EXTRACTION method changes):
+#   main:    v = Sum_{i in S} s_i * dhat_i   (SAE decoder columns of 20 helix-selective latents)
+#   variant: v_dm = mean(layer26 residual | helix codons) - mean(| non-helix codons), train split only
+# HELD FIXED (identical to main experiment):
+model: Evo2-7B (/mnt/quarkfs/share_models/evo2_7b_262k)   # not swapped (model axis n/a)
+sae_for_norm_ref: /mnt/quarkfs/share_model/Evo-2-Layer-26-Mixed  # used only to norm-match ||v_dm|| to ||v_S||
+hook_site: blocks.26
+intervention: residual_add  x' = x + alpha * v_dm
+decoding: {temperature: 1.0, top_p: 1.0, top_k: 4, max_nt: 900, start: ATG}   # identical
+readout: esm2_probe   # FIXED — same ESM-2 650M + SS-probe as main experiment
+seeds: paired; dev block D (base 10000), held-out block H (base 900000)   # same blocks
+norm_match: ||v_dm|| set to ||v_S|| = 1.8997
+dev_sweep: {alpha: [0, 0.5, 1, 2, 4], n_per_arm: 400, block: D}
+alpha_star_selection: argmax conditional helix s.t. valid_rate>=base-0.10 AND ppl_median<=base_ppl_p95
+highpower_confirm: {alpha: [0, alpha_star_dm], target_valid: 1500, block: H}

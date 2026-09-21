@@ -1,0 +1,34 @@
+{
+  "date": "2026-07-13",
+  "auditor": "gpt-5.4 via llm-chat (cross-model external reviewer)",
+  "claim_id": "C1",
+  "linked_milestones": ["M2"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "reviewer_raw_verdict": "FAIL (on scope/leakage grounds); re-assessed to WARN by auditor on grounds that trial-level split is correctly implemented and limitations are acknowledged in EXPERIMENT_RESULTS.md",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Probe labels: real dataset GT (V fields from JSONL). Projection-transfer regression target (tau): synthetic proxy (model greedy decoding). Proxy evaluation not explicitly labeled as such in EXPERIMENT_RESULTS.md.",
+      "evidence": "scripts/m2_extract_and_probe.py lines 402-413: taus decoded from model generation; not from external GT"
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "No division by model max/mean. cv_acc=1.0 and held_acc=1.0 are standard sklearn.score() values, not self-normalized."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All files exist: probe_accuracy.json, projection_transfer.json, layer_pick.json, baseline_transfer.json, data/dg1000_prompts.jsonl. Numbers in EXPERIMENT_RESULTS.md match artifacts. Tracker M2_r1 status=done."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "collect_residual_activations, fit_layer_probes, greedy_transfer all called in main(). Projection-transfer block executes by default (skip_transfer=False)."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "Only 48 unique prompt texts (16 cells x 3 phrasings). All 48 texts appear in both train and held (trial-level split). held_acc=1.0 may reflect memorization of surface token patterns. Layer picks are very shallow (2-6 of 32 layers). These limitations are acknowledged in EXPERIMENT_RESULTS.md ('layer-pick caveat'). Not fraudulent but limits generalization claim.",
+      "evidence": "data/dg1000_prompts.jsonl: 48 unique baseline prompt texts; probe_accuracy.json: cv_acc=1.0 from layer 2 onward; layer_pick.json: G=4, A=6, I=2, M=2"
+    },
+    "eval_type": "mixed: real_gt (probe labels) + synthetic_proxy (projection-transfer regression tau)"
+  }
+}

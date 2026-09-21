@@ -1,0 +1,24 @@
+{
+  "Name": "tuning_reweights_vs_new_circuits",
+  "Title": "Does Instruction Tuning Build New Reasoning Circuits or Reweight Old Ones?",
+  "Short Hypothesis": "We hypothesize that instruction/RLHF tuning improves reasoning primarily by reweighting and gating pre-existing pretraining circuits (amplifying latent reasoning pathways and suppressing distractor pathways) rather than by constructing new computation, and that the base model already contains the circuitry the tuned model uses. This is the best setting to ask whether 'more intelligence' from alignment is new machinery or better access to language-pretraining-acquired competence.",
+  "Related Work": "Prior work shows base models can match tuned models with good prompting ('superficial alignment', Zhou et al. 2023 LIMA) and that RLHF changes are low-rank/localized (task-vector and model-diff studies; Jain et al. on fine-tuning as wrappers). Interpretability of fine-tuning (e.g., 'fine-tuning enhances existing mechanisms', Prakash et al. 2024 on entity tracking) supports reuse. We test this at circuit granularity across multiple reasoning skills, quantifying reused-vs-novel components and localizing the gating introduced by tuning.",
+  "Abstract": "Instruction and preference tuning markedly improve reasoning, but whether they install new mechanisms or better marshal pretraining-acquired ones is unresolved and speaks to where machine intelligence actually comes from. We compare base and tuned versions of the same model (Llama-3-8B base vs Instruct; OLMo base vs SFT/DPO) on matched reasoning tasks. For each task we recover the causal circuit (heads, MLP features) via path patching in both models and compute overlap. We test the reuse hypothesis by (i) measuring circuit-component overlap, (ii) transplanting the tuned model's task circuit-activations into the base model to see if base performance recovers, (iii) localizing the parameter changes tuning made (weight diff norm per component) and testing whether they concentrate on gating/routing rather than core computation, and (iv) checking whether prompting the base model activates the same circuit the tuned model uses by default. We predict high circuit overlap, that tuning changes concentrate on a few gating components, and that base+prompt reproduces the tuned circuit. Confirmation would show alignment tuning largely unlocks rather than creates reasoning, implying language pretraining is where reasoning competence is forged, with implications for efficient tuning and for interpreting capability gains.",
+  "Experiments": [
+    "Pairs: Llama-3-8B base/Instruct, OLMo base/SFT/DPO, Qwen2.5 base/Instruct.",
+    "Tasks: multi-step arithmetic, syllogisms, indirect-object identification, instruction-conditioned inference.",
+    "Recover per-task causal circuits in both base and tuned via path patching; compute component Jaccard overlap.",
+    "Cross-model activation transplant: inject tuned-model task activations into base at matched sites; measure base accuracy recovery.",
+    "Weight-diff localization: compute per-head/per-MLP parameter change norm; test concentration on routing/gating vs core-compute components.",
+    "Prompt-elicitation: few-shot prompt the base model; test whether its active circuit matches the tuned default circuit.",
+    "Metrics: circuit overlap, transplant recovery rate, weight-change concentration index, base-vs-tuned circuit match under prompting.",
+    "Control: a capability genuinely absent in base (should show low overlap / new components)."
+  ],
+  "Risk Factors and Limitations": [
+    "Circuit recovery methods have noise; overlap estimates are approximate.",
+    "Base and tuned models can diverge enough that component correspondence is ill-defined.",
+    "Some skills may be genuinely new, and averaging across tasks could obscure this.",
+    "Weight-diff magnitude does not straightforwardly indicate functional role.",
+    "Activation transplantation across base/tuned may fail for technical reasons unrelated to the hypothesis."
+  ]
+}

@@ -1,0 +1,400 @@
+{
+  "feature_idx": 800,
+  "max_act_ref": 12.784204483032227,
+  "trigger_threshold": 2.5568408966064453,
+  "sage": {
+    "candidates": [
+      "The feature activates on capitalized surname-like token continuations or uncommon last names in news-style attribution contexts, especially around verbs like said/says/denied after punctuation or quotes.",
+      "The feature detects unusual capitalized name pieces/subtokens, especially continuations that complete a surname after an initial fragment (e.g. <<ahn>> in K<<ahn>>, <<iano>> in M<<iano>>), rather than ordinary whole words.",
+      "The feature may be a boundary-sensitive detector for the start of a capitalized rare name or name-fragment immediately after quote/sentence punctuation, particularly in reported-speech/news text."
+    ],
+    "top": "The feature activates on capitalized surname-like token continuations or uncommon last names in news-style attribution contexts, especially around verbs like said/says/denied after punctuation or quotes.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on surname tokens in news-style attribution contexts, especially a capitalized last name immediately followed or preceded by reporting verbs like \"said,\" \"says,\" or \"added.\"",
+            "positive_probes": [
+              "Smith said the policy would change next year.",
+              "According to Reuters, Garcia added no further details.",
+              "Johnson says the merger will close in June.",
+              "\"We are ready,\" Patel said after the vote.",
+              "The allegations are false, Brown added Monday."
+            ],
+            "positive_acts": [
+              9.545570373535156,
+              9.545570373535156,
+              9.545570373535156,
+              9.545570373535156,
+              9.545570373535156
+            ],
+            "distractor_probes": [
+              "The committee said the policy would change next year.",
+              "According to Reuters, officials added no further details.",
+              "Johnson County says the merger will close in June."
+            ],
+            "distractor_acts": [
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789
+            ],
+            "score": 3.814697265625e-06
+          },
+          {
+            "hypothesis": "The feature detects word-internal continuations that complete a person surname after an initial capital fragment, such as split names like \"K<<ahn>>\" or \"M<<iano>>.\"",
+            "positive_probes": [
+              "The guest list included Kahn, Meyer, and Ortiz.",
+              "She quoted Miano during the committee hearing.",
+              "Kahn arrived late but still gave remarks.",
+              "We published Miano's letter in yesterday's paper.",
+              "Everyone applauded when Kahn accepted the award."
+            ],
+            "positive_acts": [
+              9.593490600585938,
+              9.593490600585938,
+              9.593490600585938,
+              9.593490600585938,
+              9.593490600585938
+            ],
+            "distractor_probes": [
+              "The guest list included Khan, Meyer, and Ortiz.",
+              "She quoted Milano during the committee hearing.",
+              "Everyone applauded when Karen accepted the award."
+            ],
+            "distractor_acts": [
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789
+            ],
+            "score": 0.047924041748046875
+          },
+          {
+            "hypothesis": "The feature responds to common English noun substrings appearing at the end of surnames, particularly endings like \"-wood\" or standalone-looking morphemes embedded inside names.",
+            "positive_probes": [
+              "Detective Eastwood solved the case overnight.",
+              "Professor Underwood lectured on medieval trade routes.",
+              "Mayor Brentwood announced new housing reforms today.",
+              "Attorney Norwood filed the appeal before noon.",
+              "Reporter Smallwood covered the storm from downtown."
+            ],
+            "positive_acts": [
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789
+            ],
+            "distractor_probes": [
+              "The old wood fence collapsed in winter.",
+              "Ms. Easton solved the case overnight.",
+              "The carpenter polished walnut furniture carefully."
+            ],
+            "distractor_acts": [
+              9.589845657348633,
+              9.589845657348633,
+              9.589845657348633
+            ],
+            "score": -0.04427909851074219
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature activates on tokens that are surname-like name pieces in news/reporting text, especially split or uncommon last-name continuations such as the ending of K<<ahn>> or M<<iano>> near attribution verbs like said/says.",
+            "positive_probes": [
+              "Witnesses, Kahn said, fled before dawn.",
+              "The memo, Miano says, was leaked yesterday.",
+              "Analysts reported Kahn denied the allegation Monday.",
+              "According to aides, Miano said talks resumed quietly.",
+              "In court, Kahn says he never signed."
+            ],
+            "positive_acts": [
+              9.545570373535156,
+              9.545570373535156,
+              9.545570373535156,
+              9.545570373535156,
+              9.545570373535156
+            ],
+            "distractor_probes": [
+              "The canyon said nothing during the storm.",
+              "Mia said the report was incomplete.",
+              "Kahn Academy released a new lesson today."
+            ],
+            "distractor_acts": [
+              9.589845657348633,
+              9.589845657348633,
+              9.589845657348633
+            ],
+            "score": -0.04427528381347656
+          },
+          {
+            "hypothesis": "The feature detects word-internal continuations that complete a capitalized surname token after an initial fragment, i.e. BPE-style surname endings like <<ahn>> in K<<ahn>> or <<iano>> in M<<iano>>.",
+            "positive_probes": [
+              "The guest list included Kahn and Meyer.",
+              "She quoted Miano during the interview.",
+              "Ahnold joked beside Kahn at dinner.",
+              "Reporters mentioned Miano after the vote.",
+              "Their lawyer was Kahn from Boston."
+            ],
+            "positive_acts": [
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789
+            ],
+            "distractor_probes": [
+              "The guest list included Khan and Meyer.",
+              "She quoted Mariano during the interview.",
+              "Their lawyer was Kahan from Boston."
+            ],
+            "distractor_acts": [
+              9.589845657348633,
+              9.589845657348633,
+              9.589845657348633
+            ],
+            "score": -0.04427909851074219
+          },
+          {
+            "hypothesis": "The feature may prefer rare capitalized name continuations occurring immediately after quotation/news punctuation, such as after a quote or sentence break before an attributed speaker name.",
+            "positive_probes": [
+              "\"We should leave now.\" Zarif added quietly.",
+              "\"That was unexpected.\" Quenby replied after a pause.",
+              "\"No one saw it.\" Thirza whispered to reporters.",
+              "Breaking news. Xanthe denied the allegation today.",
+              "\"Everything changed overnight.\" Ysolde told the stunned crowd."
+            ],
+            "positive_acts": [
+              9.593490600585938,
+              9.593490600585938,
+              9.593490600585938,
+              9.593490600585938,
+              9.593490600585938
+            ],
+            "distractor_probes": [
+              "\"We should leave now,\" he added quietly.",
+              "Breaking news: the minister denied the allegation today.",
+              "\"Everything changed overnight,\" the crowd was told."
+            ],
+            "distractor_acts": [
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789
+            ],
+            "score": 0.047924041748046875
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "The feature activates on capitalized surname-like token continuations or uncommon last names in news-style attribution contexts, especially around verbs like said/says/denied after punctuation or quotes.",
+            "positive_probes": [
+              "\"This is false,\" Kaczmarek said Tuesday.",
+              "The allegations are baseless, Wroblewski denied.",
+              "\"No comment,\" says Chrzanowski in the report.",
+              "Officials erred, Nowakowski said after the hearing.",
+              "The memo was altered, Krzyzewski says."
+            ],
+            "positive_acts": [
+              9.593494415283203,
+              9.593494415283203,
+              9.593494415283203,
+              10.035978317260742,
+              9.593494415283203
+            ],
+            "distractor_probes": [
+              "\"This is false,\" the spokesperson said Tuesday.",
+              "The allegations are baseless, officials denied.",
+              "\"No comment,\" says the report's author."
+            ],
+            "distractor_acts": [
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789
+            ],
+            "score": 0.13642463684081996
+          },
+          {
+            "hypothesis": "The feature detects unusual capitalized name pieces/subtokens, especially continuations that complete a surname after an initial fragment (e.g. <<ahn>> in K<<ahn>>, <<iano>> in M<<iano>>), rather than ordinary whole words.",
+            "positive_probes": [
+              "We invited Kahn and Miano yesterday.",
+              "Dr. Cahn thanked Mr. Viano after lunch.",
+              "The article mentioned Riano beside Tahn in passing.",
+              "She compared Biano with Gahn during roll call.",
+              "Yesterday, Sahn greeted Liano at the station."
+            ],
+            "positive_acts": [
+              9.593494415283203,
+              9.593494415283203,
+              9.593494415283203,
+              9.593494415283203,
+              9.593494415283203
+            ],
+            "distractor_probes": [
+              "We invited Khan and Mariano yesterday.",
+              "Dr. Cohen thanked Mr. Piano after lunch.",
+              "She compared Brian with Graham during roll call."
+            ],
+            "distractor_acts": [
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789
+            ],
+            "score": 0.0479278564453125
+          },
+          {
+            "hypothesis": "The feature may be a boundary-sensitive detector for the start of a capitalized rare name or name-fragment immediately after quote/sentence punctuation, particularly in reported-speech/news text.",
+            "positive_probes": [
+              "\"Zelvar,\" officials confirmed after the briefing.",
+              "\"Qorven arrived,\" the witness told reporters.",
+              "After the pause: \"Nerith\" was mentioned twice.",
+              "He added, \"Vaelor\" before leaving the podium.",
+              "Then came \"Xandrel,\" according to state media."
+            ],
+            "positive_acts": [
+              9.593494415283203,
+              9.593494415283203,
+              9.593494415283203,
+              9.593494415283203,
+              9.593494415283203
+            ],
+            "distractor_probes": [
+              "Officials confirmed Zelvar after the briefing.",
+              "\"London,\" officials confirmed after the briefing.",
+              "He added, \"vaelor\" before leaving the podium."
+            ],
+            "distractor_acts": [
+              9.54556655883789,
+              9.54556655883789,
+              9.54556655883789
+            ],
+            "score": 0.0479278564453125
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "The engine cooled after the long climb.",
+    "design our things more streamlined. The detail is not like yesteryears.\u201d\n\n\u201cThe kids that come in with learning disabilities,\u201d Johnston said, \u201cin 99 percent of them I don\u2019t find what they\u2019ve been diagnosed with here. And",
+    "Marinol ineffective or less effective\nwhen compared to whole smoked marijuana therapy, this reclassification\nprovides little relief.\"\n\nStroup continued, \"Marinol is not",
+    "A single cloud drifted over the harbor.",
+    "The old library sat quietly at the edge of the park.",
+    "The lawyer objected on procedural grounds.",
+    "it through the new technologies that they are willing to subsidise going forward, such as sensors, positioning systems and robotics.\n\nParker says economics will",
+    "The recipe called for a pinch of saffron.",
+    "A soft breeze moved the curtains at dawn."
+  ],
+  "heldout_true_acts": [
+    9.5650634765625,
+    16.03066635131836,
+    9.5650634765625,
+    9.5650634765625,
+    9.5650634765625,
+    9.5650634765625,
+    9.5650634765625,
+    9.5650634765625,
+    9.583124160766602
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "instances of individuals expressing opinions or remarks in a discussion or report",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 9.593484878540039,
+        "sentences": [
+          "The mayor said the plan was unrealistic.",
+          "\"I strongly disagree,\" the witness remarked.",
+          "Analysts noted that profits would likely fall.",
+          "She argued the policy helps rural families.",
+          "According to the report, residents called it unfair.",
+          "Critics described the film as shallow and confused.",
+          "He commented that the meeting felt productive.",
+          "Several teachers said the new schedule was exhausting."
+        ],
+        "activations": [
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039
+        ]
+      },
+      "predictive": {
+        "pearson": 0.5037273815240235,
+        "spearman": 0.23869648112406286,
+        "preds": [
+          0.0,
+          9.0,
+          9.0,
+          0.0,
+          0.0,
+          4.0,
+          8.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "The feature activates on capitalized surname-like token continuations or uncommon last names in news-style attribution contexts, especially around verbs like said/says/denied after punctuation or quotes.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 9.593484878540039,
+        "sentences": [
+          "\"We complied,\" said Hollenbeck.",
+          "The claim is false, says Quintero.",
+          "\"No comment,\" denied Straszynski.",
+          "Officials erred, said VanderMeer.",
+          "\"I never agreed,\" says Choudhury.",
+          "The report was flawed, denied Brzezinski.",
+          "\"Markets remain stable,\" said Wozniak.",
+          "He was elsewhere, says Szczepanik."
+        ],
+        "activations": [
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039,
+          9.593484878540039
+        ]
+      },
+      "predictive": {
+        "pearson": 0.4964192282241189,
+        "spearman": 0.2440467650459882,
+        "preds": [
+          0.0,
+          9.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          8.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 71.41460180282593,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "instances of individuals expressing opinions or remarks in a discussion or report"
+}

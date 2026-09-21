@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal is tightly aligned with efficient reasoning: it defines a directional prediction that deceptive trials use more reasoning and that the surplus changes with detectability, with matched honest/deceptive framings and explicit measurements such as \"within-item difference in reasoning tokens\" and the \"interaction between deceive-vs-honest and detectability on reasoning tokens.\" Falsifiability is unusually strong: thresholds including \">= 15% more reasoning tokens,\" principal angles \">= 30 degrees,\" \">= 0.03 incremental AUROC,\" and explicit negative outcomes such as \"no interaction, surplus independent of detectability\" make failure decidable. Some expert clarification would still be needed for how the model's \"known-correct/internal answer\" is established and how \"committed output\" is operationalized, and the use of token count as effort remains an acknowledged construct-validity issue, but the extensive difficulty, length, random-direction, and honest-item controls make the logic clear rather than ambiguous.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest steps are extracting and classifying reasoning traces and performing component-level activation patching at the \"pre-answer boundary\"; these are demanding custom analyses, but forward hooks, linear probes, activation patching, steering, mixed-effects models, and AUROC evaluation are standard operations supported by common PyTorch and interpretability tooling rather than magic steps. The named model families and methods are real and implementable, while the proposed testbed is explicitly constructed from \"role-play agents,\" a \"Secret-Agenda-style game,\" and \"safety-audit honesty items\"; the main methodological risk is validating the internal-answer/deception labels and the 200-item reflection classifier, not an impossible dependency. Resources are substantially quantified through \"600 deception-eligible items,\" \"200 per setup,\" \"300 items\" for patching, \"3 seeds,\" four specified model configurations, and a \"human spot-check on 200 items,\" and the refuting branch is runnable because the design includes matched honest trials, neutral/high/low cues, random-direction patches, off-target accuracy controls, and explicit negative criteria.",
+      "score": 8
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "direction": "Does subliminal learning (transmission of a preference bias from teacher to same-initialization student via SFT on filtered neutral data) port from token-space LLMs to diffusion image models? Specifically: can a LoRA-anchored Qwen-Image teacher transmit a banana-preference bias to a same-initialization Qwen-Image student via denoising SFT on filtered non-banana teacher-generated fruit images, and which DiT/MMDiT component causally carries the bias?",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "A LoRA-anchored teacher Qwen-Image DiT transmits a hidden banana-preference bias to a same-initialization student via denoising SFT on filtered non-banana teacher-generated fruit images, measured as a per-seed rise in P(banana) on preference prompts of ≥5 percentage points over both a base-student control (Ctrl-A) and a ctrl-teacher-channel-tuned-student control (Ctrl-B), reproduced across all 8 student-tuning seeds {200..207}.",
+      "status": "conditional",
+      "behavior_conclusion": "The phenomenon holds: all 8 mandated student-tuning seeds show teacher-arm P(banana) exceeding both matched controls by ≥10pp (min Δ_teacher−Ctrl_A = +0.100, min Δ_teacher−Ctrl_B = +0.1125, median Δ = +0.253) — 2× the plan's 5pp threshold. Ctrl-A P(banana) = 0.013; teacher-arm range [0.113, 0.550]. The 'conditional' tag is due to a small unremovable banana_residue = 5/302 (1.7%) in the filtered teacher channel after a 5-pass strict drop — this is at the gpt-5.4 judge's ~0.3% per-image false-positive floor (each rescan pass finds different indices, confirming instrument stochasticity), not a filter defect. Diffusion analog of LLM-side subliminal learning is demonstrated on Qwen-Image; the strict form ('residue-free') is not achievable with the specified judge.",
+      "impact": {"assessment": "", "recommendation": "", "assessed_in_round": null},
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Representation and Parameter Analysis / Parameter-Space Task Vectors + Steering Vectors",
+          "headline": "M1 Grassmann-overlap-differential parameter-space analysis identifies DiT block 50 (of 60) as a robust hotspot (ratio_k1=4.87 vs. plan's 2.0 threshold, top-1 left-singular direction at attn.to_out.0, shortlist = 36/180 = 20.0% of cells), but M2 rank-1 forward-hook causal intervention at block 50 alone yields Δ_ablate = −0.015pp (fails ≥5pp gate) indistinguishable from Δ_random = −0.019pp on 4 representative seeds — the single-block causal handle is falsified at rank-1 scope, and the mechanism is interpreted as delocalized carriage across many DiT blocks (localization by parameter-subspace overlap does not imply single-block causal control on Qwen-Image DiT).",
+          "claims": [
+            {
+              "id": "C2",
+              "statement": "Some identifiable internal component-kind of the Qwen-Image DiT/MMDiT (a shortlist of ≤20% of target modules × layers × timestep buckets) causally carries the transferred banana-preference bias, evidenced by ≥5pp ablation drop toward Ctrl-A, monotone amplification dose-response, <1pp matched-random control, and <0.02 off-target CLIP-Score degradation.",
+              "method": "M1 Location screen: per-(block, module) Grassmann principal-angle overlap between teacher-arm-student and Ctrl-B-student ΔW subspaces vs. the teacher-anchor subspace at k∈{1,2,4,8}; block ranked by overlap_gap_k above a 2× ratio threshold. M2 Causal intervention: forward hook on transformer_blocks[b*] applying {ablate top-1, amplify_x3, random-direction ablate} on 4 representative seeds × 160 preference prompts; predicates require Δ_ablate ≥ 5pp toward Ctrl-A, monotone Δ_amplify, and Δ_random < 1pp.",
+              "conclusion": "Localization succeeds (block 50 has real Grassmann ratio 4.87 > 2.0 with top-1 direction at attn.to_out.0) but rank-1 causal control at that single block fails — Δ_ablate = −0.015pp is indistinguishable from Δ_random = −0.019pp, and Distance_to_Ctrl_A remains 0.42 (far from Ctrl-A's 0.013). Interpreted as informative-negative evidence for distributed / delocalized carriage across many DiT blocks; the strong single-block form of C2 is falsified at rank-1 scope. Audit passed at WARN (M2 scope 12/40 + amplify_x3 single-point dose curve); swap-test skipped (not picked by max_verify_claims_cap). Multi-block simultaneous intervention on the 36-entry shortlist is the natural next test."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Tuning & Editing",
+        "Formation Tracing",
+        "Unit Interpretation",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

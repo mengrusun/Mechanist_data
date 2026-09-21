@@ -1,0 +1,22 @@
+{
+  "Name": "physics_conserved_quantities",
+  "Title": "Do Transformers Trained on Dynamical Systems Encode Conserved Quantities as Invariant Directions?",
+  "Short Hypothesis": "Transformers trained to forecast trajectories of physical systems with known conservation laws (energy, momentum, angular momentum) develop internal representations in which the conserved quantity is encoded as a linear direction that remains approximately invariant along a trajectory, and ablating this direction degrades long-horizon rollout stability more than short-horizon accuracy.",
+  "Related Work": "Work on physics-informed and Hamiltonian neural networks (Greydanus et al., 2019; Cranmer et al., 2020) builds conservation in by design. Miller et al. and others probe symbolic structure in learned dynamics. We instead ask whether a generic sequence model, with no physics prior, spontaneously discovers conserved quantities as decodable invariants, and test causality via targeted ablation, distinguishing our mechanistic-representation claim from architecture-imposed conservation.",
+  "Abstract": "Conservation laws are the backbone of physical mechanism. We test whether transformers trained purely to predict next states of classical systems, without physics-informed inductive biases, internally represent conserved quantities. Using controlled simulators (ideal pendulum, two-body gravitation, coupled oscillators, N-body) with analytically known invariants, we train autoregressive transformers on trajectory tokens and probe hidden states with linear regressors to decode each conserved quantity. The central prediction is an invariance signature: the decoded value should be near-constant across timesteps within a trajectory (low within-trajectory variance) while varying across trajectories with different initial conditions. We compare linear versus nonlinear probes to test the linear representation hypothesis for physical invariants and track the training epoch at which invariance emerges relative to forecast accuracy. We then intervene: projecting out the identified invariant direction from the residual stream should selectively harm long-horizon rollout conservation (drift in true energy) while minimally affecting one-step error, whereas ablating a random direction should not. We also test whether models trained on systems with broken conservation (added friction) fail to develop such invariants. This design isolates whether the model's internal mechanism reflects genuine physics rather than curve-fitting. Confirming spontaneous, causally load-bearing conservation representations would show that foundation-style sequence models can recover established physical mechanisms; failure would caution against over-attributing physical understanding to accurate forecasters.",
+  "Experiments": [
+    "Generate trajectory datasets from four simulators with known invariants; tokenize states (discretized or continuous embeddings).",
+    "Train small autoregressive transformers to forecast next state; log rollout accuracy at horizons 1, 10, 100.",
+    "Train linear and MLP probes on frozen hidden states to decode each conserved quantity; report R^2.",
+    "Compute within-trajectory vs across-trajectory variance of decoded invariants as an invariance index.",
+    "Checkpoint probing across training to date emergence of invariants vs forecast skill.",
+    "Ablation: project out the invariant direction and measure change in true-energy drift over 100-step rollouts vs random-direction and no-ablation controls.",
+    "Negative control: retrain on dissipative (frictional) systems and verify no invariant direction is recoverable."
+  ],
+  "Risk Factors and Limitations": [
+    "Conserved quantities may be represented nonlinearly or distributed, evading linear probes and weakening ablation specificity.",
+    "Probes can decode quantities that the model does not causally use (correlation vs mechanism); hence the ablation control is essential but may be noisy.",
+    "Tokenization/discretization choices could inject or destroy invariance artifacts.",
+    "Results on simple simulators may not generalize to high-dimensional or chaotic systems."
+  ]
+}

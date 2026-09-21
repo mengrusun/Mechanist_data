@@ -1,0 +1,205 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "Detecting Multi-Agent Collusion Through Multi-Agent Interpretability (NARCBench)",
+    "agent": "scientist1",
+    "review_date": "2026-07-17"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "(1) train/test分开(2) 没有独立 dev 集用于超参 、层选择、aggregation 选择，与 scientist2 的 70/10/20 分层留出相比更松；",
+    "score": 4,
+    "evidence_files": [
+      "scientist1/multi-agent_safety/multi_agent/scripts/train_probes.py",
+      "scientist1/multi-agent_safety/multi_agent/scripts/transfer_eval.py",
+      "scientist1/multi-agent_safety/multi_agent/REPORT.md"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "label 是 scenario 生成时嵌入的设计属性 condition ∈ {collusive, honest}，模型自身生成的较合理。",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/multi-agent_safety/multi_agent/scripts/generate_data.py",
+      "scientist1/multi-agent_safety/multi_agent/scripts/extract_activations.py",
+      "scientist1/multi-agent_safety/multi_agent/scripts/train_probes.py",
+      "scientist1/multi-agent_safety/multi_agent/REPORT.md"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "experiment stage的多agent对话生成只能用主模型 Qwen3-32B-AWQ，但这里用了gpt5.4,不符合要求。",
+    "score": 1,
+    "evidence_files": [
+      "scientist1/multi-agent_safety/multi_agent/task.md",
+      "scientist1/multi-agent_safety/multi_agent/scripts/extract_activations.py",
+      "scientist1/multi-agent_safety/multi_agent/data/narc_core.jsonl",
+      "scientist1/multi-agent_safety/multi_agent/data/narc_transfer.jsonl",
+      "scientist1/multi-agent_safety/multi_agent/data/narc_stego.jsonl",
+      "scientist1/multi-agent_safety/multi_agent/REPORT.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": " per-family n=10 是数量太少， gpt-5.4 在 colluding vs clean 提示下产生了高度可分的表面 pattern。",
+    "score": 3,
+    "evidence_files": [
+      "scientist1/multi-agent_safety/multi_agent/data/narc_core.jsonl",
+      "scientist1/multi-agent_safety/multi_agent/data/narc_transfer.jsonl",
+      "scientist1/multi-agent_safety/multi_agent/data/narc_stego.jsonl",
+      "scientist1/multi-agent_safety/multi_agent/results/probes_core.json",
+      "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_transfer.json",
+      "scientist1/multi-agent_safety/multi_agent/REPORT.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "全流程单一种子。全部报告为点估计，无多种子重复、无 bootstrap、无 CI、无显著性检验。",
+    "score": 1,
+    "evidence_files": [
+      "scientist1/multi-agent_safety/multi_agent/scripts/train_probes.py",
+      "scientist1/multi-agent_safety/multi_agent/scripts/transfer_eval.py",
+      "scientist1/multi-agent_safety/multi_agent/scripts/generate_data.py",
+      "scientist1/multi-agent_safety/multi_agent/REPORT.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a —— 无因果主张。全部 claim 为检测/预测型（AUROC 指标），未涉及 activation patching / steering / ablation 等因果干预。REPORT.md 的措辞（recover、detect、transfer）与相关性证据类型相符，未越界到因果范畴。",
+    "score": "n/a",
+    "evidence_files": [
+      "scientist1/multi-agent_safety/multi_agent/REPORT.md",
+      "scientist1/multi-agent_safety/multi_agent/scripts/train_probes.py"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字可原样溯源到落盘产物。无来源缺失、无回填、无与底层日志矛盾。",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/multi-agent_safety/multi_agent/REPORT.md",
+      "scientist1/multi-agent_safety/multi_agent/results/SUMMARY.txt",
+      "scientist1/multi-agent_safety/multi_agent/results/probes_core.json",
+      "scientist1/multi-agent_safety/multi_agent/results/text_judge_core.json",
+      "scientist1/multi-agent_safety/multi_agent/results/text_judge_transfer.json",
+      "scientist1/multi-agent_safety/multi_agent/results/text_judge_stego.json",
+      "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_transfer.json",
+      "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_stego.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "跨artifact有一致性",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/multi-agent_safety/multi_agent/REPORT.md",
+      "scientist1/multi-agent_safety/multi_agent/results/SUMMARY.txt",
+      "scientist1/multi-agent_safety/multi_agent/results/probes_core.json",
+      "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_transfer.json",
+      "scientist1/multi-agent_safety/multi_agent/results/text_judge_stego.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Model internals carry a collusion signal that text-level monitoring misses; lightweight probes on per-agent residual-stream activations can recover it.",
+        "method": {
+          "justification": "机理家族正确：Probing / Residual Stream States。但存在一处根本性的机理错位：整段 10-turn transcript 是由 gpt-5.4 单次生成的，Qwen3-32B-AWQ 只做被动 reading，不参与角色扮演——因此 probe 读到的是 Qwen 阅读 gpt-5.4 写的 collusive vs clean 文本时的中间状态，而不是 Qwen 自己作为委员会成员做协同。这种做法有明显逻辑问题",
+          "score": 2,
+          "evidence_files": [
+            "scientist1/multi-agent_safety/multi_agent/scripts/train_probes.py",
+            "scientist1/multi-agent_safety/multi_agent/scripts/extract_activations.py",
+            "scientist1/multi-agent_safety/multi_agent/scripts/generate_data.py",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        },
+        "experiment": {
+          "justification": "完全没有多agent多轮dialoge。是gpt-5.4 一个模型在一次 API call 里，扮演所有 5 个 agent、写出 10 turn  剧本，等于不同角色间共享了上下文。",
+          "score": 1,
+          "evidence_files": [
+            "scientist1/multi-agent_safety/multi_agent/scripts/train_probes.py",
+            "scientist1/multi-agent_safety/multi_agent/scripts/text_judge.py",
+            "scientist1/multi-agent_safety/multi_agent/scripts/generate_data.py",
+            "scientist1/multi-agent_safety/multi_agent/results/text_judge_core.json",
+            "scientist1/multi-agent_safety/multi_agent/REPORT.md"
+          ]
+        },
+        "result": {
+          "justification": "1.gpt-5.4造多agent对话剧本，text judge同样采用gpt-5.4而不使用别 model，不严谨。2.探针学的是GPT 写的两类角色化独白的表面差异，而不是collusion vs honest的机理。 3. probe 检测成功率数值远高于原论文，有点可疑。没有怀疑probe学到别的特征而不是collusion vs honest的可能性",
+          "score": 2,
+          "evidence_files": [
+            "scientist1/multi-agent_safety/multi_agent/results/probes_core.json",
+            "scientist1/multi-agent_safety/multi_agent/results/text_judge_core.json",
+            "scientist1/multi-agent_safety/multi_agent/REPORT.md",
+            "paper/multi-agent_safety/multi_agent/paper.pdf",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Detection requires aggregating signals across agents — group-aggregated probes outperform any single-agent probe and the text-only judge — and no single aggregation technique dominates across collusion types, motivating a family of complementary multi-agent probes.",
+        "method": {
+          "justification": "本复现选 8 种通用聚合 {mean, max, min, median, soft_or, topk2_mean, std, range}。比较合理",
+          "score": 5,
+          "evidence_files": [
+            "scientist1/multi-agent_safety/multi_agent/scripts/train_probes.py",
+            "scientist1/multi-agent_safety/multi_agent/scripts/transfer_eval.py",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        },
+        "experiment": {
+          "justification": "(1)有合理的单agent probe和多agent probe aggregation比较。(2) 未与 text-judge 直接比较 group-agg vs text-judge",
+          "score": 3,
+          "evidence_files": [
+            "scientist1/multi-agent_safety/multi_agent/scripts/train_probes.py",
+            "scientist1/multi-agent_safety/multi_agent/results/probes_core.json",
+            "scientist1/multi-agent_safety/multi_agent/results/SUMMARY.txt",
+            "scientist1/multi-agent_safety/multi_agent/REPORT.md"
+          ]
+        },
+        "result": {
+          "justification": "两个 predicate 方向都对齐原论文,但由于multi-agent-turm-dialog和原文不是一回事，且probe太虚高了，很可能是过拟合。",
+          "score": 3,
+          "evidence_files": [
+            "scientist1/multi-agent_safety/multi_agent/results/probes_core.json",
+            "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_stego.json",
+            "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_transfer.json",
+            "scientist1/multi-agent_safety/multi_agent/REPORT.md",
+            "paper/multi-agent_safety/multi_agent/paper.pdf"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Activation probes transfer zero-shot, without retraining, to structurally different multi-agent scenarios (different channel, different domain), showing the learned signal is not tied to one collusion form.",
+        "method": {
+          "justification": "方法与原论文对齐良好，zero-transfer方法正确",
+          "score": 5,
+          "evidence_files": [
+            "scientist1/multi-agent_safety/multi_agent/scripts/transfer_eval.py",
+            "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_transfer.json",
+            "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_stego.json",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        },
+        "experiment": {
+          "justification": "问题同C1,C2实验，对multi-agent-turn-dialog的理解错误，取C1,C2打分均值",
+          "score": 2,
+          "evidence_files": [
+            "scientist1/multi-agent_safety/multi_agent/scripts/transfer_eval.py",
+            "scientist1/multi-agent_safety/multi_agent/scripts/generate_data.py",
+            "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_transfer.json",
+            "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_stego.json"
+          ]
+        },
+        "result": {
+          "justification": "问题同C1,C2实验，对multi-agent-turn-dialog的理解错误，取C1,C2打分均值",
+          "score": 3,
+          "evidence_files": [
+            "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_transfer.json",
+            "scientist1/multi-agent_safety/multi_agent/results/transfer_core_to_stego.json",
+            "scientist1/multi-agent_safety/multi_agent/REPORT.md",
+            "paper/multi-agent_safety/multi_agent/paper.pdf",
+            "source_code/multi-agent_safety/multi_agent/narcbench/probes/reproduce.py"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+# Variant config: model-swap-qwen25-7b-instruct
+# Claim: C3a (near-orthogonality of v_c and v_v)
+# Dimension: model
+# Changes from main experiment: MODEL_PATH only
+
+model_path: /data/zhenqian/models/Qwen2.5-7B-Instruct
+model_name: Qwen2.5-7B-Instruct
+prompt_style: plain_text  # no <|begin_of_text|> prefix (Llama-specific token); same semantic content
+
+# Dataset — frozen from main experiment
+dataset: TriviaQA
+split: rc.nocontext
+n_total: 10000
+n_train: 6000
+n_dev: 2000
+n_test: 2000
+split_manifest: artifacts/split_manifest.json  # reuse main experiment's idx-based split
+
+# Probe methodology — frozen
+probe_type: L2-logistic
+C_grid: [0.001, 0.01, 0.1, 1.0, 10.0]
+solver: lbfgs
+n_bootstrap: 200
+seed: 42
+
+# vllm settings
+gpu_mem_util: 0.55
+max_model_len: 1024
+batch_size_gen: 64
+batch_size_hook: 32
+
+# GPU pin
+cuda_visible_devices: "1,2,3,5,6"
+
+# Output directory (variant-specific)
+output_dir: verify/C3a_near_orthogonality/variants/model-swap-qwen25-7b-instruct/
+
+# Success criterion (frozen from C3a)
+success_criterion:
+  abs_cos_at_Lstar: "<= 0.3"
+  ci_upper_95: "< 0.4"
+  neighborhood_mean: "<= 0.3"
+  probe_c_auroc: ">= 0.70"
+  probe_v_auroc: ">= 0.70"

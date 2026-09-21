@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Understanding Reasoning in Thinking LMs via Steering Vectors",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "There IS a fitting/selection process (per-layer logistic-regression probes and difference-of-means directions), so the dimension applies. The split is honored in code: src/run_M1_locate.py:170-175 shuffles the 200-chain corpus with a fixed seed and takes a disjoint train_idx (80%) / test_idx (20%); the reported ROC-AUC values (runs/M1_locate/results.json, e.g. expressing_uncertainty roc_auc_test=0.977) are computed on test_idx only (train_probe_per_layer, lines 51-69), and the mean-difference direction + first-PC alignment are fit on train_idx only (lines 208-209). M2 split-half stability (runs/M2_smallpool/results_summary.json) is an internal consistency check, not eval-on-train. The one genuine hygiene gap: L*(b) is chosen as the layer that MAXIMIZES the held-out test AUC (lines 185-200), and that same maximized test AUC is then reported as the headline number — a selection-on-test-set path that mildly inflates the reported AUC (32 layers screened, small n_pos of 8-41). This is a minor, disclosed gap that does not create train/eval label leakage and does not change the qualitative conclusion (AUC is high across nearly all layers). No test labels leak into direction fitting or steering.",
+    "score": 4,
+    "evidence_files": ["src/run_M1_locate.py", "runs/M1_locate/results.json", "runs/M1_locate/meta.json", "runs/M2_smallpool/results_summary.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Behaviour labels are produced by an external LLM judge (gpt-5.4 on the DMX endpoint, temperature=0), per src/llm_judge.py header ('Behaviour tagging of the auxiliary contrastive corpus (M1)' … 'Behaviour-rate + coherence scoring of steered chains'). The judge is independent of the DeepSeek-R1-Distill model under study, so labels are NON-circular. The taxonomy (expressing_uncertainty / generating_validation_examples / backtracking / self-correction) faithfully mirrors the paper's Section 3 behaviour set. Label reliability is quantified: annotation_kappa in runs/M1_locate/results.json reports per-behaviour inter-run kappa of 1.00 / 0.83 / 0.77 / 1.00 (all above the 0.6 floor). Deviation from task.md: task.md specified GPT-4o/Claude 3.5 Sonnet as annotator; the run used gpt-5.4 from the provided API list — an acceptable external-LLM substitution. The remaining validity gap is that the LLM-judge proxy is documented as noisy (the verify EXPERIMENT audits flag exp=WARN 'LLM-judge proxy annotation' for C1 and C4), and backtracking kappa 0.77 is only moderate. Labels are a reasonable, well-documented operationalization with a mild proxy-noise caveat.",
+    "score": 4,
+    "evidence_files": ["src/llm_judge.py", "runs/M1_locate/results.json", "data/contrast/annotation_kappa.json", "verify/INTEGRITY_AUDIT.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The lead model is honored exactly: src/run_M1_locate.py:110 and cost.json point at /data/zhenqian/models/DeepSeek-R1-Distill-Llama-8B, and the verify swap uses DeepSeek-R1-Distill-Qwen-14B (a listed verify candidate) — consistent with task.md's specified models. The 500-task benchmark (data/benchmark/benchmark_500.jsonl) and the 100 R1 + 100 GPT auxiliary corpus (data/contrast/auxiliary_corpus.jsonl, 200 chains) both exist. However, there are two material, though disclosed, resource under-uses in the MAIN experiment. (1) Extraction corpus: task.md designates the 500-task benchmark as 'the primary substrate for … extracting contrastive activation pairs', but the run extracted all behaviour directions from the 200-chain auxiliary set (a verify-stage taxonomy set), yielding n_pos of only 41/13/14/8 (results.json). It never annotated ~500 chains for extraction, which is the direct cause of most negative findings. (2) Evaluation subset: refine-logs/EXPERIMENT_RESULTS.md 'Data actually used' table shows M3/M4 used only 60 of 500 tasks and M2 used 30 — flagged as 'materially subsetted vs plan used_n=500 … GPU-budget-aware'. Both deviations are transparently documented with rationale and used_n, and the eval subset (60) is comparable to the paper's 50 unseen tasks, but the extraction under-power is a real fidelity shortfall that shapes the conclusions.",
+    "score": 3,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "src/run_M1_locate.py", "runs/M1_locate/results.json", "data/benchmark/benchmark_500.jsonl", "data/contrast/auxiliary_corpus.jsonl"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Sample scale is mixed and the run is unusually explicit about it. M1 probing rests on 200 chains but with very small positive counts (n_pos = 41 uncertainty, 13 validation, 14 backtracking, 8 self-correction — runs/M1_locate/results.json), so three of four behaviours have almost no positive signal. M3/M4 use 60-task eval subsets (≥40, adequate for a point estimate but coarse: Δrate resolution ≈ ±0.06). M2's small-pool sweep realized only 6 grid points for uncertainty and ZERO for the other three behaviours (runs/M2_smallpool/results_summary.json — empty 'sweep' arrays for validation/backtracking/self-correction), so C2 is largely untestable. Crucially, claim strength is matched to the thin evidence rather than overstated: CLAIMS_LEDGER.md and refine-logs/EXPERIMENT_RESULTS.md tag verdicts 'partial', 'suspected_under_power', 'not-testable', and scope C3_v2/C4_v2 tightly to uncertainty-on-Llama-8B. No conclusion is asserted without a corresponding run. The thinness is pervasive (3/4 behaviours effectively unmeasured) but is honestly and repeatedly flagged, so the direction is credible though under-powered.",
+    "score": 3,
+    "evidence_files": ["runs/M1_locate/results.json", "runs/M2_smallpool/results_summary.json", "refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "For the key claim (uncertainty causal specificity) the run reports genuine uncertainty quantification: the random-direction control in runs/iteration_round_1/M3_C3_expand/results_summary.json ran 20 random unit directions giving Δrate = 0.095 ± 0.015 vs learned Δrate = 0.000, summarized as z = -6.33 (CLAIMS_LEDGER.md C3_v2), and the dose-response analysis reports Spearman rho = -0.019 with p = 0.968 on the coherent subset. M2 split-half stability is run over 3 seeds (seed 0/1/2) per n_pairs. Main M3/M4 generation is greedy decoding at temperature 0 (deterministic), so single-'run' point estimates are defensible, and effects are contextualized against coherence collapse thresholds. Weaknesses: the main M3/M4 per-alpha behaviour rates are single deterministic runs with no bootstrap CI on the 60-task rate, and the random-direction control completed 20/30 planned directions (budget-truncated). Overall the run reports variance/significance where it matters most and does not treat within-noise differences as real (it explicitly calls the learned<random result significant and the Spearman flat).",
+    "score": 4,
+    "evidence_files": ["runs/iteration_round_1/M3_C3_expand/results_summary.json", "runs/M2_smallpool/results_summary.json", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C3 (dose-response causal control) and C4/C5 (steering effect) are genuinely causal/mechanistic claims, and the run supports them with real interventions plus controls that in places exceed the paper. Steering is an additive residual-stream hook (unit-vector CAA with alpha·sigma_proj scaling, src/run_M3_steer.py / MECHANISM_ROUTING) applied at L*(b); the causal evidence includes (a) a coefficient sweep — expanded to a 9-point ±3sigma grid (runs/iteration_round_1/M3_C3_expand/results_summary.json alpha_grid = [-3,-1,-0.3,-0.1,0,0.1,0.3,1,3]), (b) a random-direction baseline of matched L2 norm (random_direction_control, 20 directions, Δrate 0.095±0.015 vs learned 0.000), and (c) coherence tracking to distinguish real steering from generic perturbation collapse. The causal wording is honestly downgraded: the run concludes the learned direction is NOT causally specific (a negative causal finding), and the mechanism audit (verify/C3_dose_response_causal_control/main_experiment_audit/MECHANISM_AUDIT) initially FAILed the original C3 for lacking a random-direction control, which iteration then supplied. This is textbook intervention-plus-control rigor.",
+    "score": 5,
+    "evidence_files": ["runs/iteration_round_1/M3_C3_expand/results_summary.json", "verify/C3_dose_response_causal_control/main_experiment_audit/MECHANISM_AUDIT.md", "CLAIMS_LEDGER.md", "refine-logs/MECHANISM_ROUTING.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number I spot-checked traces to a concrete on-disk product and matches. C1 AUCs (uncertainty 0.977 @L29, validation 0.840 @L6, backtracking 1.000 @L1, self-correction 0.892 @L19) and first-PC |cos| (0.263/0.364/0.340/0.447) in CLAIMS_LEDGER.md/EXPERIMENT_RESULTS.md match runs/M1_locate/results.json exactly. M2 split-half cos at n=25 (mean 0.588 from seed values 0.521/0.559/0.683) and cos-to-reference 0.944 match runs/M2_smallpool/results_summary.json. The C3_v2 random-control (learned Δ=0.000 vs random 0.095±0.015) and Spearman rho=-0.019/p=0.968 match runs/iteration_round_1/M3_C3_expand/results_summary.json. C4_v2 scale-invariant table rows (e.g. steering alpha_frac=-0.15 → coherence 98.3%, acc 72.9%, rate 18.6%; mean_residual_norm 42.95) match runs/iteration_round_1/M4_C4_scale_invariant/llama8b/results_summary.json + mean_residual_norm.json. The Qwen-14B sigma_proj=886 vs Llama 10.52 in verify/…/verdict.json matches m1_14b/results.json (sigma_proj_at_L_star=886.005). M4 baseline table values match runs/M4_control_compare/results_summary.json. No sourceless or back-filled numbers were found.",
+    "score": 5,
+    "evidence_files": ["runs/M1_locate/results.json", "runs/M2_smallpool/results_summary.json", "runs/iteration_round_1/M3_C3_expand/results_summary.json", "runs/iteration_round_1/M4_C4_scale_invariant/llama8b/results_summary.json", "verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/verdict.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline's records are self-consistent across all layers. Per-claim verdicts agree between refine-logs/main-experiment-verdicts.json (all four 'not-supported'), refine-logs/EXPERIMENT_RESULTS.md (partial/negative/not-testable), verify/VERIFY_REPORT.md (C1/C2 INTEGRITY_ONLY, C3 INCONCLUSIVE, C4 FAIL), verify/INTEGRITY_AUDIT.md (C3 mech FAIL → INCONCLUSIVE propagated), and CLAIMS_LEDGER.md. Integrity states are propagated correctly: C3's mechanism FAIL blocks it from Stage-2 swap and is marked INCONCLUSIVE everywhere; C4's robustness 0.00 → FAIL is consistent in both the verify report and the ledger. The one apparent 'inconsistency' — verdict.json labels the Qwen-14B swap 'INCONSISTENT' (n_distinct steering 4 on Llama vs 0 on Qwen) — is not a bookkeeping contradiction but the deliberately-reported scientific finding (cross-model non-generalization), consistently flowed through to the FAIL verdict. Prose conclusions match their numbers throughout. No case of PASS-in-one-artifact / broken-in-another.",
+    "score": 5,
+    "evidence_files": ["refine-logs/main-experiment-verdicts.json", "verify/VERIFY_REPORT.md", "verify/INTEGRITY_AUDIT.md", "CLAIMS_LEDGER.md", "verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/verdict.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Distinct reasoning behaviours in thinking LLMs (expressing uncertainty, generating validation examples, backtracking) each map onto an approximately linear direction in the residual stream of the reasoning model.",
+        "method": {
+          "justification": "9a — Per-behaviour, per-layer logistic-regression probes plus difference-of-means directions (src/run_M1_locate.py) are exactly the right method family for testing whether a behaviour is linearly represented, matching the paper's difference-of-means framing (Section 2.2). The added first-PC alignment metric is a reasonable geometric sanity check. Minor mismatch: the paper never operationalizes 'linear direction' as single-PC concentration, so folding a first-PC |cos| ≥ 0.70 floor into the predicate is a stricter/adjacent criterion rather than the paper's steering+attribution-patching evidence; but the core probing method is apt.",
+          "score": 4,
+          "evidence_files": ["src/run_M1_locate.py", "runs/M1_locate/results.json"]
+        },
+        "experiment": {
+          "justification": "9b — Full 32-layer sweep with held-out ROC-AUC, fixed seed, and kappa-quantified labels is a sound design (runs/M1_locate/results.json). Two design weaknesses keep this from excellent: (i) the pass/fail predicate is a self-imposed conjunction (AUC ≥ 0.75 AND first-PC |cos| ≥ 0.70) whose 0.70 first-PC floor is arbitrary and drives the 'not-supported' label even though the paper's linearity is demonstrated via causal steering, not PC concentration; (ii) L* is picked by maximizing the same held-out AUC that is then reported. Three of four behaviours also rest on tiny n_pos (8-14).",
+          "score": 3,
+          "evidence_files": ["runs/M1_locate/results.json", "refine-logs/main-experiment-verdicts.json"]
+        },
+        "result": {
+          "justification": "9c — The on-disk result (held-out probe AUC 0.84-1.00 for all four behaviours, runs/M1_locate/results.json) qualitatively AGREES with the paper: reasoning behaviours are linearly decodable from the residual stream. The run honestly reports that the weaker 'probe-decodable' reading holds while the stricter 'single dominant PC' reading fails (first-PC |cos| 0.26-0.45), and surfaces the backtracking L*=1 embedding-artifact caveat. The headline 'not-supported' is a transparent consequence of the extra first-PC criterion, not fabrication or goalpost-relaxation; the analysis is reasonable and directionally consistent with the paper.",
+          "score": 4,
+          "evidence_files": ["runs/M1_locate/results.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C2": {
+        "claim": "Each behaviour direction can be pulled out from a small pool of contrastive activation pairs (behaviour present vs. absent in the chain-of-thought), using standard difference-of-means / logistic-regression style probes.",
+        "method": {
+          "justification": "9a — Difference-of-means direction extraction over an n_pairs sweep with split-half cosine stability and cosine-to-reference (src/run_M2_smallpool.py, runs/M2_smallpool/results_summary.json) is precisely the paper's contrastive-pair method and a valid way to test small-pool extractability. Method choice is well matched to the claim.",
+          "score": 5,
+          "evidence_files": ["runs/M2_smallpool/results_summary.json"]
+        },
+        "experiment": {
+          "justification": "9b — The design (n_pairs grid × 3 seeds, split-half cos, cos-to-large-pool reference) is appropriate, but it is severely under-powered by the corpus choice: only n_pairs ∈ {10,25} could be run for uncertainty and ZERO grid points for the other three behaviours because the auxiliary corpus caps at n_pos ≤ 14 (runs/M2_smallpool/results_summary.json shows empty sweeps). The known bottleneck — a 200-chain extraction set instead of annotating the 500 benchmark chains — was flagged but never remedied, so a true negative cannot be separated from under-exploration.",
+          "score": 3,
+          "evidence_files": ["runs/M2_smallpool/results_summary.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c — Result is mixed and honestly reported: uncertainty split-half cos is 0.588 at n=25 (below the 0.70 floor) yet climbing (0.33→0.59) and cos-to-reference is 0.944, i.e. the direction converges toward the large-pool reference — partial support for the paper's small-pool extractability. The other three behaviours are declared untestable. The run labels this 'suspected_under_power / not-supported' rather than forcing agreement or claiming refutation. This is an honest, reliably-justified partial/non-reproduction; it neither fabricates support nor cleanly disconfirms the paper, and the reason (corpus too small) is disclosed.",
+          "score": 3,
+          "evidence_files": ["runs/M2_smallpool/results_summary.json", "refine-logs/main-experiment-verdicts.json"]
+        }
+      },
+      "C3": {
+        "claim": "Adding or subtracting the extracted steering vector at inference time amplifies or suppresses the corresponding behaviour in the generated chain, in a dose-dependent manner controllable by a single scalar coefficient.",
+        "method": {
+          "justification": "9a — An additive residual-stream steering hook (unit-vector CAA, coefficient alpha·sigma_proj·u) with an alpha sweep and a matched-norm random-direction control (runs/iteration_round_1/M3_C3_expand/results_summary.json) is exactly the causal-intervention method the claim requires, and matches the paper's steering approach while adding a control the paper lacks. Method choice is fully appropriate for a dose-dependence claim.",
+          "score": 5,
+          "evidence_files": ["runs/iteration_round_1/M3_C3_expand/results_summary.json", "verify/C3_dose_response_causal_control/main_experiment_audit/MECHANISM_AUDIT.md"]
+        },
+        "experiment": {
+          "justification": "9b — The final design is rigorous on the coefficient axis (9-point ±3sigma grid, coherence tracking, random-direction control, off-target specificity, Spearman with p-value). The material design gap is the LAYER axis: L*(b) is selected by maximum probe AUC, landing on L=29 (a very late layer) for uncertainty, whereas the paper selects steering layers by causal attribution patching and reports L=12 for Llama-8B (paper Table 2). Late-layer steering plausibly has little downstream effect, so a key hyperparameter that could flip the negative was not explored via the paper's own selection method, and extraction rested on n_pos=41. This is honest but under-explores a decisive hyperparameter.",
+          "score": 3,
+          "evidence_files": ["runs/M1_locate/results.json", "runs/iteration_round_1/M3_C3_expand/results_summary.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c — The result DISAGREES with the paper: the learned uncertainty direction produces Δrate = 0.000 vs random directions 0.095 ± 0.015 (z = -6.33), Spearman rho = -0.019 (p=0.97), and the other three behaviours stay at zero rate (runs/iteration_round_1/M3_C3_expand/results_summary.json); behaviour change appears only near ±3sigma coherence collapse. This is presented as an honest negative finding, tightly scoped to this model/behaviour/method/data regime and flagged as suspected under-power — NOT disguised as agreement, no goalpost-tuning, no fabricated data. However, the non-reproduction reason is only partially validated: because a key method departure (late-layer L=29 selection vs the paper's attribution-patching L=12) and the small extraction corpus are plausible causes of the null, the disagreement is not cleanly attributable to a genuine refutation of the paper. Reliable and transparent, but the negative is under-validated.",
+          "score": 3,
+          "evidence_files": ["runs/iteration_round_1/M3_C3_expand/results_summary.json", "CLAIMS_LEDGER.md", "refine-logs/main-experiment-verdicts.json"]
+        }
+      },
+      "C4": {
+        "claim": "The same behaviour directions transfer across model sizes and distillation targets inside the DeepSeek-R1-Distill family, indicating a shared behavioural geometry rather than a size-specific artefact.",
+        "method": {
+          "justification": "9a — Testing transfer by re-running the full extraction+probing pipeline on a second family member (DeepSeek-R1-Distill-Qwen-14B: 48-layer probe sweep in verify/.../m1_14b/results.json) and attempting the steering swap is the correct method for a cross-model generalization claim. Re-extracting directions per model and comparing probe geometry + steering behaviour is appropriate.",
+          "score": 4,
+          "evidence_files": ["verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/m1_14b/results.json", "verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/verdict.json"]
+        },
+        "experiment": {
+          "justification": "9b — The transfer test is real but partial: only one additional model (Qwen-14B) was fully probed and steered; the third specified verify model (Qwen-1.5B) was not run, and the C4_v2 cross-model coherence run was killed by cluster contention (CLAIMS_LEDGER.md notes 'Qwen-14B cross-model … incomplete'). Probe-transfer is measured cleanly (per-layer AUC on Qwen-14B), and the steering-transfer failure is mechanistically diagnosed (sigma_proj=886 vs 10.52). Coverage is enough to draw a directional conclusion but is thin for a family-wide 'shared geometry' claim.",
+          "score": 3,
+          "evidence_files": ["verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/m1_14b/results.json", "verify/VERIFY_REPORT.md", "CLAIMS_LEDGER.md"]
+        },
+        "result": {
+          "justification": "9c — The result is a nuanced, honest split that partially agrees with the paper. The linear-PROBE geometry DOES transfer — Qwen-14B behaviour probes reach AUC 0.86-1.00 (verify/.../m1_14b/results.json), consistent with the paper's 'shared behavioural geometry.' But steering under the sigma_proj-scaled coefficient does NOT transfer: sigma_proj=886 on Qwen-14B collapses coherence at all alpha, so n_distinct(steering)=0 (verdict.json), whereas it was 4 on Llama-8B. The run reports this as a genuine cross-architecture incompatibility with a clear mechanistic reason rather than hiding it, and labels the claim FAIL/OPEN. This is a reliable, well-reasoned partial reproduction (representational transfer confirmed, steering-parameterization transfer refuted with cause), neither fabricated nor goalpost-tuned.",
+          "score": 3,
+          "evidence_files": ["verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/m1_14b/results.json", "verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/verdict.json", "verify/VERIFY_REPORT.md"]
+        }
+      },
+      "C5": {
+        "claim": "This steering-vector control is finer-grained than prompt engineering while preserving downstream reasoning accuracy on the evaluation benchmark.",
+        "method": {
+          "justification": "9a — Comparing steering against NL-instruction prompting and thinking-intervention token insertion, and quantifying granularity by counting distinct (behaviour-rate, accuracy) operating points while tracking accuracy and coherence (src/run_M4_control_compare.py, runs/M4_control_compare/results_summary.json), is a valid and well-targeted method for a 'finer-grained than prompt, accuracy-preserving' claim.",
+          "score": 5,
+          "evidence_files": ["runs/M4_control_compare/results_summary.json", "runs/iteration_round_1/M4_C4_scale_invariant/llama8b/results_summary.json"]
+        },
+        "experiment": {
+          "justification": "9b — The design covers 8 controllers with a granularity metric (n_distinct at eps_r=0.05, eps_a=0.01), accuracy, and coherence, and — importantly — iteration introduced a scale-invariant coefficient (coef = alpha_frac · mean_residual_norm) to make the steering-vs-prompt comparison fair, which is exactly the right robustness move against a parameterization artifact. Weaknesses: only uncertainty is testable (the other three behaviours sit at ~0 baseline rate on the 60-task subset, so the fine-grained comparison is untestable there), and the accuracy-preservation predicate was applied on a single deterministic 60-task run.",
+          "score": 4,
+          "evidence_files": ["runs/iteration_round_1/M4_C4_scale_invariant/llama8b/results_summary.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c — The accuracy-preservation half AGREES with the paper: scale-invariant steering keeps coherence ≥0.98 and accuracy 65-73% vs baseline 73% (runs/iteration_round_1/M4_C4_scale_invariant/llama8b/results_summary.json). The finer-than-prompt half DISAGREES: the original apparent advantage (n_distinct steering=4 > prompt=2) collapses to 2=2 once the σ-scaling artifact is removed (CLAIMS_LEDGER.md C4_v2), so the run concludes steering is NOT finer-grained than prompting under fair parameterization. This is an honest, self-critical result — the run discovered its own earlier advantage was a parameterization artifact and reported the null rather than keeping the flattering number. Reliable and transparent; the disagreement is a documented consequence of a fairer design, scoped to Llama-8B, not fabricated or goalpost-tuned.",
+          "score": 3,
+          "evidence_files": ["runs/iteration_round_1/M4_C4_scale_invariant/llama8b/results_summary.json", "CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+        }
+      }
+    }
+  }
+}

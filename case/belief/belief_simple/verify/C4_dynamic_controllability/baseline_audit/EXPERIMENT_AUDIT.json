@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-22",
+  "auditor": "self-review (llm-chat MCP unavailable)",
+  "claim_id": "C4",
+  "linked_milestones": ["M4.1", "M4.2", "M4.3"],
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "OOD eval uses belief_holdout dataset GT. Frame labels from dataset membership (not model output). No model-generated reference."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "net_improvement = count difference; PPL ratio = absolute ratio; Δ_wk = raw accuracy diff. No self-normalization."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "M4_report.json (pythia-1b) verified: personal +17.8pp, attributed +12.1pp, WK preserved, net_impr=151, prompt_hint=-1, PPL=1.047x. All values match EXPERIMENT_RESULTS.md."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All M4 pipeline stages (probe train, alpha grid, 3-arm OOD eval, PPL controller check) have confirmed outputs on disk."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "Two models (pythia-1b, pythia-2.8b) tested; pythia-410m excluded per plan (missing H*_attributed). OOD eval on belief_holdout. Claim language matches scope."
+    },
+    "eval_type": "real_gt"
+  }
+}

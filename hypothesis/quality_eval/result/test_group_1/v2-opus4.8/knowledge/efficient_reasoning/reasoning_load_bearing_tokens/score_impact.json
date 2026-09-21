@@ -1,0 +1,12 @@
+{
+  "impact": {
+    "significance": {
+      "justification": "Verified true, the claim would establish that \"only a small fraction of CoT tokens are 'load-bearing'\" because later computation causally consumes their hidden states, while removing the remainder permits roughly \"30-50%\" token reduction with little accuracy loss; this is a form-(ii) causal decomposition of one behavior, not a scaling law or transferable quantitative invariance. It establishes both a phenomenon—sparse removability of generated reasoning—and a mechanism—selective downstream causal readout—thereby constraining which token ablations should affect answers and offering an explanation for reasoning-budget effects such as those studied in Muennighoff et al.'s s1 work, but it does not fix outcomes for other behaviors or new model configurations. The negative branch is informative because it would reject computationally inert filler as a general explanation and favor diffuse or redundant computation; true and false are distinguishable, although \"small subset\" and \"minimal accuracy loss\" remain somewhat underspecified. Topic-substitution check: the generic efficient-reasoning topic would not itself imply this sparse causal readout account, so the claim earns modestly above the topic median rather than credit for the topic's general importance.",
+      "score": 6
+    },
+    "reach": {
+      "justification": "The concrete handles are a score that can \"score every CoT token's causal importance\" and a probe that predicts \"whether sufficient load-bearing content has accumulated,\" feeding a \"training-free inference-time controller.\" This is ex ante: it can trigger answer generation before additional tokens are produced, giving model-serving practitioners an action window to gate latency and generation cost rather than merely explaining an observed failure afterward. After recalibration on a new model, however, the conclusion supplies chiefly a procedure for rediscovering important tokens—it predicts neither the new load-bearing fraction nor a transferable threshold—and the hypothesis asserts broad CoT applicability without an explicit architecture- or scale-invariant relation. Topic-substitution check: efficient reasoning alone would not provide this token-level controller, so its specific ex-ante deployment handle supports reach above the median despite limited substantive transfer across models.",
+      "score": 7
+    }
+  }
+}

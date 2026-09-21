@@ -1,0 +1,392 @@
+{
+  "feature_idx": 200,
+  "max_act_ref": 14.30906867980957,
+  "trigger_threshold": 2.8618137359619142,
+  "sage": {
+    "candidates": [
+      "The feature fires on the exact token/segment `openapi` when it appears as a package component in dotted Java/Kotlin-style names, especially IntelliJ references such as `com.intellij.openapi.*`.",
+      "Polysemantic feature with two concrete triggers: (1) the Python script guard `if __name__ == '__main__':` / `if __name__ == \"__main__\":`, and (2) the exact IntelliJ package segment `openapi` in dotted references like `com.intellij.openapi.*`.",
+      "The feature fires on the Python module-entry guard pattern `if __name__ == '__main__':`, centered on the `__main__` literal and tolerant to single vs double quotes around `__main__`."
+    ],
+    "top": "The feature fires on the exact token/segment `openapi` when it appears as a package component in dotted Java/Kotlin-style names, especially IntelliJ references such as `com.intellij.openapi.*`.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature fires on double-underscore sentinel/module-name tokens in Python boilerplate, especially the `if __name__ == '__main__':` guard where the peak is on the closing `__` of `__main__`.",
+            "positive_probes": [
+              "Use if __name__ == '__main__': to run directly.",
+              "Python scripts often check __name__ against '__main__'.",
+              "That boilerplate guard is if __name__ == '__main__':",
+              "Place startup code under if __name__ == '__main__':",
+              "The module runs when __name__ equals '__main__'."
+            ],
+            "positive_acts": [
+              12.690723419189453,
+              0.0,
+              9.706214904785156,
+              9.362865447998047,
+              0.0
+            ],
+            "distractor_probes": [
+              "Use main() to start the Python script.",
+              "Check the module name before running code.",
+              "Guard execution with a standard entrypoint condition."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 6.351960754394531
+          },
+          {
+            "hypothesis": "The feature activates on dotted package/import path segments inside source code, particularly Java/Kotlin imports where a middle namespace component like `openapi` appears between `com.intellij.` and a submodule.",
+            "positive_probes": [
+              "import com.intellij.openapi.project.Project;",
+              "uses com.intellij.openapi.vfs.VirtualFile in Kotlin code",
+              "Java import: com.intellij.openapi.editor.Document appears here",
+              "Reference com.intellij.openapi.actionSystem.AnAction within source",
+              "Kotlin package mentions com.intellij.openapi.util.TextRange directly"
+            ],
+            "positive_acts": [
+              10.539251327514648,
+              10.266075134277344,
+              10.372262954711914,
+              10.185691833496094,
+              10.220775604248047
+            ],
+            "distractor_probes": [
+              "import com.intellij.platform.project.Project;",
+              "Documentation mentions IntelliJ OpenAPI project interfaces generally",
+              "com intellij openapi project path written without dots"
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 10.31681137084961
+          },
+          {
+            "hypothesis": "The feature responds more broadly to programming-language namespace or magic-identifier markers that denote framework/runtime structure, such as special dunder names in Python and canonical API package names in JetBrains imports.",
+            "positive_probes": [
+              "Override __init__ and inspect __name__ during module loading.",
+              "The traceback mentions __file__ and __package__ attributes.",
+              "Import com.intellij.openapi.project.Project in the plugin entrypoint.",
+              "Register actions using com.intellij.openapi.actionSystem.AnAction classes.",
+              "Access __dict__ before calling the runtime framework hook."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              10.278711318969727,
+              9.488086700439453,
+              0.0
+            ],
+            "distractor_probes": [
+              "Initialize the project and import utility functions normally.",
+              "The plugin architecture supports actions, editors, and project views.",
+              "Use Python variables and class methods for clean code."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 3.953359603881836
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature fires on the exact Java/Kotlin package segment `openapi` in dotted IntelliJ import/reference paths, especially strings like `com.intellij.openapi.*`.",
+            "positive_probes": [
+              "Import com.intellij.openapi.project.Project in your plugin class.",
+              "Reference com.intellij.openapi.actionSystem.AnAction from the IDE SDK.",
+              "Use com.intellij.openapi.vfs.VirtualFile for file handling.",
+              "Resolve com.intellij.openapi.editor.Editor before inserting text.",
+              "The package com.intellij.openapi.module loads module APIs."
+            ],
+            "positive_acts": [
+              10.224918365478516,
+              10.174617767333984,
+              9.955657958984375,
+              9.964925765991211,
+              9.977720260620117
+            ],
+            "distractor_probes": [
+              "Import com.intellij.platform.project.Project in your plugin class.",
+              "Reference IntelliJ open API classes from the IDE SDK.",
+              "Use org.openapitools.generator for code generation tasks."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 10.05956802368164
+          },
+          {
+            "hypothesis": "The feature fires on the exact Python boilerplate pattern `if __name__ == '__main__':`, with activation concentrated near the closing double-underscore in `__main__`.",
+            "positive_probes": [
+              "Use exactly: if __name__ == '__main__': before running.",
+              "Classic Python guard: if __name__ == '__main__': starts here.",
+              "Remember the boilerplate if __name__ == '__main__': line.",
+              "Example script includes if __name__ == '__main__': at bottom.",
+              "Type this verbatim: if __name__ == '__main__': in Python."
+            ],
+            "positive_acts": [
+              11.597085952758789,
+              11.420745849609375,
+              9.841827392578125,
+              11.011642456054688,
+              10.152938842773438
+            ],
+            "distractor_probes": [
+              "Use if __name__ == \"__main__\": with double quotes.",
+              "Python checks whether __name__ equals '__main__' before execution.",
+              "Add if __main__ == '__name__': to the script."
+            ],
+            "distractor_acts": [
+              10.26888656616211,
+              0.0,
+              7.471469879150391
+            ],
+            "score": 4.891395950317383
+          },
+          {
+            "hypothesis": "Polysemantic feature: it has two distinct triggers\u2014(1) the exact Python entrypoint guard `if __name__ == '__main__':` and (2) the exact IntelliJ dotted package segment `com.intellij.openapi.*` in code imports/references.",
+            "positive_probes": [
+              "Include `if __name__ == '__main__':` before calling main().",
+              "The script ends with `if __name__ == '__main__':`.",
+              "Import from `com.intellij.openapi.project` in this plugin.",
+              "Reference `com.intellij.openapi.actionSystem.AnAction` in the class.",
+              "Use `com.intellij.openapi.*` APIs for IntelliJ integration."
+            ],
+            "positive_acts": [
+              10.540718078613281,
+              11.004085540771484,
+              10.204681396484375,
+              10.505012512207031,
+              10.213607788085938
+            ],
+            "distractor_probes": [
+              "Use `if __name__ == \"main\":` in pseudocode.",
+              "Import from `org.intellij.openapi.project` instead.",
+              "Reference `com.intellij.platform.actionSystem.AnAction` in code."
+            ],
+            "distractor_acts": [
+              0.0,
+              9.152299880981445,
+              0.0
+            ],
+            "score": 7.442854436238607
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Polysemantic feature with two concrete triggers: (1) the Python script guard `if __name__ == '__main__':` / `if __name__ == \"__main__\":`, and (2) the exact IntelliJ package segment `openapi` in dotted references like `com.intellij.openapi.*`.",
+            "positive_probes": [
+              "Include `if __name__ == \"__main__\":` before calling main().",
+              "The script ends with `if __name__ == '__main__':`.",
+              "Import `com.intellij.openapi.project.Project` in the plugin class.",
+              "Reference `com.intellij.openapi.vfs.VirtualFile` from the action.",
+              "Use `com.intellij.openapi.editor.Editor` for document access."
+            ],
+            "positive_acts": [
+              8.15390396118164,
+              10.992900848388672,
+              10.478052139282227,
+              10.505012512207031,
+              10.319225311279297
+            ],
+            "distractor_probes": [
+              "Use `if name == \"main\":` in pseudocode.",
+              "Import `com.intellij.platform.project.Project` in the plugin.",
+              "The Python module defines a main() function."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 10.089818954467773
+          },
+          {
+            "hypothesis": "The feature fires on the exact token/segment `openapi` when it appears as a package component in dotted Java/Kotlin-style names, especially IntelliJ references such as `com.intellij.openapi.*`.",
+            "positive_probes": [
+              "Import com.intellij.openapi.project.Project in this plugin.",
+              "Use com.intellij.openapi.vfs.VirtualFile for file access.",
+              "Reference com.intellij.openapi.editor.Editor from the action event.",
+              "The class extends com.intellij.openapi.components.ServiceManager usage.",
+              "Call com.intellij.openapi.application.ApplicationManager before startup."
+            ],
+            "positive_acts": [
+              10.301912307739258,
+              10.000490188598633,
+              10.185688018798828,
+              10.416007995605469,
+              9.720130920410156
+            ],
+            "distractor_probes": [
+              "OpenAPI documentation describes this REST endpoint clearly.",
+              "Use com.intellij.platform.project for newer APIs instead.",
+              "The package open.api.client handles HTTP requests."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 10.124845886230469
+          },
+          {
+            "hypothesis": "The feature fires on the Python module-entry guard pattern `if __name__ == '__main__':`, centered on the `__main__` literal and tolerant to single vs double quotes around `__main__`.",
+            "positive_probes": [
+              "Use if __name__ == '__main__': before calling main().",
+              "Add if __name__ == \"__main__\": at file bottom.",
+              "The script checks if __name__ == '__main__': first.",
+              "Place if __name__ == \"__main__\": above startup code.",
+              "Guard execution with if __name__ == '__main__': block."
+            ],
+            "positive_acts": [
+              12.690723419189453,
+              10.689685821533203,
+              10.897903442382812,
+              11.160909652709961,
+              10.512077331542969
+            ],
+            "distractor_probes": [
+              "Check if __name__ equals '__file__' before printing.",
+              "Use if module_name == '__main__': in pseudocode.",
+              "The __main__.py file runs when package executes."
+            ],
+            "distractor_acts": [
+              0.0,
+              10.770929336547852,
+              0.0
+            ],
+            "score": 7.599950154622396
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "The engine cooled after the long climb.",
+    "A soft breeze moved the curtains at dawn.",
+    "Small pebbles crunched under his boots on the path.",
+    "Rain drummed on the tin roof through the night.",
+    ".components.service\nimport com.intellij.openapi.extensions.ExtensionNotApplicableException\nimport com.intellij.openapi.module.Module\nimport com.intellij.openapi.module.ModuleManager\nimport com.intellij.openapi.project",
+    "She whisked the eggs and folded them into the batter.",
+    "He plotted the data on a log-log scale."
+  ],
+  "heldout_true_acts": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    10.801834106445312,
+    0.0,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "references to the OpenAPI specification and its components",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 0.0,
+        "sentences": [
+          "The OpenAPI specification defines paths, operations, and responses.",
+          "Our API contract uses OpenAPI 3.1 with JSON Schema.",
+          "This YAML document declares OpenAPI components like schemas and parameters.",
+          "Swagger UI renders the OpenAPI spec for this REST service.",
+          "Add a requestBody object and response headers to the OpenAPI file.",
+          "The components section includes securitySchemes, examples, and reusable schemas.",
+          "Validate the OpenAPI document against the official specification.",
+          "Each endpoint is described with paths, tags, servers, and callbacks."
+        ],
+        "activations": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 1.0,
+        "spearman": 0.9999999999999998,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          2.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "The feature fires on the exact token/segment `openapi` when it appears as a package component in dotted Java/Kotlin-style names, especially IntelliJ references such as `com.intellij.openapi.*`.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 9.930871725082397,
+        "sentences": [
+          "Import com.intellij.openapi.project.Project in the plugin.",
+          "Use com.intellij.openapi.actionSystem.AnAction for toolbar actions.",
+          "The class extends com.intellij.openapi.components.ServiceManager utilities.",
+          "Reference com.intellij.openapi.editor.Editor within the handler.",
+          "Check com.intellij.openapi.application.ApplicationManager before scheduling tasks.",
+          "Mock com.intellij.openapi.vfs.VirtualFile during tests.",
+          "Call com.intellij.openapi.ui.Messages for simple dialogs.",
+          "Register com.intellij.openapi.extensions.ExtensionPointName in plugin.xml."
+        ],
+        "activations": [
+          10.313089370727539,
+          9.89192008972168,
+          10.384363174438477,
+          10.189464569091797,
+          9.761541366577148,
+          9.891698837280273,
+          9.79098892211914,
+          9.223907470703125
+        ]
+      },
+      "predictive": {
+        "pearson": 1.0,
+        "spearman": 0.9999999999999998,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 80.54960632324219,
+  "layer": 6,
+  "sae_info": {
+    "layer": 6,
+    "width": "16k",
+    "l0": 70,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_6/width_16k/average_l0_70/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "references to the OpenAPI specification and its components"
+}

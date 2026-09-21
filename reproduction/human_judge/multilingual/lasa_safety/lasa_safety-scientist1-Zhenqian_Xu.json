@@ -1,0 +1,165 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "LASA: Language-Agnostic Semantic Alignment at the Semantic Bottleneck for LLM Safety",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "refusal 方向的 100 条 EN MultiJail 与评测的 40 条 EN MultiJail有重叠，还会影响别的语言的同义问题的测评；(b) MMLU 100（benign 方向）vs MMLU 200（能力评测）子集有重叠",
+    "score": 3,
+    "evidence_files": [
+      "scientist1/multilingual/lasa_safety/exp/02_analyze_bottleneck.py",
+      "scientist1/multilingual/lasa_safety/exp/04_refusal_direction.py",
+      "scientist1/multilingual/lasa_safety/exp/06_run_all_conditions.py",
+      "scientist1/multilingual/lasa_safety/exp/09_mmlu_capability.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签源于原数据集，合理",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/multilingual/lasa_safety/exp/08_llm_judge.py",
+      "scientist1/multilingual/lasa_safety/cache/main_sweep_judged.jsonl",
+      "scientist1/multilingual/lasa_safety/results/claim2_agg_judge.csv"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "task.md 硬性资源使用情况：(1) 基模 LLaMA-3.1-8B-Instruct ✓（exp/01 L23 默认路径）；(2) MultiJail 10 语言 ✓；(3) **训练数据 PKU-SafeRLHF EN/ZH/KO + UltraFeedback 完全未使用",
+    "score": 2,
+    "evidence_files": [
+      "scientist1/multilingual/lasa_safety/task.md",
+      "scientist1/multilingual/lasa_safety/report.md",
+      "scientist1/multilingual/lasa_safety/exp/04_refusal_direction.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "C1: 200 平行 MultiJail prompts × 10 语言 = 2000 隐状态/层 × 33 层，覆盖度充分；lang probe 用 5-fold CV。C2: 40 prompts × 10 langs × 8 条件 = 3200 gens LLM-judged（claim2_agg_judge.csv 每条件×每语言 n=40 每种语言的样本量太少了；",
+    "score": 3,
+    "evidence_files": [
+      "scientist1/multilingual/lasa_safety/results/claim1_layerwise.json",
+      "scientist1/multilingual/lasa_safety/results/claim2_agg_judge.csv",
+      "scientist1/multilingual/lasa_safety/results/mmlu_capability.json",
+      "scientist1/multilingual/lasa_safety/report.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "总体点估计为主，没用random vector做对照组。",
+    "score": 3,
+    "evidence_files": [
+      "scientist1/multilingual/lasa_safety/results/claim1_layerwise.json",
+      "scientist1/multilingual/lasa_safety/results/claim2_agg_judge.csv",
+      "scientist1/multilingual/lasa_safety/results/mmlu_capability.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C2 是典型的因果干预式设计，但是unsafe/safe prompt都加refusal vector, 没有区分unsafe/safe prompt，对safe question也会产生拒答，steer时没考虑输出崩塌的情况",
+    "score": 2,
+    "evidence_files": [
+      "scientist1/multilingual/lasa_safety/exp/04_refusal_direction.py",
+      "scientist1/multilingual/lasa_safety/exp/05_generate_steering.py",
+      "scientist1/multilingual/lasa_safety/exp/06_run_all_conditions.py",
+      "scientist1/multilingual/lasa_safety/results/claim2_agg_judge.csv",
+      "scientist1/multilingual/lasa_safety/report.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字全部可溯源到落盘产物",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/multilingual/lasa_safety/results/claim1_layerwise.json",
+      "scientist1/multilingual/lasa_safety/results/claim1_centered.json",
+      "scientist1/multilingual/lasa_safety/results/claim2_agg_judge.csv",
+      "scientist1/multilingual/lasa_safety/results/mmlu_capability.json",
+      "scientist1/multilingual/lasa_safety/results/mmlu_capability_extra.json",
+      "scientist1/multilingual/lasa_safety/cache/main_sweep_judged.jsonl"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "无跨产物冲突。",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/multilingual/lasa_safety/report.md",
+      "scientist1/multilingual/lasa_safety/results/claim2_agg_judge.csv",
+      "scientist1/multilingual/lasa_safety/results/mmlu_capability.json",
+      "scientist1/multilingual/lasa_safety/results/mmlu_capability_extra.json",
+      "scientist1/multilingual/lasa_safety/results/claim1_layerwise.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "There exists an intermediate 'semantic bottleneck' layer in multilingual LLMs whose hidden-state geometry is dominated by shared meaning rather than by language identity.",
+        "method": {
+          "justification": "scientist1 采用**两个正交探针**：(A) 5-fold logistic-regression 语言可辨识度，但该probe几乎没用；(B) 跨语言 parallel-retrieval top-1（每 (L1,L2) 对每 prompt 用 cosine 排 top-1，看top1是否正好是与与L1语义相同、与L2语言相同的回答，如果 L 层几何真被共享语义支配，那 L1 的表征应能 top-1 检索出 L2 里同义句。",
+          "score": 4,
+          "evidence_files": [
+            "scientist1/multilingual/lasa_safety/exp/02_analyze_bottleneck.py",
+            "scientist1/multilingual/lasa_safety/results/claim1_layerwise.json",
+            "scientist1/multilingual/lasa_safety/results/claim1_centered.json",
+            "scientist1/multilingual/lasa_safety/report.md"
+          ]
+        },
+        "experiment": {
+          "justification": "整体设计合理，与论文有偏差但可接受。",
+          "score": 4,
+          "evidence_files": [
+            "scientist1/multilingual/lasa_safety/exp/01_extract_hidden_states.py",
+            "scientist1/multilingual/lasa_safety/exp/02_analyze_bottleneck.py",
+            "scientist1/multilingual/lasa_safety/results/claim1_layerwise.json",
+            "scientist1/multilingual/lasa_safety/results/claim1_pair_heatmap.png"
+          ]
+        },
+        "result": {
+          "justification": "scientist1 的 centered retrieval 峰值恰好落在 layer 14-16，与论文一致。同时center方法比raw方法更好，揭示 lang identity ≈ 加性 shift这一超出论文明说的机制细节。",
+          "score": 5,
+          "evidence_files": [
+            "scientist1/multilingual/lasa_safety/results/claim1_layerwise.json",
+            "scientist1/multilingual/lasa_safety/report.md",
+            "paper/multilingual/lasa_safety/paper.pdf"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Aligning safety at this layer yields substantially lower attack success rates across high-, medium-, and low-resource languages (including languages unseen during alignment training) compared with surface-level safety alignment baselines, while preserving general task performance.",
+        "method": {
+          "justification": "用英文语料获得refusal direction,无差别迁移到safe/unsafe prompt的各种语言的prompt中，没做到区分prompt是否是safe/unsafe的，对safe question也会产生拒答。",
+          "score": 2,
+          "evidence_files": [
+            "scientist1/multilingual/lasa_safety/exp/04_refusal_direction.py",
+            "scientist1/multilingual/lasa_safety/exp/05_generate_steering.py",
+            "scientist1/multilingual/lasa_safety/exp/06_run_all_conditions.py",
+            "scientist1/multilingual/lasa_safety/report.md"
+          ]
+        },
+        "experiment": {
+          "justification": "(a) 所有prompt都加refusal direction会导致refuse everything, 没有系统测试对安全问题的拒绝性；(b) 没有检测steer的alpha系数是否导致语言崩塌；(c) 无 random-direction control（不能排除任何 L14 扰动都增加 refusal平凡解释）。",
+          "score": 2,
+          "evidence_files": [
+            "scientist1/multilingual/lasa_safety/exp/06_run_all_conditions.py",
+            "scientist1/multilingual/lasa_safety/exp/09_mmlu_capability.py",
+            "scientist1/multilingual/lasa_safety/results/claim2_agg_judge.csv",
+            "scientist1/multilingual/lasa_safety/results/mmlu_capability.json",
+            "scientist1/multilingual/lasa_safety/report.md"
+          ]
+        },
+        "result": {
+          "justification": "在所有prompt上加的L14上refusal directoin，asr下降很小，3/8种小众语言refusal率没有下降，这个方法效果不够好，且不针对unsafe prompt.",
+          "score": 2,
+          "evidence_files": [
+            "scientist1/multilingual/lasa_safety/results/claim2_agg_judge.csv",
+            "scientist1/multilingual/lasa_safety/results/mmlu_capability.json",
+            "scientist1/multilingual/lasa_safety/results/mmlu_capability_extra.json",
+            "scientist1/multilingual/lasa_safety/report.md",
+            "paper/multilingual/lasa_safety/paper.pdf"
+          ]
+        }
+      }
+    }
+  }
+}

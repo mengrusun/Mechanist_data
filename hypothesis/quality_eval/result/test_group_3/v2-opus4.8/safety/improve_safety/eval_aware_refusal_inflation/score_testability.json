@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the hypothesis by varying matched \"evaluation-framed vs deployment-framed wrappers\" and measuring both the \"refusal-rate gap\" and \"ASR vs alpha curves with placebo baselines,\" followed by reverse-direction steering and checkpoint comparisons. The directional prediction is clear: subtracting the evaluation-awareness direction should \"raise ASR beyond placebos, but less than direct refusal ablation,\" while adding it in deployment framing should increase refusals; failure to exceed the placebo effects is an explicit refuting outcome. The proposal lacks numeric decision thresholds and leaves the precise calculation of the component \"causally attributable to the eval-awareness feature\" somewhat underspecified, but its measurements, comparisons, and negative-result interpretation are otherwise coherent and decidable.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is the causal intervention that will \"subtract alpha*eval-awareness-direction\" across layers while separating it from the refusal direction; this requires custom layer and alpha selection but is a standard activation-steering operation rather than a magic step. The named models and artifacts—\"Llama-3-8B, Qwen2.5-7B, Gemma-2-9B,\" AdvBench, HarmBench, StrongREJECT, XSTest, SAD, and Llama-Guard—exist, and difference-in-means directions, forward hooks, steering, and automated grading are supported by standard interpretability and ML tooling. The refuting branch is runnable because the design includes \"random-direction placebo,\" \"orthogonal-to-refusal placebo of matched norm,\" direct refusal ablation, reverse steering, paraphrased wrappers, output-quality checks, and multiple graders, although resources are only partly quantified: model sizes are concrete, but prompt counts, alpha grids, layer ranges, and replication counts are unstated.",
+      "score": 8
+    }
+  }
+}

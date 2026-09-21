@@ -1,0 +1,33 @@
+{
+  "iterations_consumed": 4,
+  "claim_reentries_consumed": 0,
+  "status": "completed",
+  "termination_reason": "positive_verdict",
+  "last_score": 7.0,
+  "last_verdict": "ready",
+  "consecutive_noop_count": 0,
+  "iteration_breakdown": [
+    {"i": 1, "type": "plan_script_rerun", "action_type_code": "②", "target_claims": ["C1"], "produced_claims": [], "runs": 1, "gpu_hours": 1.665,
+     "notes": "M5-v2 hardened steering (capability + random + locked α + text log + extended α grid).",
+     "outcome_score": 3.0, "outcome_verdict": "not ready"},
+    {"i": 2, "type": "plan_script_rerun", "action_type_code": "②", "target_claims": ["C1"], "produced_claims": [], "runs": 1, "gpu_hours": 0.088,
+     "notes": "M5-v3 logit-level supplement at E4L10 (sub-argmax null).",
+     "outcome_score": 4.0, "outcome_verdict": "not ready"},
+    {"i": 3, "type": "plan_script_rerun", "action_type_code": "②", "target_claims": ["C1"], "produced_claims": [], "runs": 1, "gpu_hours": 0.347,
+     "notes": "M5-v3 top-5-site sweep (site-generalization test). All 5 sites' max |E[first_digit] span| < 0.5 → dissociation_generalizes.",
+     "outcome_score": 5.0, "outcome_verdict": "not ready"},
+    {"i": 4, "type": "plan_script_rerun", "action_type_code": "②", "target_claims": ["C1"], "produced_claims": [], "runs": 1, "gpu_hours": 0.187,
+     "notes": "M5-v3 JOINT top-5-site simultaneous steering (distributed-cause test). Joint span 0.14-0.32 across seeds → distributed_null verdict; small joint signal detected but still <0.5 threshold.",
+     "outcome_score": 6.0, "outcome_verdict": "almost"},
+    {"i": 5, "type": "narrative_closure", "action_type_code": "⓪", "target_claims": ["C1"], "produced_claims": [], "runs": 0, "gpu_hours": 0.0,
+     "notes": "No new experiments — narrative closure per reviewer. Reviewer bumped to 7/10 READY on iteration 4's joint-sweep result and its stated iteration-4 commitment. Iteration ⓪ does NOT consume budget per skill spec.",
+     "outcome_score": 7.0, "outcome_verdict": "ready"}
+  ],
+  "claim_stage_reentries": [],
+  "pending_upstream_calls": [],
+  "runs_total": 4,
+  "gpu_hours_total": 2.287,
+  "thread_id": null,
+  "timestamp": "2026-07-14T16:00:00Z",
+  "open_items_notes": "C1 remains verify_inconclusive on-disk (VERIFY_REPORT.md not modified). Reviewer certified mechanism-audit gate as PASS at score 7/10 verdict ready. Orchestrator should invoke `/auto-verify C1 — resume: false, swap_variants: true, dimensions: model` to formally close the on-disk state."
+}

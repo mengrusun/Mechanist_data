@@ -1,0 +1,34 @@
+{
+  "novelty": {
+    "score": 7,
+    "reasoning": "Core claims: (1) hidden-knowledge failures are often retrieval-gating rather than storage failures; (2) a small query-conditioned set of attention heads acts as a router/gate for factual expression; (3) this gate is causally identifiable and transferable across facts/paraphrases; (4) targeted attention intervention can reopen hidden facts with less collateral than weight editing. Relative to prior work, the ingredients are known, but the specific causal framing and selective intervention are a plausible non-trivial delta. The novelty is mostly in the mechanism + intervention, not in the phenomenon.",
+    "revision_notes": [
+      "State the exact falsifiable novelty claim: 'a compact, query-conditioned gate-head set causally mediates expression of internally recoverable facts.'",
+      "Differentiate explicitly from 'attention routes facts' papers by specifying what is new: compactness, transfer across facts, and causal reopening of hidden knowledge.",
+      "Clarify whether the contribution is a new mechanism, a new dataset of matched hidden/expressed pairs, or a new intervention; right now it is all three, which blurs the novelty center.",
+      "Add a crisp comparison table against Inside-Out, ROME, Knowledge Neurons, and query-localization work showing the actual delta."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "The problem is real: why models can internally recover facts yet fail to say them matters for interpretability, hallucination/reliability, and editing. If true, it would affect how researchers think about knowledge failures and could offer a practical, non-destructive alternative to weight editing. The so-what is decent: practitioners may use gate interventions to surface latent knowledge and researchers may shift from storage-centric to routing-centric explanations.",
+    "revision_notes": [
+      "Make the downstream user explicit: interpretability, knowledge editing, and factual reliability audiences each need a distinct payoff statement.",
+      "Add one sentence on application value: when reopening latent facts is preferable to editing weights, and when it is unsafe.",
+      "Quantify the practical advantage over editing in terms of speed, reversibility, and collateral damage.",
+      "Clarify whether this changes theory broadly or mainly improves a niche debugging/tooling workflow."
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The hypothesis is testable, but the proposal overstates certainty in a hard-to-disentangle setting. The main weakness is confounding: probe recovery, attention causality, and storage-vs-routing are not cleanly separable yet. Experimental ideas are reasonable and feasible, but several controls are underspecified, and the intervention could simply amplify existing logits or induce artifacts rather than reveal a genuine gate mechanism. The core contribution could still be strong if executed carefully, but the current writeup needs tighter scope and more rigorous discriminative tests.",
+    "revision_notes": [
+      "Define precise success/failure criteria for each hypothesis and what result would falsify the gating account.",
+      "Add stronger controls to separate routing from storage: MLP-only patching, layerwise causal scrubbing, and matched-confidence examples.",
+      "Include ablations for whether the 'gate' heads are truly small/transferable versus just correlated with answerability.",
+      "Test whether interventions work on facts the model does not know internally, to measure hallucination risk and specificity.",
+      "Add a direct comparison to simple baselines like logit lens, prompt engineering, and generic attention scaling.",
+      "Narrow the claims in the abstract so the paper is defendable even if compact gate heads are only partially transferable."
+    ]
+  }
+}

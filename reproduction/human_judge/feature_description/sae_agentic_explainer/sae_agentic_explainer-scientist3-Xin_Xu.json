@@ -1,0 +1,122 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Xin Xu",
+    "paper_title":         "SAGE: An Agentic Explainer Framework for Interpreting SAE Features in Language Models",
+    "agent":         "scientist3",
+    "review_date":         "2026-07-20"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "无训练过程,但存在明确的选择/评估泄漏:SAGE循环的最终报告指标就是其迭代选择指标本身。best_solution代码中,每轮对每个候选解释调用eval_generative/eval_predictive得到g与pr,按score=gen+max(pred,0)做best-so-far保留(最多5轮×K=3候选≈15次评估取最大),而最终落盘并进入汇总的sage_final直接就是这个best_gen/best_pred——被选中的解释从未在独立于选择过程的评估上重测。相比之下Neuronpedia与SingleShot baseline只被评估一次。'多次带噪评估取max' vs '单次评估'的比较结构性偏向SAGE,即使零假设下也会产生虚假优势,直接抬高claim核心对比。缓解因素:每次评估的probe由LLM按解释新生成(非固定测试集复用),threshold在REF_TEXTS参考语料上按70分位事前校准且三方法共用(best_solution第338-341行)。但报告指标与选择指标同源、无held-out终评这一缺口是实质性的。",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_0ef9754eefd74f9cbc5627961de30956.py",
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "两个指标的ground truth(真实SAE激活)本身有效且非循环:generative/predictive均通过本地Gemma-2-2B前向传播实测目标feature激活(get_sae_activations_all_layers),不由被评估系统生成。但存在两处实质缺陷:(1) 作为对比对象的'Neuronpedia baseline'标签可能是LLM伪造的——neuronpedia_explanation()在API失败时(timeout仅8s、无重试)静默降级为让GPT-5看snippet现编一条'Neuronpedia风格'解释(best_solution第378-392行,src='llm_fallback'),此时claim的对比对象已不是真Neuronpedia;实际fallback比例记录在FALLBACK_LOG中,但该记录随experiment_data.npy/json一起未被保留,cache/neuronpedia.json亦未保留,baseline真实性完全不可验证——按judge规范,这种缺失计为可靠性风险。(2) 喂给各解释方法的'top-activating snippets'并非Neuronpedia真实top激活语料,而是从仅~80句手写REF_TEXTS里选激活最高的8句(第349行),对16k维SAE feature而言是极弱的激活分布代理,削弱了解释与feature真实行为的对应。另有轻微问题:predictive的scorer与解释生成者同为GPT-5,无matched-scorer控制,对Neuronpedia baseline存在潜在风格偏向。",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_0ef9754eefd74f9cbc5627961de30956.py",
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主模型与backbone符合指定:Gemma-2-2B从MODEL_DIR本地加载(best_solution第86-97行),gemmascope-res-16k SAE按layer加载width_16k变体,backbone为task.md指定的gpt-5.4 via dmxapi(experiment_code.py:32-33)。但三处保真缺口:(1) 指定数据集Neuronpedia被部分且不可验证地替换——baseline解释在API失败时静默降级为GPT-5现编(llm_fallback,timeout仅8s无重试),实际替换比例记录于未保留的FALLBACK_LOG,无法证明baseline是真Neuronpedia;且Neuronpedia的真实top激活语料完全未使用,snippet改用~80句手写REF_TEXTS替代。(2) verify阶段候选模型(Qwen3-4B、GPT-OSS-20B)一个都没用——task.md措辞'use as needed, not necessarily all'允许挑选,但全零使用使claim的'跨多个LLM'子句没有任何指定资源支撑(其summary自认'not yet reflected')。(3) SAE的l0变体按目录排序取第一个(find_local_sae, sorted(os.listdir)[0]),未按Neuronpedia canonical值对齐,与baseline的可比性未校准(对比:scientist2专门做了l0校准)。",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_0ef9754eefd74f9cbc5627961de30956.py",
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py",
+      "logs/0-run/research_summary.json",
+      "idea.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "used_n:headline结果(stage 3)为30个feature(10/层×L5/L12/L20),低于40条门槛;每feature仅6条generative probe、5正+4负predictive句;仅单模型Gemma-2-2B,claim的'跨多个LLM'子句零证据(Qwen3-4B/GPT-OSS-20B未跑);feature选择还偏向'在80句手写REF_TEXTS上有中等激活频率'的子集,覆盖面进一步收窄。claim强度与证据的匹配尚可:最终verdict为'Partially supported / inconclusive'而非强宣称,research_summary的分析明确自认缺verify阶段模型、每层样本量小、'improvements are modest rather than dramatic',stage-1的significance描述也写明'not statistically significant at this scale';per-feature汇总算了均值±SE误差棒(mean_ci,best_solution第732-752行)且draft_summary承认误差棒大量重叠。属'证据稀薄且稀薄被部分标示':n<40、单模型、probe极少,但结论已相应压低,无凭空下结论。",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_0ef9754eefd74f9cbc5627961de30956.py",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json",
+      "report.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "单种子单次运行:random.seed(42)仅控制feature选择(best_solution第317行),无torch种子,LLM采样随机性未控制。不确定性报告只有跨feature均值±1.96·SE误差棒(mean_ci,第732-742行):有方差、无显著性——全代码无任何配对检验/p值(无wilcoxon/ttest/pvalue),尽管三方法在相同feature上评估、天然适合配对分析,SAGE vs Neuronpedia的差值从未做显著性检验(对比:scientist1/2均做了配对Wilcoxon)。seed_aggregation阶段名义存在,但其aggregation_plotting_code.py的experiment_data_path_list只含1条路径——'多种子聚合'实际只聚合了单次运行。另predictive相关系数每feature仅由9句算出且NaN/退化时强制置0.0,噪声大且系统性拉低均值。headline差值(gen 0.711 vs 0.378)幅度较大,verdict也留了'inconclusive'余地,无挑种子迹象;但叠加维度1的best-of-many选择偏置,该差值不能按面值采信。符合3分锚点:点估计+效应看上去不平凡,但单种子、无显著性检验,稳健性未经验证。",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_0ef9754eefd74f9cbc5627961de30956.py",
+      "logs/0-run/experiment_results/seed_aggregation_316caea61ea84958a84163c1a3dfc355/aggregation_plotting_code.py",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a",
+    "score": null,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_0ef9754eefd74f9cbc5627961de30956.py",
+      "logs/0-run/ablation_summary.json"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字可追溯且一致:headline指标(SAGE gen 0.7111/pred 0.3683, Neuronpedia 0.3778/0.1961, SingleShot 0.272/0.106)与per-layer数字(L5/L12/L20)在stage_3 journal.json的_term_out(67KB被捕获的执行stdout)中逐一精确对应('[OVERALL] n=30 ... sage_gen=0.711±0.137'等),30个feature的逐条处理记录完整('=== [1/30] L5 feature 1275 ===');research_summary.json的metric与该执行日志一致,无伪造或回填迹象。执行日志还打印了Fallback log{'neuronpedia_api_ok':30,'fallback_llm':0},证明baseline全部来自真实API。缺口:代码明确保存的结构化原始数据(experiment_data.npy第905行、experiment_data.json第920行)与cache/neuronpedia.json均未保留在case目录,experiment_results/各目录只有代码+PNG——逐probe/逐句级的原始数据无法深审,可溯源性依赖被捕获的stdout而非结构化落盘产物,完整性不足但真实性有据。",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "数字层面各产物一致:research_summary.json的best-node指标(0.7111/0.3683/0.3778/0.1961)与stage_3 journal.json的_term_out执行日志逐一吻合,各stage间数字差异(stage1: 0.75vs0.70 n=20单层;stage2: 0.4667vs0.40;stage3: 0.711vs0.378)源于实验配置不同,非记录冲突。主要不一致在最终报告的文字与自身数字之间:report.md的verdict写'Partially supported / inconclusive — weak or mixed evidence',其引用的Significance摘录与'What the agent actually ran'描述均取自stage-1初步实验(L12单层、小样本、'advantage is small and not statistically significant'),而非同一产物树中stage-3的最终结果(Δgen=+0.333、Δpred=+0.172、逐层全胜)——最终报告的叙述锚定在过时的初步阶段,与best-node数字明显脱节。缓解:该verdict自标'automated heuristic...not peer review',且偏差方向是保守低报而非夸大。另有小瑕疵:report.md表格中ablation_summary标记为'[—]'而其他summary为'[✓]',但ablation_summary.json实际存在且非空。",
+    "score": 3,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/ablation_summary.json",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "You should build a pipeline around the following basic idea — letting an LLM agent propose several candidate explanations for an SAE feature, query the target LLM+SAE with probe inputs to gather empirical activation feedback, and iteratively accept, reject, or revise those candidates — produces feature explanations that outperform Neuronpedia on both generative accuracy (success rate of triggering the feature with text written from the explanation) and predictive accuracy (correlation between explanation-based predictions and true activations on held-out text), across multiple open-source LLMs and across early-to-late layers.",
+        "method": {
+          "justification": "机理方法族正确:迭代propose→probe→revise循环,K=3并行候选(sage_revise),真实Gemma+SAE前向传播激活反馈,还加了matched-backbone的SingleShot GPT-5第二baseline(与scientist2同思路,方法论加分)。但偏离不少:论文四角色(Explainer/Designer/Analyzer/Reviewer)被压缩为普通llm_call序列,无accept/reject/refute显式状态(只有best-so-far打分保留,更接近随机搜索而非论文的状态机),无最终synthesis;且解释的锚定输入不是Neuronpedia真实top激活语料,而是80句手写REF_TEXTS内的相对高激活句(best_solution第349行),偏离论文'从语料top-k激活样本出发'的设定,可解释假设(snippet代表feature真实行为)被明显削弱。",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_0ef9754eefd74f9cbc5627961de30956.py",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "有可取设计(三方法同feature配对评估、threshold事前校准且共用、predictive含对比负样本、均值±SE误差棒、stage_4组件消融、stage_1曾探索K=1..4),但判定claim的metric本身不可靠:SAGE的报告值是迭代中最多约15次带噪评估的best-so-far最大值,而两个baseline只评一次(best_solution第655-697行sage_final=best_gen/best_pred),'多次取max vs 单次'的比较结构性偏向SAGE,即使零假设下也会产生正差——claim核心对比被该偏置污染且无held-out终评。另:n=30(<40),每feature仅6条gen probe/9句pred,无任何显著性检验,feature选择偏向REF语料激活子集,'跨多个LLM'子句零实验(Qwen/GPT-OSS未跑),SAE l0变体未对齐Neuronpedia canonical。",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_0ef9754eefd74f9cbc5627961de30956.py",
+            "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py",
+            "logs/0-run/ablation_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "表面结论与论文定性一致:SAGE在两指标上均优(gen 0.711 vs 0.378, pred 0.368 vs 0.196)且逐层成立,方向与论文Table 2相同;数字真实可溯源(journal.json执行日志)、无编造或事后放宽阈值,最终verdict还保守写为'Partially supported / inconclusive'。但按维度9'结合前面维度判断conclusion是真实取得还是被工程化制造'的要求,这一与论文的一致性有相当部分归因于评估结构本身:best-of-many选择偏置直接抬高SAGE两个指标,而分析中对此零讨论;Neuronpedia的predictive基线(0.196)远低于scientist1在真实held-out上测得的0.807,提示弱snippet代理+同backbone scorer也在放大差距——'两指标全胜'恰是另外两家(scientist1: predictive打平;scientist2: 归因为backbone假象)都未能得到的结论,却缺乏对偏置的自省。一致性结论不可按面值采信,披露不完整。",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json",
+            "logs/0-run/research_summary.json",
+            "report.md",
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_0ef9754eefd74f9cbc5627961de30956.py"
+          ]
+        }
+      }
+    }
+  }
+}

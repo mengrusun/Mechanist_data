@@ -1,0 +1,21 @@
+{
+  "Name": "belief_agent_binding",
+  "Title": "Belief Slots: Binding Propositions to the Right Believer",
+  "Short Hypothesis": "LLMs attribute beliefs by binding proposition representations to agent representations via a binding-ID-like mechanism, and belief-misattribution errors (assigning A's belief to B) arise from binding interference, not from failure to represent the beliefs themselves.",
+  "Related Work": "Binding/variable-binding interpretability (Feng & Steinhardt 2023 'binding IDs'; Prakash et al. 2024) studies entity-attribute binding but not epistemic-state binding across multiple agents. Multi-agent ToM benchmarks show misattribution but not its mechanism. We extend binding-ID analysis to the belief domain and multi-agent divergence.",
+  "Abstract": "When a passage says 'Alice thinks the box is empty; Bob thinks it is full,' a model must bind each belief to its holder. The source paper shows models are unreliable at such attribution. We hypothesize the mechanism is a binding scheme—analogous to the binding IDs found for entity-attribute pairs—that tags each belief proposition with its believer, and that misattribution errors reflect binding collisions rather than missing beliefs. We construct multi-agent belief scenes with 2-4 agents holding distinct (sometimes contradictory) beliefs about the same item, and probe whether the model represents each belief and whether it maintains a separable binding to each agent. We test the binding hypothesis with the classic factorization signature: swapping agent-binding vectors between positions should swap *which agent* the model reports as holding a belief without changing the belief content. We quantify misattribution as a function of belief similarity, agent-token distance, and number of agents, predicting binding-interference scaling (errors rise with more agents and more similar beliefs). Finally we test a mitigation: strengthening binding vectors to reduce collisions and measuring attribution accuracy. This locates a concrete, manipulable cause of belief misattribution.",
+  "Experiments": [
+    "Generate multi-agent belief scenes (2-4 agents, contradictory/similar/distinct beliefs about a shared item).",
+    "Probe each agent-belief pair for (a) presence of the belief content and (b) binding to the correct agent.",
+    "Binding-swap causal test: exchange the putative binding vectors of two agents and measure whether the model's attribution swaps accordingly.",
+    "Scaling analysis: measure misattribution rate vs number of agents, inter-belief similarity, and agent-token distance.",
+    "Mitigation: amplify binding-vector magnitude / orthogonalize agent tags and re-measure attribution accuracy.",
+    "Compare to entity-attribute binding IDs from prior work to test whether the same mechanism is reused for beliefs."
+  ],
+  "Risk Factors and Limitations": [
+    "Belief binding may not reuse the entity-attribute binding mechanism, requiring new tooling.",
+    "Swap experiments can have confounded effects on content as well as attribution.",
+    "Very small models may not exhibit clean binding structure.",
+    "Naturalistic multi-agent text differs from templated scenes; ecological validity limited."
+  ]
+}

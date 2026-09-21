@@ -1,0 +1,22 @@
+{
+  "claim": "C1",
+  "intervention_type": "additive contrastive activation addition (CAA) at residual block 28 during autoregressive DNA generation",
+  "checks": {
+    "A_steering_coefficient_sweep": {
+      "verdict": "pass",
+      "unit_stated": "raw multiplier on the diff-of-means CAA vector; vector norm recorded (vnorm=823.91 in results/m3/s28_caa.json)",
+      "capability_metric_logged": "validity_rate + mean Evo2 NLL (naturalness) logged at every sweep point alongside helix (Pareto / joint scoring)",
+      "coefficient_locked": "coef 1.0, locked by the pre-registered validity-frontier rule = max helix_all s.t. validity non-inferiority (results/m3/winning.json, results/m4/validity_frontier.json). A principled joint-criterion lock, not an ad-hoc pick.",
+      "random_direction_control": "matched_control (orthogonalized same-norm random direction) shows no gain (-0.024, n.s.); same-norm permuted sham shows no gain (-0.005, n.s.). Both present.",
+      "geometric_range": "coefs [0.0, 0.5, 1.0, 2.0, 4.0, 8.0] -> 16x largest-to-smallest nonzero, 6 points, alpha=0 baseline included. The run MET its criteria (significant monotone dose-response rho=0.922, q=1.5e-4; helix gain at winning coef), so the >=30x wide-sweep requirement (which applies only where a run fell short) does not bind.",
+      "finding": "Textbook steering-coefficient sweep: unit stated, capability/validity co-logged at every point, principled frontier lock, random-direction and sham controls both present, alpha=0 in-run baseline. Criteria met at a small conservative coefficient."
+    },
+    "B_direction_extraction_quality": {"verdict": "not_implemented"},
+    "C_site_layer_choice": {"verdict": "not_implemented"},
+    "D_n_effective": {"verdict": "not_implemented"},
+    "E_probe_vs_causal": {"verdict": "not_implemented"},
+    "F_intervention_scope": {"verdict": "not_implemented"}
+  },
+  "overall_verdict": "pass",
+  "notes": "Location (M2 probe/SAE screen) is decodability-only and correctly feeds -- not substitutes for -- the causal steering; C1 rests on the causal dose-response, not on probe R^2 (which was near-zero, honestly reported)."
+}

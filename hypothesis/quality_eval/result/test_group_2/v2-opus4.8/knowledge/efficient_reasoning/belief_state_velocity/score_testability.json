@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The central test is well aligned with the hypothesis: the plan defines velocity as \"the L2 norm of the difference between consecutive projected states\" and compares it with surprisal/CAID using answer-flip AUC, matched-compression accuracy, and token counts. The prediction is directional and refutable—velocity must outperform the output-space baselines, low-velocity tokens must \"flip answers far less often,\" and the stated expectation of \"25-45% token savings at matched accuracy\" supplies a concrete decision range. Some implementation-relevant concepts remain ambiguous, particularly \"mean-ablate each token's residual contribution,\" \"optionally normalized,\" what accuracy tolerance counts as matched, and how the controller can \"skip/compress\" an ungenerated run, so an expert would still need clarifications.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is the online skip/compress controller—\"suppress generation of runs where predicted velocity stays below a threshold\" using \"a one-step-ahead velocity estimate or a tiny probe\"—which requires custom logic and leaves the actual suppression or replacement operation underdefined, unlike the standard early-exit branch. The named models and datasets—\"DeepSeek-R1-Distill-Qwen-1.5B/7B, Qwen2.5-7B\" and \"GSM8K, MATH, and ProntoQA\"—exist, while linear probes, residual-stream hooks, projections, and activation ablations are supported by standard ML and interpretability tooling; the exact ASAP and CAID/PACE implementation dependencies are not specified. Resources are partly quantified through three model configurations and an expected \"25-45% token savings,\" but sample counts, token-ablation counts, probe-training set sizes, and concrete threshold/window values are unstated. The refuting branch is runnable because full CoT, fixed truncation, entropy, surprisal, and CAID/PACE controls are included, alongside \"threshold/window sweeps\" and matched-compression comparisons that can yield null or adverse results.",
+      "score": 6
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "Name": "variable_binding_working_memory",
+  "Title": "Attention as Variable Binding: The Working-Memory Substrate of Language-Based Reasoning",
+  "Short Hypothesis": "We hypothesize that multi-entity reasoning depends on an attention-implemented variable-binding mechanism (binding fillers to roles via dedicated heads/subspaces), that its capacity sets a hard limit on how many entities a model can track, and that reasoning failures on multi-entity problems coincide with binding errors (role-filler swaps) visible in attention. This directly connects a linguistic operation (coreference/role assignment) to a general-intelligence bottleneck (working memory), making it the best setting to study the language-intelligence interface.",
+  "Related Work": "Feng and Steinhardt (2023) study how transformers bind entities; work on binding IDs and the 'binding subspace' exists. Coreference and IOI circuits (Wang et al. 2022) localize entity tracking. Cognitive theory ties reasoning to working-memory capacity. We extend beyond single tasks by testing a capacity law: measuring the maximum bindings sustainable, showing failures are swaps not omissions, and causally editing bindings, framing working memory as the shared substrate linking language processing and reasoning.",
+  "Abstract": "Human reasoning is bounded by working memory; we ask whether an analogous attention-based variable-binding mechanism bounds language-model reasoning. Using synthetic tasks that require tracking N entity-attribute bindings (e.g., 'Alice has the red box, Bob the blue...' followed by queries), we (i) identify binding heads via patching and locate a binding subspace where filler and role are jointly encoded, (ii) measure the capacity N at which accuracy collapses and test whether errors are role-filler swaps (mis-binding) rather than forgetting, and (iii) causally rebind by editing the binding subspace to swap two entities' attributes and verify predicted answer changes. We predict a sharp capacity limit, that near-limit errors are systematic swaps traceable to attention interference, that capacity scales with head count/width, and that the same binding machinery is recruited in natural coreference and multi-step word problems. Establishing a measurable binding-capacity law that governs both linguistic coreference and symbolic reasoning would show working memory is a shared, causal substrate connecting language and intelligence in transformers, provide a diagnostic for multi-entity reasoning failures, and suggest architectural levers (more binding capacity) for improving reasoning.",
+  "Experiments": [
+    "Synthetic binding tasks with N=1..8 entity-attribute pairs and query templates; matched natural coreference and multi-entity word problems.",
+    "Locate binding heads/subspace via activation patching and probing for role-filler joint codes.",
+    "Capacity curve: accuracy vs N for Llama-3-8B/70B, Qwen2.5-7B; identify collapse point.",
+    "Error taxonomy: classify errors as swaps vs omissions using the model's answer and attention pattern.",
+    "Causal rebinding: edit the binding subspace to swap two entities; test that answers change as predicted.",
+    "Transfer test: check whether the same heads/subspace are causal in natural coreference and word problems.",
+    "Metrics: capacity N*, swap-vs-omission ratio near limit, rebinding success rate, cross-task circuit overlap.",
+    "Control: single-entity tasks should not engage binding heads."
+  ],
+  "Risk Factors and Limitations": [
+    "Synthetic tasks may not reflect naturalistic binding, limiting transfer claims.",
+    "Binding subspace identification may be approximate and entangled with other information.",
+    "Capacity limits may be format-dependent (prompt phrasing) rather than architectural.",
+    "Editing the binding subspace risks off-target effects.",
+    "Some models may use non-attention mechanisms (MLP memory) for binding, complicating the story."
+  ]
+}

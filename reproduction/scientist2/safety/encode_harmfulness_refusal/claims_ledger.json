@@ -1,0 +1,162 @@
+{
+  "project": "Unified verification suite for Claims 1–5 on Llama-3-8B-Instruct + AdvBench",
+  "direction": "Verify the five claims in task.md about the mechanistic separation of harmfulness perception and refusal execution as two dissociable linear directions in the residual stream of Llama-3-8B-Instruct.",
+  "date_range": {"start": "2026-07-15", "end": "2026-07-15"},
+  "models": {"claim": "claude-opus-4-7", "experiment": "claude-opus-4-7", "verify": "claude-sonnet-4-6", "iteration": "claude-opus-4-7"},
+  "pipeline_status": "completed",
+  "round_end": {"qualifier": "", "detail": "", "remedy": "", "see": "", "partial_artifacts": [], "next_round_options": []},
+  "journey_summary": {
+    "claim": "given (5 claims from task.md § Claim, verbatim); mechanism strategy = Location + Causal Intervention",
+    "mechanism_strategy": "Location + Causal Intervention",
+    "mechanism_routing": "family=Representation and Parameter Analysis / Steering Vectors; submethod=Difference-in-Means direction extraction + additive-steering hook",
+    "experiment": "35 runs, ≈ 0.6 GPU-h wall-clock (≈ 2.5 GPU-h single-GPU equivalent); headline mixed — C3 (causal dissociation) + C5 (probe vs Llama Guard) positive; C1 partial (h clean, r unmeasurable at 98.7% refusal ceiling); C2 & C4 informative negatives (ceiling AUROC, ASR=0)",
+    "verify": "5 claim(s): 1 PASS / 0 FAIL / 2 INCONCLUSIVE / 0 ZEV / 2 INTEGRITY_ONLY (cap=2, swap_off=0); integrity[Phase2=FAIL(C3 mechanism, C5 experiment)/Phase9=WARN(1 variant, NaN expected)]",
+    "iteration": "3/6 iterations, claim-reentries=0/2, score 6/10 verdict 'almost', termination=positive_verdict; 138 Phase-C runs, 3.27 GPU-h; iter 1 = C5 scope-narrowing (type ②, 0 GPU-h) + C3 mechanism-audit fix started (added σ_proj-normalized sweep + n_random=30 at h-site, z=101.65), iter 2 = C3 r-site closure (n_random=30 at r-site, z=128.31 at α_raw=2.0), iter 3 = C3 narrative language downgrade (type ⓪) to 'asymmetric causal steering / partial functional dissociation'",
+    "figures": "4 across 4 claims (C1 judgment-skipped — geometric-distinctness numbers already in prose); 0 render-skipped, 0 errored"
+  },
+  "open_items": [
+    "Verify INTEGRITY_ONLY: C2 (position dissociation) — swap-test deferred (max_verify_claims_cap); upgrade via /auto-verify C2 — resume: true",
+    "Verify INTEGRITY_ONLY: C4 (jailbreak signature) — swap-test deferred (max_verify_claims_cap); upgrade via /auto-verify C4 — resume: true",
+    "C1 refusal-side sub-tests (probe AUROC of r; shuffled-refusal control) unmeasurable at Llama-3-8B-Instruct's 98.7% bare-refusal rate on AdvBench; replicated on Qwen2-Instruct-7B — dataset+alignment issue, not a model-specific artifact; needs an attack family with ASR>0 or a dataset with more natural jailbreaks",
+    "Scope-deferred jailbreak-detection framing for C5: restoring the original 'flagging jailbreaks' scope requires an attack family with ASR>0 on Llama-3-8B-Instruct + re-run of M4 + M5 on the jailbreak-inclusive test set + standalone /auto-verify C5 — resume: true",
+    "Manuscript authoring pass required (iter-3 reviewer flag): the final paper draft must be written to the asymmetric-causal-steering / partial-functional-dissociation claim throughout — the loop enforced plan+results+verdict wording, but a full author-facing rewrite is a human task"
+  ],
+  "iteration_summary": {"score": 6, "verdict": "almost", "rounds_consumed": 3, "max_rounds": 6},
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "Instruction-tuned LLMs (specifically Llama-3-8B-Instruct) represent harmfulness perception (h) and refusal execution (r) as two distinct, approximately-linear, independently-recoverable directions in the residual stream.",
+      "origin": "task.md § Claim ¶1 (verbatim)",
+      "data": {"provenance": "existing", "source": "AdvBench (harmful) + Alpaca (benign, matched)", "available_n": "AdvBench = 520; Alpaca ≈ 50 000", "used_n": "520 harmful + 520 matched benign; 312 direction-extraction / 104 val / 104 test (seed=0, 60/20/20)", "subset_note": "benign side subsetted from Alpaca to match harmful pool size (matched-N contrast — scientific choice, not cost cut); r-direction contrast falls back to harmful-vs-benign proxy (CAA/Arditi standard) because only 7 natural jailbreaks in 520 bare-harmful attempts, below the 8-item within-attribute floor"},
+      "models": ["Llama-3-8B-Instruct"],
+      "method": "difference-in-means direction extraction at best (layer, position) + held-out linear-probe AUROC + cosine(h,r) vs split-half reference + shuffled-refusal control (M-prep, M1) — Screen → Decode",
+      "main_experiment": {"verdict": "partial", "key_stats": "h AUROC = 0.9998 at (layer 11, t_final_instr); cos(h, r) = 0.174 vs split-half reference 0.883 (ratio 0.20 — well below the ≤ 0.5 threshold); refusal-side sub-tests (probe AUROC of r on refusal, shuffled-refusal control) = NaN because only 7 natural jailbreaks in the 520 bare-harmful pool", "headline": "h side clean at ceiling; geometry passes cleanly (h and r geometrically distinct at ratio 0.20 of split-half reference); refusal-side sub-tests unmeasurable at Llama-3-8B-Instruct's 98.7% bare-refusal rate, not disproven"},
+      "verify": {"robustness": 1.0, "axes": {"method": "n/a", "dataset": "n/a", "model": "pass"}, "integrity": "WARN", "verdict": "PASS", "stage2_skip_reason": null},
+      "iteration": {"final_reviewer_status": "PASS (held) — brief consistency check confirmed h-side geometry; refusal-side unmeasurable caveat framed as dataset+alignment issue, not a rigor gap", "changed": ["reviewer wording note: 'harmfulness direction is strongly recoverable and geometrically distinct from the proposed refusal direction' — NOT 'both are equally well established latent directions'"], "falsified": [], "narrowed_to": ""},
+      "final_status": "⚠ PASS held — partial main-experiment verdict (h clean at ceiling, refusal-side sub-tests unmeasurable) is robust across Llama-3 and Qwen2 model families (cos ratio 0.20 → 0.069 cross-model, refusal-side NaN replicated); the unmeasurability is a dataset+alignment issue, not a model-specific artifact",
+      "caveats": ["r extracted from harmful-vs-benign proxy contrast rather than within-harmful refused-vs-complied (CAA/Arditi standard fallback when natural jailbreaks are rare) — residual overlap cos(h,r)=0.174 may partly reflect shared contrast rather than shared latent concept", "variant integrity WARN — auroc_r=NaN expected on Qwen2 swap (same 98.7%-refusal-ceiling story)", "paper-side caveat mandatory: PASS applies mainly to sub-test (ii) of C1 (geometric distinctness); sub-tests (i) refusal-AUROC and (iii) shuffled-refusal are unmeasurable at 98.7% bare-refusal rate"],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M-prep", "refine-logs/EXPERIMENT_PLAN.md#M1", "results/m_prep/directions.json", "results/m1/claim1_verdict.json", "verify/C1_h_r_directions_distinct/ROBUSTNESS.md", "verify/C1_h_r_directions_distinct/variants/model-swap-qwen2-instruct-7b/"],
+      "figures": []
+    },
+    {
+      "id": "C2",
+      "statement": "Position dissociation: the harmfulness signal (h) peaks at the final instruction-token position; the refusal signal (r) peaks at the position immediately post-instruction — a crossover on the per-position AUROC curve.",
+      "origin": "task.md § Claim ¶2 (verbatim)",
+      "data": {"provenance": "existing", "source": "AdvBench + Alpaca (same pool as C1, held-out 20%)", "available_n": "AdvBench = 520; Alpaca ≈ 50 000", "used_n": "104 harmful + 104 benign held-out pairs evaluated on a 6-position ladder around t_final_instr / t_post_instr (no new forward passes — read from M-prep cache)", "subset_note": "shares M-prep's cached activations"},
+      "models": ["Llama-3-8B-Instruct"],
+      "method": "per-position × per-attribute AUROC of difference-in-means directions over a 6-position ladder; crossover-Δ ≥ 0.05 + bootstrap 95% CI non-overlap with immediate neighbours (M2)",
+      "main_experiment": {"verdict": "not-supported", "key_stats": "AUROC_h(t_final_instr) = 0.99982, AUROC_h(t_post_instr) = 1.00000, crossover_h = −0.00018 (far below the 0.05 threshold — both positions decode harmfulness at ceiling); refusal-side unmeasurable (98.7% bare-refusal ceiling — same cause as C1)", "headline": "no meaningful position crossover — both anchor positions decode harmfulness at ceiling on Llama-3-8B-Instruct; the two-signal-at-two-positions hypothesis is not testable in the linear-probe sense on this well-aligned model + AdvBench"},
+      "verify": {"robustness": null, "axes": {"method": "excluded", "dataset": "excluded", "model": "excluded"}, "integrity": "WARN", "verdict": "INTEGRITY_ONLY", "stage2_skip_reason": "max_verify_claims_cap"},
+      "iteration": {"final_reviewer_status": "unchanged (INTEGRITY_ONLY, cap-deferred — no back-edge per contract)", "changed": [], "falsified": [], "narrowed_to": ""},
+      "final_status": "⚪ integrity_only (swap-test deferred — max_verify_claims cap); main experiment: not-supported (ceiling AUROC negative — no crossover possible when both positions are at 1.000); informative negative matching plan's stated failure branch; upgrade via /auto-verify C2 — resume: true",
+      "caveats": ["ceiling-AUROC negative — crossover cannot exist when both positions are at 1.000; a cross-model verify swap (a model with lower bare-refusal ceiling) would be the natural test"],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M2", "results/m2/claim2_verdict.json", "results/m2/position_auroc_heatmap.csv", "verify/C2_position_dissociation/ROBUSTNESS.md", "verify/C2_position_dissociation/main_experiment_audit/"],
+      "figures": [
+        {
+          "id": "c2_position_auroc_heatmap",
+          "type": "heatmap",
+          "caption": "C2 — per-position AUROC of difference-in-means directions on the harmfulness attribute (refusal-side NaN at 98.7% baseline refusal). Both anchor positions t_final_instr and t_post_instr decode at ceiling (AUROC ≥ 0.999), leaving no meaningful crossover — an informative negative on the position-dissociation hypothesis at Llama-3-8B-Instruct scale.",
+          "png": "figures/C2/c2_position_auroc_heatmap.png",
+          "pdf": "figures/C2/c2_position_auroc_heatmap.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/m2/position_auroc_heatmap.csv",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "statement": "Asymmetric causal steering via additive intervention (iter-3 narrowed wording; originally 'additive steering along each axis dissociates the effects'): steering along h flips the internal harmfulness readout in a monotone dose-response while refusal stays in a null-band and direction-specific vs 30 matched-norm random controls at h-site (z=101.65); steering along r produces a thresholded refusal jump (0.01→0.53 at α=+2) while the harmfulness readout stays in the null-band, with the r-site random-control specificity closure (z=128.31 at α_raw=2.0 vs random-at-r-site delta≈−0.002).",
+      "origin": "task.md § Claim ¶3 (verbatim; narrowed in iter-3 to 'asymmetric causal steering / partial functional dissociation' — see refine-logs/main-experiment-verdicts.json avoid_wording field)",
+      "data": {"provenance": "existing", "source": "AdvBench held-out + Alpaca held-out per condition", "available_n": "AdvBench = 520; Alpaca ≈ 50 000", "used_n": "5600 forward-passes-with-intervention (200 prompts × 28 cells = 4 directions × 7 α values) main; +78 fine sub-sweep cells (iter 1) + 60 random-r-site cells (iter 2) = 166 total steering configs", "subset_note": "per-condition eval sets held-out from M-prep's direction-extraction split; iter-1+2 added σ_proj-normalized fine sweep + n_random=30 at both h-site and r-site (mechanism-audit fix)"},
+      "models": ["Llama-3-8B-Instruct", "Llama-Guard-3-8B (secondary refusal judge on 20% subset)"],
+      "method": "additive residual-stream steering at (best-layer, target-position) across direction ∈ {h, r, random-matched-norm, swap, random_r_site (iter 2)} × α ∈ σ_proj-normalized ladder spanning 35× (iter 1) + raw α ∈ {−2..+2}; Δ internal harmfulness readout + Δ refusal rate; null-band = 2× baseline SD; specificity: n_random=30 at each site — Screen → Decode → Verify",
+      "main_experiment": {"verdict": "supported (asymmetric — strong graded h, thresholded direction-specific r)", "key_stats": "h target: h-readout monotone from −4.83 (α=−2) → +1.06 (α=0) → +6.96 (α=+2), Δh_max = ±5.90; h off-target: refusal_ben = 0.01 (within ε_null 0.02). r target: benign refusal 0.01 (α=−2..+1) → 0.53 (α=+2), Δmax = +0.52; r off-target: Δh_readout = 0.00 (within ε_null 0.10). Specificity (iter 1+2 closure) — h-site z=101.65 vs 30 random matched-norm controls; r-site z=128.31 (α_raw=2.0) vs random-at-r-site Δ=−0.002±0.004; random-direction Δh=0.045 (0.8% of true h); swap-direction Δh=1.29 (site also matters).", "headline": "asymmetric causal steering: strong graded direction-specific h-side effect (z=101.65) and thresholded direction-specific r-side effect (z=128.31 at r-site) — partial functional dissociation. Does NOT support the strict symmetric mechanistic dissociation the original wording implied."},
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "n/a"}, "integrity": "FAIL", "verdict": "INCONCLUSIVE", "stage2_skip_reason": null},
+      "iteration": {"final_reviewer_status": "PASS (as 'asymmetric causal steering / partial functional dissociation') — iteration-1+2 mechanism-audit fixes closed all three original gaps (σ_proj-normalized 35× α coverage, n_random=30 at h-site + r-site, plateau/threshold identification) and iteration-3 downgraded wording to match evidence asymmetry", "changed": ["iter 1: added --random_dir_seed flag to scripts/m3_claim3_steering.py; σ_proj-normalized sweep with 35× coverage span; n_random=30 at h-site → z=101.65", "iter 2: added random_r_site direction with hook at r's block at t_post_instr; n_random=30 at r-site → z=128.31 at α_raw=2.0", "iter 3: narrative downgrade throughout — refine-logs/EXPERIMENT_PLAN.md M3 heading + top-of-file iteration-3 block, results/m3/claim3_verdict.json verdict field, refine-logs/main-experiment-verdicts.json C3 (added supported_asymmetric_partial_functional_dissociation + verdict_synonyms_for_paper + avoid_wording fields)"], "falsified": ["strict symmetric mechanistic dissociation — reviewer explicitly notes final wording must be 'strong h + weaker/thresholded r' with 'asymmetric' or 'partial functional dissociation' framing; the raw 'causal dissociation' wording is on the avoid_wording list"], "narrowed_to": "asymmetric causal steering / partial functional dissociation — strong graded direction-specific h-side (z=101.65 vs 30 random matched-norm controls at h-site) + thresholded direction-specific r-side (z=128.31 at α_raw=2.0 vs 30 random matched-norm controls at r-site with Δ=−0.002±0.004); does NOT support symmetric mechanistic dissociation or 'clean' causal dissociation"},
+      "final_status": "⚠ PASS as narrowed — asymmetric causal steering / partial functional dissociation (strong graded direction-specific h-side, z=101.65; thresholded direction-specific r-side, z=128.31); iteration-1+2 closed all three Phase-2 mechanism-audit gaps and iteration-3 downgraded wording; explicitly NOT symmetric mechanistic dissociation",
+      "caveats": ["Phase 2 mechanism-audit FAIL was resolved by iteration-1+2 (σ_proj-normalized sweep + n_random=30 at both sites); the new evidence is stronger than the pre-iteration main experiment. Verify was not re-invoked on the fixed C3 (post-iter budget conservation) — the fixed dose-response result is documented in runs/iteration_round_{1,2}/ and would need a standalone /auto-verify C3 — resume: true to run a swap-variant on the σ_proj-normalized sweep.", "high-dimensional geometry caveat — z ≈ 100 vs random matched-norm controls is a necessary sanity check but partly a geometric inevitability in 4096-dim space; the r-site closure (z=128.31 vs random-at-r-site with essentially zero shift) is the much stronger form of the specificity argument because it holds site+norm+position constant"],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M3", "results/m3/claim3_verdict.json", "results/m3/claim3_dose_response.csv", "refine-logs/main-experiment-verdicts.json", "verify/C3_causal_steering_dissociation/ROBUSTNESS.md", "verify/C3_causal_steering_dissociation/main_experiment_audit/MECHANISM_AUDIT.md", "runs/iteration_round_1/m3_extended_analysis.json", "runs/iteration_round_2/r_site_specificity_analysis.json"],
+      "figures": [
+        {
+          "id": "c3_dose_response_panels",
+          "type": "multi_panel",
+          "caption": "C3 — additive-steering dose-response, 4 directions × 7 α values × 200 prompts. Top row (h direction): monotone h-readout response (target axis) with refusal on benign flat in null-band (off-target axis). Bottom row (r direction): thresholded benign-refusal response (target axis, jumps 0.01→0.53 at α=+2) with h-readout unchanged (off-target axis). Random-direction and swap-direction traces shown for specificity. Iteration-1+2 σ_proj-normalized fine sweeps closed the mechanism-audit gaps (n_random=30 at both h-site and r-site: z=101.65 h, z=128.31 r-site).",
+          "png": "figures/C3/c3_dose_response_panels.png",
+          "pdf": "figures/C3/c3_dose_response_panels.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/m3/claim3_dose_response.csv",
+          "status": "ok"
+        },
+        {
+          "id": "c3_specificity_zscores",
+          "type": "table",
+          "caption": "C3 — direction-specificity: z-scores of true-direction effects vs 30 matched-norm random-direction controls, at both h's site (iteration 1) and r's site (iteration 2). z=128.31 at r's site is the decisive result — the effect is direction-specific, not merely site-driven.",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C3/c3_specificity_zscores.md",
+          "tex": "figures/C3/c3_specificity_zscores.tex",
+          "source_data": "runs/iteration_round_1/m3_extended_analysis.json + runs/iteration_round_2/r_site_specificity_analysis.json",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "statement": "A notable class of successful jailbreaks (GCG-style optimized suffixes and PAP-style persuasion / adversarial templates) suppresses the refusal signal while the harmfulness signal remains active; a hidden-state probe on h picks up this refusal-suppressed/harmfulness-preserved signature.",
+      "origin": "task.md § Claim ¶4 (verbatim)",
+      "data": {"provenance": "existing", "source": "AdvBench held-out attacked with 5 published transferable GCG suffixes (Zou 2023) + 5 published-style PAP templates (Zeng 2024)", "available_n": "AdvBench held-out = 104; up to 5 templates per family", "used_n": "100 behaviors × 5 templates × 2 families = 500 attempts per family (1000 total)", "subset_note": "paired (bare-refused, attacked-succeeded) samples — only successful pairs contribute to Δ metrics; specificity control uses failed-attack subset"},
+      "models": ["Llama-3-8B-Instruct", "Llama-Guard-3-8B (attack-success adjudicator)"],
+      "method": "extract residual-stream activations on bare vs attacked prompt at t_final_instr / t_post_instr; compute Δ projection onto h and r on successful subset; detection AUROC of h-probe on successful-jailbreak vs benign-compliant; specificity on failed-attack subset (M4)",
+      "main_experiment": {"verdict": "not-supported", "key_stats": "ASR = 0/500 on GCG (5 published transferable Zou-2023 suffixes) AND 0/500 on PAP (5 published-style Zeng-2024 persuasion templates); Δ metrics untestable on empty successful subset; failed-subset specificity — GCG mean |Δr| = 0.77 (within ε_null 1.69, ✓); PAP mean |Δr| = 1.70 (marginally over ε_null 1.69 — longer contextual prompts naturally shift the post-instruction residual)", "headline": "Llama-3-8B-Instruct's alignment is strong enough that neither published-transferable GCG suffixes nor 5 published-style PAP templates elicit any successful jailbreak on 100 held-out AdvBench behaviors — empty successful-attack subset means the refusal-suppressed/harmfulness-preserved signature cannot be tested; matches the plan's stated risk"},
+      "verify": {"robustness": null, "axes": {"method": "excluded", "dataset": "excluded", "model": "excluded"}, "integrity": "WARN", "verdict": "INTEGRITY_ONLY", "stage2_skip_reason": "max_verify_claims_cap"},
+      "iteration": {"final_reviewer_status": "unchanged (INTEGRITY_ONLY, cap-deferred — no back-edge per contract; ASR=0 makes claim untestable on this model+attack pool)", "changed": [], "falsified": [], "narrowed_to": ""},
+      "final_status": "⚪ integrity_only (swap-test deferred — max_verify_claims cap); main experiment: not-supported (ASR=0/500 GCG+PAP) — testability blocked by model alignment strength; upgrade via /auto-verify C4 — resume: true (but likely still ASR=0 unless attack family changes to something with fresh optimization)",
+      "caveats": ["intended re-tuning path (fresh GCG optimization at claim time) is explicitly out of budget per HARD constraint and plan; verify-stage attack-family swap or a newer attack is the natural follow-up", "informative negative — not resolvable at this model+attack setup + budget"],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M4", "results/m4/GCG/", "results/m4/PAP/", "results/m4/claim4_verdict.json", "verify/C4_jailbreak_signature/ROBUSTNESS.md"],
+      "figures": [
+        {
+          "id": "c4_attack_signature_summary",
+          "type": "table",
+          "caption": "C4 — per-family attack success rate + failed-subset specificity check. Both GCG (5 Zou-2023 published transferable suffixes) and PAP (5 Zeng-2024 published-style templates) yielded ASR = 0/500 on 100 held-out AdvBench behaviors. Δ metrics are untestable on an empty successful subset; failed-subset |Δr| is within the ε_null=1.69 band for GCG (0.77) and marginally over for PAP (1.70). Informative negative — matches the plan's stated risk for a well-aligned model.",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C4/c4_attack_signature_summary.md",
+          "tex": "figures/C4/c4_attack_signature_summary.tex",
+          "source_data": "results/m4/claim4_verdict.json",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C5",
+      "statement": "A lightweight harmfulness-direction probe (linear or shallow-MLP readout of the projection onto h) matches Llama Guard 3 8B on a mixed bare-harmful vs benign/safe-lookalike classification task at orders-of-magnitude lower per-query compute. [SCOPE-NARROWED in iteration 1: original 'flagging jailbreak attempts' wording not supported by M4 ASR=0; jailbreak-detection framing deferred to standalone /auto-verify C5 — resume: true.]",
+      "origin": "task.md § Claim ¶5 (verbatim, narrowed in iteration 1); term 'Latent Guard' from task.md rewritten as 'harmfulness-direction probe' in artifact prose per project's forbidden-terms policy; original semantics preserved verbatim in IDEA_REPORT.md",
+      "data": {"provenance": "existing", "source": "training: M-prep's 60% direction-extraction split; test: 100 bare-harmful-refused (AdvBench held-out) + 100 benign-compliant (Alpaca held-out) + 200 XSTest safe (benign-lookalikes) = 400 total; 0 successful-jailbreak items because M4 ASR = 0", "available_n": "AdvBench = 520; Alpaca ≈ 50 000; XSTest = 200", "used_n": "400-item test set (100 + 100 + 200); XSTest fully used (all 200; plan overestimated 250)", "subset_note": "test set drawn from held-out splits — no successful-jailbreak items because M4 produced empty successful subset"},
+      "models": ["Llama-3-8B-Instruct (activation source for the probe)", "Llama-Guard-3-8B (baseline)"],
+      "method": "logistic-regression / 2-layer-MLP classifier on projection onto h at (layer 11, t_final_instr); head-to-head vs Llama Guard 3 8B (input-classification mode, standard chat template) at threshold-free AUROC + F1@matched-FPR=5% + per-query wall-clock and FLOPs (M5)",
+      "main_experiment": {"verdict": "supported_narrowed_scope", "key_stats": "linear_probe AUROC = 1.000 (F1@FPR5% = 1.00, 76 µs/query, 8.2K FLOPs); shallow_mlp AUROC = 1.000 (F1@FPR5% = 1.00, 106 µs/query, 524K FLOPs); Llama Guard 3 8B AUROC = 0.9992 (F1 = 0.975, 33.6 ms/query, 7.8×10¹¹ FLOPs). AUROC gap probe − LG = +0.0008 (both probes edge past LG). Compute ratio ≈ 1.05×10⁻⁸ (linear) / 6.7×10⁻⁷ (MLP) — 10⁴–10⁵× under the 5% ceiling. Per-query wall-clock speedup ≈ 440× (linear) / 320× (MLP).", "headline": "both probe variants match or edge past Llama Guard 3 8B (AUROC 1.000 vs 0.9992) on the narrowed-scope 400-item bare-harmful vs benign/safe-lookalike test set at ~10⁻⁷ of the compute; jailbreak-detection framing deferred pending an attack family with ASR>0"},
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "n/a"}, "integrity": "FAIL", "verdict": "INCONCLUSIVE", "stage2_skip_reason": null},
+      "iteration": {"final_reviewer_status": "PASS (as supported_narrowed_scope) — iteration-1 type-② scope-fix flipped verdict to supported_narrowed_scope; reviewer explicitly acknowledged the narrower claim is honest-but-weak (near-circular training/eval contrast) and cautioned that practical jailbreak-detection framing must not creep back into the manuscript", "changed": ["iter 1: narrowed C5 wording in refine-logs/EXPERIMENT_PLAN.md Claim Map + M5 heading + Claim tested + Failure interpretation from 'flagging jailbreaks' to 'matches Llama Guard on bare-harmful vs benign/safe-lookalike classification'", "iter 1: results/m5/claim5_verdict.json verdict field updated to supported_narrowed_scope + added scope_note; per-variant verdicts updated + added scope: bare_harmful_vs_benign_and_xstest_lookalike", "iter 1: refine-logs/main-experiment-verdicts.json C5 field updated with scope-narrowed metadata + SCOPE-NARROWED note", "iter 1: refine-logs/EXPERIMENT_RESULTS.md M5 verdict + Summary row updated to 'supported (narrowed scope)' with expanded caveat about near-circular training/eval contrast"], "falsified": ["original 'flagging jailbreak attempts' framing — M4 ASR=0 means the M5 test set has 0 successful-jailbreak items, so the original scope is not supported"], "narrowed_to": "matches Llama Guard 3 8B on a mixed bare-harmful vs benign/safe-lookalike classification task (AUROC 1.000 vs 0.9992) at ~10⁻⁸ per-query FLOPs; jailbreak-detection framing deferred until an attack family with ASR>0 is available (would require M4 rerun + standalone /auto-verify C5 — resume: true)"},
+      "final_status": "⚠ PASS as narrowed — supported_narrowed_scope: probe matches Llama Guard 3 8B on bare-harmful vs benign/safe-lookalike at ~10⁻⁸ compute (AUROC 1.000 vs 0.9992, ~440× wall-clock speedup); jailbreak-detection framing deferred pending attack family with ASR>0",
+      "caveats": ["test set has 0 successful-jailbreak items (M4 ASR=0); the head-to-head measured is 'distinguish bare-harmful from bare-benign + XSTest-lookalike', which is easier than the intended jailbreak-heavy scenario — Phase 2 experiment audit flagged this as a scope mismatch (see verify/C5_probe_beats_llamaguard/main_experiment_audit/EXPERIMENT_AUDIT.md); iteration-1 resolved by re-scoping the claim (Option A) rather than obtaining a jailbreak-inclusive test set (Option B, out of scope)", "near-circular training/eval contrast honestly acknowledged in EXPERIMENT_RESULTS.md M5 — the probe was trained on the harmful-vs-benign contrast and evaluated on essentially the same axis; the residual novel signal is generalization to XSTest benign-lookalike (probe still separates cleanly)"],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M5", "results/m5/linear_probe/", "results/m5/shallow_mlp/", "results/m5/claim5_verdict.json", "refine-logs/main-experiment-verdicts.json", "verify/C5_probe_beats_llamaguard/ROBUSTNESS.md", "verify/C5_probe_beats_llamaguard/main_experiment_audit/EXPERIMENT_AUDIT.md"],
+      "figures": [
+        {
+          "id": "c5_probe_vs_llamaguard_headtohead",
+          "type": "table",
+          "caption": "C5 — head-to-head against Llama Guard 3 8B on the 400-item mixed test set (100 bare-harmful-refused + 100 benign-compliant + 200 XSTest-safe; 0 successful-jailbreak items due to M4 ASR=0). Both a 1-d logistic-regression probe on ⟨activation, h⟩ and a 2-layer 64-unit MLP match/edge-past LG on AUROC (1.000 vs 0.9992), at ~10⁻⁷–10⁻⁸ of the per-query FLOPs and ~440× / 320× per-query wall-clock speedup. Scope-narrowed in iteration 1 from 'flagging jailbreaks' to 'bare-harmful vs benign/safe-lookalike'; jailbreak-detection framing deferred until an attack family with ASR > 0 is available.",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C5/c5_probe_vs_llamaguard_headtohead.md",
+          "tex": "figures/C5/c5_probe_vs_llamaguard_headtohead.tex",
+          "source_data": "results/m5/claim5_verdict.json",
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

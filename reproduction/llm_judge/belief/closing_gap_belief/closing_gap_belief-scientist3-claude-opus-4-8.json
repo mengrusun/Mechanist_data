@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Closing the Confidence-Faithfulness Gap in LLMs",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The pipeline fits a fitted model (logistic-regression correctness probe + ridge confidence probe), so this dimension applies. The split is defined and honored in code: in logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_code.py lines 269-272 a fixed permutation `perm = np.random.default_rng(0).permutation(n)` with `n_train = int(0.7*n)` yields disjoint `tr`/`te` indices; probes are fit on `Xtr, ytr_c/ytr_v` (lines 287,297) and every reported metric (probe_acc, auc, conf_mse, ece_verb, ece_probe) is computed on the held-out `Xte`/`yte` (lines 288-315). The probe weight vectors used for the orthogonality score are the train-fit `clf.coef_`/`reg.coef_`, so no test data leaks into fitting. The stage-1 node (experiment_8cd31c...) uses the identical 70/30 disjoint scheme (lines 273-278). The 'headline layer' is a fixed structural choice (middle of target_layers, line 349), not selected on the test set, so there is no selection-on-test leakage. Only minor gap: there is no dedicated third validation split as the paper describes, but since layer choice is fixed rather than tuned, this creates no contamination path for the reported numbers.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_code.py",
+      "logs/0-run/experiment_results/experiment_8cd31c57364e46cdb1f85169e5434d41_proc_965338/experiment_code.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Two ground-truth signals are used, both externally sourced and non-circular. Correctness is graded by normalized alias matching against TriviaQA gold answer aliases (baseline_summary.json: 'grade correctness via normalized alias matching'), a standard, valid operationalization of QA correctness independent of the probe under test. Verbalized confidence is parsed from the model's own 'Confidence: XX%' string — this IS the target behavior the claim concerns (verbalized confidence), so it is a direct measurement, not a circular label. The probe directions are learned from hidden states and scored against these independent labels, not against themselves. One documented gap relative to the paper: the paper's C1 target is *empirical accuracy* (fraction correct over repeated samples — a genuinely calibrated continuous signal, fit with a ridge probe), whereas this run uses single-sample *binary* correctness with a logistic probe. Binary correctness is a coarser proxy for 'well-calibrated accuracy information' than the paper's empirical-accuracy label, so C1's label is a plausible but slightly under-specified operationalization; C2/C3 labels are faithful.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_code.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The task specifies the experiment-stage model Llama-3.1-8B-Instruct and dataset TriviaQA. The run uses exactly these: draft_summary.json 'Loaded Llama-3.1-8B-Instruct in bf16 and ran it on ... TriviaQA questions'; baseline_summary.json overall_plan '(1) load Llama-3.1-8B-Instruct ... in bf16; (2) load TriviaQA locally'. No smaller/substitute model was used, no OOM-driven shrink of the model. Data volume is generous: the on-disk product experiment_data.npy contains ground_truth of length 1000 (per_N covers N=200/400/700/1000), so the specified dataset is used at scale, not silently subset below usefulness. No mandatory experiment-stage resource was swapped or skipped.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_data.npy"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Sample size is adequate. The generation stage produced 1000 TriviaQA instances (experiment_data.npy ground_truth length = 1000, verbalized_confidence length = 1000), and probes are trained/evaluated across N in {200,400,700,1000} with a 30% held-out test set (300 examples at N=1000) — far above the 40-item thinness threshold. The N-sweep gives coverage of how the metrics move with data scale (research_summary.json reports headline orthogonality 0.9962/0.9385/0.9908/0.9947 and layer-8 probe accuracy 0.8333/0.825/0.8009/0.7933 across the four N). Claim strength is matched to a single-model, single-dataset scope, which is exactly what the task's experiment stage specifies. The main limitation is breadth (one model, one dataset) rather than depth, and the paper itself spans three models/four datasets — but that is a fidelity/generalization point, not an under-powered-n problem for the specified experiment stage.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_data.npy"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Weak. Every experiment node uses a single fixed seed: experiment_code.py sets seed=0 (stage-1 node lines 6-8 `random.seed(0)/np.random.seed(0)/torch.manual_seed(0)`) and all splits/controls use `np.random.default_rng(0)`. The 'seed_aggregation_*' directories are nominal: each aggregation_plotting_code.py references only ONE experiment_data.npy path (e.g. seed_aggregation_373faf48.../line 9 lists a single npy), so the mean/SEM 'across runs' is computed over a single run and carries no real cross-seed variance. There is a random-direction control for the orthogonality metric (20 random vectors, mean reported as rand_ctrl_ortho), which supplies a null floor, but no significance test compares the probe orthogonality against it — and critically the probe orthogonality is essentially at/below that null: at N=1000 layer-8 ortho=0.8704 vs rand_ctrl 0.9862, layer-24 ortho=0.9721 vs 0.9848 (probe directions LESS orthogonal than random), and headline layer-16 ortho=0.9947 barely exceeds rand 0.9862. No error bars across seeds and the headline effect sits within the noise band of the control, so robustness to randomness is essentially unverified.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_8cd31c57364e46cdb1f85169e5434d41_proc_965338/experiment_code.py",
+      "logs/0-run/experiment_results/seed_aggregation_373faf48e55d473ea046e521377911f9/aggregation_plotting_code.py",
+      "logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_data.npy"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a — no causal claim. The three claims being reproduced (C1 accuracy linearly encoded, C2 verbalized confidence linearly encoded, C3 the two directions are nearly orthogonal) are all correlational/geometric statements about linear decodability and probe-direction geometry, appropriately investigated by probing. The paper reserves its causal contributions (contrastive-activation-addition steering, two-stage adaptive steering) for separate contributions that are NOT among the task's C1-C3, and this run does not make or rely on any steering/intervention causal claim. The run does include a random-direction control for the orthogonality metric, but it makes no causal assertion that would require an intervention. Structurally not applicable; scored 5.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Reported key numbers trace to concrete on-disk products and agree with them. The headline orthogonality 0.9947 (research_summary.json / baseline_summary.json, N=1000) matches experiment_data.npy per_N/1000 subspace_orthogonality_score=0.9947 (layer 16); layer-8 probe accuracy 0.7933 at N=1000 matches per_N/1000/per_layer/8/probe_acc=0.7933; QA accuracy 0.753 and mean verbalized confidence 98.1864 in the summaries match the best-node metrics. The draft_summary.json figures (verbalized ECE 0.2437, layer-8 probe ECE 0.0564) trace exactly to stage-1 node experiment_8cd31c.../experiment_data.npy metrics.val (ece_verbalized=0.24374993741512302, ece_probe=0.05643690427144369). Minor note: report.md's headline overconfidence numbers (~98.78% conf, 0.75 acc) come from the earlier stage-1 node rather than the stage-2/3 'best node' (98.19%, 0.753), but each value still traces to a real product; no sourceless or contradicted numbers were found.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_data.npy",
+      "logs/0-run/experiment_results/experiment_8cd31c57364e46cdb1f85169e5434d41_proc_965338/experiment_data.npy",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Largely consistent with a few minor bookkeeping gaps. research_summary.json and baseline_summary.json report identical best-node metrics (QA acc 0.753, mean conf 98.1864, headline orthogonality 0.9962/0.9385/0.9908/0.9947), and these match the underlying experiment_data.npy. However: (1) ablation_summary.json is an empty list `[]` even though report.md section 1 states stage_4_ablation ran 4 good nodes and section 3 links an 'Ablation studies summary', and the ablation node experiment_8ea88316... on disk does contain a full token_position_pooling result set — an unpropagated summary. (2) report.md's headline calibration-gap numbers (mean confidence ~98.78%, accuracy 0.75) are drawn from the stage-1 draft node while the pipeline's designated best node reports 98.1864% / 0.753 — a stale/mixed number that changes no verdict but reflects loose cross-node bookkeeping. No case was found where a claim is PASS in one artifact but flagged broken by an integrity gate in another; the per-claim verdicts are uniformly 'See overall verdict'. These are minor inconsistencies, not material contradictions.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/ablation_summary.json",
+      "logs/0-run/research_summary.json",
+      "report.md",
+      "logs/0-run/experiment_results/experiment_8ea88316c4494d0ca9010f415d122fb9_proc_1420483/experiment_data.npy"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Models encode well-calibrated accuracy information in a linearly accessible direction.",
+        "method": {
+          "justification": "9a: Linear probing is the correct method family for a 'linearly accessible direction' claim, and it matches the paper's gold-calibration linear-probing approach. The run trains a logistic-regression probe on layer-8/16/24 hidden states to predict correctness (experiment_code.py lines 286-294). Deviations from the paper: (a) the paper fits a *ridge* probe on *empirical accuracy* (fraction correct across repeated samples) under a dedicated *pure-correctness* prompt, whereas this run uses binary single-sample correctness under the joint answer+confidence prompt; (b) 'well-calibrated' in the paper is grounded in the probe recovering a calibrated continuous accuracy signal, which binary correctness only approximates. Method is broadly right for the claim but with these interpretive/label mismatches.",
+          "score": 4,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_code.py"]
+        },
+        "experiment": {
+          "justification": "9b: Reasonable design with held-out test, a layer sweep (8/16/24), an N-sweep (200-1000), and both discriminative (probe_acc, AUC) and calibration (ece_probe vs ece_verbalized) metrics. On disk: probe_acc ~0.775-0.833, AUC 0.68-0.84, and probe ECE ~0.056 (layer 8) vs verbalized ECE 0.2437 — a ~4x calibration advantage for the internal probe, directly supporting 'well-calibrated accuracy information internally.' Weaknesses: no shuffled-label / random-feature control for the probe accuracy itself (only the orthogonality metric has a control), so chance-level baseline for the correctness probe is not established; and the calibration story rests on ECE of a probe trained on the same binary labels rather than the paper's empirical-accuracy R^2. Sound but not fully controlled.",
+          "score": 4,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_8cd31c57364e46cdb1f85169e5434d41_proc_965338/experiment_data.npy","logs/0-run/draft_summary.json"]
+        },
+        "result": {
+          "justification": "9c: Qualitatively agrees with the paper. The internal correctness probe reaches ~0.78 accuracy and a probe ECE (~0.056) roughly 4x lower than the verbalized-confidence ECE (0.2437), while overall QA accuracy (~0.75) sits far below mean verbalized confidence (~98%). This reproduces the paper's core §3.1 finding that the model encodes calibrated accuracy information internally that its verbalized channel fails to surface. The direction of the conclusion is faithfully obtained from real on-disk products, not engineered.",
+          "score": 4,
+          "evidence_files": ["logs/0-run/draft_summary.json","logs/0-run/experiment_results/experiment_8cd31c57364e46cdb1f85169e5434d41_proc_965338/experiment_data.npy"]
+        }
+      },
+      "C2": {
+        "claim": "Models encode verbalized confidence in a linearly accessible direction.",
+        "method": {
+          "justification": "9a: A ridge-regression probe predicting the parsed verbalized-confidence value from hidden states (experiment_code.py lines 296-300) is the appropriate linear method family and matches the paper's pure-verbal-confidence ridge probe. However, the interpretive precondition is weak here: the run elicits confidence under a single prompt, and the resulting verbalized confidence is heavily saturated (mean ~98%, clustered near 100%), so the regression target has very little variance — unlike the paper, which elicits confidence under K=11 framings spanning a wide range specifically to give the probe signal to decode. Right method, but applied to a near-degenerate target.",
+          "score": 4,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_code.py","logs/0-run/research_summary.json"]
+        },
+        "experiment": {
+          "justification": "9b: Under-powered for validating C2. The only reported quantity for the confidence probe is a regression MSE (conf_mse); there is no test R^2, correlation, or high-vs-low separability analysis to demonstrate that verbalized confidence is actually linearly *decodable* (the paper reports test R^2 and a PC separability figure, Fig 2). Because the elicited confidence is saturated near 98%, a low MSE is trivially achievable by predicting the mean and does not establish linear accessibility. No prompt-framing variation was attempted to induce confidence spread. So the design cannot distinguish 'confidence is linearly encoded' from 'confidence is near-constant,' leaving C2 essentially unvalidated on its own merits (the w_conf direction is used mainly as input to the orthogonality metric).",
+          "score": 2,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_code.py","logs/0-run/research_summary.json"]
+        },
+        "result": {
+          "justification": "9c: The run does not produce a clear standalone result establishing that verbalized confidence occupies a linearly accessible direction; it computes a w_conf probe and its MSE but never reports a decodability metric (R^2/AUC/separability). The paper's C2 result (verbalized confidence linearly separable in later layers, a dedicated confidence representation) is therefore only asserted via the probe's existence, not demonstrated. It is consistent with the paper's direction and not fabricated, but the supporting analysis is incomplete/under-disclosed rather than a solid qualitative match.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/research_summary.json","logs/0-run/draft_summary.json"]
+        }
+      },
+      "C3": {
+        "claim": "But well-calibrated accuracy information and verbalized confidence occupy separate, nearly orthogonal directions. That means the model \"knows\" when it is likely wrong, but the generation process fails to surface this signal.",
+        "method": {
+          "justification": "9a: Exactly the paper's method: cosine similarity between the two probe weight vectors, reported as an orthogonality score 1-|cos(w_corr, w_conf)| per layer (experiment_code.py lines 233,302-304), with a random-direction control (lines 306-311). This is precisely how the paper measures the geometric relationship (Fig 3c, cosine similarity between ridge probe weight vectors). Method choice is well matched to the geometric/orthogonality claim.",
+          "score": 5,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_code.py"]
+        },
+        "experiment": {
+          "justification": "9b: The design computes orthogonality across layers 8/16/24 and N values, with a 20-sample random-direction control — a good instinct. But the metric interpretation is compromised: in 4096-dim space the random control is already ~0.985-0.99, and the probe orthogonality is at or below that null at 2 of 3 layers (N=1000 layer-8 ortho=0.8704 < rand 0.9862; layer-24 0.9721 < 0.9848), with only the headline layer-16 (0.9947) marginally above rand (0.9862). So the experiment as designed cannot separate 'the two directions occupy a genuinely separate subspace' from 'two arbitrary high-dimensional vectors are trivially near-orthogonal.' The paper strengthens this with consistency (<0.04) across ALL layers plus a contrast against the joint-prompt condition (cosine +0.26 -> -0.63); neither the all-layer consistency framing nor the joint-vs-pure contrast is reproduced, and no statistical test against the control is performed. Honest but under-powered.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_data.npy","logs/0-run/research_summary.json"]
+        },
+        "result": {
+          "justification": "9c: The headline result — orthogonality 0.9947 at layer 16 (i.e. cosine ~0.005), traced to experiment_data.npy per_N/1000 — is qualitatively consistent with the paper's 'nearly orthogonal, cosine similarity < 0.04' (§3.3). So at the surface the run reaches the same directional conclusion via the same method, and the number is real (not fabricated). The reliability caveat is that the run's own random-direction control shows the probe directions are no more orthogonal than random (indeed less so at layers 8/24), which materially weakens the 'separate subspace' interpretation, and this caveat is only partially surfaced in the summaries (which celebrate the ~0.99 orthogonality). The conclusion broadly aligns with the paper's direction but with an incompletely disclosed control caveat and a single-seed basis.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_data.npy","logs/0-run/research_summary.json","report.md"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "novelty": {
+    "score": 6,
+    "reasoning": "Core claims: (1) belief-contradicting premises increase reasoning-token spend relative to belief-neutral but logically matched premises; (2) a decodable internal signal reflecting parametric knowledge competes with instructed premises across the trace and predicts both extra tokens and errors; (3) suppressing that signal reduces both compute and errors; (4) the effect generalizes across open reasoning models and multi-step deductive tasks. The phenomenon itself is not new: belief bias / premise rejection in LLMs and counterfactual reasoning failures are already known from the cited prior work. The actual delta is the compute-allocation angle plus a mechanistic, step-resolved tug-of-war with causal steering, which is a meaningful extension but not a new task or setting. The novelty is thus moderate: stronger than a simple re-run because it proposes a different dependent variable and mechanistic test, but it is still anchored in an established phenomenon and could be seen as a reframing unless the compute inflation effect is large and cleanly isolated.",
+    "revision_notes": [
+      "Make the delta explicit as a new dependent variable: compute inflation under matched logical structure, not just accuracy on belief-bias items.",
+      "State why multi-step reasoning traces are meaningfully different from prior single-judgment belief-bias work, beyond longer outputs.",
+      "Clarify what is truly new about the mechanism claim: not 'belief bias exists,' but 'a decodable competing signal persists and predicts compute allocation.'",
+      "Tighten the closest-prior-work comparison: what existing benchmarks measure, and exactly what they do not (token budget, trace dynamics, causal steering)."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "Problem: reasoning robustness for hypothetical/counterfactual reasoning, especially when models must ignore strong priors/world knowledge. Who cares: interpretability, reasoning-systems, and benchmark communities; potentially anyone deploying models for planning or formal inference where counterfactual premises matter. If true, it changes the story from 'models are less accurate on contradictory premises' to 'they also waste compute while fighting their own beliefs,' which is a stronger systems-level failure mode and suggests a mechanism for latency/cost plus correctness. This is broader than a niche curiosity because it touches general reasoning reliability and token efficiency, but it is still somewhat specialized to structured reasoning and model analysis. The strongest case is that belief-contradicting inputs impose a hidden compute tax and that this tax is mechanistically linked to errors, giving a new target for optimization and evaluation.",
+    "revision_notes": [
+      "Lead with the practical consequence: contradictory premises cost more tokens and hurt accuracy, so this is both a reliability and efficiency problem.",
+      "Specify who would act on the result: reasoning-model builders, eval designers, and interpretability researchers.",
+      "Explain the direction-shifting value: current evals look at accuracy; this adds compute as a failure mode.",
+      "If possible, connect to deployment relevance (latency/cost) rather than only benchmark significance."
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The hypothesis is directionally clear but not yet fully falsifiable/scoped. Main gap: 'belief-neutral/novel' versus 'belief-contradicting' may confound familiarity, lexical oddity, or semantic plausibility; the proposal needs tighter controls and explicit operationalization of matched difficulty. The compute claim also risks being explained by generic uncertainty or longer self-correction rather than belief rejection per se. The proposed experiments are reasonably concrete, but several are under-specified: how the linear probe is trained/evaluated, how step boundaries are defined, how causal steering vectors are derived without leaking task difficulty, and what effect sizes/preregistered thresholds justify the claim. The mixed-effects design is appropriate, but the proposal should better distinguish the primary test from exploratory analyses and include stronger baselines (prompt length, entropy/uncertainty, OOD hardness, self-consistency). Venue strength is decent if the controls are clean and the steering result is robust; otherwise it risks reading as an elaborate correlation study on a known bias.",
+    "revision_notes": [
+      "Define the primary hypothesis in one sentence with explicit variables: matched logical form, belief-status manipulation, token count, and error rate.",
+      "Add controls for unfamiliarity/nonce wording, semantic plausibility, and generic difficulty/uncertainty.",
+      "Pre-register or clearly designate the main endpoint and the minimal effect size for claiming compute inflation.",
+      "Specify the probe protocol: label source, layer/step selection, train/test split, and whether the probe generalizes across tasks/models.",
+      "Strengthen causal identification: derive the steering direction on separate data, include a random-direction and difficulty-matched control, and report off-target effects.",
+      "Include a baseline comparison showing whether extra tokens are explained by uncertainty/self-consistency rather than a belief-specific signal."
+    ]
+  },
+  "revision_notes": [
+    "Make the delta explicit as a new dependent variable: compute inflation under matched logical structure, not just accuracy on belief-bias items.",
+    "State why multi-step reasoning traces are meaningfully different from prior single-judgment belief-bias work, beyond longer outputs.",
+    "Clarify what is truly new about the mechanism claim: not 'belief bias exists,' but 'a decodable competing signal persists and predicts compute allocation.'",
+    "Tighten the closest-prior-work comparison: what existing benchmarks measure, and exactly what they do not (token budget, trace dynamics, causal steering).",
+    "Lead with the practical consequence: contradictory premises cost more tokens and hurt accuracy, so this is both a reliability and efficiency problem.",
+    "Specify who would act on the result: reasoning-model builders, eval designers, and interpretability researchers.",
+    "Explain the direction-shifting value: current evals look at accuracy; this adds compute as a failure mode.",
+    "If possible, connect to deployment relevance (latency/cost) rather than only benchmark significance.",
+    "Define the primary hypothesis in one sentence with explicit variables: matched logical form, belief-status manipulation, token count, and error rate.",
+    "Add controls for unfamiliarity/nonce wording, semantic plausibility, and generic difficulty/uncertainty.",
+    "Pre-register or clearly designate the main endpoint and the minimal effect size for claiming compute inflation.",
+    "Specify the probe protocol: label source, layer/step selection, train/test split, and whether the probe generalizes across tasks/models.",
+    "Strengthen causal identification: derive the steering direction on separate data, include a random-direction and difficulty-matched control, and report off-target effects.",
+    "Include a baseline comparison showing whether extra tokens are explained by uncertainty/self-consistency rather than a belief-specific signal."
+  ]
+}

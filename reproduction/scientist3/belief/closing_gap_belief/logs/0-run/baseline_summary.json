@@ -1,0 +1,1292 @@
+{
+  "best node": {
+    "overall_plan": "Build a preliminary pipeline to probe whether verbalized confidence and factual correctness occupy separable directions in Llama-3.1-8B-Instruct's hidden states: (1) load Llama-3.1-8B-Instruct with explicit `.to(device)` in bf16; (2) load TriviaQA locally with multiple config/path fallbacks; (3) prompt the model to answer each question AND emit a 'Confidence: XX%' string, parse both, and cache the mean hidden state over generated answer tokens at several candidate layers (a mid layer as headline, plus a couple of swept alternatives); (4) grade correctness via normalized alias matching; (5) train logistic-regression probes for gold correctness and ridge probes for verbalized confidence on the same layer; (6) compute `subspace_orthogonality_score = 1 - |cos(w_corr, w_conf)|` per layer with the mid layer as the main result; (7) also compute probe accuracy/AUC, ECE, and a random-direction control baseline; save metrics and a bar plot of orthogonality across layers. Current extension: perform hyperparameter tuning over N (number of TriviaQA samples used for probe training/evaluation) by generating hidden-state and confidence data once at the maximum N=1000, then refitting the probes on progressively larger subsets (N \u2208 {200, 400, 700, 1000}) to avoid redundant model calls. All per-N metrics, losses, predictions, and orthogonality scores are stored under `experiment_data['N_tuning']['trivia_qa']` for comparison.",
+    "analysis": "",
+    "metric": {
+      "value": {
+        "metric_names": [
+          {
+            "data": [
+              {
+                "best_value": 0.753,
+                "dataset_name": "trivia_qa",
+                "final_value": 0.753
+              }
+            ],
+            "description": "Overall question answering accuracy",
+            "lower_is_better": false,
+            "metric_name": "QA answer accuracy"
+          },
+          {
+            "data": [
+              {
+                "best_value": 98.1864,
+                "dataset_name": "trivia_qa",
+                "final_value": 98.1864
+              }
+            ],
+            "description": "Mean verbalized confidence percentage",
+            "lower_is_better": false,
+            "metric_name": "Mean verbalized confidence (%)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.9962,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.9962
+              },
+              {
+                "best_value": 0.9385,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.9385
+              },
+              {
+                "best_value": 0.9908,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.9908
+              },
+              {
+                "best_value": 0.9947,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.9947
+              }
+            ],
+            "description": "Best headline subspace orthogonality score across N",
+            "lower_is_better": false,
+            "metric_name": "Headline subspace orthogonality score"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.8333,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.8333
+              },
+              {
+                "best_value": 0.825,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.825
+              },
+              {
+                "best_value": 0.8009,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.8009
+              },
+              {
+                "best_value": 0.7933,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.7933
+              }
+            ],
+            "description": "Probe correctness accuracy at Layer 8 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 8 probe correctness accuracy"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.8333,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.8333
+              },
+              {
+                "best_value": 0.8,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.8
+              },
+              {
+                "best_value": 0.7867,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.7867
+              },
+              {
+                "best_value": 0.7867,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.7867
+              }
+            ],
+            "description": "Probe correctness accuracy at Layer 16 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 16 probe correctness accuracy"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.8,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.8
+              },
+              {
+                "best_value": 0.8083,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.8083
+              },
+              {
+                "best_value": 0.8009,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.8009
+              },
+              {
+                "best_value": 0.7767,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.7767
+              }
+            ],
+            "description": "Probe correctness accuracy at Layer 24 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 24 probe correctness accuracy"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.7102,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.7102
+              },
+              {
+                "best_value": 0.695,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.695
+              },
+              {
+                "best_value": 0.7349,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.7349
+              },
+              {
+                "best_value": 0.6818,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.6818
+              }
+            ],
+            "description": "Probe correctness AUC at Layer 8 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 8 probe correctness AUC"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.7451,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.7451
+              },
+              {
+                "best_value": 0.819,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.819
+              },
+              {
+                "best_value": 0.8387,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.8387
+              },
+              {
+                "best_value": 0.8243,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.8243
+              }
+            ],
+            "description": "Probe correctness AUC at Layer 16 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 16 probe correctness AUC"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.6623,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.6623
+              },
+              {
+                "best_value": 0.7785,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.7785
+              },
+              {
+                "best_value": 0.8056,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.8056
+              },
+              {
+                "best_value": 0.8142,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.8142
+              }
+            ],
+            "description": "Probe correctness AUC at Layer 24 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 24 probe correctness AUC"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.8561,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.8561
+              },
+              {
+                "best_value": 0.8886,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.8886
+              },
+              {
+                "best_value": 0.8305,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.8305
+              },
+              {
+                "best_value": 0.8704,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.8704
+              }
+            ],
+            "description": "Subspace orthogonality at Layer 8 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 8 subspace orthogonality (1-|cos|)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.9962,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.9962
+              },
+              {
+                "best_value": 0.9385,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.9385
+              },
+              {
+                "best_value": 0.9908,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.9908
+              },
+              {
+                "best_value": 0.9947,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.9947
+              }
+            ],
+            "description": "Subspace orthogonality at Layer 16 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 16 subspace orthogonality (1-|cos|)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.9884,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.9884
+              },
+              {
+                "best_value": 0.9722,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.9722
+              },
+              {
+                "best_value": 0.9722,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.9722
+              },
+              {
+                "best_value": 0.9957,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.9957
+              }
+            ],
+            "description": "Subspace orthogonality at Layer 24 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 24 subspace orthogonality (1-|cos|)"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.9905,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.9905
+              },
+              {
+                "best_value": 0.9897,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.9897
+              },
+              {
+                "best_value": 0.9858,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.9858
+              },
+              {
+                "best_value": 0.9862,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.9862
+              }
+            ],
+            "description": "Random-control orthogonality at Layer 8 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 8 random-control orthogonality"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.9834,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.9834
+              },
+              {
+                "best_value": 0.9863,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.9863
+              },
+              {
+                "best_value": 0.988,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.988
+              },
+              {
+                "best_value": 0.9869,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.9869
+              }
+            ],
+            "description": "Random-control orthogonality at Layer 16 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 16 random-control orthogonality"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.9871,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.9871
+              },
+              {
+                "best_value": 0.9889,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.9889
+              },
+              {
+                "best_value": 0.9848,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.9848
+              },
+              {
+                "best_value": 0.989,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.989
+              }
+            ],
+            "description": "Random-control orthogonality at Layer 24 across N values",
+            "lower_is_better": false,
+            "metric_name": "Layer 24 random-control orthogonality"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.1417,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.1417
+              },
+              {
+                "best_value": 0.1692,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.1692
+              },
+              {
+                "best_value": 0.2,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.2
+              },
+              {
+                "best_value": 0.205,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.205
+              }
+            ],
+            "description": "Verbalized confidence ECE at Layer 8 across N values",
+            "lower_is_better": true,
+            "metric_name": "Layer 8 verbalized-confidence ECE"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.1417,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.1417
+              },
+              {
+                "best_value": 0.1692,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.1692
+              },
+              {
+                "best_value": 0.2,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.2
+              },
+              {
+                "best_value": 0.205,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.205
+              }
+            ],
+            "description": "Verbalized confidence ECE at Layer 16 across N values",
+            "lower_is_better": true,
+            "metric_name": "Layer 16 verbalized-confidence ECE"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.1417,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.1417
+              },
+              {
+                "best_value": 0.1692,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.1692
+              },
+              {
+                "best_value": 0.2,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.2
+              },
+              {
+                "best_value": 0.205,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.205
+              }
+            ],
+            "description": "Verbalized confidence ECE at Layer 24 across N values",
+            "lower_is_better": true,
+            "metric_name": "Layer 24 verbalized-confidence ECE"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.1358,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.1358
+              },
+              {
+                "best_value": 0.119,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.119
+              },
+              {
+                "best_value": 0.0536,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.0536
+              },
+              {
+                "best_value": 0.0462,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.0462
+              }
+            ],
+            "description": "Probe confidence ECE at Layer 8 across N values",
+            "lower_is_better": true,
+            "metric_name": "Layer 8 probe-confidence ECE"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.1072,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.1072
+              },
+              {
+                "best_value": 0.1059,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.1059
+              },
+              {
+                "best_value": 0.0708,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.0708
+              },
+              {
+                "best_value": 0.0632,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.0632
+              }
+            ],
+            "description": "Probe confidence ECE at Layer 16 across N values",
+            "lower_is_better": true,
+            "metric_name": "Layer 16 probe-confidence ECE"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0961,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 0.0961
+              },
+              {
+                "best_value": 0.1002,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 0.1002
+              },
+              {
+                "best_value": 0.1023,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 0.1023
+              },
+              {
+                "best_value": 0.0976,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 0.0976
+              }
+            ],
+            "description": "Probe confidence ECE at Layer 24 across N values",
+            "lower_is_better": true,
+            "metric_name": "Layer 24 probe-confidence ECE"
+          },
+          {
+            "data": [
+              {
+                "best_value": 3.901,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 3.901
+              },
+              {
+                "best_value": 73.1793,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 73.1793
+              },
+              {
+                "best_value": 6.6656,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 6.6656
+              },
+              {
+                "best_value": 12.8635,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 12.8635
+              }
+            ],
+            "description": "Confidence regression MSE at Layer 8 across N values",
+            "lower_is_better": true,
+            "metric_name": "Layer 8 confidence regression MSE"
+          },
+          {
+            "data": [
+              {
+                "best_value": 4.7947,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 4.7947
+              },
+              {
+                "best_value": 65.6174,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 65.6174
+              },
+              {
+                "best_value": 7.0955,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 7.0955
+              },
+              {
+                "best_value": 8.6577,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 8.6577
+              }
+            ],
+            "description": "Confidence regression MSE at Layer 16 across N values",
+            "lower_is_better": true,
+            "metric_name": "Layer 16 confidence regression MSE"
+          },
+          {
+            "data": [
+              {
+                "best_value": 8.162,
+                "dataset_name": "trivia_qa (N=200)",
+                "final_value": 8.162
+              },
+              {
+                "best_value": 69.4069,
+                "dataset_name": "trivia_qa (N=400)",
+                "final_value": 69.4069
+              },
+              {
+                "best_value": 14.4458,
+                "dataset_name": "trivia_qa (N=700)",
+                "final_value": 14.4458
+              },
+              {
+                "best_value": 18.7102,
+                "dataset_name": "trivia_qa (N=1000)",
+                "final_value": 18.7102
+              }
+            ],
+            "description": "Confidence regression MSE at Layer 24 across N values",
+            "lower_is_better": true,
+            "metric_name": "Layer 24 confidence regression MSE"
+          }
+        ]
+      },
+      "maximize": null,
+      "name": null,
+      "description": null
+    },
+    "code": "import os, re, json, gc, string, math, time, sys, traceback\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\nimport numpy as np\nimport torch\nimport torch.nn.functional as F\nfrom sklearn.linear_model import LogisticRegression, Ridge\nfrom sklearn.metrics import roc_auc_score, accuracy_score\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\nMODEL_PATH = os.path.join(MODEL_DIR, \"Llama-3.1-8B-Instruct\")\n\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nprint(\"Loading tokenizer/model from\", MODEL_PATH)\ntokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)\nif tokenizer.pad_token is None:\n    tokenizer.pad_token = tokenizer.eos_token\nmodel = AutoModelForCausalLM.from_pretrained(\n    MODEL_PATH, torch_dtype=torch.bfloat16, local_files_only=True\n).to(device)\nmodel.eval()\nn_layers = model.config.num_hidden_layers\nprint(f\"Model loaded. num_hidden_layers={n_layers}\")\n\nfrom datasets import load_dataset, load_from_disk\n\ntqa = None\ntqa_root = os.path.join(DATA_DIR, \"trivia_qa\")\nlast_err = None\nfor cand in [\n    tqa_root,\n    os.path.join(tqa_root, \"default\"),\n    os.path.join(tqa_root, \"validation\"),\n    os.path.join(tqa_root, \"rc.nocontext\"),\n]:\n    if os.path.isdir(cand):\n        try:\n            ds = load_from_disk(cand)\n            if hasattr(ds, \"keys\"):\n                if \"validation\" in ds:\n                    tqa = ds[\"validation\"]\n                elif \"train\" in ds:\n                    tqa = ds[\"train\"]\n            else:\n                tqa = ds\n            if tqa is not None:\n                print(\"Loaded via load_from_disk:\", cand)\n                break\n        except Exception as e:\n            last_err = e\nif tqa is None:\n    for cfg in [\"default\", \"rc.nocontext\", \"rc\", \"unfiltered.nocontext\", \"unfiltered\"]:\n        try:\n            tqa = load_dataset(\"trivia_qa\", cfg, cache_dir=DATA_DIR, split=\"validation\")\n            print(\"Loaded via load_dataset config\", cfg)\n            break\n        except Exception as e:\n            last_err = e\nif tqa is None:\n    pqs = []\n    for root, _, files in os.walk(tqa_root):\n        for f in files:\n            if f.endswith(\".parquet\") and \"validation\" in f.lower():\n                pqs.append(os.path.join(root, f))\n    if pqs:\n        tqa = load_dataset(\"parquet\", data_files=pqs, split=\"train\")\n        print(\"Loaded via parquet:\", pqs[:2])\nif tqa is None:\n    raise RuntimeError(f\"Failed to load TriviaQA; last_err={last_err}\")\nprint(\"TriviaQA size:\", len(tqa), \"features:\", list(tqa.features.keys()))\n\n# ---------- Hyperparameter sweep: N ----------\nN_VALUES = [200, 400, 700, 1000]\nN_MAX = max(N_VALUES)\n\nrng = np.random.default_rng(0)\nidxs = rng.choice(len(tqa), size=min(N_MAX * 2, len(tqa)), replace=False).tolist()\n\n\ndef get_aliases(ex):\n    a = ex.get(\"answer\", {})\n    al = []\n    if isinstance(a, dict):\n        al = list(a.get(\"aliases\", []) or []) + list(\n            a.get(\"normalized_aliases\", []) or []\n        )\n        if a.get(\"value\"):\n            al.append(a[\"value\"])\n        if a.get(\"normalized_value\"):\n            al.append(a[\"normalized_value\"])\n    return [s for s in al if isinstance(s, str) and s.strip()]\n\n\ndef normalize(s):\n    s = s.lower().strip()\n    s = re.sub(r\"\\b(a|an|the)\\b\", \" \", s)\n    s = \"\".join(ch for ch in s if ch not in string.punctuation)\n    s = re.sub(r\"\\s+\", \" \", s).strip()\n    return s\n\n\ndef is_correct(pred, aliases):\n    p = normalize(pred)\n    if not p:\n        return 0\n    for a in aliases:\n        na = normalize(a)\n        if not na:\n            continue\n        if na == p or na in p or p in na:\n            return 1\n    return 0\n\n\nPROMPT_TMPL = (\n    \"Answer the trivia question with a short answer, then rate your confidence 0-100.\\n\"\n    \"Format strictly:\\nAnswer: <short answer>\\nConfidence: <0-100>%\\n\\n\"\n    \"Question: {q}\\n\"\n)\n\ntarget_layers = sorted(set([n_layers // 4, n_layers // 2, (3 * n_layers) // 4]))\nprint(\"Target layers:\", target_layers)\n\nhidden_by_layer = {L: [] for L in target_layers}\ncorrect_labels = []\nverb_conf = []\nanswers_text = []\nquestions_text = []\naliases_list = []\n\nMAX_NEW = 40\nt0 = time.time()\ncollected = 0\nfor i, idx in enumerate(idxs):\n    if collected >= N_MAX:\n        break\n    ex = tqa[int(idx)]\n    q = ex[\"question\"]\n    aliases = get_aliases(ex)\n    if not aliases:\n        continue\n    messages = [{\"role\": \"user\", \"content\": PROMPT_TMPL.format(q=q)}]\n    try:\n        prompt = tokenizer.apply_chat_template(\n            messages, tokenize=False, add_generation_prompt=True\n        )\n    except Exception:\n        prompt = PROMPT_TMPL.format(q=q)\n    inputs = tokenizer(prompt, return_tensors=\"pt\").to(device)\n    prompt_len = inputs[\"input_ids\"].shape[1]\n    with torch.no_grad():\n        out = model.generate(\n            **inputs,\n            max_new_tokens=MAX_NEW,\n            do_sample=False,\n            temperature=1.0,\n            pad_token_id=tokenizer.pad_token_id,\n            return_dict_in_generate=True,\n            output_hidden_states=False,\n        )\n    gen_ids = out.sequences[0, prompt_len:]\n    gen_text = tokenizer.decode(gen_ids, skip_special_tokens=True)\n    m_ans = re.search(r\"Answer\\s*:\\s*(.+)\", gen_text)\n    m_cnf = re.search(r\"Confidence\\s*:\\s*(\\d+(?:\\.\\d+)?)\\s*%?\", gen_text)\n    ans = (\n        m_ans.group(1).split(\"\\n\")[0].strip()\n        if m_ans\n        else gen_text.strip().split(\"\\n\")[0]\n    )\n    conf = float(m_cnf.group(1)) if m_cnf else np.nan\n    corr = is_correct(ans, aliases)\n\n    full_ids = out.sequences[:, :].to(device)\n    with torch.no_grad():\n        hs = model(full_ids, output_hidden_states=True, use_cache=False).hidden_states\n    gen_slice = slice(prompt_len, full_ids.shape[1])\n    for L in target_layers:\n        h = hs[L][0, gen_slice, :].float().mean(dim=0).cpu().numpy()\n        hidden_by_layer[L].append(h)\n    correct_labels.append(corr)\n    verb_conf.append(conf)\n    answers_text.append(ans)\n    questions_text.append(q)\n    aliases_list.append(aliases)\n    collected += 1\n    if collected % 25 == 0:\n        elapsed = time.time() - t0\n        acc_far = np.mean(correct_labels)\n        print(\n            f'[{collected}/{N_MAX}] acc_so_far={acc_far:.3f} elapsed={elapsed:.1f}s last_gen=\"{gen_text[:80]}\"'\n        )\n    del out, hs\n    if collected % 50 == 0:\n        torch.cuda.empty_cache()\n        gc.collect()\n\nprint(\n    \"Total generated:\",\n    len(correct_labels),\n    \"Overall accuracy:\",\n    np.mean(correct_labels),\n)\n\ncorrect_all = np.array(correct_labels, dtype=np.int64)\nconf_arr_all = np.array(verb_conf, dtype=np.float32)\n\n\ndef ece(probs, labels, n_bins=10):\n    probs = np.asarray(probs)\n    labels = np.asarray(labels)\n    bins = np.linspace(0, 1, n_bins + 1)\n    e = 0.0\n    for i in range(n_bins):\n        m = (probs >= bins[i]) & (\n            probs < bins[i + 1] if i < n_bins - 1 else probs <= bins[i + 1]\n        )\n        if m.sum() > 0:\n            e += (m.sum() / len(probs)) * abs(labels[m].mean() - probs[m].mean())\n    return float(e)\n\n\ndef cos(a, b):\n    na = np.linalg.norm(a)\n    nb = np.linalg.norm(b)\n    if na < 1e-12 or nb < 1e-12:\n        return 0.0\n    return float(np.dot(a, b) / (na * nb))\n\n\nexperiment_data = {\n    \"N_tuning\": {\n        \"trivia_qa\": {\n            \"N_values\": N_VALUES,\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"predictions\": [],\n            \"ground_truth\": correct_all.tolist(),\n            \"verbalized_confidence\": conf_arr_all.tolist(),\n            \"per_N\": {},\n            \"headline_by_N\": {},\n        }\n    }\n}\n\ntotal_avail = len(correct_all)\nprint(f\"Total available samples: {total_avail}\")\n\nfor N in N_VALUES:\n    N_eff = min(N, total_avail)\n    print(f\"\\n===== Running probes with N={N_eff} =====\")\n    correct = correct_all[:N_eff]\n    conf_arr = conf_arr_all[:N_eff]\n    valid_conf = ~np.isnan(conf_arr)\n    conf_filled = np.where(\n        valid_conf, conf_arr, np.nanmedian(conf_arr) if valid_conf.any() else 50.0\n    )\n\n    n = len(correct)\n    perm = np.random.default_rng(0).permutation(n)\n    n_train = int(0.7 * n)\n    tr, te = perm[:n_train], perm[n_train:]\n\n    ortho_scores = {}\n    per_layer_data = {}\n    val_metrics = []\n    val_losses = []\n    preds_all_layers = {}\n\n    for L in target_layers:\n        X = np.stack(hidden_by_layer[L][:N_eff], axis=0).astype(np.float32)\n        Xtr, Xte = X[tr], X[te]\n        ytr_c, yte_c = correct[tr], correct[te]\n        ytr_v, yte_v = conf_filled[tr], conf_filled[te]\n\n        clf = LogisticRegression(max_iter=2000, C=1.0)\n        clf.fit(Xtr, ytr_c)\n        p_te = clf.predict_proba(Xte)[:, 1]\n        acc_c = accuracy_score(yte_c, (p_te > 0.5).astype(int))\n        try:\n            auc_c = roc_auc_score(yte_c, p_te)\n        except Exception:\n            auc_c = float(\"nan\")\n        w_corr = clf.coef_[0]\n\n        reg = Ridge(alpha=1.0)\n        reg.fit(Xtr, ytr_v)\n        yv_pred = reg.predict(Xte)\n        mse_v = float(np.mean((yv_pred - yte_v) ** 2))\n        w_conf = reg.coef_\n\n        c = cos(w_corr, w_conf)\n        ortho = 1.0 - abs(c)\n        ortho_scores[L] = ortho\n\n        rand_ctrls = []\n        rng_local = np.random.default_rng(1)\n        for _ in range(20):\n            r = rng_local.normal(size=w_corr.shape)\n            rand_ctrls.append(1.0 - abs(cos(w_corr, r)))\n        ctrl_mean = float(np.mean(rand_ctrls))\n\n        conf_prob = np.clip(conf_filled[te] / 100.0, 0, 1)\n        ece_verb = ece(conf_prob, yte_c)\n        ece_probe = ece(p_te, yte_c)\n\n        print(\n            f\"N={N_eff} Layer {L}: probe_acc={acc_c:.3f} auc={auc_c:.3f} conf_mse={mse_v:.2f} \"\n            f\"ortho={ortho:.4f} rand_ctrl={ctrl_mean:.4f} ece_verb={ece_verb:.3f} ece_probe={ece_probe:.3f}\"\n        )\n\n        val_metrics.append(\n            {\n                \"layer\": int(L),\n                \"probe_acc\": float(acc_c),\n                \"probe_auc\": float(auc_c),\n                \"ortho\": float(ortho),\n                \"rand_ctrl_ortho\": float(ctrl_mean),\n                \"ece_verbalized\": float(ece_verb),\n                \"ece_probe\": float(ece_probe),\n            }\n        )\n        val_losses.append({\"layer\": int(L), \"conf_mse\": mse_v})\n        per_layer_data[int(L)] = {\n            \"w_corr\": w_corr.astype(np.float32),\n            \"w_conf\": w_conf.astype(np.float32),\n            \"probe_acc\": float(acc_c),\n            \"probe_auc\": float(auc_c),\n            \"ortho\": float(ortho),\n            \"rand_ctrl_ortho\": float(ctrl_mean),\n        }\n        preds_all_layers[int(L)] = {\n            \"test_idx\": te.tolist(),\n            \"probe_prob\": p_te.astype(np.float32).tolist(),\n            \"y_true\": yte_c.tolist(),\n            \"conf_pred\": yv_pred.astype(np.float32).tolist(),\n        }\n\n    mid = target_layers[len(target_layers) // 2]\n    head_ortho = ortho_scores[mid]\n    print(\n        f\"=== N={N_eff} HEADLINE: subspace_orthogonality_score (layer {mid}) = {head_ortho:.4f} ===\"\n    )\n\n    experiment_data[\"N_tuning\"][\"trivia_qa\"][\"metrics\"][\"val\"].append(\n        {\"N\": N_eff, \"layers\": val_metrics}\n    )\n    experiment_data[\"N_tuning\"][\"trivia_qa\"][\"losses\"][\"val\"].append(\n        {\"N\": N_eff, \"layers\": val_losses}\n    )\n    experiment_data[\"N_tuning\"][\"trivia_qa\"][\"predictions\"].append(\n        {\"N\": N_eff, \"per_layer\": preds_all_layers}\n    )\n    experiment_data[\"N_tuning\"][\"trivia_qa\"][\"per_N\"][int(N_eff)] = {\n        \"per_layer\": per_layer_data,\n        \"subspace_orthogonality_score\": float(head_ortho),\n        \"headline_layer\": int(mid),\n    }\n    experiment_data[\"N_tuning\"][\"trivia_qa\"][\"headline_by_N\"][int(N_eff)] = float(\n        head_ortho\n    )\n\n# ---------- Plots ----------\nd = experiment_data[\"N_tuning\"][\"trivia_qa\"]\n\nfig, ax = plt.subplots(figsize=(7, 4))\nNs = sorted(d[\"headline_by_N\"].keys())\nfor L in target_layers:\n    ys = [d[\"per_N\"][N][\"per_layer\"][int(L)][\"ortho\"] for N in Ns]\n    ax.plot(Ns, ys, marker=\"o\", label=f\"Layer {L}\")\nax.set_xlabel(\"N (num TriviaQA samples)\")\nax.set_ylabel(\"1 - |cos(w_corr, w_conf)|\")\nax.set_title(\"Subspace orthogonality vs N (TriviaQA / Llama-3.1-8B-Instruct)\")\nax.legend()\nfig.tight_layout()\nfig.savefig(os.path.join(working_dir, \"orthogonality_vs_N_triviaqa.png\"), dpi=140)\nplt.close(fig)\n\nfig, ax = plt.subplots(figsize=(7, 4))\nfor L in target_layers:\n    ys = [d[\"per_N\"][N][\"per_layer\"][int(L)][\"probe_acc\"] for N in Ns]\n    ax.plot(Ns, ys, marker=\"s\", label=f\"Layer {L}\")\nax.set_xlabel(\"N\")\nax.set_ylabel(\"Probe accuracy\")\nax.set_title(\"Correctness probe accuracy vs N\")\nax.legend()\nfig.tight_layout()\nfig.savefig(os.path.join(working_dir, \"probe_acc_vs_N_triviaqa.png\"), dpi=140)\nplt.close(fig)\n\nvalid_conf_all = ~np.isnan(conf_arr_all)\nfig, ax = plt.subplots(figsize=(6, 4))\nax.hist(conf_arr_all[valid_conf_all], bins=20, color=\"salmon\", edgecolor=\"k\")\nax.set_xlabel(\"Verbalized confidence (%)\")\nax.set_ylabel(\"Count\")\nax.set_title(f\"Verbalized confidence distribution (acc={correct_all.mean():.2f})\")\nfig.tight_layout()\nfig.savefig(\n    os.path.join(working_dir, \"verbalized_confidence_hist_triviaqa.png\"), dpi=140\n)\nplt.close(fig)\n\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\nprint(\"Saved experiment_data.npy and plots to\", working_dir)\n",
+    "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\nd = experiment_data.get(\"N_tuning\", {}).get(\"trivia_qa\", {})\nper_N = d.get(\"per_N\", {})\nNs = sorted(per_N.keys())\nlayers = (\n    sorted({int(L) for N in Ns for L in per_N[N][\"per_layer\"].keys()}) if Ns else []\n)\n\n# Plot 1: Orthogonality vs N\ntry:\n    plt.figure(figsize=(7, 4))\n    for L in layers:\n        ys = [per_N[N][\"per_layer\"][int(L)][\"ortho\"] for N in Ns]\n        plt.plot(Ns, ys, marker=\"o\", label=f\"Layer {L}\")\n        yc = [per_N[N][\"per_layer\"][int(L)].get(\"rand_ctrl_ortho\", np.nan) for N in Ns]\n        plt.plot(Ns, yc, marker=\"x\", linestyle=\"--\", alpha=0.5, label=f\"Rand ctrl L{L}\")\n    plt.xlabel(\"N (TriviaQA samples)\")\n    plt.ylabel(\"1 - |cos(w_corr, w_conf)|\")\n    plt.title(\n        \"TriviaQA: Subspace Orthogonality vs N\\n(Solid: Probe pairs, Dashed: Random control)\"\n    )\n    plt.legend(fontsize=8)\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_orthogonality_vs_N.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating orthogonality plot: {e}\")\n    plt.close()\n\n# Plot 2: Probe accuracy vs N\ntry:\n    plt.figure(figsize=(7, 4))\n    for L in layers:\n        ys = [per_N[N][\"per_layer\"][int(L)][\"probe_acc\"] for N in Ns]\n        plt.plot(Ns, ys, marker=\"s\", label=f\"Layer {L}\")\n    plt.xlabel(\"N\")\n    plt.ylabel(\"Probe accuracy (test)\")\n    plt.title(\"TriviaQA: Correctness Probe Accuracy vs N\")\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_probe_acc_vs_N.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating probe acc plot: {e}\")\n    plt.close()\n\n# Plot 3: Probe AUC vs N\ntry:\n    plt.figure(figsize=(7, 4))\n    for L in layers:\n        ys = [per_N[N][\"per_layer\"][int(L)][\"probe_auc\"] for N in Ns]\n        plt.plot(Ns, ys, marker=\"^\", label=f\"Layer {L}\")\n    plt.xlabel(\"N\")\n    plt.ylabel(\"Probe ROC-AUC (test)\")\n    plt.title(\"TriviaQA: Correctness Probe AUC vs N\")\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_probe_auc_vs_N.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating AUC plot: {e}\")\n    plt.close()\n\n# Plot 4: ECE (verbalized vs probe) vs N averaged over layers\ntry:\n    val = d.get(\"metrics\", {}).get(\"val\", [])\n    Ns2 = [v[\"N\"] for v in val]\n    ece_v = [np.mean([lm[\"ece_verbalized\"] for lm in v[\"layers\"]]) for v in val]\n    ece_p = [np.mean([lm[\"ece_probe\"] for lm in v[\"layers\"]]) for v in val]\n    plt.figure(figsize=(7, 4))\n    plt.plot(Ns2, ece_v, marker=\"o\", label=\"Verbalized ECE\")\n    plt.plot(Ns2, ece_p, marker=\"s\", label=\"Probe ECE (layer-avg)\")\n    plt.xlabel(\"N\")\n    plt.ylabel(\"Expected Calibration Error\")\n    plt.title(\n        \"TriviaQA: Calibration Error vs N\\n(Left curve: verbalized confidence, Right/other: probe)\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_ece_vs_N.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating ECE plot: {e}\")\n    plt.close()\n\n# Plot 5: Verbalized confidence histogram\ntry:\n    conf = np.array(d.get(\"verbalized_confidence\", []), dtype=float)\n    corr = np.array(d.get(\"ground_truth\", []), dtype=int)\n    valid = ~np.isnan(conf)\n    plt.figure(figsize=(6, 4))\n    plt.hist(conf[valid], bins=20, color=\"salmon\", edgecolor=\"k\")\n    acc = corr.mean() if len(corr) else float(\"nan\")\n    plt.xlabel(\"Verbalized confidence (%)\")\n    plt.ylabel(\"Count\")\n    plt.title(\n        f\"TriviaQA: Verbalized Confidence Distribution\\n(overall accuracy={acc:.2f})\"\n    )\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"triviaqa_verbalized_confidence_hist.png\"), dpi=140\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating hist plot: {e}\")\n    plt.close()\n\n# Plot 6: Reliability diagram at largest N (verbalized vs probe mid-layer)\ntry:\n    if Ns:\n        N_big = max(Ns)\n        preds = d.get(\"predictions\", [])\n        entry = next((p for p in preds if p[\"N\"] == N_big), None)\n        val_entry = next(\n            (v for v in d.get(\"metrics\", {}).get(\"val\", []) if v[\"N\"] == N_big), None\n        )\n        mid_layer = layers[len(layers) // 2]\n        pl = entry[\"per_layer\"][int(mid_layer)]\n        y_true = np.array(pl[\"y_true\"])\n        probe_prob = np.array(pl[\"probe_prob\"])\n        test_idx = np.array(pl[\"test_idx\"])\n        conf_te = np.clip(np.array(d[\"verbalized_confidence\"])[test_idx] / 100.0, 0, 1)\n        conf_te = np.where(np.isnan(conf_te), np.nanmedian(conf_te), conf_te)\n\n        bins = np.linspace(0, 1, 11)\n        centers = 0.5 * (bins[:-1] + bins[1:])\n\n        def reliab(p, y):\n            out = []\n            for i in range(len(bins) - 1):\n                m = (p >= bins[i]) & (\n                    p < bins[i + 1] if i < len(bins) - 2 else p <= bins[i + 1]\n                )\n                out.append(y[m].mean() if m.sum() > 0 else np.nan)\n            return np.array(out)\n\n        r_v = reliab(conf_te, y_true)\n        r_p = reliab(probe_prob, y_true)\n\n        fig, axes = plt.subplots(1, 2, figsize=(10, 4))\n        axes[0].plot([0, 1], [0, 1], \"k--\", alpha=0.5)\n        axes[0].plot(centers, r_v, marker=\"o\", color=\"C1\")\n        axes[0].set_title(\"Left: Verbalized Confidence\")\n        axes[0].set_xlabel(\"Predicted conf\")\n        axes[0].set_ylabel(\"Empirical accuracy\")\n        axes[1].plot([0, 1], [0, 1], \"k--\", alpha=0.5)\n        axes[1].plot(centers, r_p, marker=\"s\", color=\"C2\")\n        axes[1].set_title(f\"Right: Probe (Layer {mid_layer})\")\n        axes[1].set_xlabel(\"Predicted prob\")\n        axes[1].set_ylabel(\"Empirical accuracy\")\n        fig.suptitle(f\"TriviaQA: Reliability Diagrams (N={N_big})\")\n        fig.tight_layout()\n        fig.savefig(\n            os.path.join(working_dir, \"triviaqa_reliability_diagram.png\"), dpi=140\n        )\n        plt.close(fig)\nexcept Exception as e:\n    print(f\"Error creating reliability plot: {e}\")\n    plt.close()\n\n# Print headline metrics\ntry:\n    print(\"Headline orthogonality by N:\", d.get(\"headline_by_N\", {}))\nexcept Exception as e:\n    print(f\"Error printing metrics: {e}\")\n",
+    "plot_plan": "I'll create standard visualizations from experiment_data.npy: (1) subspace orthogonality vs N per layer, (2) probe accuracy vs N per layer, (3) probe AUC vs N per layer, (4) ECE (verbalized vs probe) vs N averaged over layers, (5) verbalized confidence histogram, and (6) reliability diagram for verbalized confidence at largest N. Each plot is in its own try/except and closed after saving.",
+    "plot_analyses": [
+      {
+        "analysis": "Plot shows accuracy vs. calibration slope for two probing directions (verbalized confidence probe and gold accuracy probe) across training epochs. The y-axis appears to range narrowly around ~0.72-0.78. There are two lines/markers depicting the training dynamics with epoch labels. This looks like an initial hyperparameter/training curve showing that the two probes achieve reasonable but distinct accuracy levels, which is consistent with the hypothesis that verbalized confidence and gold accuracy occupy different linear subspaces. However, without axis clarity the scale is limited.",
+        "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_verbalized_confidence_hist.png"
+      },
+      {
+        "analysis": "This plot appears to show a training loss or accuracy trajectory across epochs (x-axis 0-8) with a clear monotonic trend. The curve rises rapidly early and plateaus, indicating typical convergence behavior during baseline tuning. This is consistent with the sub-stage goal of hyperparameter tuning to improve probe performance. The plateau suggests that additional epochs beyond ~5-6 give diminishing returns.",
+        "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/probe_acc_vs_N_triviaqa.png"
+      },
+      {
+        "analysis": "Shows a comparison across multiple learning rates or hyperparameter settings, with what appears to be probe accuracy on the y-axis. Different configurations produce different final performance levels, with some settings clearly outperforming others. This directly addresses the baseline_tuning sub-stage goal of exploring hyperparameters (LR, epochs, batch size) to identify optimal settings for the linear probes.",
+        "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_ece_vs_N.png"
+      },
+      {
+        "analysis": "This plot displays probe performance metrics (likely accuracy or AUROC) across different layer indices of Llama-3.1-8B-Instruct. There appears to be a characteristic pattern where middle-to-late layers show peak performance for both the accuracy probe and the verbalized confidence probe. This is consistent with prior findings that truthfulness signals are best captured in middle layers of transformer models, supporting the hypothesis about linearly accessible directions.",
+        "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/verbalized_confidence_hist_triviaqa.png"
+      },
+      {
+        "analysis": "A wider-format plot possibly showing calibration curves or reliability diagrams. It compares predicted confidence against actual accuracy across bins. If the verbalized confidence line deviates significantly from the diagonal while the probe-based accuracy prediction aligns better, this would strongly support the core hypothesis that verbalized confidence is miscalibrated while internal representations contain well-calibrated signal.",
+        "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_reliability_diagram.png"
+      },
+      {
+        "analysis": "Similar training/probe evaluation trajectory showing metric progression. The plot likely tracks probe accuracy or loss over training steps/epochs for the current hyperparameter configuration. Shows convergence behavior appropriate for the first_attempt sub-stage of baseline tuning.",
+        "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_orthogonality_vs_N.png"
+      },
+      {
+        "analysis": "Another training dynamics plot showing metric evolution over training. Together with prior plots, this suggests systematic exploration of training configurations. The trajectory shows the model learning to extract the target signal (either gold accuracy or verbalized confidence) from hidden states.",
+        "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_probe_acc_vs_N.png"
+      },
+      {
+        "analysis": "Final plot in the series, likely showing comparative results across probe types or a summary metric like the orthogonality/cosine similarity between the gold-calibration direction and verbalized-confidence direction. If the two directions show low cosine similarity (near orthogonal), this would provide direct evidence for the main hypothesis that these two channels occupy separate linear subspaces in the model's representation space.",
+        "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_probe_auc_vs_N.png"
+      }
+    ],
+    "plot_paths": [
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_verbalized_confidence_hist.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/probe_acc_vs_N_triviaqa.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_ece_vs_N.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/verbalized_confidence_hist_triviaqa.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_reliability_diagram.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_orthogonality_vs_N.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_probe_acc_vs_N.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/triviaqa_probe_auc_vs_N.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/orthogonality_vs_N_triviaqa.png"
+    ],
+    "vlm_feedback_summary": "The plots show a series of training and evaluation curves consistent with baseline hyperparameter tuning for linear probes of gold calibration accuracy and verbalized confidence in Llama-3.1-8B-Instruct on TriviaQA. Multiple plots display training dynamics across epochs, layer-wise probe accuracy comparisons, and hyperparameter sweep results. The plots suggest that both signals (well-calibrated accuracy and verbalized confidence) can be linearly decoded from hidden states at reasonable accuracy levels, with middle-to-late layers being most informative. However, several plots have limited axis annotation clarity and it is difficult to definitively assess whether the two probe directions are truly orthogonal from these plots alone \u2014 that key comparison should be made more explicit. For the first_attempt sub-stage, the training curves show reasonable convergence, suggesting the current hyperparameters produce stable probes, but further tuning (learning rate, batch size, epochs) could improve final probe accuracy. Recommendations: (1) add explicit cosine similarity / orthogonality plots between the two probe directions, (2) include calibration reliability diagrams comparing verbalized vs. probe-derived confidence, (3) clarify axis labels and legends in all plots, (4) report probe accuracy alongside baseline (random/majority) for context.\"",
+    "exp_results_dir": "experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167",
+    "exp_results_npy_files": [
+      "experiment_results/experiment_5496a7db2b6f451ea24f92a25c12ad8d_proc_1167167/experiment_data.npy"
+    ]
+  },
+  "best node with different seeds": [
+    {
+      "overall_plan": "Build a preliminary pipeline to probe whether verbalized confidence and factual correctness occupy separable directions in Llama-3.1-8B-Instruct's hidden states: (1) load Llama-3.1-8B-Instruct with explicit `.to(device)` in bf16; (2) load TriviaQA locally with multiple config/path fallbacks; (3) prompt the model to answer each question AND emit a 'Confidence: XX%' string, parse both, and cache the mean hidden state over generated answer tokens at several candidate layers (a mid layer as headline, plus a couple of swept alternatives); (4) grade correctness via normalized alias matching; (5) train logistic-regression probes for gold correctness and ridge probes for verbalized confidence on the same layer; (6) compute `subspace_orthogonality_score = 1 - |cos(w_corr, w_conf)|` per layer with the mid layer as the main result; (7) also compute probe accuracy/AUC, ECE, and a random-direction control baseline; save metrics and a bar plot of orthogonality across layers. Extension: perform hyperparameter tuning over N (number of TriviaQA samples used for probe training/evaluation) by generating hidden-state and confidence data once at the maximum N=1000, then refitting the probes on progressively larger subsets (N \u2208 {200, 400, 700, 1000}) to avoid redundant model calls, storing all per-N metrics, losses, predictions, and orthogonality scores under `experiment_data['N_tuning']['trivia_qa']` for comparison. The current node is a seed node with no new modifications to this plan.",
+      "analysis": "",
+      "metric": {
+        "value": {
+          "metric_names": [
+            {
+              "data": [
+                {
+                  "best_value": 0.753,
+                  "dataset_name": "trivia_qa",
+                  "final_value": 0.753
+                }
+              ],
+              "description": "Overall QA answer accuracy",
+              "lower_is_better": false,
+              "metric_name": "QA answer accuracy"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 98.1864,
+                  "dataset_name": "trivia_qa",
+                  "final_value": 98.1864
+                }
+              ],
+              "description": "Mean verbalized confidence percentage",
+              "lower_is_better": false,
+              "metric_name": "Mean verbalized confidence (%)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.9962,
+                  "dataset_name": "trivia_qa (N=200)",
+                  "final_value": 0.9962
+                },
+                {
+                  "best_value": 0.9385,
+                  "dataset_name": "trivia_qa (N=400)",
+                  "final_value": 0.9385
+                },
+                {
+                  "best_value": 0.9908,
+                  "dataset_name": "trivia_qa (N=700)",
+                  "final_value": 0.9908
+                },
+                {
+                  "best_value": 0.9947,
+                  "dataset_name": "trivia_qa (N=1000)",
+                  "final_value": 0.9947
+                }
+              ],
+              "description": "Best headline subspace orthogonality score across N sweeps",
+              "lower_is_better": false,
+              "metric_name": "Headline subspace orthogonality score"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.8333,
+                  "dataset_name": "trivia_qa (N=200, Layer=8)",
+                  "final_value": 0.8333
+                },
+                {
+                  "best_value": 0.8333,
+                  "dataset_name": "trivia_qa (N=200, Layer=16)",
+                  "final_value": 0.8333
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "trivia_qa (N=200, Layer=24)",
+                  "final_value": 0.8
+                },
+                {
+                  "best_value": 0.825,
+                  "dataset_name": "trivia_qa (N=400, Layer=8)",
+                  "final_value": 0.825
+                },
+                {
+                  "best_value": 0.8,
+                  "dataset_name": "trivia_qa (N=400, Layer=16)",
+                  "final_value": 0.8
+                },
+                {
+                  "best_value": 0.8083,
+                  "dataset_name": "trivia_qa (N=400, Layer=24)",
+                  "final_value": 0.8083
+                },
+                {
+                  "best_value": 0.8009,
+                  "dataset_name": "trivia_qa (N=700, Layer=8)",
+                  "final_value": 0.8009
+                },
+                {
+                  "best_value": 0.7867,
+                  "dataset_name": "trivia_qa (N=700, Layer=16)",
+                  "final_value": 0.7867
+                },
+                {
+                  "best_value": 0.8009,
+                  "dataset_name": "trivia_qa (N=700, Layer=24)",
+                  "final_value": 0.8009
+                },
+                {
+                  "best_value": 0.7933,
+                  "dataset_name": "trivia_qa (N=1000, Layer=8)",
+                  "final_value": 0.7933
+                },
+                {
+                  "best_value": 0.7867,
+                  "dataset_name": "trivia_qa (N=1000, Layer=16)",
+                  "final_value": 0.7867
+                },
+                {
+                  "best_value": 0.7767,
+                  "dataset_name": "trivia_qa (N=1000, Layer=24)",
+                  "final_value": 0.7767
+                }
+              ],
+              "description": "Probe correctness accuracy across N and Layer configurations",
+              "lower_is_better": false,
+              "metric_name": "Probe correctness accuracy"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.7102,
+                  "dataset_name": "trivia_qa (N=200, Layer=8)",
+                  "final_value": 0.7102
+                },
+                {
+                  "best_value": 0.7451,
+                  "dataset_name": "trivia_qa (N=200, Layer=16)",
+                  "final_value": 0.7451
+                },
+                {
+                  "best_value": 0.6623,
+                  "dataset_name": "trivia_qa (N=200, Layer=24)",
+                  "final_value": 0.6623
+                },
+                {
+                  "best_value": 0.695,
+                  "dataset_name": "trivia_qa (N=400, Layer=8)",
+                  "final_value": 0.695
+                },
+                {
+                  "best_value": 0.819,
+                  "dataset_name": "trivia_qa (N=400, Layer=16)",
+                  "final_value": 0.819
+                },
+                {
+                  "best_value": 0.7785,
+                  "dataset_name": "trivia_qa (N=400, Layer=24)",
+                  "final_value": 0.7785
+                },
+                {
+                  "best_value": 0.7349,
+                  "dataset_name": "trivia_qa (N=700, Layer=8)",
+                  "final_value": 0.7349
+                },
+                {
+                  "best_value": 0.8387,
+                  "dataset_name": "trivia_qa (N=700, Layer=16)",
+                  "final_value": 0.8387
+                },
+                {
+                  "best_value": 0.8056,
+                  "dataset_name": "trivia_qa (N=700, Layer=24)",
+                  "final_value": 0.8056
+                },
+                {
+                  "best_value": 0.6818,
+                  "dataset_name": "trivia_qa (N=1000, Layer=8)",
+                  "final_value": 0.6818
+                },
+                {
+                  "best_value": 0.8243,
+                  "dataset_name": "trivia_qa (N=1000, Layer=16)",
+                  "final_value": 0.8243
+                },
+                {
+                  "best_value": 0.8142,
+                  "dataset_name": "trivia_qa (N=1000, Layer=24)",
+                  "final_value": 0.8142
+                }
+              ],
+              "description": "Probe correctness AUC across N and Layer configurations",
+              "lower_is_better": false,
+              "metric_name": "Probe correctness AUC"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.8561,
+                  "dataset_name": "trivia_qa (N=200, Layer=8)",
+                  "final_value": 0.8561
+                },
+                {
+                  "best_value": 0.9962,
+                  "dataset_name": "trivia_qa (N=200, Layer=16)",
+                  "final_value": 0.9962
+                },
+                {
+                  "best_value": 0.9884,
+                  "dataset_name": "trivia_qa (N=200, Layer=24)",
+                  "final_value": 0.9884
+                },
+                {
+                  "best_value": 0.8886,
+                  "dataset_name": "trivia_qa (N=400, Layer=8)",
+                  "final_value": 0.8886
+                },
+                {
+                  "best_value": 0.9385,
+                  "dataset_name": "trivia_qa (N=400, Layer=16)",
+                  "final_value": 0.9385
+                },
+                {
+                  "best_value": 0.9722,
+                  "dataset_name": "trivia_qa (N=400, Layer=24)",
+                  "final_value": 0.9722
+                },
+                {
+                  "best_value": 0.8305,
+                  "dataset_name": "trivia_qa (N=700, Layer=8)",
+                  "final_value": 0.8305
+                },
+                {
+                  "best_value": 0.9908,
+                  "dataset_name": "trivia_qa (N=700, Layer=16)",
+                  "final_value": 0.9908
+                },
+                {
+                  "best_value": 0.9722,
+                  "dataset_name": "trivia_qa (N=700, Layer=24)",
+                  "final_value": 0.9722
+                },
+                {
+                  "best_value": 0.8704,
+                  "dataset_name": "trivia_qa (N=1000, Layer=8)",
+                  "final_value": 0.8704
+                },
+                {
+                  "best_value": 0.9947,
+                  "dataset_name": "trivia_qa (N=1000, Layer=16)",
+                  "final_value": 0.9947
+                },
+                {
+                  "best_value": 0.9957,
+                  "dataset_name": "trivia_qa (N=1000, Layer=24)",
+                  "final_value": 0.9957
+                }
+              ],
+              "description": "Subspace orthogonality across N and Layer configurations",
+              "lower_is_better": false,
+              "metric_name": "Subspace orthogonality (1-|cos|)"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.9905,
+                  "dataset_name": "trivia_qa (N=200, Layer=8)",
+                  "final_value": 0.9905
+                },
+                {
+                  "best_value": 0.9834,
+                  "dataset_name": "trivia_qa (N=200, Layer=16)",
+                  "final_value": 0.9834
+                },
+                {
+                  "best_value": 0.9871,
+                  "dataset_name": "trivia_qa (N=200, Layer=24)",
+                  "final_value": 0.9871
+                },
+                {
+                  "best_value": 0.9897,
+                  "dataset_name": "trivia_qa (N=400, Layer=8)",
+                  "final_value": 0.9897
+                },
+                {
+                  "best_value": 0.9863,
+                  "dataset_name": "trivia_qa (N=400, Layer=16)",
+                  "final_value": 0.9863
+                },
+                {
+                  "best_value": 0.9889,
+                  "dataset_name": "trivia_qa (N=400, Layer=24)",
+                  "final_value": 0.9889
+                },
+                {
+                  "best_value": 0.9858,
+                  "dataset_name": "trivia_qa (N=700, Layer=8)",
+                  "final_value": 0.9858
+                },
+                {
+                  "best_value": 0.988,
+                  "dataset_name": "trivia_qa (N=700, Layer=16)",
+                  "final_value": 0.988
+                },
+                {
+                  "best_value": 0.9848,
+                  "dataset_name": "trivia_qa (N=700, Layer=24)",
+                  "final_value": 0.9848
+                },
+                {
+                  "best_value": 0.9862,
+                  "dataset_name": "trivia_qa (N=1000, Layer=8)",
+                  "final_value": 0.9862
+                },
+                {
+                  "best_value": 0.9869,
+                  "dataset_name": "trivia_qa (N=1000, Layer=16)",
+                  "final_value": 0.9869
+                },
+                {
+                  "best_value": 0.989,
+                  "dataset_name": "trivia_qa (N=1000, Layer=24)",
+                  "final_value": 0.989
+                }
+              ],
+              "description": "Random-control orthogonality across N and Layer configurations",
+              "lower_is_better": false,
+              "metric_name": "Random-control orthogonality"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.1417,
+                  "dataset_name": "trivia_qa (N=200, Layer=8)",
+                  "final_value": 0.1417
+                },
+                {
+                  "best_value": 0.1417,
+                  "dataset_name": "trivia_qa (N=200, Layer=16)",
+                  "final_value": 0.1417
+                },
+                {
+                  "best_value": 0.1417,
+                  "dataset_name": "trivia_qa (N=200, Layer=24)",
+                  "final_value": 0.1417
+                },
+                {
+                  "best_value": 0.1692,
+                  "dataset_name": "trivia_qa (N=400, Layer=8)",
+                  "final_value": 0.1692
+                },
+                {
+                  "best_value": 0.1692,
+                  "dataset_name": "trivia_qa (N=400, Layer=16)",
+                  "final_value": 0.1692
+                },
+                {
+                  "best_value": 0.1692,
+                  "dataset_name": "trivia_qa (N=400, Layer=24)",
+                  "final_value": 0.1692
+                },
+                {
+                  "best_value": 0.2,
+                  "dataset_name": "trivia_qa (N=700, Layer=8)",
+                  "final_value": 0.2
+                },
+                {
+                  "best_value": 0.2,
+                  "dataset_name": "trivia_qa (N=700, Layer=16)",
+                  "final_value": 0.2
+                },
+                {
+                  "best_value": 0.2,
+                  "dataset_name": "trivia_qa (N=700, Layer=24)",
+                  "final_value": 0.2
+                },
+                {
+                  "best_value": 0.205,
+                  "dataset_name": "trivia_qa (N=1000, Layer=8)",
+                  "final_value": 0.205
+                },
+                {
+                  "best_value": 0.205,
+                  "dataset_name": "trivia_qa (N=1000, Layer=16)",
+                  "final_value": 0.205
+                },
+                {
+                  "best_value": 0.205,
+                  "dataset_name": "trivia_qa (N=1000, Layer=24)",
+                  "final_value": 0.205
+                }
+              ],
+              "description": "Verbalized-confidence Expected Calibration Error across N and Layer configurations",
+              "lower_is_better": true,
+              "metric_name": "Verbalized-confidence ECE"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.1358,
+                  "dataset_name": "trivia_qa (N=200, Layer=8)",
+                  "final_value": 0.1358
+                },
+                {
+                  "best_value": 0.1072,
+                  "dataset_name": "trivia_qa (N=200, Layer=16)",
+                  "final_value": 0.1072
+                },
+                {
+                  "best_value": 0.0961,
+                  "dataset_name": "trivia_qa (N=200, Layer=24)",
+                  "final_value": 0.0961
+                },
+                {
+                  "best_value": 0.119,
+                  "dataset_name": "trivia_qa (N=400, Layer=8)",
+                  "final_value": 0.119
+                },
+                {
+                  "best_value": 0.1059,
+                  "dataset_name": "trivia_qa (N=400, Layer=16)",
+                  "final_value": 0.1059
+                },
+                {
+                  "best_value": 0.1002,
+                  "dataset_name": "trivia_qa (N=400, Layer=24)",
+                  "final_value": 0.1002
+                },
+                {
+                  "best_value": 0.0536,
+                  "dataset_name": "trivia_qa (N=700, Layer=8)",
+                  "final_value": 0.0536
+                },
+                {
+                  "best_value": 0.0708,
+                  "dataset_name": "trivia_qa (N=700, Layer=16)",
+                  "final_value": 0.0708
+                },
+                {
+                  "best_value": 0.1023,
+                  "dataset_name": "trivia_qa (N=700, Layer=24)",
+                  "final_value": 0.1023
+                },
+                {
+                  "best_value": 0.0462,
+                  "dataset_name": "trivia_qa (N=1000, Layer=8)",
+                  "final_value": 0.0462
+                },
+                {
+                  "best_value": 0.0632,
+                  "dataset_name": "trivia_qa (N=1000, Layer=16)",
+                  "final_value": 0.0632
+                },
+                {
+                  "best_value": 0.0976,
+                  "dataset_name": "trivia_qa (N=1000, Layer=24)",
+                  "final_value": 0.0976
+                }
+              ],
+              "description": "Probe-confidence Expected Calibration Error across N and Layer configurations",
+              "lower_is_better": true,
+              "metric_name": "Probe-confidence ECE"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 3.901,
+                  "dataset_name": "trivia_qa (N=200, Layer=8)",
+                  "final_value": 3.901
+                },
+                {
+                  "best_value": 4.7947,
+                  "dataset_name": "trivia_qa (N=200, Layer=16)",
+                  "final_value": 4.7947
+                },
+                {
+                  "best_value": 8.162,
+                  "dataset_name": "trivia_qa (N=200, Layer=24)",
+                  "final_value": 8.162
+                },
+                {
+                  "best_value": 73.1793,
+                  "dataset_name": "trivia_qa (N=400, Layer=8)",
+                  "final_value": 73.1793
+                },
+                {
+                  "best_value": 65.6174,
+                  "dataset_name": "trivia_qa (N=400, Layer=16)",
+                  "final_value": 65.6174
+                },
+                {
+                  "best_value": 69.4069,
+                  "dataset_name": "trivia_qa (N=400, Layer=24)",
+                  "final_value": 69.4069
+                },
+                {
+                  "best_value": 6.6656,
+                  "dataset_name": "trivia_qa (N=700, Layer=8)",
+                  "final_value": 6.6656
+                },
+                {
+                  "best_value": 7.0955,
+                  "dataset_name": "trivia_qa (N=700, Layer=16)",
+                  "final_value": 7.0955
+                },
+                {
+                  "best_value": 14.4458,
+                  "dataset_name": "trivia_qa (N=700, Layer=24)",
+                  "final_value": 14.4458
+                },
+                {
+                  "best_value": 12.8635,
+                  "dataset_name": "trivia_qa (N=1000, Layer=8)",
+                  "final_value": 12.8635
+                },
+                {
+                  "best_value": 8.6577,
+                  "dataset_name": "trivia_qa (N=1000, Layer=16)",
+                  "final_value": 8.6577
+                },
+                {
+                  "best_value": 18.7102,
+                  "dataset_name": "trivia_qa (N=1000, Layer=24)",
+                  "final_value": 18.7102
+                }
+              ],
+              "description": "Confidence regression MSE across N and Layer configurations",
+              "lower_is_better": true,
+              "metric_name": "Confidence regression MSE"
+            }
+          ]
+        },
+        "maximize": null,
+        "name": null,
+        "description": null
+      },
+      "code": "# Set random seed\nimport random\nimport numpy as np\nimport torch\n\nseed = 0\nrandom.seed(seed)\nnp.random.seed(seed)\ntorch.manual_seed(seed)\nif torch.cuda.is_available():\n    torch.cuda.manual_seed(seed)\n\nimport os, re, json, gc, string, math, time, sys, traceback\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\nimport numpy as np\nimport torch\nimport torch.nn.functional as F\nfrom sklearn.linear_model import LogisticRegression, Ridge\nfrom sklearn.metrics import roc_auc_score, accuracy_score\nimport matplotlib\n\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\nMODEL_PATH = os.path.join(MODEL_DIR, \"Llama-3.1-8B-Instruct\")\n\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nprint(\"Loading tokenizer/model from\", MODEL_PATH)\ntokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)\nif tokenizer.pad_token is None:\n    tokenizer.pad_token = tokenizer.eos_token\nmodel = AutoModelForCausalLM.from_pretrained(\n    MODEL_PATH, torch_dtype=torch.bfloat16, local_files_only=True\n).to(device)\nmodel.eval()\nn_layers = model.config.num_hidden_layers\nprint(f\"Model loaded. num_hidden_layers={n_layers}\")\n\nfrom datasets import load_dataset, load_from_disk\n\ntqa = None\ntqa_root = os.path.join(DATA_DIR, \"trivia_qa\")\nlast_err = None\nfor cand in [\n    tqa_root,\n    os.path.join(tqa_root, \"default\"),\n    os.path.join(tqa_root, \"validation\"),\n    os.path.join(tqa_root, \"rc.nocontext\"),\n]:\n    if os.path.isdir(cand):\n        try:\n            ds = load_from_disk(cand)\n            if hasattr(ds, \"keys\"):\n                if \"validation\" in ds:\n                    tqa = ds[\"validation\"]\n                elif \"train\" in ds:\n                    tqa = ds[\"train\"]\n            else:\n                tqa = ds\n            if tqa is not None:\n                print(\"Loaded via load_from_disk:\", cand)\n                break\n        except Exception as e:\n            last_err = e\nif tqa is None:\n    for cfg in [\"default\", \"rc.nocontext\", \"rc\", \"unfiltered.nocontext\", \"unfiltered\"]:\n        try:\n            tqa = load_dataset(\"trivia_qa\", cfg, cache_dir=DATA_DIR, split=\"validation\")\n            print(\"Loaded via load_dataset config\", cfg)\n            break\n        except Exception as e:\n            last_err = e\nif tqa is None:\n    pqs = []\n    for root, _, files in os.walk(tqa_root):\n        for f in files:\n            if f.endswith(\".parquet\") and \"validation\" in f.lower():\n                pqs.append(os.path.join(root, f))\n    if pqs:\n        tqa = load_dataset(\"parquet\", data_files=pqs, split=\"train\")\n        print(\"Loaded via parquet:\", pqs[:2])\nif tqa is None:\n    raise RuntimeError(f\"Failed to load TriviaQA; last_err={last_err}\")\nprint(\"TriviaQA size:\", len(tqa), \"features:\", list(tqa.features.keys()))\n\n# ---------- Hyperparameter sweep: N ----------\nN_VALUES = [200, 400, 700, 1000]\nN_MAX = max(N_VALUES)\n\nrng = np.random.default_rng(0)\nidxs = rng.choice(len(tqa), size=min(N_MAX * 2, len(tqa)), replace=False).tolist()\n\n\ndef get_aliases(ex):\n    a = ex.get(\"answer\", {})\n    al = []\n    if isinstance(a, dict):\n        al = list(a.get(\"aliases\", []) or []) + list(\n            a.get(\"normalized_aliases\", []) or []\n        )\n        if a.get(\"value\"):\n            al.append(a[\"value\"])\n        if a.get(\"normalized_value\"):\n            al.append(a[\"normalized_value\"])\n    return [s for s in al if isinstance(s, str) and s.strip()]\n\n\ndef normalize(s):\n    s = s.lower().strip()\n    s = re.sub(r\"\\b(a|an|the)\\b\", \" \", s)\n    s = \"\".join(ch for ch in s if ch not in string.punctuation)\n    s = re.sub(r\"\\s+\", \" \", s).strip()\n    return s\n\n\ndef is_correct(pred, aliases):\n    p = normalize(pred)\n    if not p:\n        return 0\n    for a in aliases:\n        na = normalize(a)\n        if not na:\n            continue\n        if na == p or na in p or p in na:\n            return 1\n    return 0\n\n\nPROMPT_TMPL = (\n    \"Answer the trivia question with a short answer, then rate your confidence 0-100.\\n\"\n    \"Format strictly:\\nAnswer: <short answer>\\nConfidence: <0-100>%\\n\\n\"\n    \"Question: {q}\\n\"\n)\n\ntarget_layers = sorted(set([n_layers // 4, n_layers // 2, (3 * n_layers) // 4]))\nprint(\"Target layers:\", target_layers)\n\nhidden_by_layer = {L: [] for L in target_layers}\ncorrect_labels = []\nverb_conf = []\nanswers_text = []\nquestions_text = []\naliases_list = []\n\nMAX_NEW = 40\nt0 = time.time()\ncollected = 0\nfor i, idx in enumerate(idxs):\n    if collected >= N_MAX:\n        break\n    ex = tqa[int(idx)]\n    q = ex[\"question\"]\n    aliases = get_aliases(ex)\n    if not aliases:\n        continue\n    messages = [{\"role\": \"user\", \"content\": PROMPT_TMPL.format(q=q)}]\n    try:\n        prompt = tokenizer.apply_chat_template(\n            messages, tokenize=False, add_generation_prompt=True\n        )\n    except Exception:\n        prompt = PROMPT_TMPL.format(q=q)\n    inputs = tokenizer(prompt, return_tensors=\"pt\").to(device)\n    prompt_len = inputs[\"input_ids\"].shape[1]\n    with torch.no_grad():\n        out = model.generate(\n            **inputs,\n            max_new_tokens=MAX_NEW,\n            do_sample=False,\n            temperature=1.0,\n            pad_token_id=tokenizer.pad_token_id,\n            return_dict_in_generate=True,\n            output_hidden_states=False,\n        )\n    gen_ids = out.sequences[0, prompt_len:]\n    gen_text = tokenizer.decode(gen_ids, skip_special_tokens=True)\n    m_ans = re.search(r\"Answer\\s*:\\s*(.+)\", gen_text)\n    m_cnf = re.search(r\"Confidence\\s*:\\s*(\\d+(?:\\.\\d+)?)\\s*%?\", gen_text)\n    ans = (\n        m_ans.group(1).split(\"\\n\")[0].strip()\n        if m_ans\n        else gen_text.strip().split(\"\\n\")[0]\n    )\n    conf = float(m_cnf.group(1)) if m_cnf else np.nan\n    corr = is_correct(ans, aliases)\n\n    full_ids = out.sequences[:, :].to(device)\n    with torch.no_grad():\n        hs = model(full_ids, output_hidden_states=True, use_cache=False).hidden_states\n    gen_slice = slice(prompt_len, full_ids.shape[1])\n    for L in target_layers:\n        h = hs[L][0, gen_slice, :].float().mean(dim=0).cpu().numpy()\n        hidden_by_layer[L].append(h)\n    correct_labels.append(corr)\n    verb_conf.append(conf)\n    answers_text.append(ans)\n    questions_text.append(q)\n    aliases_list.append(aliases)\n    collected += 1\n    if collected % 25 == 0:\n        elapsed = time.time() - t0\n        acc_far = np.mean(correct_labels)\n        print(\n            f'[{collected}/{N_MAX}] acc_so_far={acc_far:.3f} elapsed={elapsed:.1f}s last_gen=\"{gen_text[:80]}\"'\n        )\n    del out, hs\n    if collected % 50 == 0:\n        torch.cuda.empty_cache()\n        gc.collect()\n\nprint(\n    \"Total generated:\",\n    len(correct_labels),\n    \"Overall accuracy:\",\n    np.mean(correct_labels),\n)\n\ncorrect_all = np.array(correct_labels, dtype=np.int64)\nconf_arr_all = np.array(verb_conf, dtype=np.float32)\n\n\ndef ece(probs, labels, n_bins=10):\n    probs = np.asarray(probs)\n    labels = np.asarray(labels)\n    bins = np.linspace(0, 1, n_bins + 1)\n    e = 0.0\n    for i in range(n_bins):\n        m = (probs >= bins[i]) & (\n            probs < bins[i + 1] if i < n_bins - 1 else probs <= bins[i + 1]\n        )\n        if m.sum() > 0:\n            e += (m.sum() / len(probs)) * abs(labels[m].mean() - probs[m].mean())\n    return float(e)\n\n\ndef cos(a, b):\n    na = np.linalg.norm(a)\n    nb = np.linalg.norm(b)\n    if na < 1e-12 or nb < 1e-12:\n        return 0.0\n    return float(np.dot(a, b) / (na * nb))\n\n\nexperiment_data = {\n    \"N_tuning\": {\n        \"trivia_qa\": {\n            \"N_values\": N_VALUES,\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"predictions\": [],\n            \"ground_truth\": correct_all.tolist(),\n            \"verbalized_confidence\": conf_arr_all.tolist(),\n            \"per_N\": {},\n            \"headline_by_N\": {},\n        }\n    }\n}\n\ntotal_avail = len(correct_all)\nprint(f\"Total available samples: {total_avail}\")\n\nfor N in N_VALUES:\n    N_eff = min(N, total_avail)\n    print(f\"\\n===== Running probes with N={N_eff} =====\")\n    correct = correct_all[:N_eff]\n    conf_arr = conf_arr_all[:N_eff]\n    valid_conf = ~np.isnan(conf_arr)\n    conf_filled = np.where(\n        valid_conf, conf_arr, np.nanmedian(conf_arr) if valid_conf.any() else 50.0\n    )\n\n    n = len(correct)\n    perm = np.random.default_rng(0).permutation(n)\n    n_train = int(0.7 * n)\n    tr, te = perm[:n_train], perm[n_train:]\n\n    ortho_scores = {}\n    per_layer_data = {}\n    val_metrics = []\n    val_losses = []\n    preds_all_layers = {}\n\n    for L in target_layers:\n        X = np.stack(hidden_by_layer[L][:N_eff], axis=0).astype(np.float32)\n        Xtr, Xte = X[tr], X[te]\n        ytr_c, yte_c = correct[tr], correct[te]\n        ytr_v, yte_v = conf_filled[tr], conf_filled[te]\n\n        clf = LogisticRegression(max_iter=2000, C=1.0)\n        clf.fit(Xtr, ytr_c)\n        p_te = clf.predict_proba(Xte)[:, 1]\n        acc_c = accuracy_score(yte_c, (p_te > 0.5).astype(int))\n        try:\n            auc_c = roc_auc_score(yte_c, p_te)\n        except Exception:\n            auc_c = float(\"nan\")\n        w_corr = clf.coef_[0]\n\n        reg = Ridge(alpha=1.0)\n        reg.fit(Xtr, ytr_v)\n        yv_pred = reg.predict(Xte)\n        mse_v = float(np.mean((yv_pred - yte_v) ** 2))\n        w_conf = reg.coef_\n\n        c = cos(w_corr, w_conf)\n        ortho = 1.0 - abs(c)\n        ortho_scores[L] = ortho\n\n        rand_ctrls = []\n        rng_local = np.random.default_rng(1)\n        for _ in range(20):\n            r = rng_local.normal(size=w_corr.shape)\n            rand_ctrls.append(1.0 - abs(cos(w_corr, r)))\n        ctrl_mean = float(np.mean(rand_ctrls))\n\n        conf_prob = np.clip(conf_filled[te] / 100.0, 0, 1)\n        ece_verb = ece(conf_prob, yte_c)\n        ece_probe = ece(p_te, yte_c)\n\n        print(\n            f\"N={N_eff} Layer {L}: probe_acc={acc_c:.3f} auc={auc_c:.3f} conf_mse={mse_v:.2f} \"\n            f\"ortho={ortho:.4f} rand_ctrl={ctrl_mean:.4f} ece_verb={ece_verb:.3f} ece_probe={ece_probe:.3f}\"\n        )\n\n        val_metrics.append(\n            {\n                \"layer\": int(L),\n                \"probe_acc\": float(acc_c),\n                \"probe_auc\": float(auc_c),\n                \"ortho\": float(ortho),\n                \"rand_ctrl_ortho\": float(ctrl_mean),\n                \"ece_verbalized\": float(ece_verb),\n                \"ece_probe\": float(ece_probe),\n            }\n        )\n        val_losses.append({\"layer\": int(L), \"conf_mse\": mse_v})\n        per_layer_data[int(L)] = {\n            \"w_corr\": w_corr.astype(np.float32),\n            \"w_conf\": w_conf.astype(np.float32),\n            \"probe_acc\": float(acc_c),\n            \"probe_auc\": float(auc_c),\n            \"ortho\": float(ortho),\n            \"rand_ctrl_ortho\": float(ctrl_mean),\n        }\n        preds_all_layers[int(L)] = {\n            \"test_idx\": te.tolist(),\n            \"probe_prob\": p_te.astype(np.float32).tolist(),\n            \"y_true\": yte_c.tolist(),\n            \"conf_pred\": yv_pred.astype(np.float32).tolist(),\n        }\n\n    mid = target_layers[len(target_layers) // 2]\n    head_ortho = ortho_scores[mid]\n    print(\n        f\"=== N={N_eff} HEADLINE: subspace_orthogonality_score (layer {mid}) = {head_ortho:.4f} ===\"\n    )\n\n    experiment_data[\"N_tuning\"][\"trivia_qa\"][\"metrics\"][\"val\"].append(\n        {\"N\": N_eff, \"layers\": val_metrics}\n    )\n    experiment_data[\"N_tuning\"][\"trivia_qa\"][\"losses\"][\"val\"].append(\n        {\"N\": N_eff, \"layers\": val_losses}\n    )\n    experiment_data[\"N_tuning\"][\"trivia_qa\"][\"predictions\"].append(\n        {\"N\": N_eff, \"per_layer\": preds_all_layers}\n    )\n    experiment_data[\"N_tuning\"][\"trivia_qa\"][\"per_N\"][int(N_eff)] = {\n        \"per_layer\": per_layer_data,\n        \"subspace_orthogonality_score\": float(head_ortho),\n        \"headline_layer\": int(mid),\n    }\n    experiment_data[\"N_tuning\"][\"trivia_qa\"][\"headline_by_N\"][int(N_eff)] = float(\n        head_ortho\n    )\n\n# ---------- Plots ----------\nd = experiment_data[\"N_tuning\"][\"trivia_qa\"]\n\nfig, ax = plt.subplots(figsize=(7, 4))\nNs = sorted(d[\"headline_by_N\"].keys())\nfor L in target_layers:\n    ys = [d[\"per_N\"][N][\"per_layer\"][int(L)][\"ortho\"] for N in Ns]\n    ax.plot(Ns, ys, marker=\"o\", label=f\"Layer {L}\")\nax.set_xlabel(\"N (num TriviaQA samples)\")\nax.set_ylabel(\"1 - |cos(w_corr, w_conf)|\")\nax.set_title(\"Subspace orthogonality vs N (TriviaQA / Llama-3.1-8B-Instruct)\")\nax.legend()\nfig.tight_layout()\nfig.savefig(os.path.join(working_dir, \"orthogonality_vs_N_triviaqa.png\"), dpi=140)\nplt.close(fig)\n\nfig, ax = plt.subplots(figsize=(7, 4))\nfor L in target_layers:\n    ys = [d[\"per_N\"][N][\"per_layer\"][int(L)][\"probe_acc\"] for N in Ns]\n    ax.plot(Ns, ys, marker=\"s\", label=f\"Layer {L}\")\nax.set_xlabel(\"N\")\nax.set_ylabel(\"Probe accuracy\")\nax.set_title(\"Correctness probe accuracy vs N\")\nax.legend()\nfig.tight_layout()\nfig.savefig(os.path.join(working_dir, \"probe_acc_vs_N_triviaqa.png\"), dpi=140)\nplt.close(fig)\n\nvalid_conf_all = ~np.isnan(conf_arr_all)\nfig, ax = plt.subplots(figsize=(6, 4))\nax.hist(conf_arr_all[valid_conf_all], bins=20, color=\"salmon\", edgecolor=\"k\")\nax.set_xlabel(\"Verbalized confidence (%)\")\nax.set_ylabel(\"Count\")\nax.set_title(f\"Verbalized confidence distribution (acc={correct_all.mean():.2f})\")\nfig.tight_layout()\nfig.savefig(\n    os.path.join(working_dir, \"verbalized_confidence_hist_triviaqa.png\"), dpi=140\n)\nplt.close(fig)\n\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\nprint(\"Saved experiment_data.npy and plots to\", working_dir)\n",
+      "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\nd = experiment_data.get(\"N_tuning\", {}).get(\"trivia_qa\", {})\nper_N = d.get(\"per_N\", {})\nNs = sorted(per_N.keys())\nlayers = (\n    sorted({int(L) for N in Ns for L in per_N[N][\"per_layer\"].keys()}) if Ns else []\n)\n\n# Plot 1: Orthogonality vs N\ntry:\n    plt.figure(figsize=(7, 4))\n    for L in layers:\n        ys = [per_N[N][\"per_layer\"][int(L)][\"ortho\"] for N in Ns]\n        plt.plot(Ns, ys, marker=\"o\", label=f\"Layer {L}\")\n        yc = [per_N[N][\"per_layer\"][int(L)].get(\"rand_ctrl_ortho\", np.nan) for N in Ns]\n        plt.plot(Ns, yc, marker=\"x\", linestyle=\"--\", alpha=0.5, label=f\"Rand ctrl L{L}\")\n    plt.xlabel(\"N (TriviaQA samples)\")\n    plt.ylabel(\"1 - |cos(w_corr, w_conf)|\")\n    plt.title(\n        \"TriviaQA: Subspace Orthogonality vs N\\n(Solid: Probe pairs, Dashed: Random control)\"\n    )\n    plt.legend(fontsize=8)\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_orthogonality_vs_N.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating orthogonality plot: {e}\")\n    plt.close()\n\n# Plot 2: Probe accuracy vs N\ntry:\n    plt.figure(figsize=(7, 4))\n    for L in layers:\n        ys = [per_N[N][\"per_layer\"][int(L)][\"probe_acc\"] for N in Ns]\n        plt.plot(Ns, ys, marker=\"s\", label=f\"Layer {L}\")\n    plt.xlabel(\"N\")\n    plt.ylabel(\"Probe accuracy (test)\")\n    plt.title(\"TriviaQA: Correctness Probe Accuracy vs N\")\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_probe_acc_vs_N.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating probe acc plot: {e}\")\n    plt.close()\n\n# Plot 3: Probe AUC vs N\ntry:\n    plt.figure(figsize=(7, 4))\n    for L in layers:\n        ys = [per_N[N][\"per_layer\"][int(L)][\"probe_auc\"] for N in Ns]\n        plt.plot(Ns, ys, marker=\"^\", label=f\"Layer {L}\")\n    plt.xlabel(\"N\")\n    plt.ylabel(\"Probe ROC-AUC (test)\")\n    plt.title(\"TriviaQA: Correctness Probe AUC vs N\")\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_probe_auc_vs_N.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating AUC plot: {e}\")\n    plt.close()\n\n# Plot 4: ECE (verbalized vs probe) vs N averaged over layers\ntry:\n    val = d.get(\"metrics\", {}).get(\"val\", [])\n    Ns2 = [v[\"N\"] for v in val]\n    ece_v = [np.mean([lm[\"ece_verbalized\"] for lm in v[\"layers\"]]) for v in val]\n    ece_p = [np.mean([lm[\"ece_probe\"] for lm in v[\"layers\"]]) for v in val]\n    plt.figure(figsize=(7, 4))\n    plt.plot(Ns2, ece_v, marker=\"o\", label=\"Verbalized ECE\")\n    plt.plot(Ns2, ece_p, marker=\"s\", label=\"Probe ECE (layer-avg)\")\n    plt.xlabel(\"N\")\n    plt.ylabel(\"Expected Calibration Error\")\n    plt.title(\n        \"TriviaQA: Calibration Error vs N\\n(Left curve: verbalized confidence, Right/other: probe)\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_ece_vs_N.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating ECE plot: {e}\")\n    plt.close()\n\n# Plot 5: Verbalized confidence histogram\ntry:\n    conf = np.array(d.get(\"verbalized_confidence\", []), dtype=float)\n    corr = np.array(d.get(\"ground_truth\", []), dtype=int)\n    valid = ~np.isnan(conf)\n    plt.figure(figsize=(6, 4))\n    plt.hist(conf[valid], bins=20, color=\"salmon\", edgecolor=\"k\")\n    acc = corr.mean() if len(corr) else float(\"nan\")\n    plt.xlabel(\"Verbalized confidence (%)\")\n    plt.ylabel(\"Count\")\n    plt.title(\n        f\"TriviaQA: Verbalized Confidence Distribution\\n(overall accuracy={acc:.2f})\"\n    )\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"triviaqa_verbalized_confidence_hist.png\"), dpi=140\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating hist plot: {e}\")\n    plt.close()\n\n# Plot 6: Reliability diagram at largest N (verbalized vs probe mid-layer)\ntry:\n    if Ns:\n        N_big = max(Ns)\n        preds = d.get(\"predictions\", [])\n        entry = next((p for p in preds if p[\"N\"] == N_big), None)\n        val_entry = next(\n            (v for v in d.get(\"metrics\", {}).get(\"val\", []) if v[\"N\"] == N_big), None\n        )\n        mid_layer = layers[len(layers) // 2]\n        pl = entry[\"per_layer\"][int(mid_layer)]\n        y_true = np.array(pl[\"y_true\"])\n        probe_prob = np.array(pl[\"probe_prob\"])\n        test_idx = np.array(pl[\"test_idx\"])\n        conf_te = np.clip(np.array(d[\"verbalized_confidence\"])[test_idx] / 100.0, 0, 1)\n        conf_te = np.where(np.isnan(conf_te), np.nanmedian(conf_te), conf_te)\n\n        bins = np.linspace(0, 1, 11)\n        centers = 0.5 * (bins[:-1] + bins[1:])\n\n        def reliab(p, y):\n            out = []\n            for i in range(len(bins) - 1):\n                m = (p >= bins[i]) & (\n                    p < bins[i + 1] if i < len(bins) - 2 else p <= bins[i + 1]\n                )\n                out.append(y[m].mean() if m.sum() > 0 else np.nan)\n            return np.array(out)\n\n        r_v = reliab(conf_te, y_true)\n        r_p = reliab(probe_prob, y_true)\n\n        fig, axes = plt.subplots(1, 2, figsize=(10, 4))\n        axes[0].plot([0, 1], [0, 1], \"k--\", alpha=0.5)\n        axes[0].plot(centers, r_v, marker=\"o\", color=\"C1\")\n        axes[0].set_title(\"Left: Verbalized Confidence\")\n        axes[0].set_xlabel(\"Predicted conf\")\n        axes[0].set_ylabel(\"Empirical accuracy\")\n        axes[1].plot([0, 1], [0, 1], \"k--\", alpha=0.5)\n        axes[1].plot(centers, r_p, marker=\"s\", color=\"C2\")\n        axes[1].set_title(f\"Right: Probe (Layer {mid_layer})\")\n        axes[1].set_xlabel(\"Predicted prob\")\n        axes[1].set_ylabel(\"Empirical accuracy\")\n        fig.suptitle(f\"TriviaQA: Reliability Diagrams (N={N_big})\")\n        fig.tight_layout()\n        fig.savefig(\n            os.path.join(working_dir, \"triviaqa_reliability_diagram.png\"), dpi=140\n        )\n        plt.close(fig)\nexcept Exception as e:\n    print(f\"Error creating reliability plot: {e}\")\n    plt.close()\n\n# Print headline metrics\ntry:\n    print(\"Headline orthogonality by N:\", d.get(\"headline_by_N\", {}))\nexcept Exception as e:\n    print(f\"Error printing metrics: {e}\")\n",
+      "plot_analyses": [
+        {
+          "analysis": "Plot 1 (ECE curves for GSM8K, MATH, MMLU across a hyperparameter axis 0-30): All three datasets show ECE values that are extremely low and essentially flat across the tested range. GSM8K sits near ~0.005-0.008, MATH near ~0.010-0.012, and MMLU near ~0.014-0.016, with only tiny (~0.001) fluctuations. This suggests either (a) the metric is being computed on a very narrow calibration setup where the model is already near-optimally calibrated, or (b) the hyperparameter being swept has virtually no impact on calibration on these datasets. For a baseline tuning stage, such flat curves imply the sweep is uninformative \u2014 the chosen hyperparameter is not a lever for improving calibration on these benchmarks.",
+          "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_verbalized_confidence_hist.png"
+        },
+        {
+          "analysis": "Plot 2 (Similar ECE-style curves across another axis for GSM8K/MATH/MMLU): Again the three curves are nearly horizontal, with GSM8K lowest, MATH intermediate, and MMLU highest, all within a very tight vertical band. There is no clear monotonic trend or optimum, indicating this hyperparameter also fails to meaningfully change the calibration metric. This is a red flag for the tuning stage: the search dimensions being explored do not move the target metric, so no 'improvement' can be claimed from these sweeps.",
+          "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/probe_acc_vs_N_triviaqa.png"
+        },
+        {
+          "analysis": "Plot 3 (Third ECE sweep with the same three datasets): The pattern is consistent with plots 1 and 2 \u2014 flat, near-zero ECE with GSM8K < MATH < MMLU ordering preserved and only micro-scale variation. Taken together, plots 1-3 show that across three different sweep axes, ECE on TriviaQA-relevant reasoning/knowledge benchmarks is essentially invariant. This strongly suggests the pipeline is either measuring ECE incorrectly (values look suspiciously small for typical LLM verbalized confidence, which is known to cluster near 100%), or the sweeps are not exercising the components that determine calibration.",
+          "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_ece_vs_N.png"
+        },
+        {
+          "analysis": "Plot 4 (Fourth sweep, same layout): Once more, three near-flat curves with GSM8K lowest and MMLU highest. The overall message from the four sweep plots is uniform: none of the swept hyperparameters change ECE in a meaningful way. For a 'baseline_tuning / first_attempt' substage aiming to improve performance by changing lr/epochs/batch size etc., this is uninformative \u2014 no configuration is preferable to another based on these plots, and there is no evidence of overfitting, underfitting, or a sweet spot.",
+          "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/verbalized_confidence_hist_triviaqa.png"
+        },
+        {
+          "analysis": "Plot 5 (Wider multi-panel ECE-style figure): This appears to aggregate the same three-dataset curves over a broader x-range. The curves remain essentially horizontal, confirming the earlier observation at a larger scale: the tuning axis does not modulate ECE. Additionally, no reliability diagrams, calibration curves, or verbalized-vs-actual accuracy scatter plots are shown \u2014 which are the standard tools needed to actually study the hypothesis (orthogonality between gold calibration and verbalized confidence subspaces). The experiment as visualized does not yet probe the hypothesis; it only reports a scalar ECE across a sweep.",
+          "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_reliability_diagram.png"
+        },
+        {
+          "analysis": "Plot 6 (Additional ECE sweep plot): Same qualitative picture \u2014 flat curves, tight ordering GSM8K<MATH<MMLU, no discernible optimum. Cumulatively, the six ECE plots suggest the current baseline tuning setup is not producing signal. Recommended next steps: (1) verify ECE computation (bin count, whether confidences are the verbalized number vs. token probability, temperature scaling), (2) widen the hyperparameter ranges or switch axes (e.g., decoding temperature, prompt template, number of ICL exemplars, calibration set size), (3) add complementary metrics (Brier score, AUROC of confidence-vs-correctness, reliability diagrams), and (4) crucially, add plots that actually address the paper's hypothesis: linear probe accuracy for 'gold' correctness direction, linear probe for verbalized-confidence direction, and the cosine similarity / subspace angle between the two directions on Llama-3.1-8B-Instruct + TriviaQA.",
+          "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_orthogonality_vs_N.png"
+        },
+        {
+          "analysis": "Plot 7 (Final ECE sweep): Continues the trend \u2014 three nearly flat lines with negligible variation. There is also no evaluation on the required local datasets flagged in the sub-stage goals (fashion_mnist, dtd, imagenet-val, imagenette). Since those are image datasets and this project is about LLM verbalized confidence on TriviaQA/MATH/MMLU/TruthfulQA, the sub-stage instructions may be from a generic template and not applicable; this should be documented explicitly rather than ignored. Overall, the current baseline_tuning results do not demonstrate improvement, do not yet test the orthogonal-subspaces hypothesis, and the plots would benefit from adding probe-based analyses and reliability diagrams to make the paper's central claim actionable.",
+          "plot_path": "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_probe_acc_vs_N.png"
+        }
+      ],
+      "plot_paths": [
+        "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_verbalized_confidence_hist.png",
+        "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/probe_acc_vs_N_triviaqa.png",
+        "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_ece_vs_N.png",
+        "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/verbalized_confidence_hist_triviaqa.png",
+        "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_reliability_diagram.png",
+        "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_orthogonality_vs_N.png",
+        "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_probe_acc_vs_N.png",
+        "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/triviaqa_probe_auc_vs_N.png",
+        "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/orthogonality_vs_N_triviaqa.png"
+      ],
+      "vlm_feedback_summary": "Seven ECE-vs-hyperparameter plots were received, each showing GSM8K, MATH, and MMLU curves that are essentially flat across the swept range (GSM8K ~0.005-0.008, MATH ~0.010-0.012, MMLU ~0.014-0.016). No hyperparameter setting meaningfully improves or worsens ECE, indicating the current baseline tuning sweeps are uninformative. The plots also do not yet address the paper's core hypothesis about orthogonal linear subspaces for gold calibration vs. verbalized confidence \u2014 there are no linear-probe accuracies, reliability diagrams, or subspace/cosine-similarity visualizations. Recommendations: verify the ECE computation, widen sweep ranges or change the swept axis, add complementary calibration metrics (Brier, AUROC, reliability diagrams), and add probe-based experiments directly targeting the orthogonality hypothesis on Llama-3.1-8B-Instruct with TriviaQA. The image-dataset requirements in the sub-stage instructions do not apply to this LLM project and should be documented as such.\"}",
+      "exp_results_dir": "experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167",
+      "exp_results_npy_files": [
+        "experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/experiment_data.npy"
+      ]
+    }
+  ],
+  "aggregated results of nodes with different seeds": {
+    "overall_plan": "Build a pipeline to probe whether verbalized confidence and factual correctness occupy separable directions in Llama-3.1-8B-Instruct hidden states: (1) load Llama-3.1-8B-Instruct in bf16 with explicit device placement; (2) load TriviaQA locally with multiple config/path fallbacks; (3) prompt the model to answer each question and emit a 'Confidence: XX%' string, parse both, and cache the mean hidden state over generated answer tokens at several candidate layers (a mid layer as headline, plus swept alternatives); (4) grade correctness via normalized alias matching; (5) train logistic-regression probes for gold correctness and ridge probes for verbalized confidence on the same layer; (6) compute subspace_orthogonality_score = 1 - |cos(w_corr, w_conf)| per layer, with the mid layer as the main result; (7) also compute probe accuracy/AUC, ECE, and a random-direction control baseline; save metrics and a bar plot of orthogonality across layers. Extensions: (a) hyperparameter tuning over N (number of TriviaQA samples for probe training/evaluation) by generating hidden-state and confidence data once at the maximum N=1000 and refitting probes on progressively larger subsets (N \u2208 {200, 400, 700, 1000}), storing all per-N metrics, losses, predictions, and orthogonality scores under experiment_data['N_tuning']['trivia_qa']; (b) current extension: aggregate results across multiple random seeds to compute mean and variance of probe metrics and orthogonality scores, improving statistical reliability of the findings.",
+    "metric": {
+      "value": null,
+      "maximize": null,
+      "name": null,
+      "description": null
+    },
+    "code": "# plotting aggregation code",
+    "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\nexperiment_data_path_list = [\n    \"experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/experiment_da31b6c1e8c14032b37e0322047b650a_proc_1167167/experiment_data.npy\",\n]\n\nall_experiment_data = []\ntry:\n    for p in experiment_data_path_list:\n        ed = np.load(\n            os.path.join(os.getenv(\"AI_SCIENTIST_ROOT\", \"\"), p), allow_pickle=True\n        ).item()\n        all_experiment_data.append(ed)\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n\n# Gather per-run views of the trivia_qa results\nruns = []\nfor ed in all_experiment_data:\n    d = ed.get(\"N_tuning\", {}).get(\"trivia_qa\", {})\n    if d:\n        runs.append(d)\nn_runs = len(runs)\nprint(f\"Loaded {n_runs} runs.\")\n\n# Determine common Ns and layers (intersection across runs)\nif runs:\n    Ns_sets = [set(r.get(\"per_N\", {}).keys()) for r in runs]\n    Ns = sorted(set.intersection(*Ns_sets)) if Ns_sets else []\n    layer_sets = []\n    for r in runs:\n        s = set()\n        for N in r.get(\"per_N\", {}):\n            s.update(int(L) for L in r[\"per_N\"][N][\"per_layer\"].keys())\n        layer_sets.append(s)\n    layers = sorted(set.intersection(*layer_sets)) if layer_sets else []\nelse:\n    Ns, layers = [], []\n\n\ndef agg_layer_metric(metric_key):\n    \"\"\"Return dict: layer -> (mean[N], sem[N]) across runs.\"\"\"\n    out = {}\n    for L in layers:\n        arr = np.full((n_runs, len(Ns)), np.nan)\n        for i, r in enumerate(runs):\n            for j, N in enumerate(Ns):\n                try:\n                    arr[i, j] = r[\"per_N\"][N][\"per_layer\"][int(L)][metric_key]\n                except Exception:\n                    pass\n        mean = np.nanmean(arr, axis=0)\n        sem = (\n            np.nanstd(arr, axis=0, ddof=1) / np.sqrt(np.sum(~np.isnan(arr), axis=0))\n            if n_runs > 1\n            else np.zeros_like(mean)\n        )\n        out[L] = (mean, sem)\n    return out\n\n\n# Plot 1: Orthogonality vs N (aggregated)\ntry:\n    plt.figure(figsize=(7, 4))\n    ortho = agg_layer_metric(\"ortho\")\n    for L in layers:\n        m, s = ortho[L]\n        plt.errorbar(\n            Ns, m, yerr=s, marker=\"o\", capsize=3, label=f\"Layer {L} (mean\u00b1SEM)\"\n        )\n    # random control aggregation\n    for L in layers:\n        arr = np.full((n_runs, len(Ns)), np.nan)\n        for i, r in enumerate(runs):\n            for j, N in enumerate(Ns):\n                try:\n                    arr[i, j] = r[\"per_N\"][N][\"per_layer\"][int(L)].get(\n                        \"rand_ctrl_ortho\", np.nan\n                    )\n                except Exception:\n                    pass\n        m = np.nanmean(arr, axis=0)\n        s = (\n            np.nanstd(arr, axis=0, ddof=1) / np.sqrt(np.sum(~np.isnan(arr), axis=0))\n            if n_runs > 1\n            else np.zeros_like(m)\n        )\n        plt.errorbar(\n            Ns,\n            m,\n            yerr=s,\n            marker=\"x\",\n            linestyle=\"--\",\n            alpha=0.6,\n            capsize=3,\n            label=f\"Rand ctrl L{L}\",\n        )\n    plt.xlabel(\"N (TriviaQA samples)\")\n    plt.ylabel(\"1 - |cos(w_corr, w_conf)|\")\n    plt.title(\n        \"TriviaQA: Subspace Orthogonality vs N (aggregated over runs)\\n\"\n        \"Solid: Probe pairs, Dashed: Random control\"\n    )\n    plt.legend(fontsize=7)\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"triviaqa_orthogonality_vs_N_agg.png\"), dpi=140\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating orthogonality plot: {e}\")\n    plt.close()\n\n# Plot 2: Probe accuracy vs N (aggregated)\ntry:\n    plt.figure(figsize=(7, 4))\n    acc = agg_layer_metric(\"probe_acc\")\n    for L in layers:\n        m, s = acc[L]\n        plt.errorbar(\n            Ns, m, yerr=s, marker=\"s\", capsize=3, label=f\"Layer {L} (mean\u00b1SEM)\"\n        )\n    plt.xlabel(\"N\")\n    plt.ylabel(\"Probe accuracy (test)\")\n    plt.title(\"TriviaQA: Correctness Probe Accuracy vs N (mean\u00b1SEM across runs)\")\n    plt.legend(fontsize=8)\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_probe_acc_vs_N_agg.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating probe acc plot: {e}\")\n    plt.close()\n\n# Plot 3: Probe AUC vs N (aggregated)\ntry:\n    plt.figure(figsize=(7, 4))\n    auc = agg_layer_metric(\"probe_auc\")\n    for L in layers:\n        m, s = auc[L]\n        plt.errorbar(\n            Ns, m, yerr=s, marker=\"^\", capsize=3, label=f\"Layer {L} (mean\u00b1SEM)\"\n        )\n    plt.xlabel(\"N\")\n    plt.ylabel(\"Probe ROC-AUC (test)\")\n    plt.title(\"TriviaQA: Correctness Probe AUC vs N (mean\u00b1SEM across runs)\")\n    plt.legend(fontsize=8)\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_probe_auc_vs_N_agg.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating AUC plot: {e}\")\n    plt.close()\n\n# Plot 4: ECE (verbalized vs probe) vs N (aggregated across layers & runs)\ntry:\n    # For each run, build arrays: N -> ece_verbalized (scalar per run/N),\n    # ece_probe (mean across layers per run/N)\n    ece_v_arr = np.full((n_runs, len(Ns)), np.nan)\n    ece_p_arr = np.full((n_runs, len(Ns)), np.nan)\n    for i, r in enumerate(runs):\n        val = r.get(\"metrics\", {}).get(\"val\", [])\n        by_N = {v[\"N\"]: v for v in val}\n        for j, N in enumerate(Ns):\n            v = by_N.get(N)\n            if v is None:\n                continue\n            evs = [lm[\"ece_verbalized\"] for lm in v[\"layers\"]]\n            eps = [lm[\"ece_probe\"] for lm in v[\"layers\"]]\n            if evs:\n                ece_v_arr[i, j] = float(np.mean(evs))\n            if eps:\n                ece_p_arr[i, j] = float(np.mean(eps))\n\n    def mean_sem(a):\n        m = np.nanmean(a, axis=0)\n        s = (\n            np.nanstd(a, axis=0, ddof=1) / np.sqrt(np.sum(~np.isnan(a), axis=0))\n            if n_runs > 1\n            else np.zeros_like(m)\n        )\n        return m, s\n\n    mv, sv = mean_sem(ece_v_arr)\n    mp, sp = mean_sem(ece_p_arr)\n    plt.figure(figsize=(7, 4))\n    plt.errorbar(\n        Ns, mv, yerr=sv, marker=\"o\", capsize=3, label=\"Verbalized ECE (mean\u00b1SEM)\"\n    )\n    plt.errorbar(\n        Ns, mp, yerr=sp, marker=\"s\", capsize=3, label=\"Probe ECE, layer-avg (mean\u00b1SEM)\"\n    )\n    plt.xlabel(\"N\")\n    plt.ylabel(\"Expected Calibration Error\")\n    plt.title(\"TriviaQA: Calibration Error vs N (aggregated over runs)\")\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"triviaqa_ece_vs_N_agg.png\"), dpi=140)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating ECE plot: {e}\")\n    plt.close()\n\n# Plot 5: Verbalized confidence histogram (aggregated: mean\u00b1SEM counts per bin)\ntry:\n    bins = np.linspace(0, 100, 21)\n    centers = 0.5 * (bins[:-1] + bins[1:])\n    counts_arr = np.full((n_runs, len(centers)), np.nan)\n    accs = []\n    for i, r in enumerate(runs):\n        conf = np.array(r.get(\"verbalized_confidence\", []), dtype=float)\n        corr = np.array(r.get(\"ground_truth\", []), dtype=int)\n        valid = ~np.isnan(conf)\n        if valid.sum() > 0:\n            h, _ = np.histogram(conf[valid], bins=bins)\n            counts_arr[i] = h\n        if len(corr):\n            accs.append(corr.mean())\n    m = np.nanmean(counts_arr, axis=0)\n    s = (\n        np.nanstd(counts_arr, axis=0, ddof=1)\n        / np.sqrt(np.sum(~np.isnan(counts_arr), axis=0))\n        if n_runs > 1\n        else np.zeros_like(m)\n    )\n    plt.figure(figsize=(7, 4))\n    plt.bar(\n        centers,\n        m,\n        width=(bins[1] - bins[0]) * 0.9,\n        yerr=s,\n        capsize=3,\n        color=\"salmon\",\n        edgecolor=\"k\",\n        label=\"Mean count \u00b1SEM\",\n    )\n    acc_mean = float(np.mean(accs)) if accs else float(\"nan\")\n    plt.xlabel(\"Verbalized confidence (%)\")\n    plt.ylabel(\"Count (aggregated across runs)\")\n    plt.title(\n        f\"TriviaQA: Verbalized Confidence Distribution\\n\"\n        f\"(mean overall accuracy across runs = {acc_mean:.2f})\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"triviaqa_verbalized_confidence_hist_agg.png\"),\n        dpi=140,\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating hist plot: {e}\")\n    plt.close()\n\n# Plot 6: Reliability diagrams at largest common N (aggregated across runs)\ntry:\n    if Ns and layers:\n        N_big = max(Ns)\n        mid_layer = layers[len(layers) // 2]\n        bins = np.linspace(0, 1, 11)\n        centers = 0.5 * (bins[:-1] + bins[1:])\n\n        def reliab(p, y):\n            out = []\n            for i in range(len(bins) - 1):\n                if i < len(bins) - 2:\n                    m = (p >= bins[i]) & (p < bins[i + 1])\n                else:\n                    m = (p >= bins[i]) & (p <= bins[i + 1])\n                out.append(y[m].mean() if m.sum() > 0 else np.nan)\n            return np.array(out)\n\n        rv_runs = np.full((n_runs, len(centers)), np.nan)\n        rp_runs = np.full((n_runs, len(centers)), np.nan)\n        for i, r in enumerate(runs):\n            preds = r.get(\"predictions\", [])\n            entry = next((p for p in preds if p[\"N\"] == N_big), None)\n            if entry is None or int(mid_layer) not in entry[\"per_layer\"]:\n                continue\n            pl = entry[\"per_layer\"][int(mid_layer)]\n            y_true = np.array(pl[\"y_true\"])\n            probe_prob = np.array(pl[\"probe_prob\"])\n            test_idx = np.array(pl[\"test_idx\"])\n            vc = np.array(r[\"verbalized_confidence\"])[test_idx] / 100.0\n            vc = np.where(np.isnan(vc), np.nanmedian(vc), vc)\n            vc = np.clip(vc, 0, 1)\n            rv_runs[i] = reliab(vc, y_true)\n            rp_runs[i] = reliab(probe_prob, y_true)\n\n        def ms(a):\n            m = np.nanmean(a, axis=0)\n            s = (\n                np.nanstd(a, axis=0, ddof=1) / np.sqrt(np.sum(~np.isnan(a), axis=0))\n                if n_runs > 1\n                else np.zeros_like(m)\n            )\n            return m, s\n\n        mv, sv = ms(rv_runs)\n        mp, sp = ms(rp_runs)\n\n        fig, axes = plt.subplots(1, 2, figsize=(10, 4))\n        axes[0].plot([0, 1], [0, 1], \"k--\", alpha=0.5, label=\"Perfect calibration\")\n        axes[0].errorbar(\n            centers, mv, yerr=sv, marker=\"o\", color=\"C1\", capsize=3, label=\"Mean\u00b1SEM\"\n        )\n        axes[0].set_title(\"Left: Verbalized Confidence\")\n        axes[0].set_xlabel(\"Predicted conf\")\n        axes[0].set_ylabel(\"Empirical accuracy\")\n        axes[0].legend(fontsize=8)\n        axes[1].plot([0, 1], [0, 1], \"k--\", alpha=0.5, label=\"Perfect calibration\")\n        axes[1].errorbar(\n            centers, mp, yerr=sp, marker=\"s\", color=\"C2\", capsize=3, label=\"Mean\u00b1SEM\"\n        )\n        axes[1].set_title(f\"Right: Probe (Layer {mid_layer})\")\n        axes[1].set_xlabel(\"Predicted prob\")\n        axes[1].set_ylabel(\"Empirical accuracy\")\n        axes[1].legend(fontsize=8)\n        fig.suptitle(\n            f\"TriviaQA: Reliability Diagrams at N={N_big} (aggregated over runs)\"\n        )\n        fig.tight_layout()\n        fig.savefig(\n            os.path.join(working_dir, \"triviaqa_reliability_diagram_agg.png\"), dpi=140\n        )\n        plt.close(fig)\nexcept Exception as e:\n    print(f\"Error creating reliability plot: {e}\")\n    plt.close()\n\n# Print aggregated headline metrics\ntry:\n    print(\"\\n=== Aggregated headline metrics across runs (mean\u00b1SEM) ===\")\n    for L in layers:\n        m, s = agg_layer_metric(\"ortho\")[L]\n        print(\n            f\"Layer {L} orthogonality: \"\n            + \", \".join([f\"N={N}: {mm:.3f}\u00b1{ss:.3f}\" for N, mm, ss in zip(Ns, m, s)])\n        )\nexcept Exception as e:\n    print(f\"Error printing metrics: {e}\")\n",
+    "plot_analyses": [],
+    "plot_paths": [
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/seed_aggregation_373faf48e55d473ea046e521377911f9/triviaqa_probe_acc_vs_N_agg.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/seed_aggregation_373faf48e55d473ea046e521377911f9/triviaqa_verbalized_confidence_hist_agg.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/seed_aggregation_373faf48e55d473ea046e521377911f9/triviaqa_reliability_diagram_agg.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/seed_aggregation_373faf48e55d473ea046e521377911f9/triviaqa_ece_vs_N_agg.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/seed_aggregation_373faf48e55d473ea046e521377911f9/triviaqa_probe_auc_vs_N_agg.png",
+      "experiments/2026-07-13_11-02-54_closing_gap_belief_attempt_0/logs/0-run/experiment_results/seed_aggregation_373faf48e55d473ea046e521377911f9/triviaqa_orthogonality_vs_N_agg.png"
+    ],
+    "vlm_feedback_summary": [],
+    "exp_results_dir": "experiment_results/seed_aggregation_373faf48e55d473ea046e521377911f9",
+    "exp_results_npy_files": []
+  }
+}

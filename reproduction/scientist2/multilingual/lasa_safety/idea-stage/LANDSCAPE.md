@@ -1,0 +1,112 @@
+# Landscape: Multilingual LLM safety alignment via a language-agnostic semantic bottleneck
+
+**Date**: 2026-07-14
+**Scope**: Interpreted as: prior-art literature relevant to (a) the existence / geometry of a language-agnostic "semantic bottleneck" in intermediate layers of multilingual LLMs, and (b) mechanisms for **cross-lingual safety transfer** — evaluated against multilingual jailbreak benchmarks (MultiJail, XSafety) with general capability retention on MMLU / MT-Bench / MGSM. Year window: pre-2604 arXiv only (per `.claude/forbidden-urls.txt` cutoff). The target paper LASA (arXiv 2604.12710) and any concurrent 2604-onwards work are deliberately excluded.
+**Based on**: 23 retrieved / referenced papers — see `RESEARCH_LIT.md` for the raw retrieval dump.
+
+---
+
+## 1. Structured Paper Table
+
+| # | Paper | Venue | Method | Key Result | Relevance to Us | Source |
+|---|-------|-------|--------|------------|-----------------|--------|
+| 1 | XSafety (Wang et al. 2023, 2310.00905) | arXiv / EMNLP-track | Multilingual safety benchmark, 14 issues × 10 langs | LLMs give more unsafe responses in non-English; prompting drops unsafe rate 19.1%→9.7% | Companion benchmark to MultiJail; establishes **behavior (1)-side gap** we want to close | arXiv |
+| 2 | MultiJail — Multilingual Jailbreak Challenges in LLMs (Deng et al. 2023, 2310.06474) | ICLR / EMNLP 2024 | 3,150 harmful queries × 9 langs (high/mid/low) | Low-resource jailbreak succeeds far more often than English | **Primary safety benchmark** stipulated by `task.md`; establishes the gap that motivates cross-lingual safety alignment | prior-art (standard reference) |
+| 3 | Do Llamas Work in English? (Wendler et al. 2024, 2402.10588) | ACL 2024 | Logit-lens tracking of intermediate embeddings across langs | Three-phase structure (input / concept / output space); middle-layer "concept space" biased toward English | **Direct evidence for the semantic-bottleneck (behavior-1)** narrative; a mid-layer where meaning ≻ language identity | arXiv |
+| 4 | Separating Tongue from Thought — Activation Patching (Dumas et al. 2024, 2411.08745) | BlackboxNLP 2024 | Cross-lingual paraphrase activation patching | Causal evidence for language-agnostic concept representations at intermediate layers | Causal (not just correlational) evidence for behavior-1 | arXiv (title-only from voided web hit; verified as pre-cutoff) |
+| 5 | Semantic Hub Hypothesis (Wu et al. 2024, 2411.04986) | arXiv | Cross-lingual + cross-modal representation analysis | Middle-layer shared semantic hub across languages and modalities | Frames the semantic-bottleneck layer as a *shared hub*; motivates the choice of intervention layer | arXiv |
+| 6 | mOthello (Hua, Yun, Pavlick 2024, 2404.12444) | NAACL 2024 Findings | Synthetic multilingual Othello + probing | Language-neutral rep is neither automatic nor sufficient; "anchor tokens" help; unified output space is needed for transfer | Boundary condition: cross-lingual **representation alignment ≠ cross-lingual behavioral transfer** — important caveat for behavior-2 | arXiv |
+| 7 | Cross-Lingual Consistency of Factual Knowledge (Qi et al. 2023, 2310.10378) | EMNLP 2023 | RankC metric + editing case study | Factual edits transfer only to langs with high RankC to source lang; scale ↑ accuracy but not consistency | Suggests **structural pretraining bias** determines which langs receive downstream (safety) transfer — motivates layer-level intervention instead of data-only | arXiv |
+| 8 | Multilingual Value Concepts in LLMs (Xu et al. 2024, 2402.18120) | EMNLP 2024 | Linear-direction probing on 7 value concepts × 16 langs | Value directions exist multilingually; **unidirectional transfer** HRL→LRL feasible; inconsistency across langs | Direct precedent for representation-space value alignment across languages; a **weak** version of behavior-2 already established | arXiv |
+| 9 | Refusal is Mediated by a Single Direction (Arditi et al. 2024, 2406.11717) | NeurIPS 2024 | Diff-in-means refusal direction + ablation | Refusal is a 1-D subspace in residual stream; ablating disables refusal without capability collapse | Foundational mechanism — the **intervention primitive** we would apply at the semantic-bottleneck layer | arXiv |
+| 10 | Representation Engineering / RepE (Zou et al. 2023, 2310.01405) | arXiv | Population-level activation steering across safety concepts | RepE offers simple, effective control over honesty / harmlessness / power-seeking | Foundational framework for representation-space alignment (as opposed to text-space) | arXiv |
+| 11 | Circuit Breakers (Zou et al. 2024, 2406.04313) | NeurIPS 2024 | Rerouting harmful representations at training time | Robust to unseen jailbreaks incl. multimodal; preserves utility | Alternative representation-level alignment approach — a competitive baseline for behavior-2 | arXiv |
+| 12 | Preference Tuning for Toxicity Mitigation Generalizes Across Langs (Li, Yong, Bach 2024, 2406.16235) | EMNLP Findings 2024 | English-only DPO on toxicity | Toxicity drops from 46.8% → 3.9% across 17 langs after English-only DPO; MLP dual-multilinguality identified via causal intervention | **Strongest existing evidence for cross-lingual safety transfer via preference tuning** — but on toxicity (not jailbreak) and English-only source. Sets the bar our method needs to exceed | arXiv |
+| 13 | RLHF Can Speak Many Languages (Dang et al., Cohere/Aya 2024, 2407.02552) | EMNLP 2024 | Scalable multilingual DPO with translated preference data | Beats Aya-23 8B (multilingual SOTA) 54.4% win-rate | Baseline for **translation-augmented preference optimization** on the surface — the exact family task.md wants to outperform | arXiv |
+| 14 | xLLMs-100 (Lai et al. 2024, 2406.01771) | arXiv | Multilingual instruction data × 100 langs + cross-lingual DPO on 30 langs | New SOTA on 5 multilingual benchmarks | Massive-scale surface DPO reference — expensive; contrasts with sparse / representation-level alternatives | arXiv |
+| 15 | PKU-SafeRLHF (Ji et al. 2024, 2406.15513) | arXiv | 166.8k safety preference pairs, 19 harm categories | Public safety preference dataset with helpfulness ↔ harmlessness decoupled | **The training-data source stipulated by `task.md`** (with its multilingual translations restricted to EN/ZH/KO) | arXiv |
+| 16 | Refusal Direction is Universal Across Safety-Aligned Languages (Wang et al. 2025, 2505.17306) | ACL 2025 track | Extract refusal direction per language and cross-transfer | Refusal directions transfer across langs with minor loss; a **single unified refusal direction** matches per-language ones; high cosine similarity in middle-to-late layers | **Closest existing "linear cross-lingual safety mechanism"** — establishes that a *language-agnostic* refusal signal already exists at the representation level (i.e., behavior-1 has partial confirmation) | arXiv |
+| 17 | Hidden Dimensions of LLM Alignment (Pan et al. 2025, 2502.09674) | ACL 2025 | Multi-dim analysis of safety subspace via orthogonal decomposition | Dominant refusal direction + smaller feature-specific directions (role-play, narrative, ...) | Refines the safety-subspace picture: safety geometry is not 1-D. Relevant to the *scope* of the intervention at the bottleneck layer | arXiv |
+| 18 | Cross-Lingual Pitfalls (Xu et al. 2025, 2505.18673) | arXiv | Auto-probed bilingual weakness pairs (16 langs) | ≥50% accuracy drops in target langs vs. English; linguistic similarity predicts patterns | Independent evidence that **cross-lingual gaps are systematic**; motivates the need for language-*equitable* alignment (behavior-2) | arXiv |
+| 19 | Cross-Lingual Transfer of Reward Models (Hong et al. 2024, 2410.18027) | NAACL 2025 | Train reward model on English + eval across langs | English reward transfers with limited perf loss; explains part of multilingual RLHF generalization | Mechanistic complement to (12): reward models themselves are cross-lingual, not just DPO | arXiv |
+| 20 | SCANS — Safety-Conscious Activation Steering (Cao et al. 2024, 2408.11491) | AAAI 2025 | Refusal steering vectors + vocab-projection layer anchoring | Balances defense vs. exaggerated safety | Representative activation-steering baseline; monolingual — a natural comparator to cross-lingual variants | arXiv |
+| 21 | Multilingual Patch Neuron (Si et al. 2024, 2401.03190) | arXiv | Train multilingual patch neurons for cross-lingual model editing | Cross-lingual editing without excessive tooling change | Precedent for **cross-lingual, neuron-level intervention** — an alternative to layer-level bottleneck | arXiv |
+| 22 | SafeSteer (Ghosh et al. 2025, 2506.04250) | arXiv | Category-specific steering vectors, gradient-free, no contrastive pairs | Precise inference-time safety control | Efficient inference-time counterpart to training-based approaches; another baseline family | arXiv |
+| 23 | DeepRefusal (Xie et al. 2025, 2509.15202) | arXiv | Probabilistic refusal-direction ablation during SFT | ASR ↓ ~95% across 4 model families / 6 attacks; capability preserved | Strong **training-time representation-level** safety baseline (monolingual); a competitive comparator on the mechanism-side of behavior-2 | arXiv |
+
+---
+
+## 2. Core Landscape Narrative
+
+**(A) The multilingual safety gap is empirically established, and it is worse in low-resource languages.** XSafety (Paper 1) and MultiJail (Paper 2) both demonstrate — using large-scale multilingual benchmarks (10 and 9 languages respectively, covering high / medium / low resource tiers) — that safety-aligned chat LLMs produce substantially more unsafe responses to translated harmful prompts than to their English originals. Cross-Lingual Pitfalls (Paper 18) generalizes this finding to non-safety benchmarks: ≥50% accuracy drops in target languages relative to English are systematic, and linguistically similar languages cluster in performance patterns. The gap is now the standard motivation for multilingual safety research; task.md's Behavior 2 is precisely the promise of closing this gap.
+
+**(B) Mid-layer "concept space" is language-agnostic, or nearly so — the empirical basis for the semantic bottleneck.** Wendler et al. (Paper 3) showed with layer-wise logit-lens tracking on Llama-2 that intermediate embeddings pass through a "concept space" that decodes semantically correct next-tokens *before* they are re-projected into the input language at late layers. Dumas et al. (Paper 4) added causal evidence via cross-lingual activation patching. The Semantic Hub Hypothesis (Paper 5) generalizes this to a shared hub across languages *and* modalities. mOthello (Paper 6) provides a controlled testbed showing that language-neutral representation is a *necessary but not sufficient* condition for cross-lingual behavior transfer — anchor tokens and a unified output space also matter. Together, these papers argue that a semantic-bottleneck layer exists in modern multilingual LLMs (matching task.md's Behavior 1), but that language-neutral encoding alone need not produce language-neutral downstream behavior — the mapping from geometry to behavior is not automatic.
+
+**(C) Safety-relevant computation *also* has partially language-agnostic structure.** The Arditi et al. "single refusal direction" result (Paper 9) is monolingual, but Wang et al. 2025 (Paper 16, "Refusal Direction is Universal Across Safety-Aligned Languages") shows the direction transfers across languages with high cosine similarity in middle-to-late layers, and that a single unified direction fit jointly across languages matches per-language directions. Xu et al. (Paper 8) demonstrated linearly-encoded *value* concepts across 16 languages with feasible cross-lingual control from the dominant language. Pan et al. (Paper 17) added that safety geometry is multi-dimensional (dominant refusal direction plus role-play / narrative sub-features). This body of work already establishes that a language-agnostic safety representation exists at the middle-to-late layers — a partial confirmation of task.md's Behavior 1 for the specific case of safety.
+
+**(D) Cross-lingual safety transfer via preference tuning is known — but limited.** Li, Yong, Bach (Paper 12) showed that English-only DPO for *toxicity* generalizes to 17 languages, with a mechanistic explanation (dual multilinguality of MLP layers). Cross-lingual reward models transfer (Paper 19). Multilingual DPO with translated data works at scale (Papers 13, 14). But these results are on toxicity (softer target than jailbreak), rely on either English-only or fully-translated data, and — critically — none of them explicitly localize their alignment signal to the semantic-bottleneck layer. Instead, they align at surface text (DPO / RLHF loss on tokens) and hope for cross-lingual generalization via the internal geometry. The generalization is real but partial: HRLs benefit disproportionately.
+
+**(E) Representation-level safety alignment (RepE, refusal ablation, circuit breakers, activation steering) is the alternative to surface alignment.** RepE (Paper 10), Circuit Breakers (Paper 11), SCANS (Paper 20), SafeSteer (Paper 22), and DeepRefusal (Paper 23) all intervene in activation / representation space rather than only on output tokens. They target refusal directions or harmful-representation trajectories directly. But almost all of them are monolingual — English only — and their cross-lingual behavior is largely unstudied. This is the **prior-art gap** that a semantic-bottleneck safety-alignment method would fill: bringing representation-level safety alignment into the multilingual setting by attaching the safety loss / intervention at the layer where the geometry is already language-agnostic.
+
+**(F) The pieces exist; the specific combination "align safety *at* the semantic bottleneck layer, with EN/ZH/KO-only preference data, and demonstrate transfer to unseen languages" is what remains open.** Papers 9, 10, 11, 16, 17 give us the safety-intervention toolkit at the representation level. Papers 3, 4, 5, 6, 8, 16 give us evidence that a language-agnostic subspace exists in mid layers. Paper 12 shows preference tuning cross-lingual transfer is real. What is *not* directly established in the pre-cutoff literature I retrieved is a **head-to-head demonstration that anchoring the safety-alignment loss / gradient at a language-agnostic mid-layer** (rather than at surface tokens) produces (i) lower ASR on MultiJail across unseen low-resource languages, (ii) higher equity across resource tiers, and (iii) preserved MMLU / MT-Bench / MGSM. This is precisely task.md's contribution.
+
+---
+
+## 3. Sub-direction-Specific Work
+
+### 3.1 Multilingual safety benchmarks (define what "behavior-2 works" means)
+- **XSafety** (Paper 1) — 14 safety issues × 10 languages; gap ratio non-EN vs EN is the metric.
+- **MultiJail** (Paper 2) — 9 languages, high/mid/low tiers; primary ASR benchmark; **the benchmark stipulated by task.md**.
+- **HarmBench, AdvBench** — standard English single-turn attack sets; the multilingual translation of these is a common practice; the `task.md` verify stage names HarmBench as a variant.
+- **Gap left**: no benchmark separately measures whether a low-ASR result came from language-neutral internal geometry vs. surface memorization of translations.
+
+### 3.2 Language-agnostic representations in LLMs (behavior-1)
+- **Do Llamas Work in English** (Paper 3) — three-phase model, "concept space" in middle layers is closer to English.
+- **Separating Tongue from Thought** (Paper 4) — causal patching evidence.
+- **Semantic Hub Hypothesis** (Paper 5) — shared cross-lingual + cross-modal hub.
+- **mOthello** (Paper 6) — language-neutral rep ≠ sufficient for transfer.
+- **Cross-Lingual Consistency** (Paper 7) — factual edits transfer only to high-RankC langs.
+- **Gap left**: none of these directly asks *"which layer is best for a safety intervention that maximizes cross-lingual transfer?"* — they characterize the space, they do not turn it into an intervention prescription. Also, none quantify a *bottleneck score* per layer (semantic energy / language-identity energy) for LLaMA-3.1-8B-Instruct specifically.
+
+### 3.3 Refusal directions and safety subspaces (mechanism half)
+- **Refusal single direction** (Paper 9) — the canonical mechanism.
+- **Refusal Direction is Universal Across Languages** (Paper 16) — the cross-lingual extension of Paper 9.
+- **Multi-Dimensional Safety** (Paper 17) — dominant + several sub-directions.
+- **SCANS / SafeSteer / DeepRefusal** (Papers 20, 22, 23) — steering / probabilistic ablation baselines.
+- **Multilingual Value Concepts** (Paper 8) — non-safety analog with confirmed cross-lingual linear structure.
+- **Gap left**: (i) most safety-direction work fits and evaluates in English only; (ii) the intervention layer is usually chosen post-hoc rather than by an a-priori language-agnostic criterion; (iii) there is no unified account of how a mid-layer safety loss propagates to the output for unseen languages.
+
+### 3.4 Cross-lingual preference optimization (surface alignment)
+- **Preference tuning for toxicity generalizes across langs** (Paper 12) — English-only DPO, 17 langs, MLP dual-multilinguality mechanism.
+- **RLHF Can Speak Many Languages** (Paper 13) — Aya team; scalable multilingual DPO.
+- **xLLMs-100** (Paper 14) — 100-lang instruction + 30-lang DPO.
+- **Cross-lingual reward model transfer** (Paper 19).
+- **Multilingual Value Concepts** (Paper 8) — evidence that dominant-language alignment controls value directions across langs.
+- **Gap left**: the surface-alignment school has NOT tried anchoring the alignment loss / intervention at the language-agnostic middle layer; the mechanism-side representation work has NOT been evaluated on a multilingual ASR benchmark. Fusing the two is the open ground.
+
+### 3.5 Representation-level alignment methods (mechanism-side alignment)
+- **RepE** (Paper 10) — top-down transparency + steering.
+- **Circuit Breakers** (Paper 11) — reroute harmful reps during training.
+- **DeepRefusal** (Paper 23) — probabilistically ablate refusal direction during SFT.
+- **Multilingual Patch Neuron** (Paper 21) — cross-lingual editing precedent at neuron level.
+- **Gap left**: no representation-level alignment method has been demonstrated to be *the* mechanism responsible for cross-lingual safety transfer — the field currently treats "transfer to unseen languages" as an emergent property of pretraining, not as a direct consequence of the intervention layer.
+
+---
+
+## 4. Structural Gaps
+
+- **Gap G1 — Anchor the safety-alignment signal at a *quantitatively identified* semantic-bottleneck layer, not by heuristic choice.** — *Competitive set*: Papers 3, 4, 5, 6, 16 (behavior-1) × Papers 9, 10, 11, 22, 23 (safety intervention) — *Why open*: nobody has combined a *diagnostic* (per-layer semantic-vs-language-identity score computed on parallel multilingual inputs) with an *intervention* (safety loss / RLHF gradient injected exactly at that layer). Papers 16 shows the refusal direction is universal *across* languages, but does not decide the layer by an a-priori bottleneck criterion.
+- **Gap G2 — Rigorous causal test: does *the geometry* explain the *transfer*?** — *Competitive set*: Papers 12, 13, 14 (surface DPO transfers) vs Papers 3, 4, 5, 16 (geometry is language-neutral) — *Why open*: Paper 12 explains cross-lingual DPO with "dual multilinguality of MLP layers" (correlational-mechanistic) but nobody has done a controlled intervention (e.g., swap the alignment layer, ablate the bottleneck, measure how much transfer collapses).
+- **Gap G3 — Preserving general capability under representation-level cross-lingual safety alignment.** — *Competitive set*: Papers 11, 22, 23 (English-only) — *Why open*: DeepRefusal reports ~95% ASR reduction with minimal capability loss in English, but no analog has been shown to hold across languages on MMLU / M-MMLU / MT-Bench / MGSM simultaneously.
+- **Gap G4 — Language equity, not just average ASR reduction.** — *Competitive set*: Papers 1, 2, 18 (equity is the true concern) vs Papers 12, 13, 14 (report averages / a few langs) — *Why open*: Most existing multilingual-safety works report aggregate ASR or a handful of langs; language-tier equity (variance across HRL/MRL/LRL, worst-language ASR, unseen-language ASR) is under-reported. A semantic-bottleneck method could specifically be evaluated on **worst-case** transfer as its distinguishing metric.
+- **Gap G5 — Data-source restriction (EN/ZH/KO) is a genuine test bed.** — *Competitive set*: Papers 12 (EN-only), Papers 13, 14 (many langs) — *Why open*: the specific 3-language training subset (EN + ZH + KO) that task.md stipulates is a **cross-family, non-exhaustive** training set (Indo-European + Sino-Tibetan + Koreanic), giving a clean generalization test to unseen African, South-Asian, and low-resource European languages in MultiJail. No prior work in this landscape reports on exactly this training split.
+- **Gap G6 — Comparability between text-level and representation-level safety on the same multilingual benchmark.** — *Competitive set*: DPO/RLHF baselines (Papers 12, 13, 14, 15) vs representation-level baselines (Papers 10, 11, 22, 23) — *Why open*: The two schools rarely appear on the same axes in the same paper on a multilingual benchmark. A study that runs surface DPO, RLHF, DeepRefusal, and a semantic-bottleneck variant on MultiJail (all with LLaMA-3.1-8B-Instruct) would settle *whether* the bottleneck locus is the key ingredient or whether any representation-level method inherits cross-lingual transfer for free.
+
+## 5. Banlist — Failed Ideas (do not regenerate)
+
+_(no prior banlist)_
+
+## Notes on Retrieval Constraints
+
+- The project's `.claude/forbidden-urls.txt` blocks the target paper LASA (arXiv 2604.12710) and any arXiv id ≥ 2604 from surfacing. Every paper in the table above has arXiv id **< 2604** and is safe to cite; several relevant post-cutoff works were seen briefly in WebSearch responses but the responses were voided by the PostToolUse filter and are NOT relied on here.
+- The mechanic-db cloud SEARCH (Lane A) was launched with a two-sub-query decomposition (interp_db + sciatlas_db, both with HyDE abstracts). At the time this landscape was finalized the job was still queued on the cloud side; if it returns before the pipeline ends, the additional papers will be merged, subject to the transparent post-filter (`.claude/mechanic-db-filter.py`) scrubbing any post-cutoff hits.

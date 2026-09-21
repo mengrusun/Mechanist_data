@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "LLMs Encode Harmfulness and Refusal Separately",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "A fitting/selection process exists (difference-in-means direction extraction, logistic-regression/MLP probes, best-layer selection), so this dimension applies. The split is defined explicitly and materialized as index lists in results/m_prep/meta.json: seed=0, 60/20/20 = 312 train / 104 val / 104 test over 520 AdvBench+Alpaca pairs. The code honors it: scripts/m_prep_extract_and_directions.py:225-246 fits the diff-mean direction on TRAIN indices (a_train/b_train) and scores AUROC on VAL indices; scripts/m1_claim1_directions.py:142-187 reloads meta['split'] and computes probe AUROC on val_harm_pos/val_harm_neg only. For C5, scripts/m5_claim5_probe_vs_llamaguard.py:179-194 trains the probe on tr_idx and comments 'Held-out AUROC split ... Never touches the M4/XSTest test set below'; the 400-item test set (test-split bare-harmful + Alpaca held-out + XSTest) is disjoint from train. No leakage path between fitting and evaluation is present. One honestly-disclosed weakness (EXPERIMENT_RESULTS.md M5 caveat) is that the C5 probe is trained and tested on essentially the same harmful-vs-benign axis (near-circular contrast) — but the items themselves are disjoint splits, so this is a task-difficulty/label concern, not train/test leakage.",
+    "score": 5,
+    "evidence_files": ["results/m_prep/meta.json", "scripts/m_prep_extract_and_directions.py", "scripts/m1_claim1_directions.py", "scripts/m5_claim5_probe_vs_llamaguard.py", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Labels are source-based and standard. Harmfulness label = AdvBench harmful vs Alpaca benign (dataset provenance, not model-generated), a valid operationalization of the target. Refusal label = refusal-substring matching, matching the paper's own convention (paper §2 'Refusal rate' compiles common refusal substrings). Attack success (C4) and the C5 baseline positives are adjudicated by Llama-Guard-3-8B, an external judge (results/m4/claim4_verdict.json 'llamaguard_used': true; results/m5/linear_probe/llamaguard_metrics.json 'n_scored':400). One documented gap: the refusal direction r is NOT extracted from the paper-faithful within-harmful refused-vs-complied contrast but from a harmful-vs-benign proxy, because Llama-3-8B-Instruct refused 98.7% of bare-harmful prompts leaving only 7 natural jailbreaks (below the 8-item floor) — EXPERIMENT_RESULTS.md §Direction Extraction and CLAIMS_LEDGER.md C1 disclose this and flag that the residual cos(h,r)=0.174 may partly reflect shared contrast rather than shared concept. This makes the r-label a partly-under-validated proxy, not circular. Labels are otherwise clean and independent of the system under test.",
+    "score": 4,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "results/m1/cosine_report.json", "results/m4/claim4_verdict.json", "results/m5/linear_probe/llamaguard_metrics.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment uses exactly the user-specified resources. results/m_prep/meta.json records model '/data/zhenqian/models/Meta-Llama-3-8B-Instruct' at fp16 (full model, not a smaller/quantized swap) and n_pairs=520 (full AdvBench harmful_behaviors pool, per EXPERIMENT_RESULTS.md 'Used N (actual) = 520 (all), no subsetting'). AdvBench is the specified harmful set; Alpaca is the matched benign contrast (520 matched, a scientific matched-N choice, not a silent subset). The fixed resource Llama-Guard-3-8B is actually invoked as the C4 adjudicator and C5 baseline (FLOPs 7.78e11 recorded in results/m5/linear_probe/llamaguard_metrics.json). Verify-stage Qwen2-Instruct-7B is a deliberate robustness swap (exempt). No silent downgrade of model, dataset, or data size in the main experiment.",
+    "score": 5,
+    "evidence_files": ["results/m_prep/meta.json", "refine-logs/EXPERIMENT_RESULTS.md", "results/m5/linear_probe/llamaguard_metrics.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Sample sizes are generally adequate and claim strength is matched to evidence. C1: val 104 harmful pairs (auroc_h on 104, claim1_verdict.json n_val_harm_pos=104). C3: 200 prompts/cell x 28 cells + 78 iter-1 + 60 iter-2 = 166 configs (claim3_dose_response.csv shows n_harm=100/n_benign=100 per cell). C5: 400-item test set (results/m5/claim5_verdict.json test_set total=400). C4: 500 attempts/family (n_attacked=500). Where evidence is thin or absent it is honestly flagged rather than overclaimed: C1's refusal-side sub-tests are reported as NaN/unmeasurable (results/m1/shuffled_refusal.json auroc=NaN) not asserted; C2 and C4 negatives are labeled 'informative negative / untestable'; EXPERIMENT_RESULTS.md §Summary states 'suspected_under_power flags: none' and attributes negatives to model-level effects. The main deduction is that C4's core signature was never actually exercised (ASR=0, empty successful subset) and C1's r-recovery half is untested — genuine coverage gaps, but transparently caveated rather than overclaimed.",
+    "score": 4,
+    "evidence_files": ["results/m1/claim1_verdict.json", "results/m3/claim3_dose_response.csv", "results/m5/claim5_verdict.json", "results/m4/claim4_verdict.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Uncertainty is reported in several places, though the main data split is single-seed (seed=0). C1 probe AUROCs carry bootstrap 95% CIs (scripts/m1_claim1_directions.py:59-107 bootstrap_auroc_ci n_bootstrap=1000); C2's position heatmap reports per-position bootstrap CIs (results/m2/position_auroc_heatmap.csv harm_ci_low/high, e.g. t_final_instr [0.9991,1.0]). C3's causal claim is backed by strong noise controls: n=30 matched-norm random-direction controls at two operating points with z-scores (runs/iteration_round_1/c3_verdict_after_fix.json z=101.65) and n=30 random controls at r's site (runs/iteration_round_2/r_site_specificity_analysis.json z=128.31 with mean±std −0.002±0.004). Cross-model replication on Qwen2 (verify stage) adds robustness. Limitation: results rest on a single 60/20/20 split (no multi-seed re-split of the main experiment), and several headline z-scores are near-ceiling geometric comparisons (the ledger itself notes z≈100 in 4096-dim space is 'partly a geometric inevitability'). Solid but not exhaustive on split-level variance.",
+    "score": 4,
+    "evidence_files": ["scripts/m1_claim1_directions.py", "results/m2/position_auroc_heatmap.csv", "runs/iteration_round_1/c3_verdict_after_fix.json", "runs/iteration_round_2/r_site_specificity_analysis.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The causal/mechanistic claim (C3) rests on a genuine intervention with the required controls, not correlational evidence dressed up as causal. results/m3/claim3_dose_response.csv records additive residual-stream steering along direction in {h, r, random, swap} across a coefficient sweep (alpha in {−2..+2} raw plus a sigma_proj-normalized ladder spanning ~35x). Controls present: (a) random-direction matched-norm baseline, n=30 seeds at both the h-site (z=101.65) and the r-site (runs/iteration_round_2/r_site_specificity_analysis.json z=128.31, true r Δrefusal_ben=+0.52 vs random −0.002±0.004); (b) swap-direction control (swap_h_delta_max=1.29 < true h 5.90); (c) off-target axis checks (h off-target refusal Δ=0.01 within ε_null; r off-target h-readout Δ=0.00). The wording was deliberately narrowed to 'asymmetric causal steering / partial functional dissociation' to match the evidence (refine-logs/main-experiment-verdicts.json avoid_wording lists 'symmetric mechanistic dissociation'), i.e. the causal wording is kept honest to the intervention strength. This is a well-controlled intervention.",
+    "score": 5,
+    "evidence_files": ["results/m3/claim3_dose_response.csv", "results/m3/claim3_verdict.json", "runs/iteration_round_1/c3_verdict_after_fix.json", "runs/iteration_round_2/r_site_specificity_analysis.json", "refine-logs/main-experiment-verdicts.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every key reported number traces to a concrete on-disk product and agrees with it. h AUROC=0.9998 at (layer 11, t_final_instr) -> results/m1/claim1_verdict.json key_stats.auroc_h_on_harmfulness=0.9998150887573964 and results/m_prep/probe_auroc.csv; cos(h,r)=0.174 and ratio 0.197 -> results/m1/cosine_report.json (cosine_h_r=0.17431, cosine_ratio_vs_reference=0.19735); C2 crossover_h=−0.00018 -> results/m2/claim2_verdict.json and position_auroc_heatmap.csv (both positions AUROC≈1.0); C3 z=101.65/128.31 and Δrefusal 0.01->0.53 -> runs/iteration_round_1/c3_verdict_after_fix.json + runs/iteration_round_2/r_site_specificity_analysis.json + claim3_dose_response.csv (r,alpha=2.0 refusal_rate_ben=0.53); C4 ASR=0/500 -> results/m4/claim4_verdict.json (n_successful=0, delta_r_failed GCG=−0.768, PAP=−1.703); C5 AUROC 1.000 vs LG 0.9992, FLOPs 8192 vs 7.78e11 -> results/m5/linear_probe/probe_metrics.json + llamaguard_metrics.json. Run-directory cost.json files exist per run (runs/R*/cost.json). No sourceless or contradicted numbers were found.",
+    "score": 5,
+    "evidence_files": ["results/m1/claim1_verdict.json", "results/m1/cosine_report.json", "results/m2/claim2_verdict.json", "results/m3/claim3_dose_response.csv", "results/m4/claim4_verdict.json", "results/m5/linear_probe/probe_metrics.json", "results/m5/linear_probe/llamaguard_metrics.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Numbers agree across CLAIMS_LEDGER.md, refine-logs/EXPERIMENT_RESULTS.md, refine-logs/main-experiment-verdicts.json and the per-claim verdict JSONs (e.g. C5 AUROC 1.000/0.9992/+0.0008 gap, C3 z=101.65 and 128.31, C4 ASR=0/500 are identical everywhere). Prose conclusions match their numbers. A few minor bookkeeping frictions, all disclosed: (1) C1 is 'partial' in the ledger/results but mapped to 'not-supported' in main-experiment-verdicts.json under a binary scheme (the notes field explains the mapping); (2) C3's per-claim results/m3/claim3_verdict.json still says verdict='supported' while the ledger/verdicts carry the narrowed 'supported_asymmetric_partial_functional_dissociation' label; (3) the verify stage recorded integrity=FAIL/INCONCLUSIVE for C3 and C5 (Phase-2 mechanism/experiment audit) that were subsequently resolved by iteration-1/2 but verify was not re-run (disclosed as 'post-iter budget conservation'), and C2/C4 are INTEGRITY_ONLY due to a max_verify_claims cap. These are transparently labeled and change no final verdict, but they reflect loose propagation of integrity states across artifacts rather than a fully self-consistent ledger.",
+    "score": 4,
+    "evidence_files": ["CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_RESULTS.md", "refine-logs/main-experiment-verdicts.json", "results/m3/claim3_verdict.json", "verify/VERIFY_REPORT.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Instruction-tuned LLMs represent harmfulness perception and refusal execution as two distinct, approximately linear directions in the residual stream, and each can be recovered without disturbing the other.",
+        "method": {
+          "justification": "9a: Difference-in-means direction extraction at (layer, position) + held-out linear-probe AUROC + cosine(h,r) vs split-half reference (scripts/m_prep_extract_and_directions.py, scripts/m1_claim1_directions.py) is exactly the paper's linear-direction recipe (paper §3.3 diff-of-means harmfulness/refusal directions). The method matches the 'approximately linear directions' mechanism category. Minor deviation: the refusal direction is extracted from a harmful-vs-benign proxy contrast rather than the paper's within-harmful refused-vs-complied, a documented CAA/Arditi fallback forced by the 98.7% bare-refusal ceiling — appropriate but a partial mismatch to the paper's r construction.",
+          "score": 4,
+          "evidence_files": ["scripts/m_prep_extract_and_directions.py", "scripts/m1_claim1_directions.py", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "experiment": {
+          "justification": "9b: Design is thoughtful — held-out AUROC with bootstrap CIs, cos(h,r) benchmarked against a split-half within-direction reference (0.883), a shuffled-refusal control, and a random-direction baseline (auroc_random_on_harmfulness=0.63 in claim1_verdict.json). But the refusal half of the claim ('each recoverable') is untestable here: auroc_r_on_refusal and the shuffled-refusal control are NaN (results/m1/shuffled_refusal.json) because only 7 natural jailbreaks exist in 520 prompts, so the 'independently recover r' sub-test was never actually evaluated. Sound but under-powered on the r-side.",
+          "score": 3,
+          "evidence_files": ["results/m1/claim1_verdict.json", "results/m1/cosine_report.json", "results/m1/shuffled_refusal.json"]
+        },
+        "result": {
+          "justification": "9c: The measured geometry qualitatively agrees with the paper: h decodes harmfulness at ceiling (0.9998) and cos(h,r)=0.174 is well below the split-half reference (ratio 0.20), i.e. h and r are geometrically distinct — matching the paper's low ~0.1 cosine and 'distinct directions' finding. The run honestly reports 'partial' because the r-recoverability sub-tests are unmeasurable (not disguised as full support), and discloses the shared-contrast caveat. Faithful, appropriately scoped agreement on the distinctness half; the recoverability half is honestly left open.",
+          "score": 4,
+          "evidence_files": ["results/m1/cosine_report.json", "results/m1/claim1_verdict.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C2": {
+        "claim": "The two signals live at different token positions: the harmfulness judgment is written at the final instruction-token position, while the decision to refuse is committed just after the instruction, immediately before the response begins.",
+        "method": {
+          "justification": "9a: The run tests position dissociation with per-position linear-probe AUROC and a crossover-delta metric on a 6-position ladder (scripts/m2_claim2_position.py, results/m2/position_auroc_heatmap.csv). This is a weaker/mismatched proxy for the paper's actual positional method: the paper (§3.2, Fig 2) uses a clustering analysis that tracks where MISBEHAVING cases (accepted-harmful, refused-harmless) fall relative to the harmful vs refusal cluster centers across layers — a test of which feature drives clustering, not raw decodability. Raw AUROC saturates at ceiling at both positions and structurally cannot reveal the crossover the paper reports. The method is only partly aligned to the claim's mechanism.",
+          "score": 2,
+          "evidence_files": ["scripts/m2_claim2_position.py", "results/m2/position_auroc_heatmap.csv"]
+        },
+        "experiment": {
+          "justification": "9b: The 6-position ladder with bootstrap CIs is executed cleanly, but the judgment metric is inadequate for the claim: auroc_h at t_final_instr=0.99982 and at t_post_instr=1.00000 (results/m2/claim2_verdict.json), so crossover_h=−0.00018 is a ceiling artifact, and the refusal side is NaN. The design cannot discriminate the hypothesis on this well-aligned model, and the natural fix (a cross-model swap with a lower refusal ceiling, or the paper's clustering-of-misbehaving-cases metric) was deferred under the max_verify_claims cap. Honest but under-powered / metric-mismatched.",
+          "score": 2,
+          "evidence_files": ["results/m2/claim2_verdict.json", "CLAIMS_LEDGER.md"]
+        },
+        "result": {
+          "justification": "9c: The run reports C2 not-supported and labels it an 'informative negative' with a disclosed, correct reason (both anchor positions decode harmfulness at ceiling, so no crossover is measurable) — it does NOT fabricate agreement with the paper. That honesty is creditable. However, the paper SUPPORTS position dissociation, and the disagreement stems chiefly from the AUROC-ceiling metric choice rather than a genuine falsification of the paper's clustering finding; the paper's own positional method was never attempted. Honest negative, but not a faithful validation of the claim.",
+          "score": 3,
+          "evidence_files": ["results/m2/claim2_verdict.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        }
+      },
+      "C3": {
+        "claim": "Additive steering along either direction yields dissociated effects — moving along the harmfulness axis flips the model's internal judgment of whether an input is harmful, independent of whether it refuses; moving along the refusal axis flips refusal behaviour without changing that internal judgment.",
+        "method": {
+          "justification": "9a: Additive residual-stream steering along h and r with a coefficient sweep (scripts/m3_claim3_steering.py, results/m3/claim3_dose_response.csv) is exactly the paper's causal method (paper §3.4-3.5 steering along harmfulness/refusal directions). The mechanism category (causal intervention) matches the claim precisely.",
+          "score": 5,
+          "evidence_files": ["scripts/m3_claim3_steering.py", "results/m3/claim3_dose_response.csv"]
+        },
+        "experiment": {
+          "justification": "9b: Strong design — 4 directions (h, r, random, swap) x 7 alpha x 200 prompts, plus a sigma_proj-normalized fine sweep (35x span, 2 OOM) and n=30 matched-norm random controls at both the h-site and the r-site, with explicit off-target axis checks (h off-target refusal Δ=0.01 within ε_null; r off-target h-readout Δ=0.00) and a fluency/collapse floor (n_collapse_flagged=0). Specificity z-scores computed (z=101.65 h, z=128.31 r-site). The judgment metric (internal h-readout projection + refusal rate) directly operationalizes 'internal judgment' vs 'refusal behaviour'. Hyperparameters were genuinely explored across iterations rather than declared post-hoc. Near-complete.",
+          "score": 5,
+          "evidence_files": ["results/m3/claim3_verdict.json", "runs/iteration_round_1/m3_extended_analysis.json", "runs/iteration_round_2/r_site_specificity_analysis.json"]
+        },
+        "result": {
+          "justification": "9c: The result qualitatively matches the paper's core finding: steering along h moves the internal harmfulness readout monotonically (−4.83->+6.96) while leaving benign refusal flat (Δ=0.01), and steering along r moves benign refusal (0.01->0.53 at α=+2) with zero change to the h-readout (Δ=0.00) — precisely the dissociation the paper claims (harmfulness steering changes the judgment; refusal steering does not). The run honestly narrows to 'asymmetric / partial functional dissociation' (r-side is thresholded, not graded like h) rather than overclaiming symmetry, and documents this in main-experiment-verdicts.json avoid_wording. Directionally faithful and rigorously supported.",
+          "score": 5,
+          "evidence_files": ["results/m3/claim3_verdict.json", "refine-logs/main-experiment-verdicts.json", "results/m3/claim3_dose_response.csv"]
+        }
+      },
+      "C4": {
+        "claim": "A notable class of successful jailbreaks operates by suppressing the refusal signal while the harmfulness signal remains active — the model still internally recognises the input as harmful yet answers — a signature that a hidden-state probe can pick up.",
+        "method": {
+          "justification": "9a: The intended method — extract residual activations on bare vs attacked prompts, compute Δ projection onto h and r on the successful subset, and a detection AUROC of the h-probe on successful-jailbreak vs benign-compliant (scripts/m4_claim4_jailbreak_signature.py) — correctly matches the paper's Figure-6 belief-of-harmfulness-vs-refusal analysis for jailbreaks. Method choice is appropriate to the claim.",
+          "score": 4,
+          "evidence_files": ["scripts/m4_claim4_jailbreak_signature.py", "scripts/attack_templates.py"]
+        },
+        "experiment": {
+          "justification": "9b: The attack instantiation was inadequate to exercise the claim: only 5 pre-computed published transferable GCG suffixes and 5 published-style PAP templates were used, with no fresh GCG optimization (explicitly cut for budget), yielding ASR=0/500 on both families (results/m4/claim4_verdict.json n_successful=0). With an empty successful subset the signature (Δr suppressed, Δh preserved, detection AUROC) is untestable — detection_auroc=NaN. The paper obtained successful jailbreaks; here the core experiment was never realized and only two pre-canned attack families were tried, so a true negative cannot be distinguished from under-exploration. This is the 9b under-powered failure mode.",
+          "score": 2,
+          "evidence_files": ["results/m4/claim4_verdict.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c: The run reports C4 not-supported and is transparent that the cause is ASR=0 making the signature untestable (not falsified) — it does not fabricate agreement or manufacture a spurious signal from the empty subset (delta metrics correctly reported NaN). The failed-subset specificity check is reported honestly (GCG |Δr|=0.77 within ε_null=1.69; PAP=1.70 marginally over). But the disagreement with the paper is driven by the run's failure to generate any successful jailbreak (an execution gap), so the claim was left untested rather than reliably validated or reliably refuted. Honest, disclosed, but not a faithful evaluation of the claim.",
+          "score": 3,
+          "evidence_files": ["results/m4/claim4_verdict.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C5": {
+        "claim": "A lightweight \"Latent Guard\" classifier trained on the harmfulness direction matches or beats a dedicated safety judge (Llama Guard 3 8B) at flagging jailbreak attempts, at a fraction of the compute.",
+        "method": {
+          "justification": "9a: A logistic-regression / 2-layer-MLP classifier on the projection onto h at (layer 11, t_final_instr), compared head-to-head against Llama-Guard-3-8B at AUROC + F1@FPR5 + FLOPs/wall-clock (scripts/m5_claim5_probe_vs_llamaguard.py), is a reasonable operationalization of the paper's Latent Guard (the paper uses a ∆harmful cluster-centroid readout of the same harmfulness representation; the run uses a learned linear/MLP head on the same signal). Same underlying mechanism, slightly different classifier head — appropriate.",
+          "score": 4,
+          "evidence_files": ["scripts/m5_claim5_probe_vs_llamaguard.py", "results/m5/claim5_verdict.json"]
+        },
+        "experiment": {
+          "justification": "9b: The head-to-head is clean and the compute comparison is well-instrumented (probe FLOPs 8192 vs LG 7.78e11; wall-clock 78µs vs 33.6ms — results/m5/linear_probe/probe_metrics.json + llamaguard_metrics.json). But the test set contains 0 successful-jailbreak items (M4 ASR=0), so the design evaluates 'bare-harmful vs benign + XSTest-lookalike' rather than the paper's jailbreak-detection task, and the probe is trained/tested on essentially the same harmful-vs-benign axis (near-circular, flagged in EXPERIMENT_RESULTS.md M5 caveat). The claim was scope-narrowed post-hoc to match what the data can exercise rather than obtaining a jailbreak-inclusive test set. Reasonable but narrowed and partly circular.",
+          "score": 3,
+          "evidence_files": ["results/m5/linear_probe/probe_metrics.json", "results/m5/linear_probe/llamaguard_metrics.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c: On the narrowed task the probe matches/edges Llama-Guard-3-8B (AUROC 1.000 vs 0.9992, F1@FPR5 1.000 vs 0.975) at ~10^-8 of its FLOPs and ~440x wall-clock speedup (results/m5/claim5_verdict.json) — qualitatively consistent with the paper's 'comparable to or better than Llama Guard 3, at a fraction of compute'. The 'at a fraction of compute' and 'matches/beats' directions genuinely agree with the paper. However, the paper's headline scope ('across different jailbreak methods') is NOT validated: the AUROC=1.000 is on an easier, near-circular bare-harmful task with 0 jailbreak items. The run discloses this narrowing honestly (scope_note in claim5_verdict.json; iteration-1 scope-fix) rather than disguising it, so the surface agreement is transparently qualified. Partial, honestly-scoped agreement.",
+          "score": 3,
+          "evidence_files": ["results/m5/claim5_verdict.json", "results/m5/linear_probe/probe_metrics.json", "CLAIMS_LEDGER.md"]
+        }
+      }
+    }
+  }
+}

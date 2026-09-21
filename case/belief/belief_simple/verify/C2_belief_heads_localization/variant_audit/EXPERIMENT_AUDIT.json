@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-22",
+  "auditor": "self-review (llm-chat MCP unavailable — empty config in .mcp.json)",
+  "claim_id": "C2",
+  "variant_id": "model-swap-olmo-1b",
+  "linked_milestones": ["M2.1", "M2.2", "M2.3", "M2.4"],
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Uses belief_core gold continuation labels (follow_belief.jsonl and believe_truth.jsonl) for task evaluation; world_knowledge (reality.jsonl) for Fisher knowledge signal. No model-generated references. Same GT provenance as main experiment. Fisher computed from log P(y+|x) gradients where y+ is the dataset-provided gold continuation."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Fisher computed as absolute squared gradients (empirical Fisher, no normalization by model statistics). Head candidate scores = AND-NOT mask fraction (target-AND-NOT-knowledge parameters per head). Target accuracy drop = acc_clean - acc_ablated (raw difference, no normalization). PPL criterion uses ablated_ppl / clean_ppl ratio. All consistent with main experiment."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "Verified on-disk: m1_gate.json confirmed present (personal_belief acc=0.778 CI=[0.746,0.808] above_chance=True; attributed_belief acc=0.731 CI=[0.697,0.763] above_chance=True; world_knowledge acc=0.930 above_chance=True). ranked_heads_{target}.json confirmed present for both targets (personal_belief top-5: [(11,12),(8,2),(9,9),(7,8),(12,0)] rho=0.926; attributed_belief top-5: [(3,7),(2,11),(11,12),(2,3),(8,2)] rho=0.954). m2_result_personal_belief.json confirmed: status=not_localized. result.json and acceptance_{target}.json presence/content verified after variant completion and cross-checked against log output."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "eval_task() function is defined (lines 101-116 of run_variant.py) but never called in the computation path. Only eval_task_fast() is used (M1 gate, eval_hstar, run_controls). Dead code is cosmetic — removing it would have no effect on any computed result. All active computation paths (M1 gate, Fisher, mask, greedy search, controls) produce their expected outputs."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "M1 above-chance gate applied: personal_belief (acc=0.778) and attributed_belief (acc=0.731) both admitted. Success criterion for this variant explicitly set to n_localized >= 1 (consistent with variant PLAN.md: 'Claim C2 is consistent with the main experiment if OLMo-1B localizes at least one (target: personal_belief or attributed_belief) H* set satisfying all four criteria'). No scope overclaim."
+    },
+    "eval_type": "real_gt"
+  }
+}

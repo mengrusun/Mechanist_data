@@ -1,0 +1,168 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "LASA: Language-Agnostic Semantic Alignment at the Semantic Bottleneck for LLM Safety",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "训练数据 (DPO pairs)略微泄露。在UNSEEN语言测试时选用了与部分训练数据同义异语言的数据。但影响不大，因为有对照组DPO排除此因素。LoRA-DPO 数据 (PKU-SafeRLHF-30K EN 5000 + UltraFeedback 2000) 与评测集独立。",
+    "score": 4,
+    "evidence_files": [
+      "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_RESULTS.md",
+      "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_PLAN.md",
+      "scientist2/multilingual/lasa_safety/scripts/m3_train_dpo.py",
+      "scientist2/multilingual/lasa_safety/scripts/m4_eval.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "使用官方数据集标签",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/multilingual/lasa_safety/results/M4_eval/method_multijail.json",
+      "scientist2/multilingual/lasa_safety/results/M4_eval/baseline_multijail.json",
+      "scientist2/multilingual/lasa_safety/results/M2_patch.json",
+      "scientist2/multilingual/lasa_safety/verify/C2_bottleneck_anchored_dpo/main_experiment_audit/EXPERIMENT_AUDIT.md"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "因为DPO方法和LASA不同，选用的数据集略有不同，但是基本遵照了task.md的用法。",
+    "score": 4,
+    "evidence_files": [
+      "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_RESULTS.md",
+      "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_PLAN.md",
+      "human_judge/multilingual/lasa_safety/task.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "M1 used_n=3150 forwards (315 groups × 10 langs) — 充分；M2 used_n=3600 patching trials (100 × 9 × 4) ；C2 主实验 MultiJail 100 prompts/lang × 10 (共 1000 gens/model)，但语言生成量偏少。",
+    "score": 3,
+    "evidence_files": [
+      "scientist2/multilingual/lasa_safety/results/M4_eval/method_multijail.json",
+      "scientist2/multilingual/lasa_safety/results/M4_eval/method_mgsm.json",
+      "scientist2/multilingual/lasa_safety/verify/VERIFY_REPORT.md",
+      "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_RESULTS.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "M1/M2 报告了 95% bootstrap CI (M1_bottleneck_diagnostic.json 每层 R_ci95；M2_patch.json 每条件 ci95)，R_max=1.371 CI[1.349,1.395]。C2 M3/M4 只有单 seed (seed=0 全部固定，scripts/m1_bottleneck_diagnostic.py L115-117)，无多种子重复、无 paired bootstrap 落盘、无显著性检验数字 。",
+    "score": 4,
+    "evidence_files": [
+      "scientist2/multilingual/lasa_safety/results/M1_bottleneck_diagnostic.json",
+      "scientist2/multilingual/lasa_safety/results/M2_patch.json",
+      "scientist2/multilingual/lasa_safety/scripts/m3_train_dpo.py",
+      "scientist2/multilingual/lasa_safety/results/M4_eval/method_mgsm.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C1为了验证找到的中间层是否是语义瓶颈层，在last-token位置做了同义异语言的patching，但没有胜过对照组用异义异语言的patching，更好的做法可能是用all-content-tokens patching/多位置 sweep token等更有说服力，scientist也承认了在位置选取上探索不足。 ",
+    "score": 3,
+    "evidence_files": [
+      "scientist2/multilingual/lasa_safety/results/M2_patch.json",
+      "scientist2/multilingual/lasa_safety/CLAIMS_LEDGER.md",
+      "scientist2/multilingual/lasa_safety/verify/C1_bottleneck_layer_llm/main_experiment_audit/EXPERIMENT_AUDIT.md",
+      "scientist2/multilingual/lasa_safety/review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字均可回溯到落盘 JSON。",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/multilingual/lasa_safety/results/M1_bottleneck_diagnostic.json",
+      "scientist2/multilingual/lasa_safety/results/M2_patch.json",
+      "scientist2/multilingual/lasa_safety/results/M4_eval/method_multijail.json",
+      "scientist2/multilingual/lasa_safety/results/M4_eval/baseline_multijail.json",
+      "scientist2/multilingual/lasa_safety/results/M4_eval/method_mgsm.json",
+      "scientist2/multilingual/lasa_safety/runs/M1_bottleneck_diagnostic/cost.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "各份产物数字与判定基本自洽：整体记账一致，无实质冲突。",
+    "score": 5,
+    "evidence_files": [
+      "scientist2/multilingual/lasa_safety/CLAIMS_LEDGER.md",
+      "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_TRACKER.md",
+      "scientist2/multilingual/lasa_safety/refine-logs/main-experiment-verdicts.json",
+      "scientist2/multilingual/lasa_safety/verify/VERIFY_REPORT.md",
+      "scientist2/multilingual/lasa_safety/verify/INTEGRITY_AUDIT.md",
+      "scientist2/multilingual/lasa_safety/verify/C2_bottleneck_anchored_dpo/ROBUSTNESS.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "There exists an intermediate 'semantic bottleneck' layer in multilingual LLMs whose hidden-state geometry is dominated by shared meaning rather than by language identity.",
+        "method": {
+          "justification": "选用同义组内两两 cos 均值 / 异义随机对 cos 均值为指标，能反映集聚性，但没有原论文选的论文用 Silhouette 分数差 S(P_Sem) − S(P_Lang)更能代表聚类质量度量。",
+          "score": 4,
+          "evidence_files": [
+            "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_PLAN.md",
+            "scientist2/multilingual/lasa_safety/scripts/m1_bottleneck_diagnostic.py",
+            "scientist2/multilingual/lasa_safety/scripts/m2_cross_lingual_patch.py",
+            "paper/multilingual/lasa_safety/paper.pdf"
+          ]
+        },
+        "experiment": {
+          "justification": "配对 cosine相似度比值 Sem(l)/Lang(l)算得哪层是语义层的设计合理",
+          "score": 5,
+          "evidence_files": [
+            "scientist2/multilingual/lasa_safety/results/M1_bottleneck_diagnostic.json",
+            "scientist2/multilingual/lasa_safety/results/M2_patch.json",
+            "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_RESULTS.md",
+            "scientist2/multilingual/lasa_safety/verify/C1_bottleneck_layer_llm/main_experiment_audit/EXPERIMENT_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "结论定性与论文 C1 一致：确实观察到 R(l) 呈内峰 dome 形，L*=10 落在中间区间，论文找到的层是第14层，略有差距但符合中间篇前层的定位",
+          "score": 4,
+          "evidence_files": [
+            "scientist2/multilingual/lasa_safety/results/M1_bottleneck_diagnostic.json",
+            "scientist2/multilingual/lasa_safety/CLAIMS_LEDGER.md",
+            "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_RESULTS.md",
+            "paper/multilingual/lasa_safety/paper.pdf"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Aligning safety at this layer yields substantially lower attack success rates across high-, medium-, and low-resource languages (including languages unseen during alignment training) compared with surface-level safety alignment baselines, while preserving general task performance.",
+        "method": {
+          "justification": "方法有一定合理处。使用英文的安全/非安全对作DPO, loss考虑了减小DPO的loss和拉近第10层不同语言的hidden state(ZH/EN/KO).虽然和论文有不同，但也是一种尝试在语义层对齐的方法。",
+          "score": 4,
+          "evidence_files": [
+            "scientist2/multilingual/lasa_safety/scripts/m3_train_dpo.py",
+            "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_PLAN.md",
+            "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_RESULTS.md",
+            "paper/multilingual/lasa_safety/paper.pdf"
+          ]
+        },
+        "experiment": {
+          "justification": "设了对照组只用DPO，而不在第10层作语义对齐，能排除是DPO使ASR下降的可能性。，除了Llama还尝试Qwen模型。",
+          "score": 5,
+          "evidence_files": [
+            "scientist2/multilingual/lasa_safety/refine-logs/EXPERIMENT_RESULTS.md",
+            "scientist2/multilingual/lasa_safety/scripts/m3_train_dpo.py",
+            "scientist2/multilingual/lasa_safety/review-stage/AUTO_ITERATION_FINAL_REPORT.md",
+            "scientist2/multilingual/lasa_safety/results/M4_eval/method_multijail.json"
+          ]
+        },
+        "result": {
+          "justification": "LLaMA 主实验方向一致幅度较大。ASR在7/8个Unseen语言上相对于纯DPO有了降低，说明语义层对齐起了作用。在保持安全性基础上，小众语言输出仍保持小众语言。至于Qwen结果反向可能是 Qwen 的 base 在 EN/ZH 上已接近 floor，anchor 没有信号可搬运.LLaMA的主实验已经是相当有意思的发现。",
+          "score": 5,
+          "evidence_files": [
+            "scientist2/multilingual/lasa_safety/results/M4_eval/method_multijail.json",
+            "scientist2/multilingual/lasa_safety/results/M4_eval/baseline_multijail.json",
+            "scientist2/multilingual/lasa_safety/results/M4_eval/base_multijail.json",
+            "scientist2/multilingual/lasa_safety/verify/C2_bottleneck_anchored_dpo/ROBUSTNESS.md",
+            "scientist2/multilingual/lasa_safety/CLAIMS_LEDGER.md",
+            "paper/multilingual/lasa_safety/paper.pdf"
+          ]
+        }
+      }
+    }
+  }
+}

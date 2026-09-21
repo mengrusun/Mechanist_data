@@ -1,0 +1,408 @@
+{
+  "feature_idx": 800,
+  "max_act_ref": 31.668048858642578,
+  "trigger_threshold": 6.333609771728516,
+  "sage": {
+    "candidates": [
+      "The specific HTML boundary `attribute=\"value\">`: the closing double quote immediately followed by `>`, marking the end of a start tag and transition into text/newline.",
+      "Closing double quote of a double-quoted HTML attribute value inside raw webpage markup, regardless of whether another attribute or the tag end follows; not quotes in prose, single-quoted attributes, or unquoted attributes.",
+      "An HTML double quote ending an attribute value, especially in real tag markup and often near tag termination (`\">` or before another attribute/`>`)."
+    ],
+    "top": "The specific HTML boundary `attribute=\"value\">`: the closing double quote immediately followed by `>`, marking the end of a start tag and transition into text/newline.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "This feature activates on a double-quote character that closes an HTML attribute value immediately before a tag boundary or visible text content.",
+            "positive_probes": [
+              "The snippet shows <a href=\"home\">Start here now.",
+              "We rendered <img alt=\"logo\"> beside the title.",
+              "Notice <div class=\"hero\">Welcome appears on screen.",
+              "Example markup: <input value=\"42\"> then continue reading.",
+              "See <span title=\"tip\">Helpful text follows immediately."
+            ],
+            "positive_acts": [
+              22.72248077392578,
+              28.02727508544922,
+              24.310184478759766,
+              27.34048080444336,
+              23.15868377685547
+            ],
+            "distractor_probes": [
+              "The snippet shows <a href=\"home\" /> self-closing markup.",
+              "We rendered <div class=\"hero\" data-x=\"1\"></div> yesterday.",
+              "Notice the quote in href=\"home\" before another attribute."
+            ],
+            "distractor_acts": [
+              20.95480728149414,
+              20.95480728149414,
+              20.95480728149414
+            ],
+            "score": 4.157013702392579
+          },
+          {
+            "hypothesis": "This feature detects quote marks inside raw HTML markup from webpages, especially around metadata and anchor/link elements such as meta tags, hrefs, and class attributes.",
+            "positive_probes": [
+              "<meta name=\"description\" content=\"news article summary\">",
+              "<a href=\"/about\" class=\"nav-link\">About us</a>",
+              "<link rel=\"stylesheet\" href=\"styles.css\">",
+              "<div class=\"header\" data-page=\"home\">",
+              "<meta property=\"og:title\" content=\"Example webpage\">"
+            ],
+            "positive_acts": [
+              27.35098648071289,
+              22.23094940185547,
+              30.49835968017578,
+              23.375930786132812,
+              27.37767791748047
+            ],
+            "distractor_probes": [
+              "The webpage description was written in quotation marks.",
+              "Click the link labeled About us on top.",
+              "HTML meta tags and href attributes are important."
+            ],
+            "distractor_acts": [
+              21.028667449951172,
+              21.028667449951172,
+              21.028667449951172
+            ],
+            "score": 5.138113403320311
+          },
+          {
+            "hypothesis": "This feature is triggered by the transition from an alphanumeric/string token into a terminating double quote in serialized HTML, including cases like charset declarations, URLs, and button/link labels.",
+            "positive_probes": [
+              "The meta tag ends charset=\"UTF-8\" neatly.",
+              "Serialize the link as href=\"https://example.com\" now.",
+              "Button label appears in value=\"Submit\" here.",
+              "Close the attribute after id=\"header\" exactly.",
+              "The image source ends src=\"logo.png\" cleanly."
+            ],
+            "positive_acts": [
+              21.006916046142578,
+              21.006916046142578,
+              21.006916046142578,
+              21.006916046142578,
+              21.006916046142578
+            ],
+            "distractor_probes": [
+              "The charset UTF-8 appears without quotation marks.",
+              "Use single quotes in href='https://example.com' instead.",
+              "The button label Submit is plain text."
+            ],
+            "distractor_acts": [
+              20.954795837402344,
+              20.954795837402344,
+              20.954795837402344
+            ],
+            "score": 0.052120208740234375
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "HTML double quote that closes an attribute value, especially when immediately followed by '>' so the tag ends and visible text or a new line begins.",
+            "positive_probes": [
+              "The tag ends here: class=\"note\">Visible text starts.",
+              "Broken markup shows href=\"/home\">Next line begins.",
+              "Parser sees title=\"greeting\">\nHello afterward.",
+              "Attribute closes before text: data-id=\"7\">content follows.",
+              "Ending quote then bracket: alt=\"icon\">caption appears."
+            ],
+            "positive_acts": [
+              25.640308380126953,
+              29.778457641601562,
+              27.464191436767578,
+              25.291656494140625,
+              27.932464599609375
+            ],
+            "distractor_probes": [
+              "The tag ends here: class='note'>Visible text starts.",
+              "Inside text, she said \"hello\" and left.",
+              "Attribute continues here: class=\"note value\" more text."
+            ],
+            "distractor_acts": [
+              20.954795837402344,
+              20.954795837402344,
+              20.954795837402344
+            ],
+            "score": 6.266619873046874
+          },
+          {
+            "hypothesis": "Raw HTML/webpage markup containing quoted attribute values in common tags such as meta, link, a, div, input, etc., with strongest response near the closing quote character inside the tag.",
+            "positive_probes": [
+              "<meta charset=\"utf-8\" content=\"width=device-width\">",
+              "<a href=\"/home\" title=\"Return home\">Back</a>",
+              "<link rel=\"stylesheet\" href=\"styles.css\" media=\"screen\">",
+              "<div class=\"card\" data-id=\"42\">Featured item</div>",
+              "<input type=\"text\" name=\"email\" placeholder=\"Enter email\">"
+            ],
+            "positive_acts": [
+              31.225540161132812,
+              24.120513916015625,
+              29.97431182861328,
+              23.074310302734375,
+              28.455577850341797
+            ],
+            "distractor_probes": [
+              "The HTML tag uses unquoted attributes in some examples.",
+              "She clicked the homepage link and returned home.",
+              "Use angle brackets and quotes carefully in documentation."
+            ],
+            "distractor_acts": [
+              20.954795837402344,
+              20.954795837402344,
+              20.954795837402344
+            ],
+            "score": 6.415254974365233
+          },
+          {
+            "hypothesis": "Transition from the final character of an HTML attribute value into the terminating double quote, rather than quotes in prose or single-quoted/unquoted attributes.",
+            "positive_probes": [
+              "Set alt=\"logo\" before closing the image tag.",
+              "Use href=\"/home\" in the anchor element.",
+              "Write class=\"primary\" on the button tag.",
+              "Include title=\"Welcome\" inside the header element.",
+              "Add data-id=\"42\" to the list item."
+            ],
+            "positive_acts": [
+              21.006916046142578,
+              21.006916046142578,
+              21.006916046142578,
+              21.006916046142578,
+              21.006916046142578
+            ],
+            "distractor_probes": [
+              "Set alt='logo' before closing the image tag.",
+              "She said \"logo\" during the design review.",
+              "Use href=/home in the anchor element."
+            ],
+            "distractor_acts": [
+              20.954795837402344,
+              20.954795837402344,
+              20.954795837402344
+            ],
+            "score": 0.052120208740234375
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "An HTML double quote ending an attribute value, especially in real tag markup and often near tag termination (`\">` or before another attribute/`>`).",
+            "positive_probes": [
+              "The tag ends like <a href=\"home.html\">.",
+              "Use real markup: <img src=\"cat.png\" alt=\"cat\">.",
+              "Closing quote before another attribute: <input value=\"x\" disabled>.",
+              "Example HTML shows <div class=\"note\"> clearly.",
+              "Attribute value closes here: <option selected=\"selected\">."
+            ],
+            "positive_acts": [
+              21.006908416748047,
+              21.006908416748047,
+              21.006908416748047,
+              22.697097778320312,
+              21.006908416748047
+            ],
+            "distractor_probes": [
+              "She said \"hello\" before the tag appeared.",
+              "Discuss HTML quotes and attributes in plain English.",
+              "This malformed snippet lacks closure: <a href=\"home.html\"."
+            ],
+            "distractor_acts": [
+              20.954795837402344,
+              20.954795837402344,
+              20.954795837402344
+            ],
+            "score": 0.39015045166015483
+          },
+          {
+            "hypothesis": "The specific HTML boundary `attribute=\"value\">`: the closing double quote immediately followed by `>`, marking the end of a start tag and transition into text/newline.",
+            "positive_probes": [
+              "The snippet ends with class=\"hero\"> before visible text.",
+              "Notice href=\"/home\"> directly precedes the page title.",
+              "An opening tag closes at data-id=\"42\"> then content.",
+              "The parser sees alt=\"logo\"> and switches into text.",
+              "This example uses name=\"email\"> right before a newline."
+            ],
+            "positive_acts": [
+              25.038631439208984,
+              29.54349136352539,
+              27.460350036621094,
+              27.267539978027344,
+              27.52804183959961
+            ],
+            "distractor_probes": [
+              "The attribute ends as class=\"hero\" before another attribute.",
+              "Notice href=\"/home\" /> closes a self-contained tag.",
+              "The parser sees alt='logo'> using single quotes instead."
+            ],
+            "distractor_acts": [
+              20.954795837402344,
+              20.954795837402344,
+              20.954795837402344
+            ],
+            "score": 6.412815093994141
+          },
+          {
+            "hypothesis": "Closing double quote of a double-quoted HTML attribute value inside raw webpage markup, regardless of whether another attribute or the tag end follows; not quotes in prose, single-quoted attributes, or unquoted attributes.",
+            "positive_probes": [
+              "Raw markup: <img alt=\"logo\" src=\"/a.png\">",
+              "Inside HTML, <a href=\"/home\"> starts here.",
+              "Snippet shows <input type=\"text\" disabled> exactly.",
+              "Use raw tag <meta charset=\"utf-8\"> now.",
+              "Markup fragment: <div class=\"card\"> displayed literally."
+            ],
+            "positive_acts": [
+              29.504985809326172,
+              24.368297576904297,
+              21.006908416748047,
+              25.884479522705078,
+              22.890701293945312
+            ],
+            "distractor_probes": [
+              "Prose says, \"href\" looks like an attribute name.",
+              "Single-quoted markup: <img alt='logo' src='/a.png'>",
+              "Unquoted attribute example: <input type=text disabled>"
+            ],
+            "distractor_acts": [
+              20.95480728149414,
+              20.95480728149414,
+              20.95480728149414
+            ],
+            "score": 3.77626724243164
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n  <modelVersion>4.0.0</modelVersion>\n\n  <groupId>ne.katch</",
+    "A single cloud drifted over the harbor.",
+    "486524929?ref_src=twsrc%5Etfw\">November 15, 2018</a></p></blockquote>\n<script async src=\"https://platform",
+    "Two children played chess on a wooden bench.",
+    "=\"1\">070185UJ0</xref>\n            <xref type=\"Non_Fiction\" type_id=\"",
+    "The old library sat quietly at the edge of the park.",
+    "https://www.dejal.com/blog/2018/11/introducing-sheetplanner-mac\">introduction of a new app, SheetPlanner</a> (written by me as consulting work).</li>\n</ul>",
+    "The senator refused to comment before the hearing.",
+    "The company announced quarterly earnings yesterday afternoon.",
+    "The train from Milan arrived twenty minutes late.",
+    "index\">\n  <div class=\"table-row \">\n    <div class=\"table-cell\" class=\"subj\"> {{"
+  ],
+  "heldout_true_acts": [
+    29.894004821777344,
+    21.026641845703125,
+    30.387386322021484,
+    21.026641845703125,
+    30.346675872802734,
+    21.026641845703125,
+    29.171833038330078,
+    21.026641845703125,
+    21.006908416748047,
+    21.006908416748047,
+    29.787174224853516
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "HTML or XML tags and attributes",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 22.863257884979248,
+        "sentences": [
+          "Use <a href=\"/home\">Home</a> for navigation.",
+          "The image tag is <img src=\"cat.jpg\" alt=\"Cat\" />.",
+          "Write <note priority=\"high\">Call me</note> in XML.",
+          "Set <input type=\"email\" required=\"required\"> on the form.",
+          "The root element is <book isbn=\"12345\"><title>Example</title></book>.",
+          "Try <div class=\"alert\" data-level=\"warning\">Caution</div> now.",
+          "This file contains <user id=\"7\" role=\"admin\"></user>.",
+          "Add <meta charset=\"UTF-8\"> inside the head section."
+        ],
+        "activations": [
+          25.11609649658203,
+          20.991313934326172,
+          21.14095687866211,
+          26.27926254272461,
+          20.991313934326172,
+          21.82172393798828,
+          20.991313934326172,
+          25.574081420898438
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9944217699596681,
+        "spearman": 0.8366191769856034,
+        "preds": [
+          10.0,
+          0.0,
+          10.0,
+          0.0,
+          9.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "The specific HTML boundary `attribute=\"value\">`: the closing double quote immediately followed by `>`, marking the end of a start tag and transition into text/newline.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 24.097457885742188,
+        "sentences": [
+          "I wrote <div class=\"note\"> yesterday in a tutorial.",
+          "The snippet ends with <img alt=\"sunrise\"> on purpose.",
+          "She highlighted <span title=\"warning\"> before the text.",
+          "Use <a href=\"/home\"> for the homepage link.",
+          "My example shows <p id=\"intro\"> at line one.",
+          "They tested <input value=\"hello\"> in the form.",
+          "He pasted <section data-role=\"main\"> into documentation.",
+          "We noticed <button aria-label=\"close\"> beside the caption."
+        ],
+        "activations": [
+          22.627586364746094,
+          27.375171661376953,
+          22.82757568359375,
+          25.167015075683594,
+          21.46359634399414,
+          27.54450225830078,
+          22.267940521240234,
+          23.506275177001953
+        ]
+      },
+      "predictive": {
+        "pearson": 0.996316957852918,
+        "spearman": 0.920394081210133,
+        "preds": [
+          9.0,
+          0.0,
+          10.0,
+          0.0,
+          10.0,
+          0.0,
+          9.0,
+          0.0,
+          0.0,
+          0.0,
+          8.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 62.13768005371094,
+  "layer": 6,
+  "sae_info": {
+    "layer": 6,
+    "width": "16k",
+    "l0": 70,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_6/width_16k/average_l0_70/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "HTML or XML tags and attributes"
+}

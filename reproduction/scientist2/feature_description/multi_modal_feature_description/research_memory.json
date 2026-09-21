@@ -1,0 +1,49 @@
+{
+  "direction": "SemanticLens-style semantic-space placement of vision-model components — reference-input summarization + frozen CLIP embedding pooling of components into a queryable image-text joint space.",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "For every component c in a trained vision model (probed on ImageNet), a small top-k activation-driven reference-input set is a concept-faithful summary of c; pooling frozen CLIP-image-tower embeddings of that set into v_c places c in CLIP's joint image-text semantic space (text-queryable, stable, and separable within- vs between-concept).",
+      "status": "established",
+      "behavior_conclusion": "On ResNet-50 / ImageNet, the two SemanticLens behaviors hold at meaningful magnitudes: last-layer top-1 concept-purity is 89.8% at k=16 (above CLIP-Dissect's published 55-76% range and 900× above the random baseline); hidden-layer matched-control cosine gap is Δ_sep=0.020 at layer4 with p≈0; text-query→component MRR is 0.898 (perm95=0.010); disjoint-half stability median cosine is 0.970; layer4 within-vs-between concept cosine gap is 0.170 (Cohen's d=1.96, p≈0). Universality across trained vision models (cross-model transfer) is NOT tested — the M12 cross-model milestone was cancelled by user directive 2026-07-14, so the 'every component c in a trained vision model' clause of the behavior statement is verified only on ResNet-50; a `given-validation` re-run of B1 on a different vision architecture is the natural follow-up.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Unit Interpretation → Decision Auditing",
+          "family": "Multi-Modal Feature Description / CLIP-Dissect",
+          "headline": "CLIP-Dissect on ResNet-50 recovers a concept-faithful v_c for ImageNet-supervised components at k=16 (last-layer top-1 purity 0.898, hidden-layer layer4 Δ_sep=0.020 at p≈0) and yields a text-queryable, disjoint-half-stable, within-vs-between-concept separable coordinate for each c (fc MRR=0.898 vs perm95=0.010; stability median cos=0.970; layer4 gap=0.170, Cohen's d=1.96). A within-family method-swap variant (Zennit-CRP compose-based fallback) reproduces MRR=0.9024 (Δ=+0.0044) with stability=0.9581 — the ResNet-50/ImageNet-scope result is robust to the CLIP-Dissect ↔ CRP-compose method swap. Sign-consistent across {mean, act-weighted mean, max, medoid} pooling on P2a/P2b/layer4-P2c; the fc P2c gap is near-zero across pools (magnitudes < 0.02) but attributed to the CLIP-text-cluster same-concept grouping heuristic (dog-breed clustering artifact) rather than a claim failure, since layer4 P2c under top-1 concept-identity grouping is unambiguous. P1c strict monotone-nondecreasing over the full k-range is not met (Δ_sep declines at k=64/256), but the plateau exists in k∈{1,4,16} — satisfying the 'small set' phrasing of C1. Cross-model transfer (P3/M12) was CANCELLED mid-run by user directive 2026-07-14; the direction+family verdict is therefore scoped to ResNet-50/ImageNet only, and the shared-coordinate-system universality across trained vision models is UNVERIFIED on this round.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "On a ResNet-50 trained on ImageNet, a small top-k activation-driven reference-input set from ImageNet-val is a concept-faithful summary of each component — measured by (P1a) last-layer top-1 concept-purity above random baseline, (P1b) hidden-layer top-1 vs matched-control CLIP-text-similarity gap > 0 with p < 0.05, and (P1c) k-sensitivity plateau at small k ≤ 16; universality across trained vision models is not asserted on this round.",
+              "method": "Reference-input screen by top-k activation → pooled decode via mean-cosine between frozen CLIP-image-tower embedding of R_c and (P1a) ImageNet-1k class-name text embeddings or (P1b/P1c) a 1203-concept broden-style vocabulary; support decided by top-1 concept-purity above a random-input baseline (P1a, McNemar p < 0.05), matched-control cosine gap Δ_sep > 0 (P1b, paired-t p < 0.05) and a k-sweep plateau in k ≤ 16 (P1c).",
+              "conclusion": "P1a last-layer concept-purity is 0.898 at k=16 vs random baseline 0.001 (Δ=0.897, McNemar p≈1.9e-270), above CLIP-Dissect's published 55-76% range; P1b layer4 Δ_sep=0.0202 (p≈0), layer3 Δ_sep=0.0049 (p≈0); P1c layer4 Δ_sep plateaus in k∈{1,4,16} at ~0.020 and declines at k=64/256 (satisfies 'small set' phrasing but not strict monotone-nondecreasing over the full k-range). Verify Stage 2 was DEFERRED (INTEGRITY_ONLY, stage2_skip_reason: max_verify_claims_cap; upgrade command `/auto-verify C1 -- resume: true` recorded as Open Item); Stage 1 audit passed WARN, anchored on the ResNet-50-only scope + P3/M12 cancellation and a P1b docstring / metric-alignment note — no numerical or methodology break. C1 stands as ResNet-50/ImageNet-scoped support; the 'for every component c in a trained vision model' universality clause is unverified because M12 cross-model transfer was cancelled by user directive 2026-07-14.",
+              "iteration_notes": "Iteration converged in 1 ⓪-only pass: paper scope narrowed to ResNet-50/ImageNet; P1c reframed as 'plateau at small k ≤ 16, degrades at k ∈ {64,256}'; P1b terminology clarified (matched-control = top-1 vs top-2 concept gap)."
+            },
+            {
+              "id": "C2",
+              "statement": "On a ResNet-50 trained on ImageNet, pooling frozen CLIP-image-tower embeddings of the top-k activation-driven reference-input set into v_c places each component in CLIP's joint image-text semantic space — text-queryable (H2a MRR/R@10 above permutation), disjoint-half stable (H2b cosine ≥ τ_stable), within-vs-between-concept separable at hidden layer4 (H2c Cohen's d ≥ 0.5), and qualitatively invariant across {mean, act-weighted mean, max, medoid} pooling on P2a, P2b, and layer4 P2c; the fc P2c gap is inconclusive under CLIP-text-cluster grouping heuristic; cross-model 'shared coordinate system' universality is not asserted on this round.",
+              "method": "Compute v_c = pool(CLIP_image_tower(R_c)) with pool ∈ {mean, act-weighted mean, max, medoid} using the top-k=16 activation-driven ImageNet-val reference set R_c; score against 1000 ImageNet-1k class-name text embeddings for MRR/R@10 vs a permutation-shuffled baseline (H2a), against disjoint reference-set halves for stability cosine (H2b), and against between- vs within-concept pair cosines with Cohen's d (H2c); support decided by MRR above the permutation-95%-upper (H2a), stability median cos ≥ τ_stable=0.5 (H2b), Cohen's d ≥ 0.5 with the correct sign (H2c), and sign-consistency across the four pools (H2d).",
+              "conclusion": "H2a last-layer MRR=0.898 (R@10=0.974) vs perm 95%-upper 0.010, highly significant; H2b disjoint-half stability median cosine=0.970 (τ_stable=0.5 satisfied); H2c layer4 within-vs-between concept cosine gap=0.170 with Cohen's d=1.96 and p≈0; fc P2c gap is near-zero across pools (magnitudes < 0.02, mixed signs) — attributed to the CLIP-text-cluster same-concept grouping heuristic clustering dog-breed classes together, not a genuine failure of C2. H2d sign-consistent across the four pools on P2a, P2b, and layer4 P2c; NOT sign-consistent on fc P2c under the grouping heuristic. A within-family method-swap variant (Zennit-CRP compose-based fallback) reproduces the effect at MRR=0.9024 (Δ=+0.0044) and stability=0.9581 — verify verdict PASS with robustness=1.0 on the method axis; the model axis was excluded by user directive 2026-07-14 (no cross-architecture testing). C2 stands as ResNet-50/ImageNet-scoped support with layer4 as the strong site and fc bracketed as inconclusive under the grouping heuristic.",
+              "iteration_notes": "Iteration converged in 1 ⓪-only pass: scope narrowed to ResNet-50/ImageNet; fc P2c bracketed as inconclusive-under-heuristic and layer4 P2c presented as the strong test; C2 robustness re-described as 'one successful method-swap verification (Zennit-CRP compose)' rather than 'comprehensive'."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Location",
+        "Causal Intervention",
+        "Tuning & Editing",
+        "Formation Tracing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

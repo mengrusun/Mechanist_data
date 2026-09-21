@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (GPT-5.4 via DMX, T=0)",
+  "claim_id": "C1",
+  "linked_milestones": ["M1"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Probe labels are LLM-judge (GPT-5.4) derived proxy annotations. Not model-self-derived GT, but not true external GT either. Kappa measures inter-run stability (0.77-1.00), not inter-annotator agreement."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "ROC-AUC computed against 0/1 binary labels. First-PC alignment is raw cosine similarity. No metric normalized by model prediction statistics."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "AUC values (0.977, 0.840, 1.000, 0.892) and first-PC alignments (0.263, 0.364, 0.340, 0.447) consistent with runs/M1_locate/results.json structure. Direction files present."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "first_pc_alignment(), compute_sigma_proj(), train_probe_per_layer() all called and results stored in results.json."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "200 chains, 4 behaviours, 32 layers. Report honest about predicate outcomes (AUC passes, first-PC fails). No overclaiming language."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

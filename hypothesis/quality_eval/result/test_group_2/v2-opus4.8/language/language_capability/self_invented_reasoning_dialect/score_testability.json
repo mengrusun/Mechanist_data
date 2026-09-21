@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The goal and method align well: the plan compares \"natural-language CoT\" with a \"self-invented dialect\" on held-out problems and measures \"final-answer accuracy, thinking-token count, accuracy-per-token efficiency,\" while legend corruption, ablation, and semantic shuffling directly test whether the notation carries information. The predictions are directional and refutable—failure to \"match natural-language CoT accuracy,\" reduce tokens, show a corruption-induced accuracy drop, or achieve partial cross-model transfer would contradict the corresponding hypotheses—but terms such as \"substantially fewer tokens,\" \"large accuracy drop,\" and \"transfer partially\" lack numeric decision thresholds, and the invention loop refers only to accuracy \"above a threshold\" without specifying it. Moreover, corruption sensitivity establishes dependence on the supplied legend but does not by itself establish the stronger claim that reasoning is \"less parasitic on natural-language priors,\" so that mechanistic conclusion would require a clearer operational criterion.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is the custom \"DIALECT INVENTION LOOP,\" but its propose-solve-verify-select procedure over \"~5–10 iterations\" is implementable with ordinary prompting, automatic verifiers, token counting, and best-of-N selection rather than requiring an undefined magic operation. The named artifacts—\"Llama-3-8B, Qwen2.5-7B, Gemma-2-9B,\" GSM8K-style arithmetic, synthetic tasks, and standard mixed-effects analysis—exist or can be constructed with mature model-inference and statistical tooling; the corruption, ablation, shuffled-assignment, filler-token, held-out, and random-symbol controls make the negative branch runnable. Resources receive useful quantification through three exact model scales, four task families, and \"~5–10 iterations,\" but test-set sizes, the value of N, the acceptance threshold, and concrete per-condition sample counts are unstated, leaving some experimental-design choices to the implementer.",
+      "score": 8
+    }
+  }
+}

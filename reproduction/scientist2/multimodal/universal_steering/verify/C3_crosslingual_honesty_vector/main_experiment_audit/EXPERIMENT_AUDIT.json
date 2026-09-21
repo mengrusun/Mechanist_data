@@ -1,0 +1,16 @@
+{
+  "claim_id": "C3",
+  "claim_dir": "C3_crosslingual_honesty_vector",
+  "overall_verdict": "warn",
+  "checks": {
+    "A_gt_provenance": {"verdict": "pass", "note": "GPT-4o multilingual rubric judge (5-point). Appropriate for cross-lingual open-ended eval. Translation via GPT-4o one-shot; no on-disk record of manual spot-check (minor gap)."},
+    "B_score_normalization": {"verdict": "pass", "note": "Absolute 5-point rubric; mean shift = mean_steered - mean_unsteered per language. No model-max normalization."},
+    "C_result_file_existence": {"verdict": "pass", "note": "summary.json exists with all per-language stats (n=50 per lang, all 4 langs, steered/unsteered means, Wilcoxon p). Internally consistent."},
+    "D_dead_code": {"verdict": "pass", "note": "All 200 cells generated and judged; Wilcoxon per language computed and stored."},
+    "E_scope": {"verdict": "warn", "note": "Wilcoxon paired test is correct (within-subject design). No Bonferroni correction for 3 languages — WARN but not misleading (all p > 0.10, far above even corrected threshold of 0.017). FR reverses sign (shift=-0.10) — claim's 'all 3 langs positive shift' not met."},
+    "F_eval_type": {"verdict": "pass", "note": "synthetic_proxy — GPT-4o multilingual rubric. Appropriate."}
+  },
+  "milestones_audited": ["M7_C3_translate", "M8_C3_steer_and_judge"],
+  "runs_audited": ["C3_crosslingual"],
+  "audited_at": "2026-07-15"
+}

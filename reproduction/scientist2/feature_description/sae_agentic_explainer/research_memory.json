@@ -1,0 +1,60 @@
+{
+  "direction": "Iterative, activation-grounded natural-language explanation of SAE features in LLMs — SAGE-style multi-agent propose→test→revise pipelines vs. single-pass baselines like Neuronpedia.",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "A multi-agent iterative (Explainer→Designer→Analyzer→Reviewer) auto-interpretation pipeline over an SAE dictionary — SAGE — produces natural-language SAE-feature explanations that outperform the reference Neuronpedia catalog on generative accuracy (probe text derived from the explanation triggers the target feature) and predictive accuracy (explanation-based predictions correlate with true activations on held-out text), across multiple open-source LLM+SAE pairs and across early-to-late residual-stream layers.",
+      "status": "conditional",
+      "behavior_conclusion": "Established only in the specific comparison against Neuronpedia's public GPT-4o-mini catalog and only on generative-accuracy (Δ=+0.018 CI[+0.005,+0.036] p=0.045 on Gemma-2-2B + gemmascope-res-16k, n=44). The behavior does NOT hold as a general 'SAGE loop improves explanation quality' claim: (i) against a matched-backbone GPT-5-1shot control the loop yields no measurable gain (Δ=-0.005 n.s.), so the Neuronpedia beat is a backbone-upgrade artifact rather than a loop artifact; (ii) predictive-accuracy shows no significant SAGE advantage on the same main pair (Δpearson=-0.018 CI[-0.094,+0.058] p=0.43); (iii) on cross-LLM+SAE pairs the loop-lite (predictive-only) shows negative transfer — Qwen3-4B Δ=+0.153 n.s. and GPT-OSS-20B Δ=-0.045 n.s., with only the non-significance being robust. Layer-depth generalization is unresolved due to under-power (n=14-15/layer vs 100 planned). All results at ~15-23% of planned n due to DMXAPI throughput variance; verdict is provisional at higher n.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": 1
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Unit Interpretation",
+          "family": "Feature Dictionary Learning / SAE",
+          "headline": "SAE-feature auto-interpretation via the SAGE 4-role loop (Explainer→Designer→Analyzer→Reviewer) does NOT produce a measurable loop-only improvement over a single-pass matched-backbone GPT-5 explainer on generative accuracy (Δ=-0.005 n.s., n=44), and shows no advantage on predictive-accuracy either (Δpearson=-0.018 n.s.). The apparent +1.8pp beat over Neuronpedia's public catalog is fully attributable to the GPT-4o-mini → GPT-5 backbone upgrade. Cross-LLM+SAE transfer is negative in the strong sense that effect directions differ across model pairs (+0.153 on Qwen3-4B vs -0.045 on GPT-OSS-20B) with neither reaching significance, so only the non-significance replicates.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "On Gemma-2-2B + gemmascope-res-16k, SAGE explanations trigger the target SAE feature more reliably than Neuronpedia's on paired same-feature-id probe texts (paired 95% CI lower bound > 0), including versus a matched-backbone control.",
+              "method": "Paired bootstrap 95% CI on per-feature generative-accuracy Δ (SAGE − reference), computed against two references — Neuronpedia's public GPT-4o-mini catalog and a matched-backbone GPT-5-1shot control run in-house — on n=44 features (planned 300) across L4/L12/L20.",
+              "conclusion": "Audit passed (WARN — coarse 5-probe metric, Wilcoxon n_eff=4), swap-test deferred (cap): SAGE beats Neuronpedia's public catalog by +0.018 (CI [+0.005, +0.036], p=0.045) but does NOT beat the matched-backbone GPT-5-1shot control (Δ=-0.005 n.s.); the pipeline gain is a backbone-upgrade artifact, not a loop artifact."
+            },
+            {
+              "id": "C2",
+              "statement": "On Gemma-2-2B + gemmascope-res-16k, SAGE explanations yield higher per-feature Pearson correlation between explanation-conditioned activation predictions and ground-truth activations on Neuronpedia's held-out text (paired 95% CI lower bound > 0).",
+              "method": "Paired bootstrap 95% CI on per-feature Pearson r of GPT-5 explanation-conditioned activation predictions against Gemma-2-2B forward-pass activations through the SAE hook, on the same n=44 features (planned 300) × 20 held-out texts.",
+              "conclusion": "Audit passed (PASS), swap-test deferred (cap): failed replication — Δpearson (SAGE − Neuronpedia) = -0.018 (CI [-0.094, +0.058], p=0.43); no significant SAGE advantage on predictive-accuracy at 15% of planned n."
+            },
+            {
+              "id": "C3",
+              "statement": "The C1 and C2 improvements hold individually at early / mid / late residual-stream depths L4, L12, L20 after Bonferroni correction over 3 depths × 2 metrics.",
+              "method": "Layer-stratified read-off from the M1 run — per-depth paired bootstrap 95% CI on both metrics with Bonferroni α=0.05/6, at n=14-15 features per depth (planned 100/depth).",
+              "conclusion": "Audit passed (WARN — per-layer n=14-15, L20 gen_acc all-zero deltas, Bonferroni framing not coded), swap-test deferred (cap): unresolved due to under-power — no per-layer CI excludes zero, but n=14-15/layer is too small to distinguish a genuine null from an under-powered null; the L20 SAE l0_71 variant was not swapped in either, leaving one noise source unaddressed."
+            },
+            {
+              "id": "C4",
+              "statement": "The C1 / C2 improvements hold on at least one cross-LLM+SAE pair from {Qwen3-4B + transcoder-hp, GPT-OSS-20B + resid-post-aa}; the second pair is deferred to /auto-verify.",
+              "method": "M2 SAGE-lite predictive-only protocol on n=34 Qwen3-4B features (planned 150); verify model-swap ran the same protocol on n=45 GPT-OSS-20B features at L3/L11/L19; robustness = fraction of eligible variants agreeing with the main-experiment verdict.",
+              "conclusion": "Robust null (verify robustness 1.00, both integrity PASS): verified negative transfer — SAGE-lite predictive-accuracy fails to significantly beat the Neuronpedia-proxy on either pair, and the effect directions actually differ (Qwen3-4B Δ=+0.153 n.s.; GPT-OSS-20B Δ=-0.045 n.s.); only the non-significance replicates, so this is NOT a positive cross-pair generalization result."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Location",
+        "Causal Intervention",
+        "Tuning & Editing",
+        "Formation Tracing",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

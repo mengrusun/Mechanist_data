@@ -1,0 +1,34 @@
+{
+  "novelty": {
+    "score": 6,
+    "reasoning": "Core claims: (1) facts are stored as multiple format-bound copies rather than one fact with multiple query pathways; (2) these copies are causally dissociable by patching; (3) they appear as distinct linear residual-stream directions; (4) a learned format-bridge steering vector can transfer access across formats without weight editing. The setting is new enough: prior work on paraphrase consistency and multilingual factual consistency shows format/query failures, but not this exact structural claim across query formats. However, the observation itself is adjacent to known inconsistency phenomena, and the bridge method is a near-transplant of cross-lingual steering. The most novel part is the structural 'many copies' hypothesis, but it is also the most vulnerable to the standard null that query encodings differ while the underlying fact store is shared.",
+    "revision_notes": [
+      "State explicitly what would falsify the proposal: e.g. if patching transfers but probes do not separate, or if format effects disappear after controlling for query difficulty/encoding.",
+      "Sharpen the delta vs prior work into one sentence: 'Unlike paraphrase-consistency and cross-lingual steering, we test whether formats induce causally separable fact representations within a single model.'",
+      "Reduce claims about 'distinct linear directions' unless the paper can prove them beyond probe artifacts; present as an empirical signature, not the core novelty.",
+      "Add a direct comparison to the one-store-many-queries null and to multilingual steering as the closest methodological baseline."
+    ]
+  },
+  "impact": {
+    "score": 5,
+    "reasoning": "The phenomenon under study is factual retrieval inconsistency across query formats. People who care: interpretability, robustness, knowledge editing, and factuality researchers. Strongest one-line case: if facts are format-bound, then improving QA requires format-aware retrieval/intervention rather than treating knowledge as a single invariant store. This is a real research problem, but still mostly methodological and somewhat niche; the result would be valuable as a phenomenon if true, yet it is not obviously direction-shifting for the broader ML field. So what? If confirmed, serious researchers in factual consistency and model editing would likely care and cite it; if refuted, the field mostly keeps the existing one-store account and focus on query encoding.",
+    "revision_notes": [
+      "Add an explicit 'who should care' paragraph: interpretability, mechanistic analysis, robustness, and editing communities.",
+      "Explain downstream change: would it alter how we design prompts, evaluation suites, or interventions?",
+      "Quantify practical relevance beyond toy format swaps: e.g. downstream QA robustness or editing generalization.",
+      "Distinguish phenomenon value from application value; emphasize why the effect matters even if the bridge method is simple."
+    ]
+  },
+  "review": {
+    "score": 5,
+    "reasoning": "The hypothesis is interesting but currently overstated and undercontrolled. Main logical gap: format mismatch could be explained by query-encoding differences, task difficulty, or answer-space changes rather than multiple stored copies. The core claim is only falsifiable if the experiments cleanly separate representation storage from query processing. Related work is directionally present but not yet specific enough to isolate the exact delta from paraphrase consistency, multilingual steering, and multi-hop query-vs-fact representation work. Experimental plan is ambitious and testable, but several controls are missing: matched difficulty across formats, answer-space and frequency controls, strong random/targeted controls for patching and steering, and analyses to distinguish probe separability from representational artifact. If executed carefully, this could be a solid interpretability/knowledge-retrieval paper, but not yet submission-ready as written.",
+    "revision_notes": [
+      "Add a precise hypothesis section with one primary claim and two secondary claims; do not present all six experiments as equally central.",
+      "Include matched-format controls for difficulty, length, answer entropy, and training frequency to rule out trivial format effects.",
+      "Specify the causal analysis in detail: where patching is done, what layers, what source/target pairs, and what nulls are used.",
+      "Add ablations for probe leakage, random label baselines, and held-out facts/formats to test true generalization.",
+      "Separate the 'format-bridge' contribution from the structural finding; the bridge may be useful even if the copy hypothesis weakens.",
+      "Tone down claims of 'multiple copies' unless the evidence can rule out a shared-store + format-specific access pathway."
+    ]
+  }
+}

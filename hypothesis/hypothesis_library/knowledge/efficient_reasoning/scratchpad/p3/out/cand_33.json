@@ -1,0 +1,50 @@
+{
+  "novelty": {
+    "score": 7,
+    "reasoning": "Core claims are: (1) a later sub-question’s confidence is inflated by an earlier high-confidence answer within the same response; (2) this is mediated by a persistent, linearly-decodable certainty state; (3) the effect is causally removable with boundary-reset; (4) the phenomenon is distinct from generic calibration/contamination because it is within-response and cross-subquestion. The closest prior family is single-answer confidence/calibration interpretability (VUF, Confidence is Not Competence, SCIURus, Read Your Own Mind), which does not test carry-over across answers. The delta is plausibly novel as a state-dynamics finding, but the mechanism may reduce to generic recency/position/salience unless tightly controlled.",
+    "revision_notes": [
+      "State the hypothesis as a falsifiable contrast: within-response confidence carry-over vs matched-length/position/recency controls.",
+      "Explicitly define the phenomenon boundary: one response, multiple sub-questions, target held identical across conditions.",
+      "Add a dedicated section contrasting with VUF/SCIURus/Read Your Own Mind on the dimension of cross-answer state persistence, not just calibration.",
+      "Separate finding, mechanism, and intervention claims; avoid overclaiming firstness unless the carry-over effect survives all control conditions."
+    ]
+  },
+  "impact": {
+    "score": 6,
+    "reasoning": "The problem is model calibration in multi-part responses, which matters for QA agents, safety-sensitive assistants, and uncertainty research. If true, it changes how people think about confidence estimation: as a state that can leak across turns inside a response, not a per-answer scalar. That said, the immediate application surface is narrower than generic calibration work, and the strongest real-world case depends on effect size/generalization across models and domains.",
+    "revision_notes": [
+      "Add one concrete downstream scenario where within-response miscalibration causes harm (e.g., clinical or agentic multi-step QA).",
+      "Quantify who benefits: calibration researchers, agent builders, safety evaluators; make this explicit in the abstract.",
+      "Frame the contribution as a new failure mode for multi-part outputs, not just another calibration paper.",
+      "Include a short “why now” motivation tied to long-form assistant responses and multi-question agents."
+    ]
+  },
+  "review": {
+    "score": 5,
+    "reasoning": "The proposal is interesting and mostly testable, but there are logical vulnerabilities: the effect could be position/recency/topic-salience rather than confidence-specific; the causal state may not be separable from difficulty; and the intervention may be hard to interpret if patching changes general generation dynamics. The hypothesis is scoped, but the writeup is overpacked with many claims and thresholds before the basic phenomenon is established. Venue strength would improve with a cleaner main claim, tighter related-work positioning, and a smaller set of decisive experiments.",
+    "revision_notes": [
+      "Reduce to one primary claim and one primary causal test; move modulators and transfer claims to secondary experiments.",
+      "Specify exact matched-control designs for position, length, topic, and predecessor correctness/confidence.",
+      "Add ablations that test whether the effect survives when the predecessor is semantically unrelated but equally long and equally salient.",
+      "Pre-register or clearly separate exploratory analyses from confirmatory ones.",
+      "Tighten related work by explicitly naming what each prior paper tests and what dimension it leaves untouched.",
+      "Replace many thresholded success criteria with a smaller number of core statistical tests and effect-size targets."
+    ]
+  },
+  "revision_notes": [
+    "State the hypothesis as a falsifiable contrast: within-response confidence carry-over vs matched-length/position/recency controls.",
+    "Explicitly define the phenomenon boundary: one response, multiple sub-questions, target held identical across conditions.",
+    "Add a dedicated section contrasting with VUF/SCIURus/Read Your Own Mind on the dimension of cross-answer state persistence, not just calibration.",
+    "Separate finding, mechanism, and intervention claims; avoid overclaiming firstness unless the carry-over effect survives all control conditions.",
+    "Add one concrete downstream scenario where within-response miscalibration causes harm (e.g., clinical or agentic multi-step QA).",
+    "Quantify who benefits: calibration researchers, agent builders, safety evaluators; make this explicit in the abstract.",
+    "Frame the contribution as a new failure mode for multi-part outputs, not just another calibration paper.",
+    "Include a short “why now” motivation tied to long-form assistant responses and multi-question agents.",
+    "Reduce to one primary claim and one primary causal test; move modulators and transfer claims to secondary experiments.",
+    "Specify exact matched-control designs for position, length, topic, and predecessor correctness/confidence.",
+    "Add ablations that test whether the effect survives when the predecessor is semantically unrelated but equally long and equally salient.",
+    "Pre-register or clearly separate exploratory analyses from confirmatory ones.",
+    "Tighten related work by explicitly naming what each prior paper tests and what dimension it leaves untouched.",
+    "Replace many thresholded success criteria with a smaller number of core statistical tests and effect-size targets."
+  ]
+}

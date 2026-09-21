@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal tightly aligns its methods with its two hypotheses: it defines the safety signal as “the residual stream at i projected onto this direction,” varies CoT length and content, and evaluates SVA using attack success, over-refusal, and reasoning accuracy. It supplies strong, directional decision criteria, including “R^2 >=0.8” and “rho >=0.6” for H1, versus “joint R^2 <0.5, or filler having no effect (rho <0.3),” and for H2 an ASR reduction “>=40 points” with accuracy loss “<=2 points,” versus ASR reduction “<15 points, or a reasoning drop >5 points.” Some operational details remain ambiguous—especially how “self-jailbreak” examples are identified, what counts as the “peak (early)” window and gating threshold, and how a single shared decay law handles prompt- and regime-specific baselines—and the claim that decay is largely content-independent sits somewhat uneasily with the prediction that semantic filler dilutes “>=2x more than format-only padding per token.”",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest core step is extracting and causally validating the caution direction through “difference-in-means,” a “layer sweep,” ablation, and residual-stream intervention; this is custom experimental logic but consists of standard forward hooks, projections, probing, generation-time activation edits, and benchmark evaluation rather than an undefined magic step. The named models and principal artifacts—“DeepSeek-R1-Distill-Llama-8B,” “DeepSeek-R1-Distill-Qwen-7B,” “Qwen3-8B,” HarmBench, AdvBench, XSTest, GSM8K, MATH-500, and GPQA-Diamond—exist and are supported by ordinary transformer and interpretability tooling, although some recent named attack and head-ablation baselines could not be independently verified here and the adaptive attack “designed to keep the early caution projection low” lacks a concrete optimization procedure. Resources are unusually well specified through figures such as “200 harmful behaviors,” filler lengths of “0, 100, 300, 600, and 1000,” and benchmark sizes of 1,319, 500, 198, and 80, though no compute or annotation totals are given. The refuting branch is runnable because the design includes frozen-model baselines, length caps, benign-task controls, matched-token format controls, a “matched-L2 non-caution” anchor, a late-value anchor, and explicit negative outcomes under which either dilution or SVA fails.",
+      "score": 8
+    }
+  }
+}

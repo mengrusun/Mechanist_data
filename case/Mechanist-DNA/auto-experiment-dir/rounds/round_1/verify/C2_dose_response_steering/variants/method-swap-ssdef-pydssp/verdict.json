@@ -1,0 +1,17 @@
+{
+  "variant_tag": "method-swap-ssdef-pydssp",
+  "dimension": "method",
+  "claim_id": "C2",
+  "claim_statement": "Amplifying the C1 alpha-helix SAE feature set during Evo2-7B autoregressive DNA generation increases the encoded-protein alpha-helix fraction, monotonically with amplification strength up to an optimum.",
+  "main_experiment_verdict": "supported",
+  "variant_metric": "pydssp helix fraction: alpha=0 0.468 -> alpha=32 0.795 (effect +0.327); Spearman rho=0.886, p=6.4e-4",
+  "main_experiment_metric": "mkdssp helix fraction: alpha=0 0.475 -> alpha=32 0.834 (effect +0.359); Spearman rho=0.759, p=1.7e-5",
+  "delta": "pydssp effect +0.327 vs main-experiment mkdssp effect +0.359 (comparable magnitude, ~9% relatively smaller)",
+  "claim_supported": "pass",
+  "consistent_with_main_experiment": "pass",
+  "confidence": "high",
+  "reasoning": "Under the swapped SS-assignment algorithm (pydssp), helix fraction rises from 0.468 (alpha=0) to 0.795 (alpha=32), effect +0.327, Spearman rho=0.886 p=6.4e-4 -- a significant, non-trivial positive dose-response, closely tracking the SAME variant's own mkdssp readout on the identical structures (rho=0.935, p=7.0e-5, effect +0.332) at every dose (within 0.01-0.02 absolute helix fraction, within 0.002 absolute sheet fraction). The variant's mkdssp-path numbers are also close to the main experiment's own mkdssp numbers at the overlapping doses (main: 0.475->0.834; variant mkdssp-path: 0.469->0.801), confirming the reduced-grid re-run itself reproduces the main experiment's general shape. main_experiment_verdict=supported, claim_supported(pydssp)=pass -> consistent_with_main_experiment=pass.",
+  "scope_note": "This variant tests robustness to the SS-ASSIGNMENT-ALGORITHM axis only (mkdssp's 8-state DSSP vs pydssp's 3-state hydrogen-bond-map reimplementation), computed on IDENTICAL ESMFold-predicted structures. It does NOT test the STRUCTURE-PREDICTOR axis (whether ESMFold's own folding/confidence behavior could be inflating the effect on degenerate/low-complexity high-alpha sequences -- the concern independently raised in C2's own main-experiment-audit and in C3's mechanism-audit). That axis remains untested this pass; an ESMFold->OmegaFold swap was attempted first and abandoned as infeasible within this verify pass's network/time budget (see variants/method-swap-omegafold/PIVOT_NOTE.md).",
+  "integrity_status": "warn",
+  "integrity_breakdown": {"experiment": "warn", "mechanism": "warn"}
+}

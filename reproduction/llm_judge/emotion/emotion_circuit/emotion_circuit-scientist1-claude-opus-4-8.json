@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Do LLMs Feel? Emotion Circuits Discovery and Control",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "Directions and circuits are fit on the SEV training set (outputs/labeled/sev.jsonl, 1120 rows over 160 scenario skeleton_ids such as 'work_00', 'relation_18', 'school_02') and all reported accuracies are computed on a disjoint held-out test set (outputs/labeled/test_circuit_v2.jsonl etc., 2880 rows over 160 skeleton_ids named 'health_test_10', 'travel_test_17', 'school_test_11'). I verified skeleton_id set intersection is exactly 0 (160 train vs 160 test, overlap 0), so no scenario leaks from fitting into evaluation. code/common.py loads the two sources separately (data/sev.jsonl -> extraction; data/test_set.jsonl -> eval), and the circuit/direction .pt files (outputs/directions/directions.pt, outputs/circuits/global_circuit.pt) are built only from SEV. This deliberately honors the paper's 'judge-player overlap' avoidance (paper Sec.4 Test Set). No fitted threshold is selected on test. Splits are honored in code, not just prose.",
+    "score": 5,
+    "evidence_files": ["outputs/labeled/sev.jsonl", "outputs/labeled/test_circuit_v2.jsonl", "code/common.py", "data/sev.jsonl", "data/test_set.jsonl"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The evaluation label is emotion-expression accuracy: each generation is classified by an external LLM judge (code/gpt_label.py, MODEL='gpt-5.4' via the DMX endpoint) into one of {anger,sadness,happiness,fear,disgust,surprise,neutral,other} with per-emotion definitions in the system prompt; 'correct' = predicted label matches the target emotion (fields pred_label/correct in outputs/labeled/*.jsonl). This mirrors the paper's own GPT-rater protocol (paper App. B: 'decide if the text's STYLE matches the target emotion'), and is non-circular because the judge model (GPT-5.4) is independent of the model under test (Llama-3.2-3B-Instruct). The operationalization validly captures 'does the output express the target emotion.' Minor gap: the classifier prompt was refined mid-run (v1->v2, adding anger-vs-disgust / happiness-vs-surprise definitions), so labels carry LLM-judge noise and the ground truth is a model-graded proxy rather than human annotation; the refinement is disclosed (outputs/report.md line 129) and applied consistently across all three methods.",
+    "score": 4,
+    "evidence_files": ["code/gpt_label.py", "outputs/labeled/test_circuit_v2.jsonl", "outputs/report.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The base model is exactly the specified Llama-3.2-3B-Instruct: models/llama32-3b-full -> /data/zhenqian/models/Llama-3___2-3B-Instruct, loaded as default in code/steer_generate.py and code/circuit_generate.py (MODELS_DIR/'llama32-3b-full'); report states '28 layers, 24 heads, d=3072'. The dataset is the specified SEV (data/sev.jsonl symlinked to the provided /data/zhenqian/data/emotion/sev.jsonl), 160 scenarios x 3 outcomes = 480 events matching the paper, and evaluation is on the disjoint test_set.jsonl at the paper's size (2880 samples/method, n=2880 confirmed in every outputs/stats/test_*_v2.json). No silent downgrade or subsetting of the main experiment. The optional Qwen2.5-7B-Instruct robustness variant (a verify-stage 'as needed' candidate in task.md) was not run, but that is not a mandatory baseline resource, so main-experiment resource fidelity is intact.",
+    "score": 5,
+    "evidence_files": ["code/steer_generate.py", "code/circuit_generate.py", "outputs/stats/test_circuit_v2.json", "data/sev.jsonl"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Each method's headline accuracy rests on n=2880 held-out generations (480 per emotion x 6 emotions), confirmed in outputs/stats/test_prompt_v2.json / test_steer_v2.json / test_circuit_v2.json (n:2880, per_emotion_n 480 each). Circuit structure analysis covers all 6 emotions over the full 160-scenario SEV set, and per-theme stability breaks 2880 into 8 domains x 360 samples. This is ample scale — far above the rubric's thin-evidence threshold (40 items). Claim strength is broadly matched to evidence, though the C3 'outperforms steering' conclusion rests on a razor-thin margin (below) which is a rigor rather than a scale issue.",
+    "score": 5,
+    "evidence_files": ["outputs/stats/test_prompt_v2.json", "outputs/stats/test_steer_v2.json", "outputs/stats/test_circuit_v2.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Generation uses greedy decoding (deterministic, matching the paper), so results are single-run point estimates with no seeds, no error bars, and no significance test on any accuracy. The large n=2880 makes per-method point estimates stable, but the pivotal C3 sub-claim 'circuit beats steering' rests on a +0.73 pp gap (circuit 88.89% vs steer 88.16%, outputs/stats/test_circuit_v2.json vs test_steer_v2.json) — ~21 samples — with no uncertainty quantification. Critically, this ordering is fragile: under the v1 classifier the ordering REVERSES (circuit 79.72% < steer 80.62%, outputs/stats/test_circuit.json vs test_steer.json, i.e. -0.90 pp), so the sign of the effect flips with the labeling prompt. The report nonetheless states the paper's mechanistic ordering 'replicates.' Treating a sub-1pp, classifier-version-dependent, no-variance difference as a real effect is exactly the within-noise risk this dimension targets. The paper's own random-intervention controls (10 seeds) were not reproduced.",
+    "score": 2,
+    "evidence_files": ["outputs/stats/test_circuit_v2.json", "outputs/stats/test_steer_v2.json", "outputs/stats/test_circuit.json", "outputs/stats/test_steer.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The control claim (C3) rests on genuine interventions, not correlation: code/circuit_generate.py adds scale*delta to selected MLP neurons (forward_pre_hook on down_proj) and attention heads (pre-o_proj slice) during generation with NO emotion cue in the prompt (common.py PROMPT_TEMPLATE_NEUTRAL_INFERENCE), so any emotion arises from the intervention. A coefficient sweep exists (scale 0.5/0.6/0.8/1.0 -> outputs/stats/test_circuit_scale05.json, test_circuit_scale06.json, test_circuit_v2.json) and two alternative selection rules (discriminative, signed) were tried. However, key controls from the paper are absent: there is NO random-direction / random-component baseline anywhere in the code (grep for 'random' over code/*.py returns nothing), and no ablation (necessity) experiment — only enhancement-style injection is run. The circuit-vs-global-steering contrast provides a partial control (targeted vs whole-direction), but without a random-component baseline the attribution of the effect specifically to the identified components is not demonstrated to the paper's standard. Intervention present; a required control element missing.",
+    "score": 3,
+    "evidence_files": ["code/circuit_generate.py", "code/common.py", "outputs/stats/test_circuit_scale05.json", "outputs/stats/test_circuit_scale06.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number traces to a concrete on-disk product and agrees exactly. The main table (Prompt 97.71 / Steer 88.16 / Circuit 88.89 and all per-emotion cells) matches outputs/stats/test_prompt_v2.json (overall 0.97708), test_steer_v2.json (0.88160), test_circuit_v2.json (0.88889); the circuit-vs-steer +0.73 pp and circuit-vs-prompt -8.82 pp are the arithmetic of those files. Per-theme, Jaccard-neuron (0.29-0.42), Jaccard-head (0.78-0.90), direction-cosine, and layer-coverage tables all match outputs/stats/circuit_analysis.json field-for-field (e.g. anger|disgust neuron Jaccard 0.418, anger|sadness 0.313). The report is generated programmatically from the labeled jsonl by code/final_report.py (defaults labeled/test_*_v2.jsonl, std via statistics.pstdev), and the 2.99 pp circuit cross-domain std reproduces from the per_theme values. No sourceless or back-filled numbers were found.",
+    "score": 5,
+    "evidence_files": ["outputs/stats/test_circuit_v2.json", "outputs/stats/circuit_analysis.json", "code/final_report.py", "outputs/report.md"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The report's numbers, tables, and prose verdicts are internally consistent with the stats JSON and labeled jsonl (verified above); prose gaps (+0.73 pp, -8.82 pp) match the underlying files, and the Claim-3 'partially supported' verdict honestly reflects circuit<prompt. Integrity states are coherent — nothing is marked PASS in one place and broken elsewhere. The one wrinkle: the pipeline retains v1 stats (test_circuit.json / test_steer.json) whose ordering (circuit<steer) contradicts the v2-based conclusion, and only the v2 classifier run is used for the reported comparison. This is disclosed as a consistent mid-run classifier refinement applied to all methods (report line 129), so it is loose bookkeeping / version fragility rather than a contradictory-record failure, but the coexistence of two artifact sets giving opposite orderings on the decisive sub-claim keeps this just short of fully clean.",
+    "score": 4,
+    "evidence_files": ["outputs/report.md", "outputs/stats/test_circuit.json", "outputs/stats/test_circuit_v2.json", "outputs/stats/test_steer.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "We can identify emotion-specific global circuits in LLMs by constructing a systematic framework that integrates emotion direction extraction, component identification, and global circuit integration.",
+        "method": {
+          "justification": "9a — The framework implements the paper's three stages: (i) direction extraction as mean(resid_emo)-mean(resid_neutral) with L2 normalization (code/dump_activations.py, outputs/directions/directions.pt), (ii) component identification scoring each (layer,neuron) and (layer,head) by activation x projection-onto-emotion-direction (code/build_circuit.py), (iii) global assembly via top-K selection (K_neurons=392 + K_heads=168 = 560 = 10x the 56 sublayers, matching the paper's budget). This is the correct method family (analytical decomposition + projection) for identifying emotion components. Deviation from the paper: heads are ranked by projection score rather than the paper's causal head-ablation (Δs), and neurons use the projection heuristic rather than the exact β=(W_d^T v_e)⊙g form; the report discloses this simplification (report lines 116, 123). Method broadly fits with a documented weakening.",
+          "score": 4,
+          "evidence_files": ["code/build_circuit.py", "code/dump_activations.py", "outputs/circuits/global_circuit.pt"]
+        },
+        "experiment": {
+          "justification": "9b — Circuits are extracted per emotion at the paper's exact budget (560 components, K_neurons=392/K_heads=168 in code/build_circuit.py) and characterized by layer coverage (~25/28 layers, spans 0-27 in outputs/stats/circuit_analysis.json), cross-emotion neuron Jaccard, head Jaccard, and direction cosine — a reasonable design to show circuits are emotion-specific. Shortfall: the paper's causal sublayer-importance I_{L,p} that drives the global budget allocation is NOT measured; allocation is naive top-K by |score| with no per-sublayer causal weighting, and head selection is not the paper's causal ablation. So the 'global circuit integration' step is only partially operationalized. Honest but under-implemented relative to the claim's 'integration' clause.",
+          "score": 3,
+          "evidence_files": ["code/build_circuit.py", "outputs/stats/circuit_analysis.json"]
+        },
+        "result": {
+          "justification": "9c — For every emotion a per-layer direction and a 560-component circuit spanning ~25 layers is extracted; cross-emotion neuron Jaccard is 0.29-0.42 while head Jaccard is 0.78-0.90 (outputs/stats/circuit_analysis.json), qualitatively reproducing the paper's dual architecture — emotion-specific MLP subcircuits (low neuron overlap) plus shared attention pathways (higher head overlap, paper µ_neuron=0.056 vs µ_head=0.454). The directional finding agrees, though quantitatively the reproduction's neuron overlap (~0.35) and head overlap (~0.83) are markedly higher than the paper's; the report acknowledges the weaker attribution signal. Honest, directionally consistent support for identifiability.",
+          "score": 4,
+          "evidence_files": ["outputs/stats/circuit_analysis.json", "outputs/report.md"]
+        }
+      },
+      "C2": {
+        "claim": "We provide the mechanistic evidence that emotion generation in LLMs is supported by traceable circuits, which is stable across different scenarios and emotions.",
+        "method": {
+          "justification": "9a — Stability is probed by applying the extracted circuit at inference across all 8 SEV domains and 6 emotions and measuring emotion-expression accuracy per theme (code/circuit_generate.py + code/final_report.py per_theme breakdown). Using the same fixed circuit on held-out, cross-domain inputs is a sensible way to test whether one 'traceable circuit' generalizes across scenarios. It is an accuracy-consistency proxy rather than a direct measurement of component-level invariance, but the method is appropriate to the stability claim.",
+          "score": 4,
+          "evidence_files": ["code/circuit_generate.py", "code/final_report.py"]
+        },
+        "experiment": {
+          "justification": "9b — Design computes circuit accuracy across 8 themes (360 samples each) and reports cross-domain population std (2.99 pp, range 84.72-93.61%) alongside prompt (1.00 pp) and steer (1.58 pp) for context (outputs/stats/test_circuit_v2.json per_theme; std via statistics.pstdev in final_report.py). Reasonable and adequately powered. Limitations: 'stability across emotions' is only lightly evidenced (per-emotion accuracies vary widely, e.g. surprise 60% vs anger 96.9%), and stability is operationalized purely as accuracy variance, not as circuit-component reuse across scenarios; no significance test on the cross-domain spread. Adequate but one-faceted.",
+          "score": 3,
+          "evidence_files": ["outputs/stats/test_circuit_v2.json", "code/final_report.py"]
+        },
+        "result": {
+          "justification": "9c — Circuit accuracy is stable across all 8 domains (84.7-93.6%, std 2.99 pp, outputs/stats/test_circuit_v2.json), comparable to prompting/steering variance, supporting that the extracted machinery generalizes across scenarios — qualitatively consistent with the paper's cross-context stability finding. The conclusion is stated as 'supported' and is backed by the on-disk per-theme numbers; the cross-emotion dimension is weaker (large per-emotion spread) but not disguised. Honest, largely aligned with the paper's direction.",
+          "score": 4,
+          "evidence_files": ["outputs/stats/test_circuit_v2.json", "outputs/report.md"]
+        }
+      },
+      "C3": {
+        "claim": "a circuit-based control method can reliably induce target emotions across arbitrary inputs without relying on explicit instructions. It outperforms both prompting and direction-level steering on emotion-expression accuracy.",
+        "method": {
+          "justification": "9a — The circuit-control method is a genuine, instruction-free intervention: emotion difference vectors are injected into the selected neurons/heads during generation with a neutral, cue-free prompt (code/circuit_generate.py + common.py PROMPT_TEMPLATE_NEUTRAL_INFERENCE), directly matching the paper's circuit-modulation protocol (paper Sec.7.3, λ=1.0, scale~0.8). The comparison baselines (prompting, direction steering) are also implemented. One method-level weakness: the steering baseline is applied at layers 8-27 with a plain additive unit-vector scale (code/steer_generate.py default scale=1.0), whereas the paper steers layers 11-20 with RMS-scaled α=8 — a different steering formulation that may mis-power the baseline it is being compared against.",
+          "score": 4,
+          "evidence_files": ["code/circuit_generate.py", "code/steer_generate.py", "code/common.py"]
+        },
+        "experiment": {
+          "justification": "9b — Three methods are compared on the same 2880 held-out samples with a consistent GPT-5.4 judge, and the circuit method's scale is swept (0.5/0.6/0.8/1.0). The metric (target-emotion match rate) corresponds to the claim. But the decisive 'outperforms steering' test hinges on a +0.73 pp gap with no significance test and no seeds, and the steering baseline itself was NOT hyperparameter-swept (single scale, no α/RMS tuning as in the paper), so a true circuit>steer effect cannot be distinguished from baseline under-tuning. The classifier version flips the ordering (v1: circuit<steer). This is honest but under-powered for the comparative sub-claim: hyperparameters of the competing method were not adequately explored.",
+          "score": 3,
+          "evidence_files": ["outputs/stats/test_circuit_v2.json", "outputs/stats/test_steer_v2.json", "code/steer_generate.py", "outputs/stats/test_circuit_scale05.json"]
+        },
+        "result": {
+          "justification": "9c — Result: circuit 88.89% marginally beats steer 88.16% (+0.73 pp) but clearly LOSES to prompting 97.71% (-8.82 pp) (outputs/stats/test_*_v2.json). The paper reports circuit 99.65% > prompt 98.96% > steer 91.22%, so the paper's headline 'outperforms both prompting and steering' is NOT reproduced. Crucially, the report does not disguise this: it labels Claim 3 'partially supported', states the circuit does not exceed prompting, and attributes the gap to the reproduction's simplified (non-causal, non-sublayer-weighted) attribution and lack of the paper's source (report line 116). That is an honest, reasoned partial non-reproduction rather than goalpost-tuning — which the rubric rewards. Points are withheld because the residual 'circuit beats steering replicates' assertion is overstated: the +0.73 pp margin is within noise and sign-flips under the v1 classifier, so the one piece claimed as replicated is not robustly established.",
+          "score": 3,
+          "evidence_files": ["outputs/stats/test_circuit_v2.json", "outputs/stats/test_steer_v2.json", "outputs/stats/test_prompt_v2.json", "outputs/report.md"]
+        }
+      }
+    }
+  }
+}

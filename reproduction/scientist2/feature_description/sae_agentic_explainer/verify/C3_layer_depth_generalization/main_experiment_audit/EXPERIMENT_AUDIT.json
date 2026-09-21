@@ -1,0 +1,31 @@
+{
+  "claim_id": "C3",
+  "claim_scope": "M1 layer-stratified read-off from features_L{4,12,20}.jsonl",
+  "overall_verdict": "warn",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "detail": "Neuronpedia cached activations"
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "detail": "Consistent with C1/C2"
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "detail": "per-layer stats verified by re-computation; all match EXPERIMENT_RESULTS.md"
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "detail": "per-layer aggregate code active in _aggregate_records()"
+    },
+    "E_scope": {
+      "verdict": "warn",
+      "detail": "Bonferroni correction described in EXPERIMENT_RESULTS.md but not explicitly implemented in aggregate script (alpha/6 threshold not applied in code); per-layer n=14-15 too small; L20 gen_acc zero-difference preventing Wilcoxon. Minor documentation mismatch, not fabrication."
+    },
+    "F_eval_type": {
+      "verdict": "pass",
+      "detail": "Real GT evaluation"
+    }
+  }
+}

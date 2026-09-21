@@ -1,0 +1,31 @@
+{
+  "claim_id": "C2",
+  "claim_scope": "M1 — predictive accuracy on main pair (Gemma-2-2B + gemmascope-res-16k)",
+  "overall_verdict": "pass",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "detail": "Neuronpedia cached maxValue; not re-computed from target model"
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "detail": "per-feature min-max on held-out GT; consistent across all methods; Pearson is scale-invariant anyway"
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "detail": "features_L{4,12,20}.jsonl all exist with pred_pearson fields; cited stats (Δ=-0.018, CI[-0.093,+0.058], p=0.43) verified by re-computation"
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "detail": "score_activation() and _pearson() both called in active code path"
+    },
+    "E_scope": {
+      "verdict": "pass",
+      "detail": "metric definition (Pearson r on held-out, scored by independent GPT-5) matches claim; under-power (n=44/300) is a caveat but not a methodology error"
+    },
+    "F_eval_type": {
+      "verdict": "pass",
+      "detail": "real GT evaluation; scorer receives only explanation+text"
+    }
+  }
+}

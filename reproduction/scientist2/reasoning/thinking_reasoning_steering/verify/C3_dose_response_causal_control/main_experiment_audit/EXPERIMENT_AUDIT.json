@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (GPT-5.4 via DMX, T=0)",
+  "claim_id": "C3",
+  "linked_milestones": ["M3", "M1"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Behaviour rates from LLM-judge (GPT-5.4, T=0) proxy annotations using frozen taxonomy. Explicit proxy design. Coherence and accuracy independently logged. Not FAIL because proxy nature is stated."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Behaviour rates are raw fractions. Delta_rate is baseline subtraction, not normalization by prediction max/mean."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All values cited in EXPERIMENT_RESULTS.md consistent with runs/M3_steer/results_summary.json: sign checks, operating alpha=0.5, Spearman rho=-0.05, zero rates for other three behaviours. Plots exist."
+    },
+    "dead_code": {
+      "status": "warn",
+      "details": "specificity_at_op is computed and stored but near-undefined at operating alpha=0.5 (on-target delta within noise, specificity approaches 0). Meaningful specificity only at alpha=+2sigma in collapse zone. Code runs but predicate is indeterminate at the chosen operating point."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "60/500 tasks, 7/9 alpha values — both disclosed. Noise floor delta_rate +/-0.06 explicitly quantified. No overclaiming. Partial/negative verdict honestly reported."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

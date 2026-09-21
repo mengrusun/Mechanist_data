@@ -1,0 +1,254 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json。注意：本文件评估的是 scientist1，按约定文件名应为 universal_steering-scientist1-{expert_name}.json；此处按用户指定路径保存。",
+  "meta": {
+    "expert_name":         "Zhenqian Xu",
+    "paper_title":         "Toward Universal Steering and Monitoring of AI Models",
+    "agent":         "scientist1",
+    "review_date":         "2026-07-19"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径（相对 scientist1/multimodal/universal_steering）。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "不存在划分数据集问题",
+    "score": "n/a",
+    "evidence_files": [
+      "src/train_probe.py",
+      "results/probe_toxicchat.json",
+      "results/probe_hewild.json",
+      "cache/toxicchat_bal.jsonl",
+      "cache/hewild_bal.jsonl"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签质量参差，监控用的是 ToxicChat 和 HaluEval-Wild 的现成标签，来源本身没问题。但 HaluEval-Wild 这份数据在constrastive pair构造上有问题：label=0，几乎都是数据集的短参考答案；label=1却是成句的生成回答两类光靠长度就能分开，于是 probe 的逐层 AUC都接近1 ",
+    "score": 3,
+    "evidence_files": [
+      "cache/hewild_bal.jsonl",
+      "results/probe_hewild.json",
+      "results/probe_toxicchat.json",
+      "src/refusal_metric.py",
+      "results/honesty_alpha0.06.jsonl"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "1 三个场景里 political 没做，只做了 refusal+honesty；(5) C2 只用 10 道 HackerRank",
+    "score": 2,
+    "evidence_files": [
+      "task.md",
+      "REPORT.md",
+      "src/llm_judge.py",
+      "results/judge_toxicchat.json"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "证据量参差：C5 有 200 test × 2 benchmark，充分；其余多数偏薄——refusal held-out 只有 8 条（REPORT.md:54），honesty 完全是 6 个例子的定性阅读，C3 每语种仅 5 条（共 15），C4 也是定性读 8 条左右。",
+    "score": 2,
+    "evidence_files": [
+      "REPORT.md",
+      "results/refusal_neg01.jsonl",
+      "results/honesty_alpha0.06.jsonl",
+      "results/compose_refuse_hon_on_honesty.jsonl",
+      "results/probe_hewild.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "基本没有不确定性量化：每个 steering 实验只用单一手调 α、单次运行，没有 seed、没有方差/误差棒/显著性，也没有随机方向对照。总体点估计为主、效应多数不平凡但不确定性单薄。",
+    "score": 4,
+    "evidence_files": [
+      "src/steer_generate.py",
+      "results/eval_steered_long.json",
+      "results/probe_toxicchat.json",
+      "results/judge_toxicchat.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "steering 是真正的干预，但全程没有随机方向 baseline（。每个实验只用单一 α、没有 sweep。",
+    "score": 2,
+    "evidence_files": [
+      "src/steer_generate.py",
+      "src/concept_vector.py",
+      "REPORT.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "可溯源性很好，没发现无来源或对不上的数字。",
+    "score": 5,
+    "evidence_files": [
+      "REPORT.md",
+      "results/probe_toxicchat.json",
+      "results/probe_hewild.json",
+      "results/judge_hewild.json",
+      "results/eval_steered_long.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "scientist1 的产物面较窄（一份 REPORT.md + results/*.json），能核对的都自洽",
+    "score": 5,
+    "evidence_files": [
+      "REPORT.md",
+      "results/eval_steered.json",
+      "results/eval_steered_long.json",
+      "results/probe_hewild.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "RFM 可从大模型内部激活中抽出 per-block 线性概念向量，加到激活上可在推理时定向 steering（示例：anti-refusal / political / honesty）。",
+        "method": {
+          "justification": "实际 steering 用的是 DiffMean(差均值/CAA),不是 task.md要求的RFM。",
+          "score": 1,
+          "evidence_files": [
+            "src/concept_vector.py",
+            "src/steer_generate.py",
+            "REPORT.md"
+          ]
+        },
+        "experiment": {
+          "justification": "refusal 用正则启发式度量、单一 α=-0.1、blocks[8,24)、无随机方向对照、无 α sweep，held-out 仅 8 条；honesty 更是完全没有 metric，纯人工读 6 个例子。",
+          "score": 2,
+          "evidence_files": [
+            "src/refusal_metric.py",
+            "results/refusal_neg01.jsonl",
+            "results/honesty_alpha-0.06.jsonl",
+            "REPORT.md"
+          ]
+        },
+        "result": {
+          "justification": "refusal 干净支持，但是实验数据量太小了，没有说服力。没有用RFM做，无法与原论文比较。别的线性概念没有做。",
+          "score": 2,
+          "evidence_files": [
+            "REPORT.md",
+            "results/refusal_neg01.jsonl",
+            "results/honesty_alpha0.06.jsonl"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "C++ 概念向量可提高 HackerRank 上算法题的 test-case pass rate，胜过默认 Python 与 'Answer in C++' prompt。",
+        "method": {
+          "justification": "DiffMean 在 53 对 (Python,C++) 同题解上抽 C++ 向量，加性 steer 到 blocks[8,24)，机理家族合适，但不是RFM。",
+          "score": 3,
+          "evidence_files": [
+            "src/concept_vector.py",
+            "cache/cpp_diffmean.pt",
+            "REPORT.md"
+          ]
+        },
+        "experiment": {
+          "justification": "没有sweep alpha但恰巧选对了正确的alpha，实验数据量太少",
+          "score": 3,
+          "evidence_files": [
+            "src/code_eval.py",
+            "results/eval_baseline.json",
+            "results/eval_prompted_cpp.json",
+            "results/eval_steered_long.json"
+          ]
+        },
+        "result": {
+          "justification": "能成功转换语言，但正确率为零。且没用rfm也是扣分点",
+          "score": 2,
+          "evidence_files": [
+            "REPORT.md",
+            "results/eval_steered_long.json",
+            "results/eval_baseline.json"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "英文 paired data 抽出的概念向量可以直接迁移到中文/法文/西班牙文 prompts 上做 steering。",
+        "method": {
+          "justification": "没用rfm但其他操作合理",
+          "score": 2,
+          "evidence_files": [
+            "REPORT.md",
+            "cache/multilang_harmful.jsonl",
+            "results/multilang_jailbreak_annot.jsonl"
+          ]
+        },
+        "experiment": {
+          "justification": "每语种仅 5 条数据量太少、单一 α，仅能作为演示。",
+          "score": 2,
+          "evidence_files": [
+            "results/multilang_jailbreak_annot.jsonl",
+            "cache/multilang_harmful.jsonl",
+            "REPORT.md"
+          ]
+        },
+        "result": {
+          "justification": "三种语言 steered 拒绝率全部 0%，但语言尝试种类太少，且数据量稀薄，用的是caa没用要求的rfm",
+          "score": 2,
+          "evidence_files": [
+            "REPORT.md",
+            "results/multilang_jailbreak_annot.jsonl"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "多个概念向量可线性组合，同时对多个概念进行 steering。",
+        "method": {
+          "justification": "机理家族对；且用中层区间 + norm-scaling。但用CAA而不是rfm",
+          "score": 2,
+          "evidence_files": [
+            "src/steer_generate.py",
+            "results/compose_refuse_hon_on_harmful.jsonl",
+            "results/compose_refuse_hon_on_honesty.jsonl"
+          ]
+        },
+        "experiment": {
+          "justification": "两种概念差异不够大，不利于分别测量。judge完全定性，在有害提示上看是否仍越狱、在诚实提示上看是否仍变回避，读少量例子确认两个效应都在。没有任何量化 metric、没有对照、单一 α、样本小",
+          "score": 2,
+          "evidence_files": [
+            "results/compose_refuse_hon_on_harmful.jsonl",
+            "results/compose_refuse_hon_on_honesty.jsonl",
+            "REPORT.md"
+          ]
+        },
+        "result": {
+          "justification": "实验设计不足导致结论不太可信",
+          "score": 2,
+          "evidence_files": [
+            "results/compose_refuse_hon_on_harmful.jsonl",
+            "results/compose_refuse_hon_on_honesty.jsonl",
+            "REPORT.md"
+          ]
+        }
+      },
+      "C5": {
+        "claim": "在 hallucination / toxicity 上，内部特征（RFM 概念向量或线性 probe）分类器比直接用 LLM judge 更准——即便内部特征来自较小的 8B 开源模型。",
+        "method": {
+          "justification": "逐层在最后一个 token 的残差上拟合 L2-logistic probe、取最优层 AUC，与直接让 GPT judge 打分对比，但脱离了用steer来判断幻觉的原意。",
+          "score": 3,
+          "evidence_files": [
+            "src/train_probe.py",
+            "src/llm_judge.py",
+            "results/probe_hewild.json"
+          ]
+        },
+        "experiment": {
+          "justification": "幻觉和非幻觉的文本差异主要在长度，probe可以光靠长度/格式就能线性分开",
+          "score": 1,
+          "evidence_files": [
+            "src/train_probe.py",
+            "results/probe_toxicchat.json",
+            "results/judge_toxicchat.json",
+            "results/judge_hewild.json"
+          ]
+        },
+        "result": {
+          "justification": "hewild数据集：block 0 就已经 0.977,32 层几乎全在 0.97–0.99 一条平线。block 0 ≈ 词嵌入层,一个真正的幻觉概念不可能在嵌入层就近乎完美可分；toxicchat:block 0 只有 0.698,一路爬到 block 13 的0.95。整体方向与论文一致,略胜过llm-judge。但report反而说hewild上的结果是有力证据，分析错误了。",
+          "score": 2,
+          "evidence_files": [
+            "results/probe_hewild.json",
+            "results/probe_toxicchat.json",
+            "results/judge_hewild.json",
+            "results/judge_toxicchat.json",
+            "REPORT.md"
+          ]
+        }
+      }
+    }
+  }
+}

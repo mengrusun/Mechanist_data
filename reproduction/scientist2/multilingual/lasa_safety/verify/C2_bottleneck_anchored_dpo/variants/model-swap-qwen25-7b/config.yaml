@@ -1,0 +1,55 @@
+# Variant config: model-swap-qwen25-7b
+# Diff from main experiment: base model changed from LLaMA-3.1-8B-Instruct to Qwen2.5-7B-Instruct
+# All other hyperparameters held constant.
+
+variant_tag: model-swap-qwen25-7b
+dimension: model
+claim_id: C2
+
+# --- SWAP: Model ---
+base_model: /data/zhenqian/models/Qwen2.5-7B-Instruct  # CHANGED (was: /data/zhenqian/models/Llama-3.1-8B-Instruct)
+model_family: Qwen2ForCausalLM
+num_hidden_layers: 28  # CHANGED (was: 32 for LLaMA-3.1-8B-Instruct)
+hidden_size: 3584       # CHANGED (was: 4096)
+
+# --- UNCHANGED: Training ---
+dpo_data:
+  safety_pairs: data_processed/dpo_data.jsonl   # same 5000 EN PKU-SafeRLHF + 2000 UltraFeedback
+  total: 7000
+anchor_triples: data_processed/anchor_triples.jsonl  # same 315 MultiJail EN/ZH/KO
+lora_r: 16          # UNCHANGED
+lora_alpha: 32      # UNCHANGED
+target_modules: q_proj,k_proj,v_proj,o_proj   # UNCHANGED (compatible with Qwen2 architecture)
+lr: 1.0e-5          # UNCHANGED
+total_steps: 3000   # UNCHANGED
+dpo_beta: 0.1       # UNCHANGED
+lambda_bottleneck_method: 0.5   # UNCHANGED
+lambda_bottleneck_baseline: 0.0 # UNCHANGED
+seed: 42            # UNCHANGED
+dtype: bfloat16     # UNCHANGED
+
+# --- ADJUSTED: Eval scale (budget constraint) ---
+multijail_cap_per_lang: 60   # ADJUSTED from 100 (budget; applied symmetrically)
+mmlu_max_n: 150              # ADJUSTED from 300 (budget; same seed=0)
+mgsm_max_per_lang: 25        # ADJUSTED from 40 (budget)
+mtbench_max_n: 15            # ADJUSTED from 25 (budget)
+
+# --- M1-lite for L* re-localization ---
+m1_n_prompts: 200            # ADJUSTED from 315 (forward-only, sufficient for L* localization)
+m1_layer_range: 0-27         # 28-layer model
+
+# --- GPU pinning ---
+gpus:
+  m1_lite: [1]
+  m3_method: [2]
+  m3_baseline: [3]
+  m4_method: [5]
+  m4_baseline: [6]
+  m4_base: [1]
+
+# --- Output directories ---
+out_base: verify/C2_bottleneck_anchored_dpo/variants/model-swap-qwen25-7b
+m1_out: verify/C2_bottleneck_anchored_dpo/variants/model-swap-qwen25-7b/results/qwen_m1_bottleneck.json
+m3_method_out: verify/C2_bottleneck_anchored_dpo/variants/model-swap-qwen25-7b/checkpoints/qwen-method
+m3_baseline_out: verify/C2_bottleneck_anchored_dpo/variants/model-swap-qwen25-7b/checkpoints/qwen-baseline
+m4_out_dir: verify/C2_bottleneck_anchored_dpo/variants/model-swap-qwen25-7b/results

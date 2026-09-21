@@ -1,0 +1,26 @@
+{
+  "claim_id": "c2",
+  "claim_text": "SAE features cover substantially more Swiss-Prot functional concepts than raw neurons from the same protein language model (alignment gap).",
+  "variant_tag": "model-swap-esm2-8m",
+  "variant_model": "ESM-2-8M",
+  "main_experiment_verdict": "not-supported",
+  "main_experiment_metrics": {
+    "sae_covered": 15,
+    "neuron_covered": 0,
+    "ratio": "inf",
+    "direction": "SAE >> neurons"
+  },
+  "variant_metrics": {
+    "sae_covered": 14,
+    "neuron_covered": 0,
+    "ratio": "inf",
+    "direction": "SAE >> neurons",
+    "sensitivity_q099_tau03": {"sae": 58, "neuron": 3, "ratio": 19.3},
+    "sensitivity_q099_tau05": {"sae": 14, "neuron": 0, "ratio": "inf"},
+    "sensitivity_q095_tau05": {"sae": 13, "neuron": 2, "ratio": 6.5}
+  },
+  "variant_verdict": "not-supported",
+  "consistent_with_main_experiment": true,
+  "judgment_pass": true,
+  "judgment_rationale": "The variant (ESM-2-8M, 6 layers, d_model=320) replicates the main experiment's conclusion exactly. SAE covered=14 vs main=15 (delta=-1, within sampling noise); neurons covered=0 in both. The direction SAE≫neurons is preserved across the model scale swap. The claim remains not-supported at the absolute threshold (14 < 65), consistent with main. No direction reversal. Verdict: PASS (robustness confirmed)."
+}

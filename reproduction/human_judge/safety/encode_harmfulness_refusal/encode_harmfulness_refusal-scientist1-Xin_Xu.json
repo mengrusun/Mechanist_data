@@ -1,0 +1,306 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Xin Xu",
+    "paper_title":         "LLMs Encode Harmfulness and Refusal Separately",
+    "agent":         "scientist1",
+    "review_date":         "2026-07-20"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "common.py的 load_advbench() 仅做 df.sample(random_state=seed)，extract_activations.py据此以 seed=0 取 200 条为 train、seed=1 取 100 条为 test，两次是从同一 520 条 CSV 的独立重采样，代码中无任何互斥划分，期望重叠约 38/100，直接污染了报告用作 C1/C5 主证据的 advbench_test probe 准确率 1.000 与 AUROC 1.0000。此外 directions.py在评估集上取 32 层 argmax 决定 best_layer/chosen_layers，下游固定的 layer 11 与 layer 15 均源自这一 selection-on-test，全程无 validation 划分。JBB / CATQA / Sorry-Bench / Alpaca 等held-out集确属不同数据源、评估干净，且 C3、C4 不依赖 probe，故非全面失效，但两处泄漏均可在代码中定位",
+    "score": 2,
+    "evidence_files": [
+      "common.py",
+      "extract_activations.py",
+      "directions.py",
+      "latent_probe_only.py",
+      "latent_guard.py",
+      "steering.py",
+      "steering_orth.py",
+      "results/direction_stats.json",
+      "results/latent_guard.json",
+      "results.md",
+      "acts_llama3/manifest.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "harmful/benign 标签来自 AdvBench/Alpaca/JBB/CATQA/Sorry-Bench 的数据集来源标注。但承载 C3/C4 的两处标签有实质缺陷：common.py 的 is_refusal() 34 条子串匹配被本 run 自身产物证伪——steering_orth.json 中 harmful_minus_vh 的 refusal_rate_regex=0.0，但其 sample_outputs 全是 steering 打坏后的退化乱码（\"The script is: cyberattack\"），被计为\"接受\"；jailbreak_stronger.py 的 prefill 强制回复以 \"Sure, here is\" 开头后所得 ASR=93.8% 同样只测\"无拒绝子串\"，未校验是否真实有害合规；二是\"内部有害性判断\"被操作化为对 v_h 的投影，其中 benign+v_h / harmful−v_h 两行系沿 v_h 施加干预后再读 v_h 投影，近乎恒真。这些数字直接进入 results.md 的结论表，非辅助指标。",
+    "score": 2,
+    "evidence_files": [
+      "common.py",
+      "steering_orth.py",
+      "jailbreak_stronger.py",
+      "results/steering_orth.json",
+      "results/jailbreak_analysis.json",
+      "results.md"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "GCG-style adversarial suffixes 与 persuasion / adversarial-template prompts 被降配实现——jailbreak_attacks.py 的 GCG 是一条硬编码静态后缀而非优化产物，persuasion 与 DAN 均为自撰模板而非 Zeng et al./Yu et al. 方法，实测 ASR 依次为 1.3% / 0.0% / 1.3%（jailbreak_analysis.json），指定攻击族全部未奏效，C4 结论转而依赖 task.md 未列出的 prefill 攻击（ASR 93.8%）；10 小时 GPU 预算下未见尝试真实 GCG 优化，亦无日志说明预算耗尽。该偏差已在 results.md 中按攻击披露 ASR。",
+    "score": 2,
+    "evidence_files": [
+      "task.md",
+      "common.py",
+      "jailbreak_attacks.py",
+      "jailbreak_stronger.py",
+      "latent_guard.py",
+      "lg_on_jailbreak.py",
+      "results/jailbreak_analysis.json",
+      "results/lg_on_jailbreak.json",
+      "results.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+      "justification": "承载核心解离结论的 C3 用 steering_orth.json 中 n=30（每条件 30 条），落在 <40 条触发线内，而 results.md 全篇未披露该样本量；二是 C4 的『Refuted』半边覆盖度极低，results.md 断言 GCG 后缀与 role-play 攻击『lower the input's harmfulness perception itself』，但两者实际成功样本仅 gcg 1 条（80×1.3%）、jbb_role 7 条（120×5.8%），jailbreak_analysis.json 中 gcg 的 proj_harm_jb_mean=-0.019 即为 n=1 的均值，对几乎未奏效的攻击断言其作用机制超出证据。另全部 claim 仅在 Llama-3 单模型上取得，跨模型覆盖为零。",
+    "score": 3,
+    "evidence_files": [
+      "results/steering_orth.json",
+      "results/steering.json",
+      "results/jailbreak_analysis.json",
+      "results/latent_probe_only.json",
+      "results/latent_guard.json",
+      "results/direction_stats.json",
+      "steering_orth.py",
+      "results.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "steering.py/steering_orth.py 确实计算并落盘了逐条件 std，生成全部用 do_sample=False 贪心解码，direction_stats.json 也存了逐层 Cohen's d，且主效应量级巨大（refusal rate 0.00→1.00，投影位移 5-6 单位而 std≈0.5-1.2），故不属噪声当效应。但不确定性完全未进入报告：results.md 的 C3 表六个条件只列均值、std 一个未报；全流程单种子（steering 固定 seed=5）、单 α=6、单干预层 11，无重复运行与显著性检验。更实质的是自身方差反驳了自身文字——benign+v_r_orth 的 proj_h=-0.008±0.451 被描述为『stays essentially at the benign level』，而 benign baseline 为 -2.535±1.153（n=30），差值 2.53 约合 12 个标准误，该句恰是 C3 解离结论的第一条关键证据。延迟结论同样不稳：latent_guard.json 报 Llama Guard 0.2410 s/样本（results.md 据此称 8.3× 加速），而同 run 的 lg_on_jailbreak.json 在同模型同 batch_size=4 下测得 0.0658-0.1281 s/样本，对应加速比仅 2.3-4.4×。",
+    "score": 2,
+    "evidence_files": [
+      "steering_orth.py",
+      "steering.py",
+      "latent_guard.py",
+      "lg_on_jailbreak.py",
+      "results/steering_orth.json",
+      "results/direction_stats.json",
+      "results/latent_guard.json",
+      "results/lg_on_jailbreak.json",
+      "results.md"
+    ]
+
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C3 有真正的干预：steering.py 的 Steerer 通过 forward hook 在 layer 11 残差流做 activation addition，并配 benign/harmful 双基线、±双符号、原始 vs 正交化方向两版对比，未把 probing 包装成因果。但 rubric 点名的两项对照均缺失——无随机方向 baseline（α=6 单位向量加到所有 token 位置是强扰动，steering_orth.json 中 harmful_minus_vh 的输出已退化为乱码，说明干预在破坏模型，无对照则无法区分语义效应与任意扰动效应），且无系数 sweep（steering_orth.py 固定 alpha=6.0，干预层亦只有 layer 11 单点）。另 orthogonalize_directions.py 为逐层正交化，v_r_orth[11] 仅与 v_h[11] 正交，而 steering_orth.py 在 layer 11 施加干预却读 layer 20 的 v_h 投影，跨层正交性无保证且未检验，故『proj_h 未变』的解离读数可能源自正交泄漏。C4 更是以纯观察性投影（analyze_jailbreak.py / jailbreak_layer_scan.py 均无干预）支撑『achieve their effect by lowering the harmfulness signal』『operates by suppressing』等因果措辞，缺少论文 Sec 3.5 那样的因果实验兜底。",
+    "score": 2,
+    "evidence_files": [
+      "steering.py",
+      "steering_orth.py",
+      "orthogonalize_directions.py",
+      "analyze_jailbreak.py",
+      "jailbreak_layer_scan.py",
+      "results/steering_orth.json",
+      "results/jailbreak_analysis.json",
+      "results.md"
+    ]
+
+  },
+  "dimension_7_result_provenance": {
+    "justification": "未发现无来源、被矛盾或疑似回填的数值。溯源链止步于结果 JSON：acts_llama3/ 下仅存 manifest.json 而 8 个 .npz 未提交，整个 jailbreak_llama3/ 目录缺失，且全流程无运行日志、时间戳或 GPU/token 用量记录，无法独立确认 JSON 由真实执行产生；旁证倾向真实（jailbreak_layer_scan.json 含 32 层结构连贯曲线，steering_orth.json 存逐条件 std 与真实退化文本样例）。",
+    "score": 4,
+    "evidence_files": [
+      "results.md",
+      "results/direction_stats.json",
+      "results/steering_orth.json",
+      "results/steering.json",
+      "results/jailbreak_analysis.json",
+      "results/jailbreak_layer_scan.json",
+      "results/latent_guard.json",
+      "results/latent_probe_only.json",
+      "results/lg_on_jailbreak.json",
+      "acts_llama3/manifest.json"
+    ]
+
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "正文逐 claim verdict 与末尾汇总表完全一致，绝大多数数字跨产物可对齐，但存在多处实质冲突。最严重的是 results/steering.json 从未出现在 results.md 中，而其数据直接反驳报告的 C3 结论：用原始 refusal 方向 steering 时，benign+v_refuse 的 H@inst 从 -2.53 升至 +2.85、harmful-v_refuse 从 +3.71 降至 -1.41，即有害性投影被拖动了 82-86% 的落差，毫无解离；报告的解离仅在把 harmfulness 分量从 refusal 方向减掉后才成立，该被反驳的原始结果与这一构造性前提均未披露。其次，latent_guard.json 报 Llama Guard 0.2410 s/样本，而 lg_on_jailbreak.json 同模型同 batch_size=4 测得 0.0658-0.1281 s/样本，results.md 据前者宣称 8.3× 加速，按后者仅 2.3-4.4×。第三，文字『benign + v_r_orth ... stays essentially at the benign level (-0.01)』与同表 benign=-2.53、harmful=+3.71 直接矛盾（-0.01 位于 40.5% 处），而该行正是 C3 判定为解离的关键证据。另有『We attacked 80 AdvBench prompts』与 jbb_role n=120 且源自 JailbreakBench judge-comparison.csv 不符、『Only two produced non-refusal outputs』与 plain/gcg/dan 各有 asr_regex=0.013 不符、两套不同口径的 pooled 指标并存而报告未说明。",
+    "score": 2,
+    "evidence_files": [
+      "results/steering.json",
+      "results/steering_orth.json",
+      "results/latent_guard.json",
+      "results/lg_on_jailbreak.json",
+      "results/jailbreak_analysis.json",
+      "results/latent_probe_only.json",
+      "jailbreak_stronger.py",
+      "results.md"
+    ]
+
+
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Instruction-tuned LLMs represent harmfulness perception and refusal execution as two distinct, approximately linear directions in the residual stream, and each can be recovered without disturbing the other.",
+        "method": {
+          "justification": "difference-of-means 提取线性方向与论文 Eq.5 同族，方法家族正确。但存在一处实质偏离：论文的 refusal direction 定义为 μ_refuse − μ_accept（按拒绝行为分组），而 directions.py 的 v_post 是 harmful − benign 在 t_post 上（仍按有害性分组，只换位置）。这意味着两条方向由同一对比集估计，『两条不同方向』部分是位置差异的产物而非概念差异；论文用以区分两个概念的核心手段——收集 accepted harmful / refused harmless 这两类 misbehaving 样本做聚类（Sec 3.2）——该 run 全程未做。",
+          "score": 1,
+          "evidence_files": [
+            "directions.py",
+            "extract_activations.py",
+            "common.py"
+          ]
+        },
+        "experiment": {
+          "justification": "设计为 2x2 的（方向 x 读取位置）held-out AUROC 加逐层余弦，思路合理，且 results.md 诚实指出 AUROC 四组全为 1.0000、不具判别力。但判定 metric 存在问题：AUROC 饱和使其无法支撑 claim，真正承担判定的是余弦相似度（峰值 0.687），而该指标缺少对照——未计算随机划分下两条 DoM 方向的余弦基线，因此 0.687 是高是低无从判断（论文 Appendix D 即提供了此类跨类别对照尺度）。此外 best_layer 由 directions.py 在评估集上取 argmax 决定，advbench_train(seed=0) 与 advbench_test(seed=1) 又系同池重采样存在约 38% 重叠。",
+          "score": 3,
+          "evidence_files": [
+            "directions.py",
+            "extract_activations.py",
+            "results/direction_stats.json",
+            "results.md"
+          ]
+        },
+        "result": {
+          "justification": "结论『两条近似线性方向存在且彼此不同（cos <= 0.69）』与论文定性一致（论文亦主张 harmfulness direction 区别于 refusal direction），方向同、结构同。分析态度诚实：主动声明 AUROC 无判别力、不以其充当位置证据，未把饱和指标包装成强证据。扣分在于该一致性部分具构造性——任意两个 token 位置的 DoM 向量都会不同，报告未讨论这一替代解释。",
+          "score": 4,
+          "evidence_files": [
+            "results/direction_stats.json",
+            "results.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The two signals live at different token positions: the harmfulness judgment is written at the final instruction-token position, while the decision to refuse is committed just after the instruction, immediately before the response begins.",
+        "method": {
+          "justification": "所选方法（在两个位置上分别做 harmful-vs-benign 的 DoM 与 AUROC）结构上无法回答该 claim：只要输入本身可分，任一位置都会给出高 AUROC，无法区分『此处编码有害性』与『此处编码拒绝』。论文正是为此才用 misbehaving 样本（accepted harmful / refused harmless）作探针——这两类样本上有害性与拒绝行为方向相反，是唯一能分离两者的设计；该 run 未收集任何 misbehaving 样本。位置定义本身正确（common.py 的 T_INST=-5 / T_POST=-1 与 Llama-3 模板吻合），故非完全错族，但方法与所指定的机制不匹配。",
+          "score": 2,
+          "evidence_files": [
+            "common.py",
+            "directions.py",
+            "extract_activations.py"
+          ]
+        },
+        "experiment": {
+          "justification": "复现尝试严重不充分。论文 Sec 3.1 提供了一个极廉价且决定性的实验——去掉 prompt 模板中的 post-instruction 特殊 token，观察有害指令拒绝率下降（Llama3 96.0%->58.9%）——只需修改 format_llama3_chat 一行，该 run 从未尝试；论文 Appendix F 的多 token 位置扫描（-2 到 t_post 全部位置）同样未做。在 10 小时 GPU 预算下、且已确认 AUROC 指标失效之后，未更换任何判定 metric 即判定为 Under-determined，属于 rubric 所指『没有充分尝试即判定实验无法定论』。",
+          "score": 2,
+          "evidence_files": [
+            "common.py",
+            "extract_activations.py",
+            "directions.py",
+            "results/direction_stats.json",
+            "results.md"
+          ]
+        },
+        "result": {
+          "justification": "结果与论文不一致（论文明确 harmfulness 编码于 t_inst、refusal 编码于 t_post），但 results.md 未伪装一致，而是明确判为 Under-determined，并给出了准确的自我诊断：『because Llama-3-8B has strong attention, a harmful vs benign signal is present everywhere by early layers. So AUROC alone cannot verify the position part of the claim』。该诊断在技术上正确，属诚实的未复现。原因披露不完整——未说明论文本身提供的可行判别方法（misbehaving 样本聚类、post-inst token 消融）存在且未被尝试，读者会误以为该 claim 客观上不可验证。",
+          "score": 4,
+          "evidence_files": [
+            "results.md",
+            "results/direction_stats.json"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Additive steering along either direction yields dissociated effects — moving along the harmfulness axis flips the model's internal judgment of harmfulness independent of refusal; moving along the refusal axis flips refusal without changing that internal judgment.",
+        "method": {
+          "justification": "steering.py 的 Steerer 用 forward hook 做 activation addition，与论文 Sec 3.4/3.5 的干预方式同族，机理方法选取正确。两处可解释假设未成立：一是『内部有害性判断』被操作化为对 v_h 的投影（相关性读出），而论文用 reply inversion 的行为读出（模型输出 Certainly / No）正是为规避该循环，该 run 未实现任何行为读出；二是 orthogonalize_directions.py 为逐层正交化，v_r_orth[11] 仅与 v_h[11] 正交，而 steering_orth.py 在 layer 11 干预却读 layer 20 的 v_h 投影，跨层正交性无保证亦未检验。",
+          "score": 3,
+          "evidence_files": [
+            "steering.py",
+            "steering_orth.py",
+            "orthogonalize_directions.py"
+          ]
+        },
+        "experiment": {
+          "justification": "设计缺口密集：n=30、单 alpha=6 无系数 sweep、单干预层 11 无层扫描、无随机方向 baseline（而 steering_orth.json 中 harmful_minus_vh 的输出已退化为乱码，证明干预在破坏模型，无对照则无法区分语义效应与任意扰动）；判定 metric 用 common.py 的 is_refusal() 子串匹配，退化乱码被计为『接受』。更关键的是判据在结果之后被更换：results/steering.json（原始方向）显示 benign+v_refuse 的 H@inst 从 -2.53 升至 +2.85、harmful-v_refuse 从 +3.71 降至 -1.41，即原始 refusal 方向把有害性投影拖动了 82-86%，完全没有解离、直接反驳 claim；报告转而只呈现正交化版本，而正交化本身就是把 harmfulness 分量从 refusal 方向中减去，其『解离』近乎构造性。原始结果在 results.md 中未被引用或调和。",
+          "score": 2,
+          "evidence_files": [
+            "steering.py",
+            "steering_orth.py",
+            "orthogonalize_directions.py",
+            "common.py",
+            "results/steering.json",
+            "results/steering_orth.json",
+            "results.md"
+          ]
+        },
+        "result": {
+          "justification": "verdict 判为 Partially supported、并主动承认 harmfulness 方向与 refusal 纠缠，措辞本身克制。但支撑『解离』的关键行分析不成立：results.md 称 benign+v_r_orth 后 proj_h『stays essentially at the benign level (-0.01)』，而同表 benign=-2.53、harmful=+3.71，-0.01 位于两者之间 40.5% 处，按 steering_orth.json 存储的 std（benign 1.153, n=30）约合 12 个标准误，该描述与自身数字矛盾。同时反驳该 claim 的 steering.json 被完整省略。因此报告呈现的『部分一致』是通过省略不一致产物加上对关键数字的错误表述达成的，而非实验本身取得。",
+          "score": 2,
+          "evidence_files": [
+            "results/steering.json",
+            "results/steering_orth.json",
+            "results.md"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "A notable class of successful jailbreaks operates by suppressing the refusal signal while the harmfulness signal remains active — the model still internally recognises the input as harmful yet answers.",
+        "method": {
+          "justification": "以投影比较分析越狱前后表征，与论文 Sec 4 同为观察性方法，家族正确。但存在一处直接导致错误结论的实现错误：jailbreak_attacks.py 的 gcg 将后缀追加于指令之后（p.strip() + GCG_SUFFIX），而 extract_and_generate 仍用默认 T_INST=-5 抽激活，此时该位置落在后缀内部、不再是用户指令末 token；对比 jailbreak_stronger.py 处理 prefill 时正确做了偏移补偿（t_inst = T_INST - prefill_len），gcg 未做任何补偿。gcg 的 proj_harm_jb_mean=-0.019 与 probe flag rate=0% 因而是读取位置错误的产物，报告却据此断言 GCG 通过降低有害性感知起作用。",
+          "score": 2,
+          "evidence_files": [
+            "jailbreak_attacks.py",
+            "jailbreak_stronger.py",
+            "analyze_jailbreak.py",
+            "common.py",
+            "results/jailbreak_analysis.json"
+          ]
+        },
+        "experiment": {
+          "justification": "task.md 指定为固定资源的三类攻击全部未奏效——jailbreak_analysis.json 中 gcg asr=0.013、dan asr=0.013、persuasion asr=0.000，即论文考察的 adv-suffix / persuasion / template 三族在本 run 中均无成功样本可供分析；结论转而完全建立在 prefill 这一 task.md 与论文均未涉及的攻击上（asr=0.938, 75/80）。用于支撑『Refuted』半边的成功样本仅 gcg 1 条、jbb_role 7 条。此外未做任何干预实验以支撑机制性措辞，也未复现论文 Sec 4 的 belief 定义（Δharmful / Δrefuse 的簇余弦差）。",
+          "score": 2,
+          "evidence_files": [
+            "task.md",
+            "jailbreak_attacks.py",
+            "jailbreak_stronger.py",
+            "analyze_jailbreak.py",
+            "jailbreak_layer_scan.py",
+            "results/jailbreak_analysis.json",
+            "results.md"
+          ]
+        },
+        "result": {
+          "justification": "prefill 上的结果（H_pfl_jb=+3.52 接近 H_harm=+3.48，R_pfl_jb=-0.35 远离 R_harm=+5.94）与论文『压制 refusal 而保留 harmfulness』的结构定性一致，这一半是可信的。但另一半与论文结论方向相反：论文发现 persuasion 有时能真正翻转内部有害性信念、而 adv-suffix / template 只压制 refusal；该 run 却断言 GCG 与 role-play『achieve their effect by lowering the harmfulness signal itself』，恰好互换。报告以 Refuted 明确标注了不一致，态度诚实，但所给原因（bypass-style 与 input-obfuscation 的攻击分类）不可靠：它建立在 asr≈0 的失败攻击与上述 t_inst 位置错误之上，更简单的解释（后缀把读取位置移出了指令）未被排除。",
+          "score": 2,
+          "evidence_files": [
+            "results/jailbreak_analysis.json",
+            "results/jailbreak_layer_scan.json",
+            "jailbreak_attacks.py",
+            "results.md"
+          ]
+        }
+      },
+      "C5": {
+        "claim": "A lightweight Latent Guard classifier trained on the harmfulness direction matches or beats a dedicated safety judge (Llama Guard 3 8B) at flagging jailbreak attempts, at a fraction of the compute.",
+        "method": {
+          "justification": "latent_guard.py / latent_probe_only.py 用 t_inst 处激活训练 logistic regression probe，与论文以 Δharmful 簇余弦差过零判定不同，但同属『读取模型内部有害性表征作为护栏』的同一机理，按 rubric 用不同方法得到同结论亦算一致，方法选取合理。轻微问题：probe 是有监督分类器，比论文的质心-阈值法更强，使得与 Llama Guard 的对比条件略偏宽松；且 probe 层 15 的选择依据来自评估集上的 direction stats。",
+          "score": 4,
+          "evidence_files": [
+            "latent_guard.py",
+            "latent_probe_only.py",
+            "results/latent_guard.json"
+          ]
+        },
+        "experiment": {
+          "justification": "对比设计基本合理：同一批 prompt、同时跑 probe 与真实 Llama-Guard-3-8B，覆盖 6 个数据集共 800 条，并另测越狱 prompt 上的 flag rate，baseline 真实未伪造。缺口有四：一是 advbench_train(seed=0) 与 advbench_test(seed=1) 同池重采样，advbench_test 上 acc=1.000 被污染；二是 probe 层 15 由评估集统计选出；三是延迟仅单次测量且含预热，latent_guard.json 的 0.2410 s/样本 与同 run lg_on_jailbreak.json 的 0.0658-0.1281 s/样本 相差 2-4 倍；四是 XSTest 从未使用（common.py 的 load_xstest_prompts 定义后零调用），而 over-refusal 正是论文 Latent Guard 的核心卖点之一，该侧面完全未评测。",
+          "score": 3,
+          "evidence_files": [
+            "latent_guard.py",
+            "latent_probe_only.py",
+            "lg_on_jailbreak.py",
+            "extract_activations.py",
+            "common.py",
+            "results/latent_guard.json",
+            "results/lg_on_jailbreak.json"
+          ]
+        },
+        "result": {
+          "justification": "结果与论文定性方向一致且分析诚实：probe pooled ACC 0.853 / F1 0.898 对 Llama Guard 3 的 0.887 / 0.922，报告主动写明『pooled F1 is 3 pts lower』『The stronger matches-or-beats statement is mostly true』，未把略低说成持平或更优。probe 在 jbb_benign（0.65 vs 0.78）与 sorrybench（0.68 vs 0.77）上落后，恰与论文 Appendix H.1 所报 Latent Guard 在分布外数据上退化的现象同向，属对论文的隐含印证。算力结论被夸大：8.3x 加速取自与自身另一产物冲突的 0.2410 s/样本，按 lg_on_jailbreak.json 仅 2.3-4.4x，而『~100x cheaper in the shared setting』一句无任何测量支撑。",
+          "score": 4,
+          "evidence_files": [
+            "results/latent_guard.json",
+            "results/latent_probe_only.json",
+            "results/lg_on_jailbreak.json",
+            "results.md"
+          ]
+        }
+      }
+    }
+  }
+}

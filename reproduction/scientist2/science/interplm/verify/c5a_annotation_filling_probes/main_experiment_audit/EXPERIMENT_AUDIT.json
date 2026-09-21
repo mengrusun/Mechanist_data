@@ -1,0 +1,25 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4 via dmxapi.cn)",
+  "claim_id": "c5a",
+  "linked_milestones": ["M5"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {"status": "pass", "details": "Swiss-Prot per-residue binary concept labels from uniprot_sprot.dat.gz. External, not model-derived."},
+    "score_normalization": {"status": "pass", "details": "PR-AUC from precision-recall on held-out labels; no self-normalization."},
+    "result_existence": {
+      "status": "pass",
+      "details": "runs/m5/wilcoxon.json (n_concepts=30, pval=0.191, mean_sae=0.5907, mean_neuron=0.5906) and summary.md match EXPERIMENT_RESULTS.md."
+    },
+    "dead_code": {
+      "status": "warn",
+      "details": "Function per_concept_pr_auc() with LogisticRegression (lines 91-111) is defined but never called in main(). Main uses SGDClassifier(log_loss) directly. Results are real from SGD path. Code quality issue, not fraudulent."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "30/50 concepts (20 no test positives in 25k subsample), 25k/387k test residues, SGD max_iter=30. All disclosed. Null result honestly reported. WARN not FAIL."
+    },
+    "eval_type": "real_gt"
+  }
+}

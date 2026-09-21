@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal has strong goal-method alignment: it explicitly defines a per-failure classification and gives directional, mutually decidable predictions, including “BINDING-STAGE if the late-layer language-vector correction alone ... makes the answer correct” and “CONCEPT-STAGE if patching the correct English mid-layer concept representation makes it correct.” The success and refutation criteria are unusually concrete—for example, H1 requires “>=60%” on-target effects with “<=10%” off-target effects, H2 defines “binding-stage fraction >60%,” and H3 specifies “Spearman >=0.5” and spread thresholds—so the claims are clearly falsifiable. Some important implementation semantics remain underspecified, particularly how the “DIFFERENT-content English item” concept patch is selected, how steering magnitude is calibrated, and how “concept-stage accuracy = task accuracy achievable when the concept stage is forced correct” avoids conflating answer injection with concept recovery; these gaps would require expert clarification but do not make the logic incoherent.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is the per-failure cross-lingual activation-patching and language-vector intervention, including representation alignment across tokenizers; this is a demanding but standard custom interpretability operation using forward hooks, probes, and tensor edits rather than an undefined magic step, although calibration and patch-location details must be implemented carefully. The dependencies named in “BMLAMA,” “mLAMA,” “MGSM,” “Llama-3-8B, Aya-23-8B, and Qwen2-7B,” together with logistic-regression probes and activation patching, are established model/data/tooling components that can be built with standard PyTorch and interpretability libraries; the constructed arithmetic set is also explicitly specified as “built from scratch.” The refuting branch is runnable because the design includes wrong-language, wrong-content, shuffled-layer, random-vector, benign-English, script-matched, and frequency/script controls, while resources are substantially quantified through “6,792,” “~44k,” “2,000 facts,” “1,000 items,” “250 parallel problems,” “20” languages, and “>=200” audited recoveries per model; residual risk comes from alignment and causal-validity engineering rather than an execution barrier.",
+      "score": 8
+    }
+  }
+}

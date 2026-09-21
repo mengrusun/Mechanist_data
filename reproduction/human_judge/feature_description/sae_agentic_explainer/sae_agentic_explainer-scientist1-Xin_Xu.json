@@ -1,0 +1,114 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Xin Xu",
+    "paper_title":         "SAGE: An Agentic Explainer Framework for Interpreting SAE Features in Language Models",
+    "agent":         "scientist1",
+    "review_date":         "2026-07-19"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "不涉及training。唯一的轻微灰色地带:trigger_threshold用all_snips[:5](即前5条,属于sage_snips范围)计算得到(run_experiment.py:79-87),但该阈值对Neuronpedia与SAGE两种解释完全一致地复用(同一个trigger_threshold变量传入两次generative_accuracy调用,run_experiment.py:117-123),不存在为让SAGE得分更高而选择性调阈值的路径,不构成实质性泄漏。",
+    "score": 4,
+    "evidence_files": [
+      "code/run_experiment.py",
+      "code/neuronpedia.py",
+      "code/evaluate.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "核心指标(generative accuracy、predictive accuracy)的ground truth是目标LLM+SAE的真实激活值(model_hook.py: feature_activation_of),真实前向传播测得,直接就是claim所关心的'feature是否被触发'本身,非代理指标,也不由被评估的GPT-5自己生成,非循环。",
+    "score": 5,
+    "evidence_files": [
+      "code/model_hook.py",
+      "code/evaluate.py",
+      "code/run_experiment.py",
+      "code/polysemantic.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "遵循task.md要求的资源使用",
+    "score": 5,
+    "evidence_files": [
+      "task.md",
+      "code/config.py",
+      "code/run_experiment.py",
+      "code/run_qwen_experiment.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Gemma-2-2B主实验n=60(3层×20个feature),证据充分,RESULTS.md结论(generative accuracy显著优于Neuronpedia)有对应支撑。Qwen3-4B verify仅n=10、只测1层,RESULTS.md对此有诚实标注小样本局限(如\"p≈0.07 with only n=10... not decisive\")。但GPT-OSS-20B完全未测,claim所称\"across multiple open-source LLMs and early-to-late layers\"的跨模型/跨层覆盖度明显窄于其措辞,且未被专门指出。",
+    "score": 3,
+    "evidence_files": [
+      "results/RESULTS.md",
+      "results/gemma-2-2b_main__summary.json",
+      "results/qwen3-4b_verify__summary.json",
+      "code/aggregate.py"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "种子固定为0(run_experiment.py:154, run_qwen_experiment.py:107, evaluate.py:105),实验可复现。SAGE本身不是需要多次重跑取方差的随机算法类实验,跨feature的显著性检验已是恰当的不确定性度量。",
+    "score": 5,
+    "evidence_files": [
+      "code/aggregate.py",
+      "code/run_experiment.py",
+      "code/run_qwen_experiment.py",
+      "code/evaluate.py",
+      "results/RESULTS.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a",
+    "score": null,
+    "evidence_files": [
+      "code/model_hook.py",
+      "code/qwen_model_hook.py",
+      "code/sage.py",
+      "code/evaluate.py"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "1) RESULTS.md声称存在logs/gemma_main.log、logs/qwen_verify.log,但整个case目录里根本没有logs/文件夹,属声称却不存在的产物;(2) RESULTS.md举例称Gemma L6 f200的'''SAGE reviewer's top candidate'''是那句'''polysemantic with two triggers...''',但实际打开results/gemma-2-2b_main/layer_6/feature_200.json,真正排名第一、真正用于eval的candidates[0]/eval.sage.explanation是另一句单一概念的openapi-only解释,被引用的那句只排第二且分数更低——举例引用与落盘产物不符。",
+    "score": 2,
+    "evidence_files": [
+      "results/RESULTS.md",
+      "results/gemma-2-2b_main__summary.json",
+      "results/qwen3-4b_verify__summary.json",
+      "results/gemma-2-2b_main__polysemantic.json",
+      "results/gemma-2-2b_main/layer_6/feature_200.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "gemma-2-2b_report.md/qwen3-4b_verify_report.md表格数字与*_summary.json逐项核对(per-layer、overall、per-feature)完全一致,scientist1无独立ledger/verdict体系,故一致性风险主要在\"叙述文字vs落盘数据\"层面。唯一发现:RESULTS.md对L6 f200的举例声称的\"top candidate\"文本,与该feature自己的feature_200.json(sage.candidates[0]与eval.sage.explanation)不符——真正的top是另一句单概念解释,被引用的多义解释实际排第二、分数更低。",
+    "score": 3,
+    "evidence_files": [
+      "results/RESULTS.md",
+      "results/gemma-2-2b_report.md",
+      "results/gemma-2-2b_main__summary.json",
+      "results/gemma-2-2b_main/layer_6/feature_200.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "letting an LLM agent propose several candidate explanations for an SAE feature, query the target LLM+SAE with probe inputs to gather empirical activation feedback, and iteratively accept/reject/revise those candidates — produces feature explanations that outperform Neuronpedia on both generative accuracy and predictive accuracy, across multiple open-source LLMs and across early-to-late layers.",
+        "method": {
+          "justification": "保留了论文核心机制家族(迭代propose→probe→refine、激活反馈驱动),但省略了论文两大招牌机制:没有四态accept/reject/refute/refine转移逻辑(`sage.py`每轮无条件revise);更关键的是完全没实现Final Explanation Synthesis——最终解释直接取最后一轮打分最高的单一候选(`sage.py:206-212`),从未产出论文强调的'多facet综合解释'。多义性判定被挪到独立事后脚本(`polysemantic.py`),不影响实际被评测的SAGE解释本身。",
+          "score": 2,
+          "evidence_files": ["code/sage.py", "code/polysemantic.py"]
+        },
+        "experiment": {
+          "justification": "Baseline(Neuronpedia)、metric定义(generative=trigger rate、predictive=held-out相关性)与claim严格对应,阈值在实验前就定义好、对两种解释一视同仁,没有事后重新表述判据的迹象。但设计本身有两处覆盖不足:(1) layer/模型选择比论文窄——论文用3/7/11/23共3模型,这里Gemma只测6/12/20、Qwen仅测1层(12)、GPT-OSS-20B完全未纳入设计;(2) K=3、T=3是全程唯一用过的一组超参数,没有做过任何sweep或对照(如K=2/T=2 vs K=4/T=4的敏感性检验)。",
+          "score": 3,
+          "evidence_files": ["code/run_experiment.py", "code/run_qwen_experiment.py", "code/sage.py", "task.md"]
+        },
+        "result": {
+          "justification": "Generative accuracy与论文定性一致(方向、幅度、深层优势模式均吻合),但claim要求'两指标均优',而Gemma上predictive accuracy未复现(Δ Pearson=-0.053、Δ Spearman=-0.015,均不显著)。偏离有诚实披露(RESULTS.md标注'Not clearly supported'),但归因不完整——只归因于baseline已足够好和SAGE描述过于具体,未考虑自身实现简化(无synthesis步骤、K/T未sweep)可能是原因;且多义性举例(L6 f200)引用与落盘数据不符,分析存在轻微美化。",
+          "score": 2,
+          "evidence_files": ["results/RESULTS.md", "results/gemma-2-2b_main__summary.json", "results/qwen3-4b_verify__summary.json"]
+        }
+      }
+    }
+  }
+}

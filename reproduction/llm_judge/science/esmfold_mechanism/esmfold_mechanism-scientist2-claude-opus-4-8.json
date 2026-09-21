@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Mechanisms of AI Protein Folding in ESMFold",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The only fitted components are the M3a charge probe and the M3b σ_proj calibration. In scripts/m3a_probe.py the heldout_probe chains are split 8:1:1 BY CHAIN (rng.permutation over chains, then n_tr/n_va/n_te slices of chain lists, lines 143-149), so no residue appears in two splits; results/M3a/summary_stats.json records n_chains_train=32, n_chains_val=4, n_chains_test=4 with disjoint residue counts (5206 train / 736 test). The Stage-0 manifest (data/prepared/manifest.jsonl, stage0_summary.json) partitions the 390 unique chains into disjoint main=200 / donor=100 / calibration=50 / heldout_probe=40 splits. verify/C1_early_block_s_localization/baseline_audit/EXPERIMENT_AUDIT.json finding E-C1-04 confirms the donor pool is strictly non-overlapping with the main set and donor native DSSP has no hairpin at target positions. v_charge is fitted on heldout_probe chains and then applied in M3b to the disjoint main chains; σ_proj is estimated on the calibration split and applied to main — no fit-on-eval leakage path exists. The probe reaching test balanced-acc=1.0 is trivial-difficulty (charge is a deterministic function of residue identity), not a leakage artifact. No leakage path found.",
+    "score": 5,
+    "evidence_files": ["scripts/m3a_probe.py", "data/prepared/manifest.jsonl", "data/prepared/stage0_summary.json", "verify/C1_early_block_s_localization/baseline_audit/EXPERIMENT_AUDIT.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Two ground truths are used, both valid and non-circular. (1) The β-hairpin outcome is DSSP secondary-structure assignment run on the ESMFold-PREDICTED structure (mkdssp on output_to_pdb output), exactly the HARD constraint in task.md and the same operationalization the paper uses (App. E). verify/C1_early_block_s_localization/baseline_audit/EXPERIMENT_AUDIT.json finding E-C1-05 verifies 'DSSP run on ESMFold predicted structure only ... no native structure contamination' and is a pure geometric function independent of the analysis under test. (2) The M3a charge label is charge_class_ids(seq) — a deterministic 3-class map from amino-acid identity (scripts/m3a_probe.py), fully independent of the model being probed, so the probe is non-circular. Both labels faithfully characterize the claimed phenomena (hairpin formation; charge encoding).",
+    "score": 5,
+    "evidence_files": ["verify/C1_early_block_s_localization/baseline_audit/EXPERIMENT_AUDIT.json", "scripts/m3a_probe.py", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "Model fidelity is exact: only ESMFold (ESM-2 backbone + 48-block trunk + structure module) is analysed across all milestones (claims_ledger.json models fields; EXPERIMENT_RESULTS.md states 'Only ESMFold analysed — task.md HARD constraint honored'). Dataset fidelity is honored: the PISCES cull list 'cullpdb_pc25.0_res0.0-2.5_len40-10000_R0.3_Xray_d2026_05_14_chains12055' is the source for every claim (stage0_summary.json, EXPERIMENT_RESULTS.md data table). task.md specifies the dataset/model but no mandatory N; the run uses 200 main / 100 donor / 50 calib / 40 heldout_probe (390 unique chains) — a cost-aware subset of the 12,055-chain whitelist. One disclosed under-scale deviation: the M3a probe used 40 heldout_probe chains vs a planned 250, explicitly flagged as suspected_under_power in claims_ledger.json (C3 caveats). No silent model swap, no smaller model, no dataset substitution. The main experiment resources match the spec; only a disclosed subset for one probe milestone deviates.",
+    "score": 4,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "data/prepared/stage0_summary.json", "claims_ledger.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Evidence scale tracks claim strength for the claims declared supported: C1/M1 rests on N=197 paired chains with a huge effect (Δ=-0.862), well-powered (results/M1/summary_stats.json; audit E-C1-03 power>>0.99). C3a probe test set is only 4 chains but 736 test residues with permutation p<0.001 and bacc=1.0, and the 40-vs-250 under-scale is explicitly caveated (results/M3a/summary_stats.json; claims_ledger C3 caveat). The thin/weak experiments are honestly NOT declared supported: C2/M2's three specificity controls have N=3 each (broken) and the claim is reported 'not-supported [evidence-incomplete]'; C3b's Spearman dose-response is defined on only 4 chains (n_chains_dose_response.same=4, results/M3b/summary_stats.json) and is reported as a null. So claim strength largely matches evidence, with the under-powered pieces flagged rather than overclaimed. Minor deduction because the C3a supported verdict leans on a very small chain-level test set and C3b's dose-response coverage is thin.",
+    "score": 4,
+    "evidence_files": ["results/M1/summary_stats.json", "results/M3a/summary_stats.json", "results/M3b/summary_stats.json", "claims_ledger.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Significance testing is present throughout: paired Wilcoxon per band with p-values (results/M1/summary_stats.json, C1 early band p=2.25e-36), a 1000-permutation null for the probe (results/M3a/summary_stats.json, permutation_p=0.000999, null_mean=0.3326, null_std=0.0175), paired McNemar for M3b same-vs-opposite (p=1.0) and a bootstrap 95% CI reported for the C1 dataset variant (VERIFY_REPORT.md: CI≈[-0.91,-0.82], not crossing 0). Claimed differences that matter (C1 Δ=-0.862) clearly exceed noise. The gap: everything runs at a single seed (seed=42 hard-coded in scripts/m3a_probe.py and m3b_worker.py); no multi-seed variance or error bars across runs are reported, so seed-robustness of the point estimates is unverified. Above the single-seed/no-significance anchor (3) because real significance tests, a permutation null, and a bootstrap CI are reported, but short of 5 for lack of multi-seed replication.",
+    "score": 4,
+    "evidence_files": ["results/M1/summary_stats.json", "results/M3a/summary_stats.json", "results/M3b/summary_stats.json", "verify/VERIFY_REPORT.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The claims are causal/mechanistic and are answered with genuine interventions plus controls, not correlation dressed as causation. M1 uses activation patching of s across 8 blocks-bands with three matched controls: same-window z-patching (Δ=-0.011), matched-mask s-patching on non-target residues (Δ=-0.067), and late-window s-patching (Δ=-0.085) vs early Δ=-0.862 (results/M1/summary_stats.json). M3b uses additive steering along v_charge WITH a random-direction control (hairpin_rate=1.0) and a matched-control non-target pair, and it explicitly separates the correlational probe (M3a decodability) from the causal steering test (M3b) — 'decodability ≠ causal sufficiency' (claims_ledger.json C3 headline; scripts/m3b_worker.py). Correlational evidence (the probe) is honestly labeled as correlational. M2's intended specificity controls broke (hook shape bug) but are disclosed as evidence-incomplete rather than asserted causal. Causal wording matches the evidence type; genuine controlled interventions are present.",
+    "score": 5,
+    "evidence_files": ["results/M1/summary_stats.json", "scripts/m3b_worker.py", "results/M3b/summary_stats.json", "claims_ledger.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number traces to a concrete on-disk product and agrees exactly. C1 Δ=-0.862, p=2.25e-36, N=197 in EXPERIMENT_RESULTS.md and claims_ledger.json match results/M1/summary_stats.json (early_delta_rate=-0.862098..., early_p=2.2508e-36, n_chains_paired=197) and results/M1/early_window.json (band b_0_3). M3a bacc=1.0, permutation_p=0.000999 match results/M3a/summary_stats.json and best_block.json. M2 seq2pair Δ=-0.017, p=0.083, N=176 match results/M2/summary_stats.json. M3b same-vs-opp Δ=-0.006, p=1.0, N=179 and random_control hairpin_rate=1.0 match results/M3b/summary_stats.json. Per-chain JSONL products (effect_by_window_worker_*.jsonl, steering_effect_worker_*.jsonl, probe_by_block.jsonl) underlie the aggregates. No sourceless or back-filled numbers were found.",
+    "score": 5,
+    "evidence_files": ["results/M1/summary_stats.json", "results/M1/early_window.json", "results/M3a/summary_stats.json", "results/M2/summary_stats.json", "results/M3b/summary_stats.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Verdicts and numbers are consistent across artifacts: claims_ledger.json, verify/VERIFY_REPORT.md and refine-logs/EXPERIMENT_RESULTS.md all report C1=supported/PASS (Δ=-0.862), C2=not-supported/INCONCLUSIVE (seq2pair Δ=-0.017, hook bug), C3a=supported (bacc=1.0) and C3b=real null/INTEGRITY_ONLY (Δ=-0.006). Integrity states propagate coherently (C2 Phase-2 FAIL → INCONCLUSIVE in both ledger and verify report; no claim is PASS in one artifact yet gate-broken in another). One minor bookkeeping slip: EXPERIMENT_RESULTS.md's recovery narrative says 'seq2pair_donor 步骤 179 chain 全部成功' while the same file's table, results/M2/summary_stats.json and claims_ledger.json all record N=176 for seq2pair_donor — a stale count that changes no verdict. That single loose number is the only inconsistency.",
+    "score": 4,
+    "evidence_files": ["claims_ledger.json", "verify/VERIFY_REPORT.md", "refine-logs/EXPERIMENT_RESULTS.md", "results/M2/summary_stats.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Folding decisions for β-hairpin structures are localized in the early blocks of the folding trunk. Whether the trunk will fold a target region into a β-hairpin is committed to within early blocks, and the sequence representation s is the active locus of that decision during this window.",
+        "method": {
+          "justification": "9a — The method is single-block/band activation patching of the sequence representation s across all 48 blocks (8 bands), which is exactly the paper's localization method (§3, 'we use activation patching to localize where the folding trunk commits to a structural motif'). It correctly matches the causal-localization mechanism category the claim is about, and adds the right within-method controls (z-patch same window, matched-mask, late-window). scripts/m1_worker.py + patch_s_at_blocks pre-hook implementation confirmed clean by audit E-C1-06.",
+          "score": 5,
+          "evidence_files": ["claims_ledger.json", "verify/C1_early_block_s_localization/baseline_audit/EXPERIMENT_AUDIT.json"]
+        },
+        "experiment": {
+          "justification": "9b — Design is complete: 8 mutually-exclusive bands covering the whole trunk (early b_0_3 as intervention, late bands as matched null), N=197 paired chains, DSSP-on-predicted-structure as judge (the paper's exact metric), three specificity controls, paired Wilcoxon, and pre-registered predicates (all 5 PASS). Direction is the reverse of the paper (patching a non-hairpin donor's s into a hairpin target to DESTROY the hairpin, baseline 100% → 13.8%) rather than the paper's induce-hairpin-in-helix, but that is an equally valid causal localization test. Only minor gap: single seed. results/M1/summary_stats.json.",
+          "score": 5,
+          "evidence_files": ["results/M1/summary_stats.json", "verify/C1_early_block_s_localization/baseline_audit/EXPERIMENT_AUDIT.json"]
+        },
+        "result": {
+          "justification": "9c — Result qualitatively agrees with the paper: early-block s-patching collapses hairpin rate (Δ=-0.862 at b_0_3), late-window s-patching barely moves it (Δ=-0.085), and same-window z-patching is near zero (Δ=-0.011), directly matching the paper's finding that early blocks commit via sequence-side computation while pairwise takes over late. The monotone decay across bands (b_0_3 -0.862 → b_32_39 -0.085) mirrors Fig. 1. Analysis and specificity framing are sound.",
+          "score": 5,
+          "evidence_files": ["results/M1/summary_stats.json", "claims_ledger.json"]
+        }
+      },
+      "C2": {
+        "claim": "The early-block seq2pair pathway is the critical channel through which the β-hairpin folding decision is transferred from s into z. In the early blocks, the seq2pair operation carries the decision to fold a target region into a β-hairpin from the sequence representation s into the pairwise representation z.",
+        "method": {
+          "justification": "9a — The chosen method is a pathway-specific donor-patch of the seq2pair output (with intended matched pair2seq patch, zero-ablation, and non-target matched control) — a reasonable intervention family for isolating the s→z channel, in the same Causal-Attribution/Patching family the paper uses (the paper freezes/ablates seq2pair during the early window). Method choice fits the claim; the pathway isolation is the correct idea (scripts/m2_worker.py collect_donor_pathway_outputs hooks on sequence_to_pair / pair_to_sequence).",
+          "score": 4,
+          "evidence_files": ["scripts/m2_worker.py", "claims_ledger.json"]
+        },
+        "experiment": {
+          "justification": "9b — The experiment is broken and not repaired. Only the seq2pair_donor condition ran (N=176); the three specificity controls needed to make the result interpretable (pair2seq, zero-ablation, matched-ctrl) each have N=3 due to a pair_to_sequence hook shape-mismatch bug (expected [B,L,S], actual [B,num_heads,L,L,32]), so s2p_vs_p2s_paired has n_chains=0 (results/M2/summary_stats.json). The iteration stage that would have fixed the hook was halted (claims_ledger open_items), so no hyperparameter/implementation iteration was completed. This is an under-powered/implementation-broken design that cannot adjudicate the claim.",
+          "score": 2,
+          "evidence_files": ["results/M2/summary_stats.json", "scripts/m2_worker.py", "claims_ledger.json"]
+        },
+        "result": {
+          "justification": "9c — The seq2pair donor-patch gives a weak Δ=-0.017 (p=0.083), which DISAGREES with the paper's conclusion that seq2pair is the critical early channel. Crucially, this is NOT disguised as agreement or goalpost-tuned: it is reported 'not-supported [evidence-incomplete]' and repeatedly framed as 'evidence missing, not claim disproved' because the specificity controls broke (VERIFY_REPORT.md C2 → INCONCLUSIVE). Honest and non-fabricated, but the surface conclusion is left dangling on an unfixed bug rather than a clean, reliable negative — so it neither reproduces the paper nor delivers a trustworthy non-reproduction.",
+          "score": 3,
+          "evidence_files": ["results/M2/summary_stats.json", "verify/VERIFY_REPORT.md", "claims_ledger.json"]
+        }
+      },
+      "C3": {
+        "claim": "Charge is a linearly encoded chemical feature in early blocks of ESMFold and causally influences β-hairpin formation, consistent with the physical principle that opposite-charge residues on facing β-strands favor pairing (same-charge configurations correspondingly increase cross-strand distance). The evaluation of β-hairpin formation must be based on DSSP secondary-structure assignment on the predicted structure.",
+        "method": {
+          "justification": "9a — The two-part method matches the two-part claim exactly: M3a trains a 3-class linear probe on early-block s to test 'linearly encoded' (correlational, correctly labeled), and M3b performs additive steering along the extracted v_charge to test the causal claim, with random-direction and matched-pair controls and DSSP judging — precisely the paper's probing+steering approach (§4.2). Method families are correctly aligned to the claim.",
+          "score": 5,
+          "evidence_files": ["scripts/m3a_probe.py", "scripts/m3b_worker.py", "claims_ledger.json"]
+        },
+        "experiment": {
+          "justification": "9b — The probe half is well-designed (chain-level split, 1000-permutation null). The causal (steering) half is materially under-powered and mis-scoped relative to the paper: M3b steers ONLY the first cross-strand pair — 2 residues (scripts/m3b_worker.py: additive_steering_s(model, block_idx, [i_tgt, j_tgt], ...)) — whereas the paper steers whole flanking regions with window size 15; and the targets are chains that already pass the hairpin≥0.7 filter (baseline hairpin_rate=1.0), so the 'opposite-charge favors pairing' direction faces a ceiling and only the 'same-charge disrupts' direction is testable. Coefficients only reach ±3σ, and the dose-response Spearman is defined on just 4 chains. These make it impossible to distinguish a true causal null from under-exploration, and the run's own ΔpLDDT at β=+3σ is ~0.003 (results/M3b/summary_stats.json), i.e. the intervention barely perturbs the output. Honest but under-powered.",
+          "score": 2,
+          "evidence_files": ["scripts/m3b_worker.py", "results/M3b/summary_stats.json", "refine-logs/EXPERIMENT_TIPS.md"]
+        },
+        "result": {
+          "justification": "9c — Mixed and only partially reliable. The M3a decodability result AGREES with the paper (charge linearly encoded, bacc=1.0, permutation p<0.001 vs paper's high ROC-AUC). The M3b causal result DISAGREES with the paper (paper: charge steering induces hairpins; run: flat null, 175/179 chains hairpin=1 across the sweep). The null is reported honestly (not fabricated, not goalpost-tuned) and labeled 'not-supported / real null'. However, it is elevated to a 'decodability ≠ causal sufficiency' scientific finding while the far more likely cause — a 2-residue steering intervention on already-hairpin targets (see 9b) — is not identified among the offered explanations, so an under-powered/design-limited negative is presented as a substantive result. The probe sub-result aligns; the causal sub-result deviates with an incompletely diagnosed reason.",
+          "score": 2,
+          "evidence_files": ["results/M3a/summary_stats.json", "results/M3b/summary_stats.json", "claims_ledger.json"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "variant_tag": "model-swap-evo2-7b-262k",
+  "dimension": "model",
+  "claim_id": "C1",
+  "claim_statement": "Under a targeted internal intervention during Evo2-7B decoding, the encoded protein's mean alpha-helix fraction rises significantly above the unintervened baseline, with a monotone dose-response.",
+  "main_experiment_verdict": "supported",
+  "variant_metric": "evo2_7b_262k site-28 CAA: dose-response Spearman rho=0.878 (perm one-sided p=0.0057); winning coef 1.0 helix_all=0.521 vs in-model baseline 0.426 (+0.094), Cliff's delta=0.201, Mann-Whitney p=1.05e-5; monotone ladder 0.426->0.521->0.541->0.565; peak +0.138 at coef 4",
+  "main_experiment_metric": "evo2_7b site-28 CAA: dose-response rho=0.922 (q=1.5e-4); winning coef 1.0 helix_all=0.482 vs baseline 0.414 (+0.068), Cliff's delta=0.135; peak +0.161 at coef 4",
+  "delta": "variant winning gain +0.094 vs main-experiment winning gain +0.068 (variant slightly larger); same direction, same monotone shape",
+  "claim_supported": "pass",
+  "consistent_with_main_experiment": "pass",
+  "confidence": "high",
+  "reasoning": "The alternate within-family Evo2-7B checkpoint (evo2_7b_262k, 262k-context) reproduces C1 on every criterion the main experiment used: a significant positive monotone dose-response of the survivorship-safe helix_all endpoint in the steering coefficient (rho=0.878, perm p=0.0057), and a significant helix gain at the winning coefficient over its own coef-0 baseline (+0.094, MW p=1.05e-5). The CAA direction was rebuilt in the 262k model's own activation space over the same DEV contrast set (anti-circularity preserved: eval on TEST-split primers, same seed offset). The off-target length/GC shortening signature also transfers (length 94.5->46.8 aa, GC 0.456->0.257 across the sweep), showing the caveat is a robust family property -- but the helix gain is real and direction-dosed on the swapped model. Main-experiment verdict on C1 = supported, so consistent_with_main_experiment = claim_supported = pass.",
+  "integrity_status": "pass",
+  "integrity_breakdown": {"experiment": "pass", "mechanism": "pass"}
+}

@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan aligns well with the hypothesis: it proposes to \"train linear/ridge probes on hidden states at the final prompt token,\" then \"add/subtract scaled multiples\" of a derived direction and measure CoT length, directly testing decodability and causal influence. Its predictions are directional and falsifiable: the expected \"monotonic dose-response\" would be refuted by no systematic length change or a non-monotonic response, while the stated expectation of \"20-40% token savings\" supplies a concrete efficiency threshold. However, the miscalibration and controller claims are less fully specified because \"budget >> difficulty warrants,\" the \"difficulty-calibrated threshold,\" and \"near-equal accuracy\" lack operational definitions or accuracy-loss bounds, and steering length alone does not unambiguously establish that the endogenous representation is specifically a compute-budget estimate rather than a correlated feature. The named controls and accuracy-versus-token measurements substantially narrow these ambiguities, but an expert would still need to define those decision rules before implementation.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The named models and datasets—\"DeepSeek-R1-Distill-Qwen-1.5B/7B and Qwen3-8B\" with \"GSM8K, MATH, ProntoQA\"—exist, and linear/ridge probing, residual-stream hooks, difference-of-means directions, activation steering, and Pareto evaluation are supported by standard ML and interpretability tooling. The hardest step is mapping the probe's excess over a \"difficulty-calibrated threshold\" into a steering strength; this is implementable custom calibration rather than a magic step, although the exact mapping, pass@k value, K, steering grid, and sample counts are not specified. Resources receive useful quantification through three named model scales and a target of \"20-40% token savings,\" but dataset subsample sizes and run-level figures remain unstated. The refuting branch is runnable because the design includes \"random directions, orthogonalized directions, other-layer directions,\" full-CoT and truncation baselines, accuracy tracking, dose-response tests, and per-difficulty ablations, so null effects or accuracy degradation can emerge rather than being designed away.",
+      "score": 7
+    }
+  }
+}

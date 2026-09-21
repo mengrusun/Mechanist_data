@@ -1,0 +1,78 @@
+{
+  "date": "2026-08-19",
+  "auditor": "llm-chat (gpt-5.6-luna, cross-model)",
+  "audit_type": "mechanism",
+  "claim_id": "C3",
+  "linked_milestones": [
+    "M2",
+    "M3"
+  ],
+  "triggered_checks": [
+    "A"
+  ],
+  "overall_verdict": "pass",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "pass",
+      "triggered": true,
+      "trigger_match": [
+        "common.py ResidualSteerer (x' = x + alpha*v additive residual at blocks.26)",
+        "gen_eval.build_steer_vector (v=sum s_i*dhat_i)",
+        "results/m2_analysis.json (alpha grid)"
+      ],
+      "intervention_type": "SAE_feature",
+      "sweep_grid": [
+        0,
+        0.5,
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "target_criteria_met": true,
+      "coefficient_unit": "raw_multiplier",
+      "capability_metric": "Evo2 perplexity (ppl_median) + ORF-valid rate at every alpha",
+      "plateau_range": [
+        0.5,
+        4
+      ],
+      "locked_alpha": 1,
+      "alpha_position": "middle",
+      "random_baseline": {
+        "run": true,
+        "n_random": 300,
+        "passed": true
+      },
+      "sign_pattern": "n/a",
+      "output_case_spotcheck": {
+        "cases_available": true,
+        "verdict": "metric_text_consistent",
+        "note": "At alpha=1 ORFs valid & fluent; at alpha=16 valid fluent low-helix DNA (not a fluency/validity collapse) -- metric tracks text."
+      },
+      "evidence": [
+        "common.py:112-137 (ResidualSteerer)",
+        "gen_eval.py:29-66 (build_steer_vector)",
+        "results/m2_analysis.json (sweep+capability)",
+        "results/mctrl_analysis.json (random-direction control)",
+        "results/m3final_analysis.json (locked-alpha held-out)"
+      ],
+      "details": "7-point sweep incl. alpha=0 spanning 32x; alpha is a reproducible raw multiplier on a fixed vector from unit SAE decoder directions x median-positive activations; target %-helix + independent perplexity & ORF-validity logged at every point; positive plateau {0.5,1,2} with collapse at alpha>=4; locked alpha=1 interior to plateau and met held-out criteria (n=2205, p<0.05); norm-matched random-direction and random-feature controls (n=300) beaten by the learned direction; no asymmetric sign requirement."
+    },
+    "check_b_reserved": {
+      "status": "not_implemented"
+    },
+    "check_c_reserved": {
+      "status": "not_implemented"
+    },
+    "check_d_reserved": {
+      "status": "not_implemented"
+    },
+    "check_e_reserved": {
+      "status": "not_implemented"
+    },
+    "check_f_reserved": {
+      "status": "not_implemented"
+    }
+  }
+}

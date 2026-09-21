@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the three-part hypothesis through a defined read-out, predictive analysis, and intervention: it will \"classify the decoded top-k vocabulary distribution by language,\" predict correctness from \"fraction of tokens in each latent language per layer band,\" and then add a target-language direction while measuring accuracy. The predictions are directional and refutable: the pivot should \"vary with problem type and prompt language,\" and steering should improve accuracy; the explicitly acknowledged outcome that it \"may simply always be English\" or a failure of steering to improve accuracy would contradict those respective claims. The logic is strong but not fully specification-ready because no numeric decision thresholds are given, train/test separation for the beneficial-pivot map is unstated, and \"control prompts where the intended internal language is known\" assumes that an internal property—not merely the requested output language—is known.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is constructing a valid token-by-layer latent-language read-out from \"logit-lens and PatchScopes\" outputs; its operations are implementable with forward hooks, vocabulary projections, PatchScopes, and language classifiers, but treating short decoded token strings as an internal language is a specialized measurement requiring the proposed aggregation and validation rather than a fully standard measurement. The named models, MGSM, XCOPA, fastText/langid, logit-lens, and PatchScopes exist and have adequate tooling, while translated StrategyQA items must be constructed as the plan states; resources receive useful quantification through four named 7B–9B models and ten specified languages, although item counts and run-level figures are absent. The refuting branch is runnable because the design includes a \"no-intervention baseline,\" identical-item comparison with constrained decoding, parallel same-content controls, four-model replication, ablations, and a manipulation check, so fixed-pivot and no-benefit outcomes can genuinely emerge.",
+      "score": 7
+    }
+  }
+}

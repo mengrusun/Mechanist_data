@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-20",
+  "auditor": "expert-self-review (llm-chat MCP unavailable)",
+  "claim_id": "C3",
+  "linked_milestones": ["M2"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Same gpt-5.4 judge as M0/C1. P(banana) = count/N. No circular GT."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "ΔP is raw difference. Magnitude bar derived from M0's independently computed gap. No self-normalization."
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "Core files verified: baseline/ablate/amplify_x2/amplify_x4/random_ablate/matched_control_ablate/verdict.json all exist with numbers matching EXPERIMENT_RESULTS.md. WARN: amplify_x3 directory missing (null in verdict). Single seed = scope limitation, honestly documented."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "mechanism_intervene.py and compute_m2_verdict.py called; all outputs on disk."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "Single seed (42 of 8; plan ≥3 seeds) — suspected under-power per EXPERIMENT_RESULTS.md. amplify_x3 null. No negative-dose amplification. All scope limitations honestly documented in CLAIMS_LEDGER.md."
+    },
+    "eval_type": "synthetic_proxy",
+    "eval_type_details": "gpt-5.4 judge, same protocol as M0/C1."
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "direction": "Mechanistic decomposition of ESMFold's folding trunk — how the 48-block trunk's coupled (s, z) latents and the two coupling operations (seq2pair, pair2seq) carry structural folding decisions, using the β-hairpin as a canonical testbed.",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "In ESMFold, whether the folding trunk will fold a target sequence region into a β-hairpin is committed to within a small number of early trunk blocks, and the commitment is carried on the s (sequence-representation) residual stream — not the pair-representation z — during that early window.",
+      "status": "established",
+      "behavior_conclusion": "The β-hairpin folding decision in ESMFold is strongly localized to trunk blocks 0-3: activation-patching s in this early window collapses target-region DSSP-hairpin rate from 100% to 13.8% (Δ=-0.862, p=2.25e-36, N=197), while same-window z-patching (Δ=-0.011, 1.3% of s-patch), matched-mask s-patching (Δ=-0.067, 7.7%), and late-window (b_32_39) s-patching (Δ=-0.085, 9.8%) each move hairpin rate by less than 10% of the primary effect. All five specificity predicates pass, and the CATH-stratified dataset re-aggregation preserves the effect (robustness=1.0 on the dataset axis; method axis deferred).",
+      "impact": {
+        "assessment": "The result gives biologists an auditable window into ESMFold's structural decision-making — an actionable pointer for structure-editing tools, folding-failure diagnostics, and interpretability research on protein language models.",
+        "recommendation": "PROCEED",
+        "assessed_in_round": 1
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Causal Attribution / Patching (donor-patching, with matched z / late-window / mask controls)",
+          "headline": "The β-hairpin decision is localized to early trunk blocks 0-3 with s as the active locus: s-patching in b_0_3 gives Δ=-0.862 (p=2.25e-36, N=197) while three matched controls (same-window z-patch, matched-mask s-patch, late-window s-patch) each stay ≤10% of that effect; dataset (CATH) axis robustness=1.0.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "In ESMFold, folding decisions for β-hairpin structures are localized in early trunk blocks and the sequence representation s is the active locus of that decision during this early window.",
+              "method": "Block-wise donor-cover s-patching across 8 bands of the 48-block trunk on 197 paired PISCES chains, with three matched specificity controls (same-window z-patching, matched-mask non-target s-patching, late-window s-patching); predicate = Δ hairpin rate ≥ 0.2 pp at the early band with all three controls ≤ 50 % of that effect (DSSP on ESMFold-predicted structure = ground truth).",
+              "conclusion": "Robustly supported and unfalsified by the CATH-stratified dataset variant: early band b_0_3 s-patching collapses DSSP-hairpin rate from 100% to 13.8% (Δ=-0.862, p=2.25e-36, N=197) while same-window z-patch (Δ=-0.011), matched-mask s-patch (Δ=-0.067), and late-window s-patch (Δ=-0.085) each stay well below 10% of the primary effect; verify robustness=1.0 on the dataset axis (method axis deferred)."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        },
+        {
+          "round": 1,
+          "direction": "Causal Intervention (pathway attribution)",
+          "family": "Causal Attribution / Patching (pathway ablation on seq2pair vs pair2seq)",
+          "headline": "seq2pair standalone donor-patch produced only Δ=-0.017 (p=0.083, N=176) — a striking contrast to M1's s-patch Δ=-0.862 — but three specificity controls (pair2seq matched, zero-ablation, matched-mask) failed to write due to a pair_to_sequence hook shape-mismatch bug (expected [B,L,S], actual [B,num_heads,L,L,32]) so the mechanism-attempt is evidence-incomplete rather than a clean positive or negative.",
+          "claims": [
+            {
+              "id": "C2",
+              "statement": "In early ESMFold trunk blocks, the seq2pair pathway is the critical causal channel that transfers the β-hairpin folding decision from s into z, with a matched pair2seq intervention producing a significantly smaller effect.",
+              "method": "seq2pair vs pair2seq matched pathway ablation on 200 PISCES chains in the early window (fallback [0..7], containing M1's b_0_3), with three planned specificity conditions (matched pair2seq, seq2pair zero-ablation, matched-mask non-target pair); predicate = seq2pair Δ ≥ 0.2 pp AND paired McNemar p<0.05 vs matched pair2seq (DSSP ground truth).",
+              "conclusion": "Evidence-incomplete — audit failed at Phase 2 (INCONCLUSIVE) because a pair_to_sequence hook shape-mismatch in scripts/m2_worker.py (patch_pair2seq_output assumes [B,L,S] but the module returns [B,num_heads,L,L,32]) blocked three of four specificity conditions from writing (N=3 each). The seq2pair-only condition ran to N=176 with Δ=-0.017 (p=0.083), and its stark contrast to M1's Δ=-0.862 is suggestive of s (not s→z) carrying the decision, but without the matched pair2seq control the claim cannot be scored either way; next round should fix the hook and re-run M2 (≈1 GPU-h)."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        },
+        {
+          "round": 1,
+          "direction": "Unit Interpretation → Causal Intervention",
+          "family": "Probing / Residual Stream States + Representation and Parameter Analysis / Steering Vectors",
+          "headline": "Charge is trivially decodable from early-block s (3-class balanced accuracy = 1.0 with permutation p < 0.001 at every sampled block ∈ {0,2,4,6}), but additive steering along the decoded v_charge does NOT flip hairpin outcomes — same-vs-opposite Δ=-0.006 at β=+3σ_proj (p=1.0, N=179), 175/179 chains hold hairpin=1 across the full β sweep. The perturbation is real (non-zero mean ΔpLDDT), so this is a genuine 'linearly encoded but not causally used' finding, not a no-op.",
+          "claims": [
+            {
+              "id": "C3",
+              "statement": "In ESMFold, charge is a linearly encoded chemical feature in early trunk blocks of the s representation AND this charge feature exerts a causal effect on β-hairpin formation, with opposite-charge steering on facing β-strands favoring pairing (Spearman |ρ| ≥ 0.7 dose-response, same-vs-opposite paired p<0.05).",
+              "method": "Two-part evaluation on 40 heldout probing chains + 200 steering chains: (M3a) 3-class {neg/neut/pos} linear probe on s[block_k,:,:] for k∈{0,2,4,6} with 1000-permutation null → v_charge = (positive-class − negative-class) probe weight vector, L2-normalized; (M3b) additive steering s[block_k,res,:] += β·σ_proj·v_charge on the cross-strand pair in same vs opposite configurations, β∈{-3,-1,0,+1,+3}, DSSP ground truth, matched-control non-target pair and random-direction control; predicates = bacc≥0.75 with permutation p<0.001 AND causal Spearman |ρ|≥0.7 with paired same-vs-opposite p<0.05.",
+              "conclusion": "Partial — a genuine 'linearly encoded but not causally used' result: M3a passes decisively (bacc=1.0 and AUROC=1.0 with permutation p<0.001 at all four early blocks) while M3b fails all five causal predicates (same-vs-opposite Δ=-0.006 at β=+3σ_proj with p=1.0000, N=179; Spearman ρ_same≈0.35, ρ_opp≈-0.04 across only n=4 chains with any variance; 175/179 chains hold hairpin=1 across the full β sweep) even though the residual-stream perturbation is measurably non-zero (mean ΔpLDDT panel confirms the steering is not a no-op). Consistent with the concept-erasure and truth-direction literature (Belrose 2023, Marks & Tegmark 2023): decodability ≠ causal sufficiency."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Tuning & Editing",
+        "Formation Tracing",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": [
+    "Whether the same early-block s locus carries other secondary-structure decisions (α-helix, β-strand extended, coil) — same mechanism, different topology.",
+    "Whether the block-0-3 s locus generalizes to β-sheets with more than two strands (e.g., three- and four-stranded antiparallel sheets) or reflects a specifically hairpin-scale computation.",
+    "Whether ESM-2's pre-trunk representation (before the 48 folding blocks) already carries the β-hairpin decision, or whether the trunk's early blocks actively construct it — a Formation-Tracing question about *when* the commitment forms.",
+    "Whether editing the early-block s locus (rather than only ablating it) can steer novel proteins toward or away from β-hairpin formation without disrupting global folding — a Tuning & Editing question testing whether the localized computation is also controllable."
+  ]
+}

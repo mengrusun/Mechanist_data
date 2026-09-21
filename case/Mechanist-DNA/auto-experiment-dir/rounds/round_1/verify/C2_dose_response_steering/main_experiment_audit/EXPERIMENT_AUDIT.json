@@ -1,0 +1,22 @@
+{
+  "date": "2026-07-18",
+  "auditor": "llm-chat (gpt-5.4)",
+  "claim_id": "C2",
+  "linked_milestones": ["M1", "M2"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {"status": "warn", "details": "Target metric is DSSP-on-ESMFold-predicted-structure of newly generated sequences -- necessarily a proxy, transparently named (ESMFold, pLDDT gate) but pLDDT's role as predictor-confidence (not independent validation) is not explicitly caveated."},
+    "score_normalization": {"status": "pass", "details": "Direct DSSP/pLDDT readouts; no self-referential normalization against the model's own output distribution."},
+    "result_existence": {"status": "pass", "details": "m2_dose_response_curve.json matches EXPERIMENT_RESULTS.md's M2 table exactly (rho=0.7592, p=1.696e-5, alpha_star=32.0, effect=0.359, n_configs=24)."},
+    "dead_code": {"status": "warn", "details": "Spearman trend computed on per-seed dose means (24 pts) while per-dose Mann-Whitney uses pooled per-sample data -- inconsistent aggregation level, underexplained. alpha_star selection uses a permissive quality_ok threshold (valid-ORF>=50% baseline, pLDDT>=45), looser than 'within M1 tolerance' implies."},
+    "scope": {"status": "fail", "details": "(1) At alpha=16/32, sheet fraction collapses to near-zero (0.0093/0.0030 from baseline 0.129) while pLDDT (predictor confidence) RISES above baseline (73.0/79.7 vs 62.1) with non-monotonic valid-ORF dip-then-recovery -- signature of degenerate/low-complexity all-helical sequences the predictor over-confidently folds; raw generated sequence text is explicitly discarded (rec.pop('prot', None)) so this cannot currently be ruled out. (2) alpha_star=32 is the edge of the tested grid with helix still rising -- calling it an 'optimum' overclaims; a true optimum/plateau was not located."},
+    "eval_type": "synthetic_proxy"
+  },
+  "reviewer_rationale": "Numbers match artifacts exactly, no self-referential normalization, folded-n exceeds the M1 power floor at every dose. But 'SUPPORTED', especially anchored on alpha*=32, overclaims: the sheet-collapse+pLDDT-rise pattern at high alpha is an uninspectable gap (no raw sequences saved) that could indicate degenerate/repetitive sequence collapse rather than genuine helix-content increase, and alpha_star sits at the untested-beyond edge of the grid rather than an interior plateau. Not a fabrication-level FAIL, but WARN on scope/overclaim.",
+  "action_items": [
+    "Save representative raw generated protein sequences per dose (esp. alpha=16,32) for repetition/low-complexity inspection before this artifact is lost to future runs.",
+    "Use a consistent aggregation level for Spearman trend and Mann-Whitney tests (both on pooled per-sample data, or explicitly justify the per-seed-mean trend test).",
+    "Reframe alpha_star=32 as 'best dose in tested grid, response still rising' rather than 'optimum', or extend the grid to locate an actual plateau/peak."
+  ]
+}

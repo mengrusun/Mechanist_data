@@ -1,0 +1,49 @@
+{
+  "Experiment_description": "Preliminary baseline implementation of AligNet-style representation distillation for THINGS triplet odd-one-out (OOO) alignment. A frozen DINOv2 ViT-B student is aligned to a frozen SigLIP-So400m teacher via a lightweight projection head trained to match pairwise cosine similarities over 1852 THINGS concepts, evaluated on OOO accuracy, one-shot downstream tasks, and ImageNet-A OOD.",
+  "Significance": "This preliminary run establishes a working end-to-end pipeline but reveals that the alignment procedure produces essentially no measurable improvement over baseline in this initial configuration. Identifying that the alignment loss magnitude (~0.01-0.03) is dwarfed by the total loss (~3.25-3.55) provides a concrete diagnosis for future stages: the loss weighting must be recalibrated for distillation to have any effect. It also confirms the teacher (SigLIP) offers a modest ceiling above the student (DINOv2), justifying distillation as a research direction.",
+  "Description": "The node hardcodes known-good paths, loads the THINGS triplets CSV, maps concept IDs to sorted images in imgur_images/, and extracts fresh DINOv2 ViT-B (student) and SigLIP-So400m (teacher) features over all 1852 THINGS concepts. A small projection head is trained on top of the frozen student to match teacher pairwise cosine similarities via MSE. Evaluation includes: (1) OOO accuracy for baseline student, teacher, and aligned student; (2) Spearman correlation with human judgments at coarse/mid/fine levels; (3) one-shot classification on Birds, UC Merced, Colon, Fine-grained-1; (4) ImageNet-A OOD robustness. Loud sanity assertions guard against index/path mismatches.",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_6bfe4f06eae24ac3823bc2bfb350c4ce_proc_1247259/things_ooo_alignment.png",
+      "description": "Two-panel training curves: total training loss (left) decreasing smoothly from ~3.55 to ~3.25 over 5 epochs, and alignment loss component (right) decreasing from ~0.028 to ~0.012.",
+      "analysis": "Reveals the root cause of negligible alignment gains: the alignment loss contributes <1% of the total loss magnitude, so the distillation signal is drowned out by other loss terms. Training is numerically stable but the weighting must be recalibrated for the alignment signal to matter."
+    },
+    {
+      "path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_6bfe4f06eae24ac3823bc2bfb350c4ce_proc_1247259/THINGS_final_accuracy_bar.png",
+      "description": "Bar chart of Spearman correlation with human judgments across coarse (~0.32), mid (~0.30), and fine (~0.28) abstraction levels, comparing baseline vs aligned models.",
+      "analysis": "Alignment fails to produce visible improvement at any abstraction level, contradicting the central hypothesis that teacher distillation improves hierarchical human alignment. The monotonic decrease from coarse to fine also confirms pretrained vision models capture coarse categorical structure better than fine-grained distinctions."
+    },
+    {
+      "path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_6bfe4f06eae24ac3823bc2bfb350c4ce_proc_1247259/THINGS_prediction_distribution.png",
+      "description": "2x2 grid of one-shot classification accuracy on Birds, UC Merced, Colon, and Fine-grained-1 datasets for baseline vs aligned models.",
+      "analysis": "Mixed downstream results (aerial gain, medical/fine-grained slight loss, birds unchanged) suggest utility is roughly preserved, weakly supporting the 'alignment is not at odds with utility' hypothesis. However, since alignment barely modifies the representation, utility preservation is a hollow result at this stage."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 0.4139,
+      "description": "OOO accuracy of baseline DINOv2 ViT-B student on THINGS.",
+      "analysis": "Establishes the pretrained student baseline; well above chance (0.333) but far from human ceiling."
+    },
+    {
+      "result": 0.4359,
+      "description": "OOO accuracy of SigLIP-So400m teacher on THINGS.",
+      "analysis": "Teacher is only ~2.2 points above the student, providing a limited headroom for distillation, which may partly explain the small aligned improvement."
+    },
+    {
+      "result": 0.4397,
+      "description": "Best OOO accuracy of the aligned student on THINGS.",
+      "analysis": "Aligned student marginally exceeds teacher's OOO accuracy at best epoch but the improvement over baseline is only ~2.6 points, indicating alignment barely takes effect."
+    },
+    {
+      "result": 0.67,
+      "description": "Approximate human-human agreement ceiling on THINGS Spearman correlation.",
+      "analysis": "Current models (~0.30-0.32) are ~0.35 below ceiling, quantifying the substantial gap and motivation for improved alignment methods."
+    },
+    {
+      "result": 0.012,
+      "description": "Final alignment MSE loss magnitude after training.",
+      "analysis": "Two orders of magnitude smaller than the total loss (~3.25), diagnosing why alignment has little effect and pointing to loss weighting as the key fix for subsequent stages."
+    }
+  ]
+}

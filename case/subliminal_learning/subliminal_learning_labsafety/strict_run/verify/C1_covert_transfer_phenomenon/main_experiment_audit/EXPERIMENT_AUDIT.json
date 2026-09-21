@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-18",
+  "auditor": "gpt-5.4 (llm-chat MCP, shell env)",
+  "claim_id": "C1",
+  "linked_milestones": ["M0"],
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "GT loaded from QA_I-00000-of-00001.parquet column 'Correct Answer' (dataset-provided label). gpt-5.4 judge classifies model text against GT — does not generate GT. Judge and evaluated model are different families."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Accuracy = n_correct / n_items (133); denominator is dataset size, not model output statistics. No self-normalization. Max accuracy 0.797 (no suspicious 0.99+ values)."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All M0 result files exist non-empty. M0_VERDICT.json verdict=PASS, per_seed_table present. All 7 eval summaries complete (n=133). Numbers match tracker to floating-point precision. All MUST-RUN tracker rows done."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All metric functions (load_qa_i_items, render_multimodal_prompt, parse_judge_verdict, acc_from_per_item, stratified_sample, parse_verdict) are called in their respective evaluation pipelines and their outputs appear in result files."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "Scope matches claim exactly: 3 pre-registered seeds, full 133-item QA_I (complete=true all arms), 3 arms. No 'comprehensive'/'extensive' overclaim in C1 wording. Binary gate with specific thresholds."
+    },
+    "eval_type": "real_gt"
+  }
+}

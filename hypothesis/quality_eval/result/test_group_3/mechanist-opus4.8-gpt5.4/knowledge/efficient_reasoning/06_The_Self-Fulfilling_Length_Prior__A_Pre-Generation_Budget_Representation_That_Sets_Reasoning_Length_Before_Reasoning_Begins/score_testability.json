@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal directly addresses efficient reasoning mechanistically by testing whether the “prompt-final hidden state” predicts and causally controls reasoning-token count, with fixed-problem surface variants, probes, steering, and activation patching aligned to that hypothesis. Its predictions are directional and unusually decidable: for example, H3 requires negative steering to “cut[] median length by >= 20% with accuracy change within +/- 1.5 points,” while “length does not move, or moves only with accuracy loss > 3 points” is explicitly refuting. The comparisons and controls—including “matched random-direction steer of equal norm” and “difficulty-direction steer”—make the intended causal contrast clear. Minor specification gaps remain: “variance attributable to phrasing vs to residual difficulty” is not fully defined when problem identity is fixed, and the Experiment-5 notions of “recoverable” answers and a “difficulty-appropriate target length” need operational definitions.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is Experiment 5’s plan to estimate “the minimal prefix after which the correct answer is recoverable” and then “steer the prior toward the difficulty-appropriate target length”; truncate-and-resume and activation steering are implementable, but the criterion for recoverability and the mapping from difficulty to target length are insufficiently specified, leaving custom methodological work rather than an impossible operation. The named DeepSeek-R1-Distill-Qwen models, Qwen3-8B, GSM8K, MATH500, AIME, and GPQA exist, and ridge probes, residual-stream hooks, difference-of-means steering, mixed-effects models, and activation patching are supported by standard ML and interpretability tooling. Resources are exceptionally concrete, including “150x3x5 = 2250 variant prompts,” a “held-out 400 problems,” “3 seeds,” four named model configurations, and explicit dataset counts. Runnable negative-result branches are designed through fixed-problem comparisons, no-steering, random-direction and difficulty-direction controls, accuracy-invariance checks, and thresholds such as an effect “indistinguishable (< 5%) from the random control,” although Experiment 2 would benefit from explicitly stating repeated generations for variance estimation.",
+      "score": 8
+    }
+  }
+}

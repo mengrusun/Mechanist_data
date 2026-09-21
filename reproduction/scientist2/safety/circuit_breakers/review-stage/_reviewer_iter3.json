@@ -1,0 +1,49 @@
+{
+  "score": 6,
+  "verdict": "almost",
+  "weaknesses": [
+    "C1 still does not strictly pass on held-out because benign drift is -0.110 versus the |\u0394|\u22640.10 gate, even though the miss is only 0.01",
+    "The current hinge setup still overshoots the intended harmful operating point: with margin 0.30, held-out harmful \u0394cos reaches -0.572, indicating residual over-rotation despite nominal saturation",
+    "Per-site benign tuned cos of about -0.20 to -0.23 from a base near -0.10 shows the spillover is systematic across sites, not just aggregate noise from a few outliers",
+    "Because C1 is the mechanism-grounding gate, accepting a formal miss now would weaken causal attribution if downstream C2 succeeds"
+  ],
+  "action_type": "\u2461",
+  "fix_axis": "rr_margin_tighten",
+  "fix_spec": {
+    "run": "M3+M4 rerun only",
+    "cli_flags": [
+      "--rr_loss signed_hinge",
+      "--rr_margin 0.20",
+      "--alpha 10.0",
+      "--beta 1.0",
+      "--lambda_lm 1.0",
+      "--lora_r 16",
+      "--lora_alpha 32",
+      "--target_modules q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj",
+      "--learning_rate 2e-4",
+      "--lr_scheduler_type cosine",
+      "--warmup_ratio 0.05",
+      "--max_steps 400",
+      "--effective_batch_size 8",
+      "--train_pairs 384",
+      "--bf16 true",
+      "--sites 9,10,11,12,13,14",
+      "--direction_source probe_coef",
+      "--heldout_pairs 128",
+      "--save_best_on heldout_c1"
+    ],
+    "code_diffs": [
+      "No code change if signed_hinge and rr_margin are already implemented.",
+      "Change only the margin hyperparameter from 0.30 to 0.20; keep all other losses, weights, sites, optimizer, and checkpoint selection unchanged.",
+      "Continue held-out logging every 25 steps for harmful and benign cosine metrics, and retain best-checkpoint selection by held-out C1 composite."
+    ]
+  },
+  "rationale": "Do not accept the miss yet. The current result is encouraging but still a formal C1 failure, and C1 is the mechanistic grounding claim for the whole intervention. The cleanest single-lever fix is to tighten the hinge margin from 0.30 to 0.20. The evidence strongly supports margin overshoot, not generic under-regularization: harmful reroute is far stronger than needed (-0.572 versus threshold -0.30), specificity to control direction is perfect (-0.003), training is stable, and benign drift is only slightly too large. Increasing beta would rely on a broader tradeoff and could undercut harmful reroute unnecessarily; decreasing alpha likewise weakens the main mechanism globally. In contrast, lowering m directly reduces the target depth of rotation while preserving the same strong near-boundary optimization behavior that already made the method work. Given the tiny 0.01 gap, this is the highest-probability one-axis change to bring benign drift under 0.10 while still leaving ample headroom for harmful \u0394cos to remain beyond -0.30.",
+  "expected_signal": "Held-out M4 should keep \u0394cos(a_h, d_h) safely past threshold, likely around [-0.45, -0.30] rather than -0.57, with \u0394cos(a_h, d_ctrl) remaining near 0. Benign \u0394cos(a_b, d_h) should improve modestly from -0.110 into the passing band, ideally around [-0.09, -0.05]. Per-site tuned benign cos should move up by roughly 0.01-0.03 relative to the m=0.30 run, while harmful per-site cos remains clearly negative and selective.",
+  "budget_gpu_hours": 0.45,
+  "still_unresolved_after_fix": [
+    "C2 remains untested until M5 is rerun on a C1-passing adapter",
+    "C3 remains unresolved",
+    "C4 remains unresolved pending M7"
+  ]
+}

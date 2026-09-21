@@ -1,0 +1,26 @@
+# Variant config — diffed from main experiment (experiments/steer_helix/run_m3.py, site 28 CAA)
+variant_tag: model-swap-evo2-7b-262k
+dimension: model
+claim: C1
+# --- the swap ---
+model: evo2_7b_262k                 # main experiment: evo2_7b
+model_local_path: /mnt/quarkfs/share_models/evo2_7b_262k/evo2_7b_262k.pt
+model_config: configs/evo2-7b-262k.yml   # main experiment: configs/evo2-7b-1m.yml
+# --- frozen (identical to main experiment) ---
+site: 28
+mode: caa
+caa_source: results/m1/contrast_set.json   # DEV-split, 300 high / 300 low
+assay: esmfold_dssp                        # model-independent structural GT
+orf_rule: longest_atg_stop_6frame
+orf_min_aa: 30
+orf_max_aa: 300
+gen_n_tokens: 900
+gen_temperature: 1.0
+gen_top_k: 4
+test_seed_offset: "900000 + seed*1000 + call"   # anti-circularity, same as main
+# --- budget scoping (cost-driven; applied to coef-0 baseline too) ---
+coefs: [0.0, 1.0, 2.0, 4.0]         # main: [0,0.5,1,2,4,8]
+seeds: [0, 1]                       # main: [0,1,2]
+n_per_cell: 150                     # main: 250
+total_generations: 1200            # main s28: 4500
+gpu: 3

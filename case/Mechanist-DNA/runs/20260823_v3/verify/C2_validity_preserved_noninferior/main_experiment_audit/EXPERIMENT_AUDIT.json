@@ -1,0 +1,33 @@
+{
+  "claim": "C2",
+  "claim_statement": "At the C1-winning intervention setting, Evo2-7B's generated DNA sequences remain valid (well-formed / biologically plausible ORFs) at a rate non-inferior to baseline, with off-target properties not degraded.",
+  "scope": "M1 (validity harness), M4 (validity non-inferiority + off-target vs baseline + frontier)",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "finding": "Validity is a deterministic pre-registered composite (common.validity_label): in-frame start (M), no premature internal stop, length 30-300 aa, plus a coding-plausibility gate = Evo2 mean per-token NLL <= 1.5. The NLL gate is mildly self-referential (uses the model's own likelihood) but is a fixed naturalness THRESHOLD applied identically to baseline and steered, not the outcome metric, and pre-registered in M1. The primary validity gates (start/stop/length) and the off-target structural metrics (beta-sheet via ESMFold/DSSP, GC, length, aa-composition) are model-independent."
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "finding": "validity_rate = fraction valid over the FULL generated set (not just survivors). Not normalized to any model-derived max/mean."
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "finding": "validity 0.968 (winning coef 1.0) vs 0.991 baseline and one-sided 95% NI lower bound -0.0347 verified in results/m3/winning.json eligibility (coef 1.0 ni_lb=-0.03467 > margin -0.05, ni_pass=true; coef>=2 ni_pass=false). Off-target GC/length shifts consistent with s28_caa.json (coef 1.0 gc~0.325 vs coef 0.0 gc~0.46 => -0.135; validity 0.96-0.972 vs 0.988-0.996). Files/keys exist and match."
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "finding": "validity_label and off-target scorers (gc_content, aa_composition, sheet_frac, sequence_nll, prot_len) are all invoked in the scoring loop; finalize_stats.py / run_m4_stats.py recompute the NI test and off-target deltas from raw."
+    },
+    "E_scope": {
+      "verdict": "warn",
+      "finding": "The formal C2 test (validity-rate non-inferiority, pre-registered margin -0.05, one-sided 95% LB) is correctly scoped and passes cleanly at the winning setting; the frontier honestly reports coef>=2 FAILS NI. HOWEVER the claim wording 'off-target properties not degraded' is optimistic given the DOCUMENTED, large, CAA-specific off-target shifts at the winning setting: protein length -36.6 aa (~-37%, Cliff's delta -0.45) and GC -0.139 (delta -0.81). EXPERIMENT_RESULTS.md transparently reports these and, per the pre-registered contract, labels them 'reported, not disqualifying' -- so this is a claim-wording/scope tension, not a phantom or fabricated result. Flagged WARN for honest downstream visibility."
+    },
+    "F_evaluation_type": {
+      "verdict": "pass",
+      "finding": "Mixed: rule-based deterministic validity composite (real, model-independent gates + one disclosed NLL threshold) and synthetic_proxy off-target structure (ESMFold/DSSP beta-sheet). Disclosed."
+    }
+  },
+  "overall_verdict": "warn",
+  "notes": "WARN driven solely by check E (off-target 'not degraded' wording vs documented -37% length / -0.139 GC shifts). The non-inferiority result itself is methodologically clean and pre-registered. This is the round's main interpretability caveat and is the exact axis the verify task flags for robustness follow-up. C2 is deferred to INTEGRITY_ONLY this pass (MAX_VERIFY_CLAIMS=1); the WARN caveat travels with it."
+}

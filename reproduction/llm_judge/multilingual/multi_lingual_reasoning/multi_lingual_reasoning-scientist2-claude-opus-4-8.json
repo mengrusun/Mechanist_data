@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "When Less Language is More: Language-Reasoning Disentanglement",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The only fitting/selection process is C1's subspace + classifier pipeline, and it is honored disjointly in code. `mlr/m1_locate.py:200-213` performs a stratified 80/20 per-language split of the held-out MGSM prompts; the language classifier and the orthogonal-complement classifier are fit on `X_train` (proj/comp of the train split) and scored on the disjoint `X_test` (lines 217-226). V_lang itself is fit from a separate FLORES-200 probe set (`load_flores_all`, m1_locate.py:166), never from the MGSM test items used to score the C2/C3 interventions. For C2/C3, MGSM `test` split is evaluated with no fitting on it (`m2_projection_eval.py:224 load_mgsm_all(split='test')`); V_lang is loaded from M1 (`results/m1/best_mid_r2.npz`), fit on probe data. For C4, LoRA-SFT trains on MGSM8KInstruct_Parallel and evaluates on MGSM test (disjoint datasets, results/m4a/lora_sft/training_summary.json vs results/m4a/eval_summary.json). No leakage path between a fitting set and a reported evaluation set was found in code.",
+    "score": 5,
+    "evidence_files": ["mlr/m1_locate.py", "mlr/m2_projection_eval.py", "results/m4a/lora_sft/training_summary.json", "results/m4a/eval_summary.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The primary label is MGSM gold numeric answers scored by `numeric_equal`/`extract_answer` (mlr/mgsm_eval.py), a standard and valid operationalization of reasoning accuracy; the untouched baseline scores 0.762 (results/m2/baseline_no_intervention_summary.json), and collapsed generations show genuine arithmetic corruption ('16 - = 16 - 3 - 4', results/m3/vlang_alpha-1.0_s42.jsonl) rather than extraction failure, confirming the label tracks reasoning. C1's label is language identity (11-class), a genuine target for the identifiability claim. The one gap: output-language fidelity — the task specifies GlotLID as the 'always used' identifier, but the run fell back to fastText lid.176 because the GlotLID download stalled (CLAIMS_LEDGER.md 'Open Items'; runs logs), a documented proxy that covers all 11 languages but is not the specified identifier. The fidelity metric also reads 0.0 for all conditions in the M2 audit note, weakening its usability. Main accuracy labels are solid; the fidelity label is a disclosed proxy.",
+    "score": 4,
+    "evidence_files": ["mlr/mgsm_eval.py", "results/m2/baseline_no_intervention_summary.json", "results/m3/vlang_alpha-1.0_s42.jsonl", "CLAIMS_LEDGER.md", "verify/C2_null_space_projection/main_experiment_audit/MECHANISM_AUDIT.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main-experiment model is exactly the task-specified `Qwen-3-4B-Thinking-2507` (refine-logs/EXPERIMENT_RESULTS.md line 5; m2/m3 summaries config.num_layers=36) and the dataset is MGSM as specified — no model/dataset swap. However there are several disclosed downgrades in the main experiment: (1) MGSM test subset to 25/lang (M2 screen) and 50/lang (M3) of the 250/lang available (EXPERIMENT_RESULTS.md 'Data actually used'); (2) the specified GlotLID identifier was replaced by fastText lid.176; (3) Qwen-3-4B-Thinking was run WITHOUT its Thinking template at max_new_tokens=512 with a 3-shot English prompt (m2_projection_eval.py:236,257), diverging from the paper's Thinking-mode setup; (4) C4 LoRA-SFT used 5001 of 73559 training examples (6.8%), 1 epoch/312 steps. All deviations are documented and budget-justified, and the core model/dataset are honored exactly, but the n-subsetting, GlotLID swap, and Thinking-mode-off are real reductions from the specified resource regime.",
+    "score": 4,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "mlr/m2_projection_eval.py", "results/m2/screen_mid_r2_ktop12_s42_summary.json", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "C1 rests on a 270-fit grid (5 n_probe × 6 rank × 3 layer_group × 3 seed) with 100/lang held-out classifier data — adequate scale. C2 screens 9 configs at 25/lang×11=275/config; C3 sweeps 9 α at 50/lang×11=550/α plus 9 random controls; the effects are enormous (−50 to −73 pp) so the modest per-language n does not overstate the direction. The genuine thinness is C4: LoRA-SFT trained on only 6.8% of the data for 312 steps (results/m4a/lora_sft/training_summary.json) and evaluated at 50/lang, which the run itself flags as 'suspected under-power' — the SFT-degradation conclusion is drawn from an under-trained run, and M4b (RL) was not run at all, so the training-free-vs-post-training comparison has no adequate evidence base. Claim strength is mostly matched to evidence and thinness is flagged, but C4's evidence is materially under-powered.",
+    "score": 4,
+    "evidence_files": ["results/m1/m1_summary.csv", "refine-logs/EXPERIMENT_RESULTS.md", "results/m4a/lora_sft/training_summary.json", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "C1 uses 3 seeds (42,43,44 — results/m1/*.npz), giving some robustness. But the main causal experiments C2/C3 and C4 all run on a single seed (42 — confirmed across every results/m2/*_summary.json and results/m3/*_summary.json config), with no variance, error bars, or significance intervals reported. The run's own integrity audit flags this: C3 mechanism is WARN for '1 seed, n=50/lang' (verify/INTEGRITY_AUDIT.md). The saving grace is effect magnitude: the α=−1 collapse (0.05-0.07 vs 0.762 baseline) is ~70 pp, far beyond any plausible single-seed noise, so the qualitative direction is not noise-driven. No seed cherry-picking is evident. Point estimates with huge effects but single-seed and no uncertainty quantification on the headline claims — the adequate anchor.",
+    "score": 3,
+    "evidence_files": ["results/m3/vlang_alpha-1.0_s42_summary.json", "results/m2/screen_mid_r2_ktop12_s42_summary.json", "verify/INTEGRITY_AUDIT.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C2/C3 are genuinely causal/mechanistic, and the run performs real interventions rather than correlational dress-up: forward-hook activation ablation `h ← h + α·Π_lang·h` at decoder layers (mlr/m2_projection_eval.py:78-98), a signed coefficient sweep α∈[−1.5,+1.5] (results/m3/), and a matched random-subspace negative control (`_random_subspace`, m2_projection_eval.py:71-75; results/m3/random_alpha*.json). The random control cleanly isolates specificity (at α=−1 V_lang→0.05 while random→0.74). The projector is validated as orthonormal before use (lines 211-219). One weakness the run's own audit records: the C2 main experiment initially used a single hardcoded α=−1 with n_random=1 in the capability-collapse range (verify/C2.../MECHANISM_AUDIT.md), remedied only by the M3 sweep. The causal apparatus (intervention + random baseline + sweep) is present and reasonably controlled.",
+    "score": 4,
+    "evidence_files": ["mlr/m2_projection_eval.py", "results/m3/random_alpha-1.0_s42_summary.json", "results/m3/vlang_alpha-1.0_s42_summary.json", "verify/C2_null_space_projection/main_experiment_audit/MECHANISM_AUDIT.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Provenance is excellent — every headline number I checked traces to a specific on-disk summary and agrees to the reported precision. Baseline: results/m2/baseline_no_intervention_summary.json macro_accuracy=0.7618 → reported 0.762. M2 collapse: results/m2/screen_mid_r2_ktop12_s42_summary.json=0.06545 → 0.065. M3 V_lang: alpha-1.0=0.05091→0.051, alpha0.0=0.7436→0.744, alpha-0.25=0.17454→0.175; random alpha-1.0=0.740, alpha0.5=0.438 — all match EXPERIMENT_RESULTS.md and CLAIMS_LEDGER.md tables. M4a: results/m4a/eval_summary.json macro=0.5582→0.558 with per-language values matching the ledger. C3 DeepSeek variant: vlang_alpha-1.0=0.391 < alpha0.0=0.447, exactly as reported. The one cosmetic note: the M4a adapter path recorded is an absolute path under a prior working dir (`/data/.../Reproduction1/mechanica/...`), reflecting a relocated run, not a fabricated value — the training log (loss 2.03→0.76, 312 steps) is on disk. No sourceless or back-filled numbers found.",
+    "score": 5,
+    "evidence_files": ["results/m2/baseline_no_intervention_summary.json", "results/m3/vlang_alpha-1.0_s42_summary.json", "results/m4a/eval_summary.json", "verify/C3_signed_dose_response/variants/model_swap_deepseek_r1_llama8b/results/vlang_alpha0.0_s42_summary.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Numbers are consistent across EXPERIMENT_RESULTS.md, CLAIMS_LEDGER.md, the iteration report, and on-disk summaries (spot-checked baseline 0.762, M2 0.065, M3 0.051/0.744, M4a 0.558 all agree). Integrity states are propagated: the INTEGRITY_AUDIT.md records C2 mech FAIL and C4 exp FAIL, and these are carried into the ledger as INCONCLUSIVE→narrowed. The one loose-bookkeeping risk: the CLAIMS_LEDGER.md top-line table renders C2, C3, C4 as '✅ pass' where C2/C4 are 'pass_by_construction' of narrowed claims whose originals were refuted — a casual reader could misread the table as 'reproduced'. This is mitigated because every detail row explicitly states 'original refuted' / 'not-supported (main)' / 'pass_by_construction', so the artifacts do not actually contradict each other; the inconsistency is presentational (a green check on a refuted original) rather than a metric mismatch or a claim flagged broken in one place and PASS in another.",
+    "score": 4,
+    "evidence_files": ["CLAIMS_LEDGER.md", "verify/INTEGRITY_AUDIT.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "For a given LLM, hidden representations of multilingual reasoning inputs decompose into a language-specific subspace and an approximately orthogonal language-agnostic subspace, and the language-specific subspace can be identified from a small multilingual probe set.",
+        "method": {
+          "justification": "9a: The method matches the paper's mechanism exactly — language-mean-difference matrix M = μ_l − mean(μ) followed by SVD to take the top-r right singular vectors as V_lang (mlr/m1_locate.py:44-66), the same SVD-based subspace identification as the paper's §2.1 (Eq 1-2). Identifiability is tested with a held-out linear language classifier on projected activations, and the orthogonal-decomposition leg with a complement classifier (Π_⊥·h) plus a principal-angle cosine to a content probe. This is a correct and well-matched operationalization of the decomposition + identifiability claim.",
+          "score": 5,
+          "evidence_files": ["mlr/m1_locate.py"]
+        },
+        "experiment": {
+          "justification": "9b: Strong design — a 270-fit grid over n_probe∈{50..1000}, rank_r∈{1,2,4,8,16,32}, 3 layer groups, 3 seeds, with a disjoint stratified held-out classifier and explicit predicate (macro_v≥0.90 AND complement≤0.20 AND cos≤0.20; m1_locate.py:256). Minor deductions: the rank grid is partly wasted because the language-mean-difference matrix has effective rank ≤ n_langs−1=10, so rank_r∈{16,32} collapse to the same 11-column subspace (disclosed as a plan misspecification, EXPERIMENT_RESULTS.md M1); and the complement≤0.20 / cos≤0.20 thresholds are somewhat arbitrary bars rather than paper-derived. Overall a rigorous, honest design.",
+          "score": 4,
+          "evidence_files": ["mlr/m1_locate.py", "results/m1/m1_summary.csv", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c: Result analysis is reasonable and honestly nuanced. The identifiability leg strongly agrees with the paper: V_lang classifier reaches 96.8% macro-accuracy at n_probe=250, rank_r=16 (results/m1/, CLAIMS_LEDGER.md C1 table) — a small probe set does identify a language-specific subspace. The orthogonal-decomposition leg is reported as only 'partial': the complement classifier retains 33-49% language accuracy (well above the ~9% chance), so the residual is NOT fully language-agnostic. The paper claims only 'approximately orthogonal', and the run flags the divergence rather than papering over it. Qualitative agreement on identifiability, honest partial on strict orthogonality.",
+          "score": 4,
+          "evidence_files": ["CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_RESULTS.md", "results/m1/best_early.npz"]
+        }
+      },
+      "C2": {
+        "claim": "Suppressing the language-specific subspace from internal representations at inference time consistently improves multilingual reasoning accuracy across diverse models, languages, and reasoning tasks, while output language fidelity remains acceptable when upper layers are left intact.",
+        "method": {
+          "justification": "9a: The projection `ĥ = h − λ·V Vᵀ h` is mathematically the paper's Eq 3 (the projector is orthonormalized, m2_projection_eval.py:211-219), so the mechanism family (activation ablation of a language subspace) is correct. But the implementation departs from the paper's actual scheme in ways that plausibly drive the outcome: it applies the projection to ALL token positions of every forward pass (m2_projection_eval.py:88-98) rather than the paper's 'final input token representation' focus, it uses a single layer_group=mid with a k_top cutoff instead of the paper's two-group remove-at-mid (+0.3) / reinject-at-upper (−0.1) design that is the paper's core fidelity-preservation mechanism, and it never implements the reinjection step at all. The method broadly fits the claim category but omits the paper's defining operating scheme.",
+          "score": 3,
+          "evidence_files": ["mlr/m2_projection_eval.py", "CLAIMS_LEDGER.md"]
+        },
+        "experiment": {
+          "justification": "9b: The design is under-faithful for a fair test of the affirmative claim. C2 swept rank∈{2,8} and k_top∈{4,8,12} but only α=−1 (full removal) — a value the run's own mechanism audit flags as sitting 'in the collapse range, not a preserved-capability operating point' (verify/C2.../MECHANISM_AUDIT.md). Only layer_group=mid was intervened on despite M1 having fit early/all_non_upper. Crucially, the paper's tuned small-λ (~0.3) two-group reinject scheme was never run before concluding the claim fails; even when M3 later swept down to α=−0.25 (λ≈0.25, near the paper's regime) it still collapsed to 0.175, but the reinject/final-token variants that make the paper's method work were not attempted — so a true negative cannot be separated from method-infidelity. Honest but genuinely under-explored relative to the paper's hyperparameter/scheme range.",
+          "score": 2,
+          "evidence_files": ["verify/C2_null_space_projection/main_experiment_audit/MECHANISM_AUDIT.md", "results/m2/screen_mid_r2_ktop12_s42_summary.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c: The result directly contradicts the paper — instead of the paper's small consistent gains (Qwen-3-4B-Thinking 79.56→80.04 in Table 1), the intervention causes catastrophic −50 to −73 pp degradation at every screened config (results/m2/, on-disk verified 0.065/0.029 vs 0.762). The reporting is fully honest: it is labeled 'not-supported / refuted', no fabrication, and the pass_by_construction narrowing explicitly states 'original C2 refuted' and re-scopes only to the observed degradation. However, the honest-NOT-REPRODUCED-earns-high-score clause does not apply, because the preceding method/design are NOT clean for this claim: the negative is plausibly an artifact of the harsher all-token, no-reinject, collapse-range-α, Thinking-mode-off regime rather than a reliable disconfirmation of the paper. The run itself concedes the phenomenon may live 'in a narrower operating range than the plan assumed' (α=−0.25 partial-preservation hint). So the surface conclusion is honest but not a reliable refutation.",
+          "score": 2,
+          "evidence_files": ["results/m2/screen_mid_r2_ktop12_s42_summary.json", "results/m3/vlang_alpha-0.25_s42_summary.json", "CLAIMS_LEDGER.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        }
+      },
+      "C3": {
+        "claim": "The strength of language-specific activation is negatively correlated with reasoning accuracy: amplifying it degrades reasoning, removing it improves reasoning.",
+        "method": {
+          "justification": "9a: A signed α-sweep `h ← h + α·Π_lang·h` with a matched random-subspace control is a genuinely appropriate causal instrument for a 'strength ↔ accuracy correlation' claim — it directly varies the intensity of the language-specific component and measures accuracy, with a negative control isolating direction-specificity (mlr/m2_projection_eval.py:71-98; results/m3/). The same all-token / single-group / no-reinject divergences from the paper noted for C2 apply and are not normalized away (α is in raw units, not σ_proj), so the 'strength' axis is not calibrated to the paper's. Method matches the claim category but inherits C2's scheme divergences.",
+          "score": 3,
+          "evidence_files": ["mlr/m2_projection_eval.py", "results/m3/random_alpha-1.0_s42_summary.json"]
+        },
+        "experiment": {
+          "justification": "9b: A reasonably complete sweep — 9 α levels in [−1.5,+1.5], a matched 9-point random-subspace control, an α=0 sanity that recovers baseline (0.744 vs no-hook 0.762), and a cross-family DeepSeek-R1-Distill-LLaMA-8B variant (verify/C3.../variants/). Weaknesses: single seed (42), σ_proj unit scaling not used so magnitudes are not comparable across directions (flagged WARN in verify/INTEGRITY_AUDIT.md), the sweep is anchored at the collapse-inducing site (mid, k_top=12, rank=2), and collapse-range α values are labeled but not excluded from interpretation. Adequate, honest, mildly under-calibrated.",
+          "score": 3,
+          "evidence_files": ["results/m3/vlang_alpha0.0_s42_summary.json", "verify/INTEGRITY_AUDIT.md", "verify/C3_signed_dose_response/variants/model_swap_deepseek_r1_llama8b/results/vlang_alpha-1.0_s42_summary.json"]
+        },
+        "result": {
+          "justification": "9c: Mixed and honestly reported. The paper's specific 'removing improves' leg is refuted: A(0)=0.744 far exceeds both A(−1)=0.051 and A(+1)=0.000 (results/m3/), i.e., BOTH amplifying and removing degrade — baseline peaks. This is the opposite of the paper's Figure 3 (removing at λ≈0.3 improves), and the DeepSeek variant shows the same non-monotone shape but much milder (A(−1)=0.391 < A(0)=0.447). A genuine positive sub-result IS obtained and agrees with the paper's spirit: the matched random control preserves accuracy where V_lang collapses (Δ up to −0.72), confirming V_lang is a specifically language-related direction. As with C2, the 'removing does not improve' refutation is likely conditioned on the harsh all-token/no-reinject regime rather than a clean disconfirmation, so it is honest but not a fully reliable negative; the specificity finding, however, is solid.",
+          "score": 3,
+          "evidence_files": ["results/m3/vlang_alpha-1.0_s42_summary.json", "results/m3/random_alpha-1.0_s42_summary.json", "verify/C3_signed_dose_response/variants/model_swap_deepseek_r1_llama8b/results/vlang_alpha0.0_s42_summary.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C4": {
+        "claim": "This training-free intervention matches or exceeds multilingual post-training (supervised fine-tuning, reinforcement learning) at a small fraction of the compute.",
+        "method": {
+          "justification": "9a: The comparison is only partially built. The post-training side substitutes LoRA-SFT (rank=32) for the paper's full SFT (LLaMA-Factory) and, critically, omits the RL/PPO leg entirely (M4b 'not run', CLAIMS_LEDGER.md C4). The 'training-free intervention' side of the comparison is the C2/C3 edit, which itself collapsed — so there is no positive intervention arm to compare against post-training. Compute ratio κ is computed (0.04). As a method for the actual claim (edit ≥ SFT and RL), the apparatus is incomplete: one of the two post-training baselines is missing and the intervention arm is non-functional.",
+          "score": 2,
+          "evidence_files": ["mlr/m4a_lora_sft.py", "CLAIMS_LEDGER.md"]
+        },
+        "experiment": {
+          "justification": "9b: Severely under-powered, as the run's own audit records (verify/INTEGRITY_AUDIT.md: C4 experiment FAIL — 'M4b not run, 6.8% training data, n=50/lang'). LoRA-SFT saw only 5001 of 73559 examples for 312 optimizer steps / 1 epoch (results/m4a/lora_sft/training_summary.json), evaluation was sub-sampled to 50/lang vs planned 250, and no RL comparator exists. Under these conditions a true 'SFT hurts' cannot be distinguished from under-training, and the headline 'matches or exceeds' predicate is untestable. Honest but well below the power needed to adjudicate the claim.",
+          "score": 2,
+          "evidence_files": ["verify/INTEGRITY_AUDIT.md", "results/m4a/lora_sft/training_summary.json", "results/m4a/eval_summary.json"]
+        },
+        "result": {
+          "justification": "9c: The actual claim is not reliably adjudicated. LoRA-SFT degrades MGSM by −20.4 pp (0.558 vs 0.762, results/m4a/eval_summary.json), which the run honestly reports and narrows (pass_by_construction) to 'SFT degrades', explicitly declaring the accuracy-match predicate 'moot' because both the edit and SFT arms fall below baseline. There is a fragment of qualitative agreement with the paper (the paper's Table 3 also shows SFT hurting: 49.09 vs 55.78), but the core claim — that the training-free intervention matches/exceeds post-training — is left untested/dangling because the intervention collapsed and RL was never run, and the '✅ pass' in the ledger is a construction on a re-scoped claim rather than a validation of the original. Honest disclosure with a stated reason, but the paper's headline C4 is effectively unreproduced and only partially, indirectly touched.",
+          "score": 2,
+          "evidence_files": ["results/m4a/eval_summary.json", "CLAIMS_LEDGER.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        }
+      }
+    }
+  }
+}

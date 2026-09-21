@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "InterPLM: Interpretable Features in Protein Language Models",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The headline SAE-vs-neuron F1 comparison (Claims 1-3) has NO validation/test split. In extract_acts.py the confusion tensor is built once over the same ~5000-protein / 1.85M-residue corpus, and summarize.py / score_f1.py then select BOTH the best-threshold-per-(feature,concept) over 20 thresholds (best_t = f1.argmax(axis=2)) AND the best-feature-per-concept (per_conc_best = best_f1_mat.max(axis=0)) in-sample on that very set that is reported. The reference paper (paper.pdf p.11-12, Sec 5.2.3) deliberately splits its 50k proteins into 25k validation / 25k test precisely to avoid this selection-on-reported-data bias, and reports feature-per-concept chosen on validation then scored on test. So the run's absolute F1 numbers (e.g. layer18 517 features / 100 concepts at F1>=0.3) are optimistically biased by max-over-20-thresholds and best-of-10240-features selection with no held-out evaluation. Mitigating factor: the selection is symmetric for SAE and raw neurons (identical pipeline on |h|), so the DIRECTION of the gap is not a leakage artifact. For Claim 5, annot_fill.py does use disjoint protein slices (train=[0:n_train], test=[n_train:n_train+n_test]) — a genuine held-out protein split — but the 16 features are selected from full-corpus F1 that includes the test proteins, and the logistic-head decision threshold is tuned on the TEST set itself (loop over np.linspace(0.05,0.95,19) maximizing F1 on yte), an optimistic post-hoc threshold. This is more than one minor gap: the main metric has no held-out set at all, though it does not flip the qualitative conclusion.",
+    "score": 2,
+    "evidence_files": ["extract_acts.py", "summarize.py", "score_f1.py", "annot_fill.py"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Ground truth is Swiss-Prot feature-table (FT) annotations parsed directly in parse_sprot.py (keys DOMAIN, DISULFID, SIGNAL, CARBOHYD, TRANSMEM, BINDING, MOTIF, ZN_FING, etc.), subtyped by /note text, converted to per-residue binary labels and keeping concepts above an occurrence threshold — exactly the operationalization the paper uses (paper.pdf p.11 Sec 5.2.1). The labels come from an external curated database and are entirely independent of the ESM-2 model / SAE features being evaluated, so there is no circularity. concepts.pkl records 236 concepts with label_pos summing to 1,573,999 positive residues over 1,847,874 total, a concrete materialized label set. One documented operationalization gap: score_f1.py / extract_acts.py compute recall per-residue (recall = TP/label_pos over positive residues), whereas the paper computes precision per-amino-acid but recall per-DOMAIN (paper.pdf p.5-6, p.12 eq.2), which systematically penalizes features that fire on a subset of a large domain and is the acknowledged reason the run's absolute F1 counts are far below the paper's. The label source is valid; the metric is a slightly stricter/different operationalization than the claim's 'alignment'.",
+    "score": 4,
+    "evidence_files": ["parse_sprot.py", "extract_acts.py", "score_f1.py", "results/layer24/concepts.pkl"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment uses exactly the user-specified lead model: extract_acts.py and annot_fill.py default to esm_dir=/data/zhenqian/models/esm2_t33_650M_UR50D (ESM-2-650M), and all main summaries record n_neurons=1280 (650M hidden size) and n_features_sae=10240 loaded from the released InterPLM-esm2-650m SAE checkpoints (layers 9,18,24,30, a targeted subset of the released 1,9,18,24,30,33). The dataset is Swiss-Prot as specified. Disclosed deviations that do not swap resources: the analysis corpus is a 5,000-protein subset (~1.85M residues, total_residues=1847874 in every summary) versus the paper's 50,000-protein 25k/25k build, and the concept vocabulary is 236 concepts (207 scored) versus the paper's 433 (REPORT.md 'Setup' table states both). ESM-2-8M (layers 3,5) is used only as an explicit cross-scale verify variant, which is exempt. No model was downgraded and no OOM-driven shrink of the model occurred; the subset is documented and attributed to the GPU budget, and it lowers absolute counts without changing the SAE-vs-neuron comparison.",
+    "score": 4,
+    "evidence_files": ["extract_acts.py", "REPORT.md", "results/summary_all_layers.json", "results/summary_8m.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The core comparison (Claims 1-3) rests on ample data: ~5,000 proteins / 1,847,874 residues per layer across 4 ESM-2-650M layers plus 2 ESM-2-8M layers, scoring 207 concepts against 10,240 SAE features and 1,280/320 neurons — a well-powered basis for the directional SAE>>neuron conclusion. Claim 5 (annotation-filling) is evaluated on a held-out set of ~500-800 proteins but only for 4 concepts (SIGNAL, CARBOHYD::N-linked, TRANSMEM::Helical, DISULFID), narrow coverage that the REPORT does not fully caveat as narrow. Claim 4 is thin: only 10 features are pattern-analyzed (results/patterns_layer24.pkl) and the paper's LLM auto-interpretation was not run; the REPORT flags this as 'Partially supported (qualitative)'. Claim 5's steering half was not run at all and is honestly flagged 'not attempted'. Overall claim strength largely matches evidence with caveats attached for the weak claims, but C4/C5 coverage is limited.",
+    "score": 4,
+    "evidence_files": ["results/summary_all_layers.json", "results/annot_fill_layer24.json", "results/patterns_layer24.pkl", "REPORT.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Results are single-run, single-seed: extract_acts.py fixes rng = np.random.default_rng(0) for the protein subsample and there is no repetition across seeds, no error bars, no variance, and no significance test on the SAE-vs-neuron gap. However, the effect is large and clearly beyond plausible noise — e.g. layer18 F1>=0.5 gives 135 SAE features vs 0 neurons, and 52 vs 0 concepts covered (summary_all_layers.json) — and it replicates monotonically across all four 650M layers (9/18/24/30) and both ESM-2-8M layers (3/5, summary_8m.json), a cross-layer/cross-scale consistency that substitutes partially for formal uncertainty. Per-run uncertainty quantification is nonetheless absent, so robustness to randomness is unverified. This matches the 'point estimates, non-trivial effect, thin uncertainty' anchor.",
+    "score": 3,
+    "evidence_files": ["extract_acts.py", "results/summary_all_layers.json", "results/summary_8m.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The run makes no correlational-evidence-dressed-as-causal error. The superposition claim (C3) is argued observationally — via the neuron-vs-SAE concept-alignment gap plus polysemanticity counts (polysemanticity.py) — which mirrors the paper's own framing (paper.pdf p.6-7, p.10: superposition is inferred from '46 vs 2,548 features', not from an intervention). The one genuinely causal/interventional part of the paper (C5 steering of glycine predictions, paper.pdf Fig 7) was explicitly NOT attempted, and the REPORT states so plainly ('steering not tested', 'out of scope'), rather than asserting a steering result. So no causal claim is fabricated or overreached: correlational evidence is honestly labeled correlational and the intervention is honestly omitted. Points withheld from full n/a because C3's task wording ('direct evidence') is causal-flavored yet supported only observationally (as in the paper) and the paper's own randomized-weight control for superposition (Fig 3 green) was not reproduced.",
+    "score": 4,
+    "evidence_files": ["polysemanticity.py", "REPORT.md", "auto_interpret.py"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Headline numbers trace exactly to on-disk products. Every REPORT.md main-table value matches results/summary_all_layers.json (verified: layer9 340/89, layer18 517/100 and 135/52 and 20/16, layer24 324/96, layer30 175/75, neuron counts 3/54/13/9, all identical). Claim 5 numbers match results/annot_fill_layer24.json exactly (SIGNAL logistic F1=0.8941, CARBOHYD 0.8441, TRANSMEM 0.6471, DISULFID 0.3073; class priors 0.0159/0.0020/0.0710/0.1030). Claim 4 examples match results/patterns_layer24.pkl (feature 2738 consensus 'xFLWLGYxNSxLNPlIY', feature 4942 'SlVAFFiPltLMmvlYY', feature 9808 center_aa N:20). concepts.pkl corroborates 236 concepts / 1,847,874 residues. Gap: the raw confusion.npz tensors for the MAIN 650M layers (9,18,24,30) are absent — only concepts.pkl survives in those dirs, so the headline summary JSONs cannot be independently recomputed from retained raw products (only the ESM-2-8M and smoke dirs still hold confusion.npz, proving the pipeline genuinely runs). Additionally the Claim-3 polysemanticity means (1.22/1.16/1.13/1.13) are stdout-only from polysemanticity.py with no persisted product. Numbers are internally consistent and clearly from real execution, but one raw tier for the headline is not retained.",
+    "score": 4,
+    "evidence_files": ["REPORT.md", "results/summary_all_layers.json", "results/annot_fill_layer24.json", "results/patterns_layer24.pkl", "results/layer24/concepts.pkl"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline's records are self-consistent. REPORT.md main tables match summary_all_layers.json exactly for all four layers and thresholds; summary_650m_partial.json layer24 (324/96/85, 78/49/46) equals the layer24 block of summary_all_layers.json; summary_8m.json and summary_8m_l3.json agree for esm8m_layer3 (116/24/21, 21/6/5). The REPORT cross-layer-maxima table ('Max SAE concepts 100 / 52 / 16', 'Max neurons 54', 'Max neuron concepts 8') correctly picks the per-column maxima from the layer JSONs. The Claim-3 polysemanticity active-unit counts (340/517/324/175 SAE; 3/54/13/9 neurons) equal features_above_tau at tau=0.3. Claim-5 REPORT table matches annot_fill_layer24.json. Per-claim verdicts (4/5 supported, C4 qualitative-partial, C5 steering-skipped) are stated consistently across REPORT.md. No metric mismatch, contradicted prose, or unpropagated integrity flag was found.",
+    "score": 5,
+    "evidence_files": ["REPORT.md", "results/summary_all_layers.json", "results/summary_650m_partial.json", "results/summary_8m.json", "results/annot_fill_layer24.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "SAEs trained on the residual-stream activations of ESM-2 layers surface up to ~2,548 interpretable latent features per layer — orders of magnitude more concepts than can be pulled out of individual neurons.",
+        "method": {
+          "justification": "9a: The mechanistic method is exactly the paper's — train/load SAEs on ESM-2-650M residual-stream activations, binarize feature activations at thresholds, and compute per-(feature,concept) F1 against Swiss-Prot, with raw neurons run through an identical pipeline (|h| as an identity 'SAE') for a symmetric comparison (extract_acts.py builds TP/PredPos for both TP_sae and TP_neu). This correctly matches the SAE-vs-neuron interpretability mechanism the claim is about (paper.pdf Sec 5.2).",
+          "score": 5,
+          "evidence_files": ["extract_acts.py", "score_f1.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design is reasonable and symmetric — 4 layers, 20 thresholds (fractions of per-feature max), min_concept_res filter, matched neuron baseline. But two deviations weaken it relative to the paper: recall is computed per-residue rather than the paper's domain-adjusted recall (paper.pdf p.5-6), and there is no validation/test split (threshold and feature selection are in-sample; summarize.py). Both cause the paper's headline magnitude (~2,548) to be unreachable here (max 517 features at F1>=0.3, 135 at F1>=0.5), and the run did not attempt the domain-recall metric that produces the paper's numbers. The design still validly tests the DIRECTIONAL claim.",
+          "score": 3,
+          "evidence_files": ["extract_acts.py", "summarize.py", "results/summary_all_layers.json"]
+        },
+        "result": {
+          "justification": "9c: SAE features dominate neurons at every layer and threshold — layer18 F1>=0.3: 517 SAE vs 54 neurons; F1>=0.5: 135 vs 0 (summary_all_layers.json). This qualitatively and directionally reproduces the paper's 'orders of magnitude more features than neurons'. The absolute count is far below 2,548, and the REPORT honestly attributes this to the 5,000-protein corpus subset, the 236-concept vocabulary cap, and per-residue recall — an honest, disclosed under-count rather than goalpost-tuning. Qualitative agreement is clear.",
+          "score": 5,
+          "evidence_files": ["results/summary_all_layers.json", "REPORT.md"]
+        }
+      },
+      "C2": {
+        "claim": "These SAE features align with up to ~143 distinct Swiss-Prot biological concepts (binding sites, active sites, sequence motifs, structural / functional domains), whereas raw ESM-2 neurons align with only ~46 concepts on the same evaluation, of which only ~15 are cleanly recovered.",
+        "method": {
+          "justification": "9a: Concept-coverage counting via the same F1-alignment framework, with 'clean recovery' operationalized as best F1 >= 0.75 and concept coverage as the number of concepts whose best-aligned unit exceeds tau (summarize.py coverage()). This matches the paper's concept-alignment and clean-recovery definitions and is applied identically to SAE features and neurons.",
+          "score": 5,
+          "evidence_files": ["summarize.py", "score_f1.py"]
+        },
+        "experiment": {
+          "justification": "9b: Reasonable design with a symmetric neuron baseline and three thresholds mapping to the paper's coverage and clean-recovery notions. Weaknesses: vocabulary is 236 (207 scored) vs the paper's 433, structurally capping SAE concept coverage at ~52 (F1>=0.5) rather than 143; and the same per-residue-recall + no-held-out issues as C1. The clean-recovery bar (F1>=0.75) is a stricter analogue of the paper's held-out F1>0.5 gate. Adequate but under-explores the paper's metric/vocabulary.",
+          "score": 3,
+          "evidence_files": ["summarize.py", "results/summary_all_layers.json", "REPORT.md"]
+        },
+        "result": {
+          "justification": "9c: SAE covers 100 concepts (F1>=0.3) / 52 (F1>=0.5) / 16 (F1>=0.75) at layer18 vs neurons 7 / 0 / 0; neurons cleanly recover zero concepts in three of four layers while SAE cleanly recovers up to 16 (summary_all_layers.json). This reproduces the paper's qualitative shape (SAE aligns with far more concepts; neurons cleanly recover only a handful). Absolute numbers (52 vs 143 for SAE, 7 vs 46 for neurons) are lower and the reason (vocab cap, per-residue recall) is disclosed, not disguised. Directionally consistent; one facet (neuron absolute coverage 0-7 vs paper's 46) diverges but under the harsher metric.",
+          "score": 4,
+          "evidence_files": ["results/summary_all_layers.json", "REPORT.md"]
+        }
+      },
+      "C3": {
+        "claim": "The gap between SAE features and raw neurons is direct evidence that PLMs encode biological concepts in superposition rather than in single units.",
+        "method": {
+          "justification": "9a: Superposition is argued via polysemanticity — counting distinct concepts each unit aligns with above F1>=0.3 (polysemanticity.py), showing SAE units are near-monosemantic (~1.1-1.2 concepts each) while the mass of neurons never cleanly project onto single concepts. This is the paper's own observational line of argument for superposition (paper.pdf p.6-7, p.10), and is an appropriate method for a representational-superposition claim. It is correlational by nature, as in the paper.",
+          "score": 4,
+          "evidence_files": ["polysemanticity.py", "REPORT.md"]
+        },
+        "experiment": {
+          "justification": "9b: polysemanticity.py computes the concepts-per-unit distribution for SAE features and neurons, which supports the monosemanticity-vs-polysemanticity contrast. However, the paper's KEY control for this claim — the randomized/shuffled-weight ESM-2 SAE that extracts zero biological concepts (paper.pdf Fig 3 green, Sec 5.2.4) — was NOT reproduced, so the run cannot rule out that the gap reflects dictionary size alone rather than learned superposition. The REPORT also hedges that the few threshold-crossing neurons look narrow only because they 'mostly stay silent', an honest but incompletely resolved interpretation. Missing control weakens rigor.",
+          "score": 3,
+          "evidence_files": ["polysemanticity.py", "REPORT.md"]
+        },
+        "result": {
+          "justification": "9c: The result — many monosemantic SAE features (mean 1.1-1.2 concepts) coexisting with essentially no cleanly-concept-aligned single neurons — is presented as the fingerprint of decompressed superposition, qualitatively matching the paper's conclusion. Interpretation is hedged honestly. Without the randomized-weight control the 'direct evidence' is weaker than the paper's, but the directional conclusion aligns and is not overstated.",
+          "score": 4,
+          "evidence_files": ["REPORT.md", "polysemanticity.py"]
+        }
+      },
+      "C4": {
+        "claim": "A subset of the SAE features corresponds to coherent biological concepts that are absent from existing annotation dictionaries; these can be surfaced by using an external LLM as an auto-interpreter over top-activating protein contexts.",
+        "method": {
+          "justification": "9a: The paper's specified mechanism is LLM auto-interpretation (Claude-3.5) over top-activating contexts (paper.pdf Sec 3.5, 5.3). The run BUILT this (auto_interpret.py, find_top_contexts.py) but the external API was blocked by the sandbox, so it substituted consensus-motif / AA-composition pattern analysis (pattern_analysis.py). Consensus-motif analysis can show a feature fires on a conserved window but does not establish that the concept is coherent AND absent from Swiss-Prot in the validated way the LLM pipeline does; the specified mechanism was not actually executed. The substitute is a weaker proxy.",
+          "score": 2,
+          "evidence_files": ["auto_interpret.py", "pattern_analysis.py", "find_top_contexts.py"]
+        },
+        "experiment": {
+          "justification": "9b: Only 10 layer-24 features were pattern-analyzed (results/patterns_layer24.pkl), reporting consensus motifs and center-residue composition; some are well-aligned (feat 2738 -> TRANSMEM::Helical;Name=7, feat 4942 -> Name=5 F1=0.77) and some 'unaligned' features fire on conserved windows. There is no systematic quantification, no LLM validation of description accuracy (the paper's median Pearson r=0.72 check), and no held-out. The design is thin and qualitative, though honestly presented.",
+          "score": 2,
+          "evidence_files": ["results/patterns_layer24.pkl", "pattern_analysis.py"]
+        },
+        "result": {
+          "justification": "9c: The REPORT labels this 'Partially supported (qualitative)' and shows several 'unaligned' features firing on specific conserved consensus motifs across many proteins, consistent with the paper's direction that features track biology beyond Swiss-Prot. But the claim's actual mechanism (LLM surfaces coherent NOVEL concepts) is not demonstrated because the LLM step did not run. This is an honest, openly disclosed non-completion (sandbox API block) rather than a disguised or fabricated agreement; the evidence is suggestive but the specific claim remains unvalidated.",
+          "score": 3,
+          "evidence_files": ["REPORT.md", "results/patterns_layer24.pkl"]
+        }
+      },
+      "C5": {
+        "claim": "The extracted feature dictionary is practically useful: it supports filling in missing Swiss-Prot annotations and steering ESM-2 sequence generation toward a target biological property.",
+        "method": {
+          "justification": "9a: For the annotation-filling half, the method (annot_fill.py) fits a small logistic head over the top-16 best-aligned SAE features and predicts residue-level concept membership on held-out proteins — a reasonable operationalization of 'the dictionary fills in annotations', close in spirit to the paper's Fig 6 use of feature activations to suggest missing labels. The steering half of the claim was not implemented at all (no steering script), so half the claim's mechanism is absent.",
+          "score": 3,
+          "evidence_files": ["annot_fill.py"]
+        },
+        "experiment": {
+          "justification": "9b: annot_fill.py uses disjoint train/test protein slices and compares the logistic head against the class-prior baseline for 4 concepts. Weaknesses: the 16 features are selected using full-corpus F1 that includes the test proteins, and the logistic decision threshold is tuned on the test set (loop maximizing F1 over yte), both optimistic; only 4 concepts are covered; there is no random-feature control. The steering experiment (paper's Fig 7 periodic-glycine GXX steering with a coefficient sweep) was entirely omitted. Reasonable demo for annotation-filling, absent for steering.",
+          "score": 3,
+          "evidence_files": ["annot_fill.py", "results/annot_fill_layer24.json"]
+        },
+        "result": {
+          "justification": "9c: Annotation-filling reproduces the paper's practical-utility direction: held-out logistic-head F1 = 0.894 for SIGNAL (class prior 0.016) and 0.844 for N-linked glycosylation (prior 0.002), with weaker but positive results for TRANSMEM (0.647) and DISULFID (0.307) (annot_fill_layer24.json). This is a genuine, if optimistically-thresholded, demonstration that a handful of SAE features supply strong annotation predictions, qualitatively matching the paper. The steering half is honestly reported as 'not attempted', not disguised — so the claim is reproduced for annotation-filling and openly left partial for steering.",
+          "score": 4,
+          "evidence_files": ["results/annot_fill_layer24.json", "REPORT.md"]
+        }
+      }
+    }
+  }
+}

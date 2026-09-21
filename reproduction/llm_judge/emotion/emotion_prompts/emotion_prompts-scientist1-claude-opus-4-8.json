@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Do Emotions in Prompts Matter? Effects of Emotional Framing on LLMs",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The static-prefix experiments (Claims 1-3) are pure temperature-0 inference with no fitted classifier/probe/threshold, so no leakage path exists there (n/a). The only fitting process is the EmotionRL selector (Claim 4). Both implementations honor a disjoint split in code: emotion_rl.py:82-90 does a deterministic permutation into train_idx/test_idx (50/50), fits TfidfVectorizer + TruncatedSVD only on Xtr_text (lines 101-105), selects best_fixed on Y[train_idx] (line 89), and reports neutral/oracle/RL accuracy strictly on Y[test_idx]. emotion_rl_v2.py:101-125 uses 5-fold KFold with vec.fit_transform/svd.fit_transform on the train fold only and scoring on the held-out fold; best_by_train = argmax over Y[train_idx] (line 119). No test labels leak into feature fitting or selection. Datasets themselves come from held-out eval splits (datasets_loader.py: gsm8k 'test', boolq 'validation', socialiqa 'dev'). Split is verifiably honored, not merely asserted.",
+    "score": 5,
+    "evidence_files": ["emotion_rl.py", "emotion_rl_v2.py", "datasets_loader.py"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Ground truth is the standard benchmark gold answer for each dataset, sourced independently of the model under test (datasets_loader.py: GSM8K answer after '####', SocialIQA dev-labels.lst mapped 1/2/3->A/B/C, BoolQ boolean, MedQA/OpenBookQA gold letter). The metric is task-appropriate accuracy (exact-match numeric for GSM8K, letter match for MCQ, Yes/No for BoolQ) matching the paper's protocol (paper p.5: 'response correct only if predicted value exactly matches ground-truth'; 'accuracy = proportion where predicted label aligns with gold'). Labels are non-circular. The only caveat is the heuristic regex answer extractor in run_eval.py:52-105 (extract_answer/is_correct), acknowledged to be imperfect enough that a dedicated rescore.py 'smarter regex-based answer extractor' was added for BBH mixed formats — this is a measurement-noise risk on small deltas but does not compromise the validity of the gold labels themselves.",
+    "score": 5,
+    "evidence_files": ["datasets_loader.py", "run_eval.py", "rescore.py"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The task specifies the main Experiment stage as model Qwen3-14B on GSM8K; this is honored exactly — results/gsm8k__Qwen3-14B__*.jsonl exist for all 25 conditions with n=500 (verified: gsm8k Qwen3 neutral acc=0.948, 500 lines). All five verify-stage datasets (MedQA n=250, BBH n=280, BoolQ n=300, OpenBookQA n=300, SocialIQA n=300) were run on Qwen3-14B, matching the candidate list. The one deviation is the cross-model verification: instead of the task's verify candidates (Llama-3.3-70B-Instruct, DeepSeek-V3.2 — both of which the paper uses and which were reachable via the provided dmxapi), the run used Qwen2.5-14B-Instruct, a model not in the candidate list and smaller than the paper's cross-model backbones. Because the mandated main model/dataset are faithful and the rubric exempts verify-stage swaps, this is a minor deviation rather than a core failure, but the substituted cross-model model is off-spec (not a listed candidate) so cross-model robustness is only partially probed.",
+    "score": 4,
+    "evidence_files": ["results/gsm8k__Qwen3-14B__neutral.jsonl", "FINDINGS.md", "results/report.txt"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "used_n is substantial and well above the 40-item thinness threshold for every setting: GSM8K 500, SocialIQA 300, BoolQ 300, OpenBookQA 300, MedQA 250, BBH 280 (verified via wc -l on the neutral JSONLs), each across 25 conditions and two models where applicable, for ~44,650 total inferences (FINDINGS.md). Claim strength is calibrated to the evidence: Claim 1 is SUPPORTED with quantified bounds (best gain never >5pp, pooled mean -0.87pp over 192 cells), Claims 2 and 4 are explicitly reported as only PARTIALLY SUPPORTED, and caveats about limited effect size and oracle headroom are attached. No conclusion is stated without the corresponding experiment having been run.",
+    "score": 5,
+    "evidence_files": ["FINDINGS.md", "results/report.txt", "results/gsm8k__Qwen3-14B__neutral.jsonl"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Decoding is deterministic (temperature 0, greedy — run_eval.py:159), so per-condition accuracies are single deterministic runs rather than seed-averaged; this removes seed variance but means no run-to-run uncertainty is reported for the static-prefix deltas. The report does provide dispersion across cells (report.txt Claim 3: per-emotion std ~0.016-0.022; FINDINGS: pooled SD 1.96pp) and the EmotionRL analysis uses 5-fold CV with std fields (emotion_rl_v2.py:140-141 rl_std/neutral_std). However, no binomial confidence intervals or significance tests are computed on the individual accuracy deltas, and many key deltas (±0.3-2.7pp on n=250-500) sit within plausible sampling noise; the small EmotionRL gains (e.g. SocialIQA/Qwen2.5 +2.7pp) are treated as real without a significance test. The 'effects are small/within noise' conclusions are well-served by this, but the positive-direction claims are under-quantified for uncertainty.",
+    "score": 3,
+    "evidence_files": ["run_eval.py", "emotion_rl_v2.py", "FINDINGS.md", "results/report.txt"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The claims are causal-behavioral (does prepending an emotional prefix change accuracy?) and are tested by a genuine controlled intervention rather than correlation: for each query the emotional prefix is prepended while the underlying question, system message, decoding, and gold are held identical to a matched neutral baseline (run_eval.py:32-46 build_user_prompt; prefixes.py neutral = empty string). Proper controls are present — a neutral A/B baseline, two intensity levels, and human- vs LLM-authored sources (prefixes.py), plus an oracle upper bound and a learned selector for Claim 4. The mechanistic wording ('interacts meaningfully with task content') is appropriately hedged and matched to the interventional evidence. This is a clean manipulation design.",
+    "score": 5,
+    "evidence_files": ["run_eval.py", "prefixes.py", "FINDINGS.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every key number traces to concrete on-disk products and agrees with them. The report/FINDINGS numbers are regenerated by final_report.py from results/*.jsonl (200 per-condition JSONL files present, each with full {id, gold, pred, raw, correct} rows including the raw model generation). Independent recomputation confirmed: gsm8k Qwen3 neutral = 0.9480 (report.txt line 14 and FINDINGS row match); bbh neutral = 0.7607 and bbh llm_happiness_high = 0.8107 (report.txt appendix lines 67/90 match exactly, delta +0.0500); medqa llm_sadness_low = 0.744 (report.txt line 175 match); socialiqa Qwen2.5 neutral = 0.8067 (report.txt line 17 match). File line counts match declared n. report.txt records an absolute results path from the original run directory (/data/zhenqian/Reproduction1/cc/...), but the values are identical to the local products, so provenance is intact. No sourceless or back-filled numbers found.",
+    "score": 5,
+    "evidence_files": ["final_report.py", "results/report.txt", "FINDINGS.md", "results/gsm8k__Qwen3-14B__neutral.jsonl", "results/bbh__Qwen3-14B__llm_happiness_high.jsonl"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The two primary artifacts (FINDINGS.md and results/report.txt) are numerically consistent: the Claim 1 tables (e.g. gsm8k Qwen3 neutral 0.9480 / best 0.9580 / worst 0.9140), Claim 3 winner counts and intensity/source deltas, and the Claim 4 EmotionRL table (gsm8k Qwen3 neutral 0.9520 / best_fixed 0.9600 / oracle 0.9760 / RL 0.9480) all agree across the two files, and prose verdicts (SUPPORTED / PARTIALLY SUPPORTED) match the numbers. One minor loose-bookkeeping point: the Claim-1 neutral accuracies (full-set, e.g. gsm8k Qwen3 0.9480) differ from the Claim-4 neutral accuracies (CV/test-fold subset, e.g. 0.9520); this is expected from full-set vs held-out-fold evaluation and is explained in FINDINGS.md ('5-fold CV over the same evaluation set') but not annotated inline in report.txt, which could confuse a reader. No verdict-level contradiction or integrity-state mismatch exists.",
+    "score": 4,
+    "evidence_files": ["FINDINGS.md", "results/report.txt"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Across diverse task domains, static emotional prefixes change LLM accuracy only by small, input-dependent amounts and do not behave as a general-purpose enhancement.",
+        "method": {
+          "justification": "9a: The chosen method — direct matched A/B intervention prepending each of 24 emotional prefixes vs a neutral baseline and measuring accuracy delta across 6 benchmarks and 2 models under deterministic decoding — is exactly the paper's approach (paper Sec 2.1/3.1, Fig 3: 'accuracy change relative to matched no-emotion prompt'). This is the correct method category for a behavioral 'does the prefix change accuracy' claim.",
+          "score": 5,
+          "evidence_files": ["run_eval.py", "prefixes.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design is complete and well-matched — 25 conditions per (model,dataset), matched neutral baseline, adequate n (250-500), 6 diverse domains covering math/factual/social, deterministic decoding, and the accuracy-delta metric maps strictly to the claim. Criteria were not adjusted post-hoc. Covers essentially the paper's static-prefix sweep.",
+          "score": 5,
+          "evidence_files": ["run_eval.py", "results/report.txt", "FINDINGS.md"]
+        },
+        "result": {
+          "justification": "9c: Result analysis qualitatively agrees with the paper. Reproduction finds best positive gain never exceeds +5pp, median +1.3pp, pooled mean -0.87pp over 192 cells, only ~30% of prefixes beat neutral, extremes bounded to +5.0/-5.2pp — directly mirroring the paper's central finding that static emotional prompting is 'a mild perturbation rather than a reliable general-purpose intervention' (paper abstract/Sec 3.1). Conclusion SUPPORTED and honestly grounded.",
+          "score": 5,
+          "evidence_files": ["FINDINGS.md", "results/report.txt"]
+        }
+      },
+      "C2": {
+        "claim": "The effect of emotional framing is most pronounced on socially grounded tasks (interpersonal/social reasoning), where the emotional context interacts meaningfully with task content; on tasks like mathematical reasoning or factual QA the effect is markedly smaller.",
+        "method": {
+          "justification": "9a: Method is to compare the magnitude/variability of the emotion effect across task types using range, worst-delta magnitude, and per-query oracle headroom (report.txt Claim 2; FINDINGS Claim 2). This is a reasonable operationalization of 'most pronounced on social tasks' and aligns with the paper's dispersion-based reading of Fig 3.",
+          "score": 5,
+          "evidence_files": ["FINDINGS.md", "final_report.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design examines multiple lenses (range, downside magnitude, oracle headroom) across all six datasets and both models, which is thorough. Minor limitation: only SocialIQA is a genuinely 'social' benchmark, so 'social vs non-social' rests on a single social task; and 'most pronounced' is measured by several different statistics that do not all agree (range vs variability vs headroom), leaving the operational definition somewhat loose. Metric coverage is otherwise reasonable and not tuned post-hoc.",
+          "score": 4,
+          "evidence_files": ["results/report.txt", "FINDINGS.md"]
+        },
+        "result": {
+          "justification": "9c: Reported honestly as PARTIALLY SUPPORTED. Reproduction confirms SocialIQA has the largest downside (-5.0pp on both models) and the largest per-query oracle headroom (~+14pp), matching the paper's 'largest spread on SocialIQA'; but it also honestly reports that on the best-prefix positive delta MedQA (8.0pp range) and BBH (5.4pp) exceed SocialIQA, so the positive effect is not uniquely largest on social tasks. This is a nuanced, directionally-aligned partial reproduction with the deviation openly disclosed rather than smoothed over — not goalpost-tuned.",
+          "score": 4,
+          "evidence_files": ["FINDINGS.md", "results/report.txt"]
+        }
+      },
+      "C3": {
+        "claim": "No single basic emotion among {happiness, sadness, fear, anger, disgust, surprise} provides a consistent benefit across all models and tasks; stronger emotional wording does not yield proportionally larger gains.",
+        "method": {
+          "justification": "9a: Method tracks per-emotion winner counts and pooled deltas across all (model,dataset) settings, plus low- vs high-intensity pooled deltas and human- vs LLM-source pooled deltas (final_report.py claim3_no_single_emotion). This matches the paper's intensity study and human-vs-LLM study (paper Sec 2.5/3.2/3.3) as the correct method family for a consistency/monotonicity claim.",
+          "score": 5,
+          "evidence_files": ["final_report.py", "prefixes.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design is sound — winner spread across the emotion family (happiness x2, sadness x2, anger x2, fear x1, surprise x1, disgust x0), pooled per-emotion means, and low vs high intensity (-0.0088 vs -0.0086) and human vs llm (-0.0067 vs -0.0107) over n=96 each. Minor method deviation from the paper: intensity is operationalized via the run's own low/high prefix pairs across all datasets rather than the paper's explicit slight/moderate/extreme 'I am (very/extremely) X' MedQA ladder, so the intensity axis is a coarser proxy than the paper's. Otherwise reasonable and not post-hoc adjusted.",
+          "score": 4,
+          "evidence_files": ["results/report.txt", "prefixes.py", "FINDINGS.md"]
+        },
+        "result": {
+          "justification": "9c: Result qualitatively agrees with the paper. No emotion is a consistent winner (disgust never wins; winners spread across the family; cross-model sign flips e.g. llm_surprise_high +1.3 on SocialIQA/Qwen3 vs -1.7 on SocialIQA/Qwen2.5), intensity does not scale monotonically, and stronger/LLM-dramatized wording is if anything slightly worse than plain human wording — consistent with the paper's 'stronger emotional wording induces only modest extra change' and 'human-written prefixes reproduce the same qualitative pattern' (paper Sec 3.2/3.3). Note the reproduction finds LLM prefixes mildly worse whereas the paper reports no systematic source advantage; the direction (stronger wording gives no gain) still agrees, and the difference is disclosed. SUPPORTED.",
+          "score": 5,
+          "evidence_files": ["FINDINGS.md", "results/report.txt"]
+        }
+      },
+      "C4": {
+        "claim": "An adaptive policy that selects the emotional prefix per query (EmotionRL) yields more reliable accuracy gains than any fixed emotional prefix or neutral baseline.",
+        "method": {
+          "justification": "9a: The paper's EmotionRL is a frozen-sentence-encoder + two-layer MLP policy trained offline with GRPO-inspired reward-weighted (soft-target) cross-entropy over 6 emotions (paper Sec 2.6). The reproduction instead builds a per-condition supervised correctness predictor on TF-IDF+LSA question features and picks the argmax condition (emotion_rl.py / emotion_rl_v2.py). This is a legitimate adaptive per-query selector and tests the same 'can input-conditioned selection beat fixed?' question, so it counts as a same-goal-different-method attempt; but it departs substantially from the paper (bag-of-words features instead of dense semantic embeddings, a correctness classifier instead of a policy net, selection over all 25 conditions rather than 6 emotions), and the report itself notes the TF-IDF features capture only a small fraction of the oracle headroom, so the method is materially weaker/under-powered for the claim.",
+          "score": 3,
+          "evidence_files": ["emotion_rl.py", "emotion_rl_v2.py", "FINDINGS.md"]
+        },
+        "experiment": {
+          "justification": "9b: Experimental scaffolding is honest — proper train/test separation, 5-fold CV in v2 with std, and three baselines (neutral, best-fixed-by-train, oracle upper bound). But the selector itself is only lightly explored (LogisticRegression vs GradientBoosting, a single confidence-gate margin), with weak features, so a true negative on factual tasks cannot be cleanly distinguished from selector under-power; the paper's learned MLP-on-embeddings policy and its hyperparameters were not reproduced. Honest but under-powered relative to the claim.",
+          "score": 3,
+          "evidence_files": ["emotion_rl.py", "emotion_rl_v2.py", "results/report.txt"]
+        },
+        "result": {
+          "justification": "9c: The paper reports EmotionRL beats the average-emotion baseline on all five datasets and is positive over baseline on 4/5 (Fig 6: OpenBookQA +1.10, SocialIQA +1.01, BoolQ +0.41, MedQA +0.05, GSM8K +0.00). The reproduction's weaker selector only partially reproduces this: it beats neutral on socially-grounded settings (SocialIQA/Qwen2.5 +2.7pp, BBH +4.3pp) but is neutral-to-negative on factual tasks (GSM8K -0.4, BoolQ -0.7, OpenBookQA -2.0, MedQA -0.8), so the paper's 'more reliable gains' claim is NOT reproduced on most tasks. Crucially, this disagreement is reported transparently as PARTIALLY SUPPORTED, attributed to the weak TF-IDF selector and the large unexploited oracle headroom (+10-15pp on SocialIQA/MedQA), and not disguised as agreement or forced via threshold-tuning. It is an honest under-powered partial non-reproduction with a plausible stated reason, so it is reliable even though it diverges from the paper.",
+          "score": 3,
+          "evidence_files": ["FINDINGS.md", "results/report.txt", "emotion_rl_v2.py"]
+        }
+      }
+    }
+  }
+}

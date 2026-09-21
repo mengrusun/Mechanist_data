@@ -1,0 +1,44 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4, via llm-chat MCP)",
+  "audit_type": "mechanism",
+  "claim_id": "C4",
+  "linked_milestones": ["M7"],
+  "triggered_checks": ["A"],
+  "overall_verdict": "fail",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "fail",
+      "triggered": true,
+      "trigger_match": [
+        "scripts/m7_agent_eval.py:224 (loads M3 RR_lora adapter -- M3's alpha controls C4 safety)",
+        "scripts/m3_rr_train.py:161 (alpha=10.0, RepE L_rr objective)"
+      ],
+      "intervention_type": "RepE",
+      "sweep_grid": [10.0],
+      "sigma_proj_scaling": false,
+      "capability_metric": null,
+      "plateau_range": null,
+      "locked_alpha": 10.0,
+      "alpha_position": "n/a",
+      "random_baseline": {"run": true, "n_random": 1, "passed": false},
+      "sign_pattern": "n/a",
+      "output_case_spotcheck": {
+        "cases_available": true,
+        "verdict": "metric_text_mismatch",
+        "note": "RR harmful_tool_use_rate=0.040 vs B0=0.010 -- intervention slightly worsened harm rate. Both near-zero (floor effect). Consistent with M3 mechanism never activating."
+      },
+      "evidence": [
+        "scripts/m7_agent_eval.py:224 (PeftModel.from_pretrained with M3 RR_lora adapter)",
+        "artifacts/m7/RR_agent.json (harmful_tool_use_rate=0.040, bfcl_score=1.000)",
+        "artifacts/m4/activation_drift.json (delta_cos_harmful=-0.0197, reroute not achieved)"
+      ],
+      "details": "C4 reuses M3's LoRA adapter without agent-specific re-training or hyperparameter sweep. The underlying M3 RepE intervention has the same three FAIL violations: single alpha=10.0 (no sweep), no capability metric at sweep points, target reroute not demonstrated. C4's floor-effect result (both B0 and RR near-zero harmful rate) is consistent with the base model's inherent RLHF refusal masking any RR safety signal."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

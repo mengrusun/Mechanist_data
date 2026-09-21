@@ -1,0 +1,62 @@
+{
+  "claim_id": "C2",
+  "variant": "model-swap-qwen25-7b",
+  "audit_type": "variant",
+  "audit_date": "2026-07-14",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "note": "GPT-4o judge applied symmetrically to all three Qwen2.5-7B models; same API key and endpoint as main experiment; no fake GT"
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "note": "ASR = unsafe/(unsafe+safe) excluding OTHER; MMLU = correct/total; MGSM exact-match; MT-Bench GPT-4o mean score; no self-normalization"
+    },
+    "C_result_files": {
+      "verdict": "pass",
+      "files_checked": [
+        "qwen_method_multijail.json",
+        "qwen_baseline_multijail.json",
+        "qwen_base_multijail.json",
+        "qwen_method_mmlu.json",
+        "qwen_baseline_mmlu.json",
+        "qwen_base_mmlu.json",
+        "qwen_method_mgsm.json",
+        "qwen_baseline_mgsm.json",
+        "qwen_base_mgsm.json",
+        "qwen_method_mtbench.json",
+        "qwen_baseline_mtbench.json",
+        "qwen_base_mtbench.json",
+        "qwen_m1_bottleneck.json"
+      ],
+      "all_present_nonempty": true,
+      "key_metrics_verified": {
+        "method_unseen_asr": 0.1411,
+        "baseline_unseen_asr": 0.1439,
+        "delta_pp": -0.28,
+        "method_mmlu": 0.6800,
+        "baseline_mmlu": 0.6800,
+        "method_mtbench": 3.2667,
+        "baseline_mtbench": 4.3333
+      }
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "note": "L*-anchor path activated with lambda=0.5 for method, deactivated (lambda=0.0) for baseline; all four eval benchmarks completed per eval logs"
+    },
+    "E_scope": {
+      "verdict": "warn",
+      "issues": [
+        "SW language N_eff=10 (50/60 OTHER for all models) — ASR unreliable for SW; affects mean symmetrically",
+        "MT-Bench reduced from 25 to 15 prompts (declared budget adjustment)",
+        "MultiJail capped at 60/lang vs 100/lang in main experiment (declared)"
+      ]
+    },
+    "F_eval_type": {
+      "verdict": "pass",
+      "note": "GPT-4o-as-judge (synthetic_proxy, task.md-mandated), loglik-proxy for MMLU, exact-match for MGSM — all symmetric and consistent with main experiment"
+    }
+  },
+  "overall_verdict": "warn",
+  "eligible_for_robustness": true
+}

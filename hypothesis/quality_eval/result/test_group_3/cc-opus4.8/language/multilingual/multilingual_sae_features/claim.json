@@ -1,0 +1,22 @@
+{
+  "Name": "multilingual_sae_features",
+  "Title": "Do Sparse Autoencoder Features Speak Every Language? Cross-Lingual Feature Universality",
+  "Short Hypothesis": "A sparse autoencoder trained on a multilingual model yields two feature classes: language-agnostic concept features that fire for a concept across all languages, and language-specific features; the proportion and layer distribution of universal features quantify the model's degree of cross-lingual abstraction.",
+  "Related Work": "SAEs (Bricken et al., Cunningham et al.) are trained mostly on English. Recent multilingual SAE probing is nascent. We systematically classify SAE features as universal vs language-specific across many languages, quantify universality by layer, and causally verify universal features via cross-lingual steering, giving a feature-level census of multilingual abstraction.",
+  "Abstract": "Sparse autoencoders decompose model activations into interpretable features, but their cross-lingual structure is unknown. We hypothesize that a multilingual-model SAE contains a substantial fraction of language-agnostic concept features that activate for a shared concept regardless of language, alongside language-specific features, and that universal features concentrate in middle layers. We train SAEs at several layers on multilingual activations, then, for each feature, measure its activation across parallel concept-bearing contexts in 10 languages to compute a universality score (consistency of firing on matched concepts across languages). We classify features and map universality by layer. Causally, we verify: steering with a universal 'concept' feature should elicit that concept across languages, while a language-specific feature should not transfer. Metrics: distribution of universality scores, layer profile of universal-feature fraction, cross-lingual steering success for universal vs specific features, and interpretability (auto-labeled feature descriptions). We predict a peak of universal features in middle layers, mirroring shared-subspace hypotheses but at feature granularity, and that universal features are more monosemantic across languages. This yields a scalable, interpretable inventory of what multilingual models represent universally vs per-language, and a toolkit for cross-lingual feature steering.",
+  "Experiments": [
+    "Train SAEs at 3 layers (early/mid/late) on activations from multilingual corpora spanning 10 languages.",
+    "For each feature, compute activation on parallel concept contexts across languages; define universality score (cross-language firing consistency).",
+    "Plot universality distribution and layer profile of universal-feature fraction.",
+    "Auto-interpret top features; compare interpretability of universal vs specific features.",
+    "Causal steering: clamp a universal concept feature and measure concept elicitation across languages; repeat for language-specific feature (expect no transfer).",
+    "Compare SAE universality with the linear shared-subspace estimate as convergent evidence.",
+    "Controls: dead-feature filtering, and matched random feature steering."
+  ],
+  "Risk Factors and Limitations": [
+    "SAE features can be split/absorbed inconsistently across training runs, destabilizing universality estimates.",
+    "Parallel-context activation matching is confounded by differing tokenization and context length.",
+    "Universality score may reflect frequency rather than genuine sharing.",
+    "Training good multilingual SAEs is compute-intensive and may underfit low-resource languages."
+  ]
+}

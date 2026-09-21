@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The hypothesis is directional and well aligned with the experiment: it predicts that the normalized score \"a_i = <g_i, v_T>/(||g_i|| ||v_T||)\" ranks sequences by \"trait shift\" and that removing top-scoring examples outperforms \"random removal vs LLM-judge/content removal.\" Refutation is immediately conceivable—absence of the proposed monotonic relationship or no filtering advantage over those controls would reject the central claims—and the area under the \"trait-strength-vs-removal curve\" is a consistent comparison metric. However, \"trait strength,\" construction of directions \"as in the weight-delta study,\" and what magnitude constitutes \"far more efficiently\" are not operationally specified, with no numeric effect or decision threshold, so implementation still requires several clarifications.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to \"compute per-sequence alignment score\" from each \"single-example finetuning gradient\" and validate it through many isolated or subset finetunes; this is demanding but consists of standard automatic differentiation, cosine similarity, checkpoint-gradient aggregation, and fine-tuning operations rather than a magic step. Per-example gradients and the named \"TracIn-style variant\" have established tooling, but the plan does not identify the \"shared base model,\" concrete teacher-generated datasets, behavioral trait evaluations, or the exact procedure for constructing the referenced weight-space trait direction, leaving artifacts and resources only partly specified; the concrete figure of \"4 traits\" earns some planning credit, while sample sizes and model scales remain unstated. The refuting branch is runnable because the design includes random and semantic-filter baselines, high/mid/low-score strata, held-out perplexity and task-accuracy checks, and a \"mismatched base\" control.",
+      "score": 6
+    }
+  }
+}

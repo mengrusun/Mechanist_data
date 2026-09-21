@@ -1,0 +1,37 @@
+{
+  "score": 8,
+  "verdict": "move_on",
+  "weaknesses": [
+    "C1 remains a formal miss under the preregistered held-out benign gate: iter-2 has \u0394cos(a_b,d_h) = -0.110 versus the |\u0394|\u22640.10 threshold.",
+    "The benign spillover appears systematic across sites and is not corrected by lowering the hinge margin, so there is still some uncertainty about the sharpness of the claimed mechanism-level selectivity.",
+    "Proceeding now means accepting that the mechanistic validation is substantively but not formally complete, which should be stated plainly in any writeup."
+  ],
+  "action_type": "\u2461",
+  "fix_axis": "accept_iter2_and_run_downstream",
+  "fix_spec": {
+    "run": "Use iter-2 adapter for M5 and M7; no further C1 tuning now",
+    "cli_flags": [
+      "M5 on iter-2 checkpoint selected by held-out C1 composite",
+      "Evaluate HarmBench ASR: base vs standard SFT vs iter-2",
+      "Evaluate MT-Bench: base vs standard SFT vs iter-2",
+      "Evaluate MMLU: base vs standard SFT vs iter-2",
+      "M7 agent eval on iter-2 checkpoint",
+      "Report paired deltas versus base and versus standard SFT",
+      "Retain existing seeds / evaluation protocol from plan"
+    ],
+    "code_diffs": [
+      "No training code change.",
+      "No additional C1 rerun before downstream evaluation.",
+      "If desired for reporting only, add uncertainty estimates / bootstrap CIs on the existing M4 held-out metrics to contextualize the 0.01 benign miss, but do not block downstream on that analysis."
+    ]
+  },
+  "rationale": "Option D is the right next step. The new evidence is decisive on the tuning question: margin was the cleanest one-axis hypothesis for overshoot, and it failed in the wrong direction. That materially updates the posterior against spending more budget on C1 micro-optimization. Among the remaining tuning options, A and C are plausible but low-confidence tradeoff moves rather than mechanism-grounded fixes: increasing \u03b2 may reduce benign drift, but the current harmful margin is only ~0.27 beyond threshold on held-out, so a stronger retention term could easily eat meaningful harmful effect while still not guaranteeing recovery of the missing 0.01. C adds LR\u2193, but that bundles optimization dynamics with objective weighting and makes interpretation weaker while consuming another iteration. B is even less justified from the present evidence: there is no direct sign that attention-path LoRA is the culprit, and restricting capacity could just as easily damage harmful rerouting without improving selectivity. In contrast, iter-2 already demonstrates the core intended pattern robustly: strong harmful movement past threshold, essentially zero control-direction drift, stable training, and only a de minimis benign miss. Given the budget, the experiment's real uncertainty now is whether this near-pass on C1 is sufficient for downstream safety/utility behavior. The highest-value information comes from M5 and M7, not another C1 sweep. Endorse iter-2 as a substantive C1 success with a narrowly missed conservative benign gate, and spend the remaining budget on C2/C4.",
+  "expected_signal": "If the mechanism is genuinely useful despite the slight benign over-drift, iter-2 should show improved harmful refusal / lower HarmBench ASR relative to base and likely relative to standard SFT, while preserving general capability close to standard SFT on MT-Bench and MMLU. In M7, expect reduced agent harm rate with modest or no degradation on benign task completion. A favorable downstream outcome would justify describing C1 as near-passing but practically adequate; an unfavorable downstream outcome would be more informative than another small C1 tuning step.",
+  "budget_gpu_hours": 3.0,
+  "still_unresolved_after_fix": [
+    "C1 remains a formal near-pass rather than a strict pass unless you later decide to revisit benign-drift tuning.",
+    "C2 will remain unresolved until M5 is completed.",
+    "C4 will remain unresolved until M7 is completed.",
+    "C3 remains unresolved."
+  ]
+}

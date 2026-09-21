@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the proposed distinction by editing assistant history—\"replace the model's own prior compliant turns with (i) explicit refusals, (ii) neutral non-committal text, (iii) deletion\"—and comparing it with user-filler edits while measuring refusal projection and attack success. The prediction is directional and refutable: \"self-consistency edits recover most of the lost refusal projection while dilution edits do not,\" so little recovery, recovery driven equally or more by filler edits, or no association with prior concessions would count against it; the neutral-text, paraphrase, deletion, benign, and utility comparisons also address major confounds. However, \"most,\" \"near single-turn safety,\" and \"minimal utility cost\" lack numeric decision thresholds, the indirect-effect estimand is not formally defined, and the edits establish a causal effect of assistant-generated context more directly than the specifically psychological explanation that refusal would \"contradict what it already said.\"",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is the defense that would \"re-project out (or attention-mask) the concession component from prior-turn key/value or residual representations\"; activation extraction and projection are supported by standard PyTorch/transformer hooks, but the proposal leaves the layer-wise mapping and exact masking rule to custom implementation rather than supplying a complete algorithm. The named core artifacts—\"Llama-3-8B-Instruct, Qwen2.5-7B-Instruct, Gemma-2-9B-it,\" HarmBench, StrongREJECT, MT-Bench, and Llama Guard—exist and support the proposed generation, representation collection, grading, and intervention workflow, while optional or recent attack resources are not essential because the plan also specifies generating \"Crescendo/Tempest-style and MEEA-style\" transcripts. Models and the number of model families are concrete, but transcript sample sizes and run-level resource figures are absent; nevertheless, the explicit refusal/neutral/deletion, filler-paraphrase/removal, benign, coherence, and utility controls make the negative branch runnable rather than structurally favoring support.",
+      "score": 7
+    }
+  }
+}

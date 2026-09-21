@@ -1,0 +1,29 @@
+{
+  "phase": "Phase 3 step 0",
+  "max_verify_claims": 1,
+  "dimensions": ["model"],
+  "admitted_pool": ["C1", "C2", "C3"],
+  "admitted_pool_rationale": {
+    "C1": "baseline_integrity=PASS_with_WARN (flat kstar grid, but Jaccard predicate sound); verdict=supported",
+    "C2": "baseline_integrity=WARN (ablation operator scope mismatch, random-null degenerate); verdict=not-supported",
+    "C3": "baseline_integrity=PASS_with_minor_WARN (length secondary not run, val-eval gap); verdict=not-supported"
+  },
+  "rejected_pool": [],
+  "cap_source": "max_verify_claims=1",
+  "picked_claims": ["C3"],
+  "picked_rationale": "C3 (Applied Control) is the pay-off claim — the practical impact claim the entire Location->Causal->Applied framework was designed to earn. Per FINAL_PROPOSAL.md: 'Dominant contribution: a pre-registered matched-budget verification protocol running Location -> Causal -> Applied on one C_e fit'. The whole pipeline exists to support or refute C3. Additionally: (1) C3's not-supported verdict is robust — macro A=0.053 is far below chance, Arm B=0.669; (2) M4 data (Qwen model swap, runs/A4_verify_qwen/) is already on-disk from the main experiment and can serve as the model-swap variant WITHOUT re-running; (3) the model-swap axis directly answers whether the C3 failure is Llama-3.2-3B-specific. C1 (supported) is lower priority for swap verification. C2 (not-supported with operator caveat) is also important but lower than C3 for Stage 2 selection.",
+  "stage2_deferred": ["C1", "C2"],
+  "stage2_deferred_rationale": {
+    "C1": "Lower importance — localizability is a prerequisite, not the primary contribution. Swap variant would add limited insight given the strong, consistent Jaccard results.",
+    "C2": "Important integrity caveat (ablation operator mismatch) but max_verify_claims=1 cap. Should be re-verified via /auto-verify <C2> --resume=true with corrected operator in a future iteration."
+  },
+  "stage2_skip_reason": "max_verify_claims_cap",
+  "model_swap_variant_plan": {
+    "claim": "C3",
+    "model": "Qwen2.5-7B-Instruct",
+    "model_path": "/data/zhenqian/models/Qwen2.5-7B-Instruct",
+    "data_reuse": "M4 data at runs/A4_verify_qwen/ is the Qwen model-swap variant (120 eval stems x 6 emotions x 3 arms = 2160 judged continuations on Qwen, independently re-tuned hyperparameters on Qwen val fold). This constitutes a valid model-swap variant.",
+    "new_run_needed": false,
+    "rationale": "M4 was explicitly designed as a verify-swap-lite for C3. It runs the same three-arm comparison on Qwen2.5-7B-Instruct + SEV held-out with independently tuned configs. The result (Qwen A=0.076, B=0.969, C=0.125; A>B: 0/6, A>C: 0/6) is the model-swap verdict."
+  }
+}

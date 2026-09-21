@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The test is logically aligned with the hypothesis: it compares a \"same-base reference\" against a \"mismatched reference model,\" measures ROC/AUC and top-1 trait identification, and predicts that the former performs better while the latter is \"near chance.\" The claim is falsifiable because failure of the same-base auditor to outperform the different-base control, or failure of detection AUC to fall as reference divergence increases, would contradict its directional predictions. However, \"high AUC,\" \"graceful degradation law,\" and \"graded distances from the base\" lack numeric thresholds or precise definitions, while construction of the \"bank of trait directions\" and the measure of reference divergence remain underspecified.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is scoring examples by the \"max cosine of its reference-model gradient with a bank of trait directions\": gradient extraction and cosine scoring are standard operations with mature autodiff tooling, but the plan does not explain how the trait-direction bank is constructed, making that custom component insufficiently specified rather than a pure magic step. Linear probes, activation extraction, ROC/AUC evaluation, finetuning, and the proposed different-base and clean-corpus controls are supported by standard ML tooling, although no concrete model, dataset, sample size, model scale, or other resource figure is named. The refuting branch is runnable because the design includes \"matched clean data,\" a \"Different-base control,\" held-out teachers, false-positive analysis, and graded-divergence comparisons, but the generic artifacts and undefined divergence metric leave meaningful implementation choices to the researcher.",
+      "score": 5
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "Name": "crystal_space_group_symmetry",
+  "Title": "Symmetry Within: Do Crystal Foundation Models Encode Space-Group Structure?",
+  "Short Hypothesis": "Graph-based crystal foundation models encode crystallographic symmetry (point-group and space-group operations) in their internal representations, such that symmetry-equivalent atoms receive equivalent embeddings and a decodable symmetry signal exists, and this symmetry representation is causally used for predicting symmetry-dependent properties (e.g., piezoelectricity, band degeneracies).",
+  "Related Work": "Equivariant networks (NequIP, Batzner et al., 2022; e3nn) build symmetry in by construction. Non-equivariant models like CGCNN and MEGNet must learn it. Prior work rarely tests whether a non-equivariant model internally discovers symmetry. We probe emergent symmetry representation and its causal role, distinguishing learned symmetry from architecturally imposed symmetry and connecting it to symmetry-governed physical properties.",
+  "Abstract": "Crystallographic symmetry dictates many material properties, but whether learned (non-equivariant) crystal models internalize it is unknown. We probe pretrained CGCNN/MEGNet-style models trained on the Materials Project to test for emergent symmetry representations. First, we test whether symmetry-equivalent atoms (Wyckoff-equivalent sites) receive similar node embeddings, quantified by within-orbit versus across-orbit embedding distance. Second, we train probes to decode the crystal system, point group, and presence of key symmetry operations (inversion, mirror, rotation axes) from pooled representations, reporting accuracy against a composition-only baseline to ensure symmetry, not chemistry, drives the signal. Third, we test causal use: for properties dictated by symmetry (piezoelectricity requires non-centrosymmetry; certain band degeneracies require specific point groups), we ablate the decodable symmetry direction and measure whether property predictions degrade specifically on symmetry-sensitive cases. We compare against an equivariant model (NequIP) as a reference for 'symmetry-native' representation. We predict that non-equivariant models partially recover symmetry, with inversion symmetry most robustly encoded due to its strong property links, and that ablation selectively harms symmetry-dependent predictions. This clarifies whether crystal models learn the physical mechanism of symmetry or approximate it via chemistry, informing when equivariance must be imposed rather than hoped for.",
+  "Experiments": [
+    "Extract node and graph embeddings from pretrained CGCNN/MEGNet on Materials Project structures with known space groups and Wyckoff positions.",
+    "Within-orbit vs across-orbit embedding distance test for symmetry-equivalent atoms.",
+    "Probe pooled embeddings to decode crystal system, point group, and inversion/mirror/rotation presence; compare to composition-only baseline.",
+    "Causal ablation: remove decoded symmetry direction and measure prediction degradation on piezoelectric (non-centrosymmetric) vs centrosymmetric materials and on symmetry-linked band features.",
+    "Reference comparison: repeat probes on an equivariant NequIP model to benchmark symmetry-native representation.",
+    "Analyze which symmetry operations are best/worst encoded and relate to their property relevance and training frequency."
+  ],
+  "Risk Factors and Limitations": [
+    "Symmetry and chemistry are correlated across the dataset, complicating attribution.",
+    "Non-equivariant models may encode symmetry only weakly, yielding low-power probes.",
+    "Wyckoff-orbit labeling and structure standardization introduce preprocessing sensitivity.",
+    "Ablation of a decoded direction may not cleanly isolate symmetry from co-encoded features."
+  ]
+}

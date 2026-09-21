@@ -1,0 +1,90 @@
+# Idea Report — Captured Behavior
+
+**Behavior-source**: given
+**Mechanism**: given
+**Claim source**: task.md (faithful capture)
+**Date**: 2026-08-19
+**Resource fidelity**: strict (given + given reproduction combination)
+**chosen_mechanism**: SAE feature identification + amplification (Evo-2 Layer-26 Mixed SAE)
+**Pipeline**: research-lit → faithful behavior capture → research-refine-pipeline
+
+## Executive Summary
+
+Three claims are captured verbatim from `task.md` and routed into one unified verification plan. The plan opens with an SAE-feature-selectivity confirmation (C1), then steered-vs-baseline generation (C2), then a coefficient sweep to find the optimal amplification strength α* (C3), plus specificity controls — all on full-scale Evo2-7B + the released Layer-26 Mixed SAE within 8 h / ≤4 GPUs (`resource_fidelity: strict`, no M0 gate). Behavior is directly precedented by the Evo2 paper's own SAE α-helix/β-sheet features; the contribution here is making it quantitative, dose-controlled, and specificity-checked. First run: `S0` data prep → `M1` feature selection.
+
+## Behavior (given, assumed to hold)
+
+> Generate DNA sequences with higher α-helical content using Evo2-7B via SAE feature amplification.
+
+The `## Experiment Tips` in `task.md` decompose this into a three-step method — (1) confirm a set of SAE features selectively respond to "α-helix"; (2) autoregressively generate DNA by amplifying those features; (3) determine the optimal amplification strength. Each step is captured below as an independently verifiable claim. Claims 2–3 are the target behavior; Claim 1 is the enabling precondition the method itself requires.
+
+## Resources (binding — reproduction combination, exact per task.md)
+
+- **Model**: Evo2-7B at `/mnt/quarkfs/share_models/evo2_7b_262k` (StripedHyena-2, 32 layers, hidden_size 4096, char-level nucleotide tokenizer, 262k context). Full scale — no smaller-model swap, no downscaling.
+- **Mechanism / SAE**: Evo-2 Layer-26 Mixed SAE at `/mnt/quarkfs/share_model/Evo-2-Layer-26-Mixed` (`sae-layer26-mixed-expansion_8-k_64.pt`). Tied-weight TopK SAE: d_model=4096, d_sae=32768 (expansion 8), TopK k=64, hooked at layer-26 residual. Activation site: layer-26 output residual stream.
+- **Compute budget (binding constraint)**: local 8× A800-80GB; ≤4 GPUs concurrent; ≤8 h total wall-clock. Plan must fit; must NOT downscale model/SAE to save cost within this budget.
+- **Environment**: conda env `scientist` (PyTorch+CUDA, vortex/evo2, transformers, Biopython, DSSP).
+- **α-helix label source**: `unspecified in task.md — to be resolved in Phase 4.5` (must derive per-residue α-helix labels from coding sequences via translation + structure → DSSP; see EXPERIMENT_PLAN.md dataset provenance).
+
+## Claims to Verify
+
+### Claim 1: α-helix-selective SAE features exist in the Layer-26 Mixed SAE
+
+**Original (verbatim excerpt from task.md):**
+> First confirm the existence of a set of SAE features that selectively respond to "α-helix"
+
+**Extracted statement**: Within the Evo-2 Layer-26 Mixed SAE (32768 latents), a small, identifiable subset of latents activates selectively on nucleotide positions whose translated codons belong to α-helical residues, with selectivity significantly above chance and above matched non-helix (β-sheet/coil) controls.
+**Hypothesis**: H1 — A set of SAE latents encode α-helix as an interpretable feature of Evo2's layer-26 representation of coding DNA.
+**Measurable predicate**: On a held-out labeled coding-DNA set, ≥1 SAE latent achieves α-helix-vs-rest selectivity (AUROC of latent activation vs. per-position α-helix label, and/or mean-activation ratio helix:non-helix) exceeding a permutation/label-shuffle null at a corrected significance threshold; the top-k selective latents form the "α-helix feature set."
+**Expected direction**: threshold (selectivity > chance / > non-helix controls)
+**Resources (binding)**: model Evo2-7B; SAE Layer-26 Mixed; dataset: labeled coding-DNA (α-helix per-position labels via translation+DSSP); used_n: resolve in Phase 4.5 (target: enough labeled positions to clear noise, ≥ ~50 proteins / thousands of residues).
+**Status**: pending verification
+**Notes**: Split from Experiment Tips step 1. Enabling precondition for Claims 2–3. Selectivity metric inferred from the standard select-then-steer literature (InterPLM, 2502.09135).
+
+### Claim 2: Amplifying the α-helix feature set raises α-helical content of generated DNA vs. unsteered baseline
+
+**Original (verbatim excerpt from task.md):**
+> Generate DNA sequences with high α-helical content using Evo2-7B via SAE. ... then autoregressively generate DNA by amplifying those features
+
+**Extracted statement**: Amplifying the Claim-1 α-helix feature set (adding a positive coefficient × feature decoder direction to the layer-26 residual during autoregressive decoding) produces generated DNA whose translated ORFs have higher mean α-helical content than sequences generated by the identical model without steering.
+**Hypothesis**: H2 — SAE-feature amplification causally increases the α-helical content of Evo2-generated coding sequences.
+**Measurable predicate**: Mean %-helix (DSSP "H" fraction over folded, quality-controlled translated ORFs) of steered generations > mean %-helix of unsteered baseline generations, at a matched decoding setting, with a statistically significant gap (e.g., n≥ per-arm sequences, bootstrap/Mann–Whitney p<0.05) on the quality-controlled subset.
+**Expected direction**: up (steered > baseline)
+**Resources (binding)**: model Evo2-7B; SAE Layer-26 Mixed; readout: ORF extraction → translation → ESMFold → DSSP %-helix; used_n: resolve in Phase 4.5 (per-arm generated-sequence count large enough for significance).
+**Status**: pending verification
+**Notes**: Core target behavior. Requires the specificity/quality controls (ORF-validity rate, perplexity, β-sheet/coil) so the increase is genuine helix gain among valid proteins, not just degradation.
+
+### Claim 3: There is an optimal amplification strength that maximizes α-helical content
+
+**Original (verbatim excerpt from task.md):**
+> determine the optimal amplification strength
+
+**Extracted statement**: Across a sweep of amplification coefficients, mean α-helical content of generated sequences varies systematically (dose–response) and attains a maximum at an interior or saturating coefficient value; beyond it, further amplification does not increase (and/or degrades) helical content or sequence validity. That coefficient is the reported optimum.
+**Hypothesis**: H3 — The steering effect on α-helix is dose-dependent with an identifiable optimal amplification strength.
+**Measurable predicate**: Sweeping coefficient α over a defined grid, the %-helix-vs-α curve is non-flat and single-peaked/saturating; the argmax coefficient α* (subject to a sequence-validity floor, e.g. ORF-validity/perplexity within tolerance) is reported, with the curve reproducible across seeds.
+**Expected direction**: threshold / non-monotone with interior-or-saturating optimum (α*)
+**Resources (binding)**: model Evo2-7B; SAE Layer-26 Mixed; coefficient grid over amplification strength; used_n: resolve in Phase 4.5 (sequences per coefficient × seeds).
+**Status**: pending verification
+**Notes**: Split from Experiment Tips step 3. Depends on Claims 1–2. "Optimal" must be defined against a stated quality/validity constraint to avoid the degenerate optimum where amplification maximizes a helix metric by destroying valid coding structure.
+
+## Verification Mapping
+
+| Claim | Verified by milestone(s) (see `refine-logs/EXPERIMENT_PLAN.md`) | Pass predicate (short) |
+|-------|------------------------------------------------------------------|------------------------|
+| C1 — α-helix-selective SAE features exist | M1 | held-out test AUROC of feature set > null & > β/coil controls |
+| C2 — amplification raises %-helix vs baseline | M2 (provisional), M3b (confirm), M-CTRL (specificity) | held-out conditional+ITT %-helix(α*) > baseline, p<0.05, composition-adjusted, > controls |
+| C3 — optimal amplification strength α* | M2 (dev sweep, α* frozen on val), M3 (held-out confirm) | non-flat single-peaked dose-response; α* reproduces on disjoint seeds, subject to validity floor |
+
+## Literature Landscape
+See `idea-stage/LANDSCAPE.md` (context for baselines, the select-then-steer recipe, and the DNA→ORF→ESMFold→DSSP readout). Never used to alter the captured claims.
+
+## Refined Proposal
+- Proposal: `refine-logs/FINAL_PROPOSAL.md` (unified testing approach + preregistered falsifiability criteria)
+- Experiment plan: `refine-logs/EXPERIMENT_PLAN.md` (milestones tagged per claim; strict full-scale; NO M0)
+- Tracker: `refine-logs/EXPERIMENT_TRACKER.md`
+
+## Next Steps
+- [ ] /auto-experiment to implement and run the verification suite (mechanism family already committed: CHOSEN_FAMILY = SAE amplification; /mechanism-skills routing skipped).
+- [ ] /auto-verify to stress-test each verified claim under method/dataset/model swaps.
+- [ ] /auto-iteration-loop to iterate until reviewer-ready.
+- [ ] Or invoke /auto for the autonomous claim → experiments → verify → review chain.

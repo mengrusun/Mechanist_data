@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal has strong goal-method alignment: it operationalizes faithfulness through causal dependence on the trace, using \"step-corruption/error-injection,\" truncation, and incremental answer-emergence, and it gives explicit directional thresholds such as \"corruption-sensitivity is >=20 pp higher\" and an Experiment 2 gap of \">=15 pp.\" The success and negative conditions are generally decidable, with numeric thresholds and confidence-interval criteria making the claims falsifiable; however, \"dominant language identified per model\" and the definition of dominance from \"training-data/resource proxies\" are not specified sufficiently to eliminate all researcher degrees of freedom. The mechanistic claim is also somewhat stronger than its measurements: the probe and steering tests support a candidate reliance mechanism, but the proposal appropriately acknowledges that it is not a \"formal mediation guarantee,\" so the overall logic is clear but not completely watertight.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is constructing and using the \"CoT-reliance direction\" from \"corruption-sensitive vs corruption-insensitive trials\" and then applying \"steer +CoT-reliance\" with four coefficients; this is custom engineering and raises potential label-circularity concerns, but it is implementable with standard hidden-state extraction, linear probes, activation intervention, and forward-hook tooling rather than being a magic step. The named models, GSM8K, 2WikiMultiHop, multilingual prompting, probes, causal perturbations, and random-direction controls are available through established model/data and PyTorch-style interpretability workflows, while \"related to the existing TrueThinking direction where possible\" is optional rather than an unimplementable dependency. Resources are unusually concrete—\"~300 items each across three families (~900),\" \"5-6 typologically diverse languages,\" five named frozen models, \"3 seeds,\" and a \"70/30 item-disjoint split\"—and the refuting branch is runnable because the design includes answer-only baselines, filler and random-direction controls, accuracy matching, language-split monitor evaluation, and explicit negative thresholds.",
+      "score": 8
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "variant_id": "model-swap-meta-llama3-8b",
+  "claim_id": "C3",
+  "phase": 9,
+  "date": "2026-07-13",
+  "overall_verdict": "WARN",
+  "integrity_status": "warn",
+
+  "triggered_checks": ["A_steering_coefficient_sweep"],
+
+  "checks": {
+    "A_steering_coefficient_sweep": {
+      "verdict": "WARN",
+      "sub_checks": {
+        "sigma_scaling": "PASS — sigma_proj recalibrated from swap model activations; values differ from main (correct behavior)",
+        "alpha_range": "WARN — ±2σ only; ±4σ not tested (same as main supp run)",
+        "coherence_logging": "PASS — format_ok_rate=1.0, mean_5gram_rep=0.0 for all 40 cells",
+        "layer_pick_recalibration": "PASS — ell_V* computed fresh from swap model probe accuracy",
+        "random_direction_control": "WARN — no B2 random-direction baseline at L=16 for swap model",
+        "bidirectional_alpha": "PASS — {-2,-1,0,+1,+2} grid present for all cells"
+      }
+    }
+  },
+
+  "hook_site_verification": {
+    "site": "LlamaDecoderLayer output residual stream (layers[layer_abs])",
+    "matches_main": true,
+    "architectural_compatibility": "Meta-Llama-3-8B-Instruct and Llama-3.1-8B-Instruct share identical LlamaDecoderLayer architecture; L=16 is architecturally equivalent in both 32-layer models"
+  },
+
+  "forward_pass_integrity": {
+    "parse_failure_rate_all_cells": 0.0,
+    "wall_time_consistency": "all cells ~0.29-0.33s (no timeout/OOM events)",
+    "sample_generation_format": "integer responses in [0,20] game range",
+    "verdict": "PASS"
+  },
+
+  "warnings": [
+    "n_baseline=10 per cell (compact sweep); statistical power severely reduced vs main n=200",
+    "no random-direction control at L=16 for swap model",
+    "alpha range truncated at ±2σ (not ±4σ)",
+    "ell_V* for I and M is L=0 in swap model (vs L=2 in main) — genuine representational difference"
+  ],
+
+  "eligible_for_phase10": true,
+  "phase10_note": "WARN verdict; eligible for N_eligible. Coherence gate PASS; hook site verified; forward pass complete. Under-powered but not corrupted."
+}

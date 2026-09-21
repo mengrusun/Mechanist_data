@@ -1,0 +1,50 @@
+{
+  "novelty": {
+    "score": 8,
+    "reasoning": "Core claims are: (1) numeral fragmentation changes inference-time thinking-token length on content-identical math problems at matched accuracy; (2) this excess compute is driven by a prompt-boundary fragmentation/difficulty signal rather than true task difficulty; (3) the signal is decodable and causally patchable; (4) simple re-encoding reduces reasoning length without hurting accuracy. The underlying fact that fragmented numerals hurt performance is known, but the compute-tax framing, matched-accuracy setup, and mechanistic budget-signal claim are new and non-trivial. Closest prior family is numeral-tokenization work on accuracy/efficiency plus overthinking/verbosity steering work; the delta is shifting from accuracy loss to inference compute inflation and a causal mechanism for it.",
+    "revision_notes": [
+      "Make the novelty boundary explicit: this is not 'fragmented numbers hurt arithmetic' but 'they inflate reasoning compute at matched accuracy'.",
+      "Add one sentence contrasting against numeral-tokenization papers and overthinking/verbosity-steering papers separately.",
+      "State clearly whether the mechanism claim is about a learned budget predictor at the prompt boundary or a broader length prior, and what would falsify it.",
+      "Tighten the closest-prior-work section to name the exact prior result family and the delta in one line each."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "The problem is wasted inference compute in reasoning models caused by tokenizer-induced numeral fragmentation. Who cares: efficient-reasoning researchers, tokenizer designers, and deployers of math/reasoning models paying token costs. If true, it changes preprocessing/tokenization choices and suggests a cheap deployment-time fix. The strongest case is that some 'thinking tokens' are not evidence of harder problems but are avoidable overhead introduced by surface form. Impact is meaningful but bounded: it matters most for math-heavy workloads and models using subword numerals, and less if the effect is small or disappears with better tokenizers.",
+    "revision_notes": [
+      "Quantify the practical cost in dollar/latency terms, not just token percentages.",
+      "State clearly which downstream workflows benefit: evals, inference serving, tokenizer design, and reasoning distillation.",
+      "Add a one-line 'so what' for model builders: cheaper inference without retraining if re-encoding works.",
+      "Be explicit about the boundary of real-world reach: mainly numeral-heavy reasoning, not all natural-language tasks."
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The proposal is promising but currently leans on a plausible but not fully pinned-down causal story. Main risk: fragmented numbers may genuinely require more parsing work, so extra tokens could reflect real difficulty rather than an artifact; the proposal acknowledges this, but the hypothesis needs sharper falsifiable separation between 'harder to parse' and 'induced overthinking'. Experiments are mostly feasible and better than average: matched-content variants, mixed-effects, truncate-and-resume, probes, patching, and re-encoding are all testable. Weaknesses: related work could be more specific on inference-time compute/verbosity effects; some metrics ('angle >= 30deg') feel underjustified; the mechanism chain from prompt-boundary signal to token inflation needs tighter operational definitions. Venue strength is moderate-to-good if results are strong; minimum viable edit is to narrow the claim to a measurable compute tax and pre-register the key controls that distinguish artifact from true parsing difficulty.",
+    "revision_notes": [
+      "Rewrite the hypothesis as two separable claims: compute inflation exists, and it is partially mediated by a prompt-boundary budget signal.",
+      "Add a decisive control for true parsing difficulty, e.g. a numerals-only recognition/parsing task with the same token fragments but no arithmetic.",
+      "Define the primary endpoint and thresholds more cleanly; avoid ad hoc metrics unless justified.",
+      "Clarify how 'minimal-solve length unchanged' is measured and why it rules out genuine difficulty increases.",
+      "Specify the causal-patching target, layer, and success criterion before results are discussed.",
+      "Trim or reorganize related work to distinguish overthinking/verbosity, early exit, and numeral tokenization more cleanly."
+    ]
+  },
+  "revision_notes": [
+    "Make the novelty boundary explicit: this is not 'fragmented numbers hurt arithmetic' but 'they inflate reasoning compute at matched accuracy'.",
+    "Add one sentence contrasting against numeral-tokenization papers and overthinking/verbosity-steering papers separately.",
+    "State clearly whether the mechanism claim is about a learned budget predictor at the prompt boundary or a broader length prior, and what would falsify it.",
+    "Tighten the closest-prior-work section to name the exact prior result family and the delta in one line each.",
+    "Quantify the practical cost in dollar/latency terms, not just token percentages.",
+    "State clearly which downstream workflows benefit: evals, inference serving, tokenizer design, and reasoning distillation.",
+    "Add a one-line 'so what' for model builders: cheaper inference without retraining if re-encoding works.",
+    "Be explicit about the boundary of real-world reach: mainly numeral-heavy reasoning, not all natural-language tasks.",
+    "Rewrite the hypothesis as two separable claims: compute inflation exists, and it is partially mediated by a prompt-boundary budget signal.",
+    "Add a decisive control for true parsing difficulty, e.g. a numerals-only recognition/parsing task with the same token fragments but no arithmetic.",
+    "Define the primary endpoint and thresholds more cleanly; avoid ad hoc metrics unless justified.",
+    "Clarify how 'minimal-solve length unchanged' is measured and why it rules out genuine difficulty increases.",
+    "Specify the causal-patching target, layer, and success criterion before results are discussed.",
+    "Trim or reorganize related work to distinguish overthinking/verbosity, early exit, and numeral tokenization more cleanly."
+  ]
+}

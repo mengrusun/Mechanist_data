@@ -1,0 +1,52 @@
+{
+  "novelty": {
+    "score": 8,
+    "reasoning": "Core technical claims: (1) the same matched problem elicits different inference-time compute/think-token allocation as a function of questioner status; (2) this effect is distinct from accuracy/agreement and from difficulty/length confounds; (3) the representation is a status-sensitive effort-budget signal at the prompt boundary that can be probed and causally steered; (4) the human effort-investment theory of power transfers to LLMs. Relative to prior authority-bias and sycophancy work, the actual delta is moving from answer/content/confidence shifts to a new outcome variable: reasoning effort allocation. That is a meaningful and non-obvious next step, and the reframing of the 'expertise not encoded' result into an effort-signal hypothesis is sharp. The novelty lives mainly in the phenomenon/finding plus the mechanistic claim, not in a new dataset or task. The main caveat is that some of the claim space is still adjacent to known social-framing effects; if the effect is weak or reducible to prompt style/length, novelty drops.",
+    "revision_notes": [
+      "State the novelty as an inference-time compute phenomenon, not as a generic 'status affects performance' claim.",
+      "Explicitly separate finding novelty (status changes think tokens) from mechanism novelty (prompt-boundary effort budget) and from application novelty (equity bias).",
+      "Add one sentence clarifying why prior authority/sycophancy/tone papers do not already imply compute allocation effects.",
+      "Specify the exact falsifiable claim: matched content, matched length, same correct answer space, different status cue, different think-token distribution."
+    ]
+  },
+  "impact": {
+    "score": 8,
+    "reasoning": "The problem under study is whether LLMs silently spend less reasoning effort for lower-status users on identical tasks. Who cares: alignment/sycophancy researchers, interpretability, fairness/equity, and anyone deploying reasoning models in user-facing settings. Strongest one-line case: if true, models would not just answer differently by status, they would reason less for lower-status people, revealing a hidden fairness failure in compute allocation. This is important because it could change how people evaluate and audit models: not just outcome parity, but effort parity. Uptake is plausible if the effect is robust because it creates a new lens and metric for auditing reasoning systems. Real-world reach is moderate-to-high due to user-facing assistants, especially in education, healthcare, and enterprise. Phenomenon value is high even if the intervention is simple, because the result would reveal a previously unmeasured social bias in internal computation. If the result comes out negative, serious practitioners may not change much; if positive, they likely would care and audit for it.",
+    "revision_notes": [
+      "Add a concrete audit implication: propose 'effort parity' as a metric alongside accuracy parity.",
+      "Name the deployment contexts where the effect matters most (education, healthcare, enterprise copilots).",
+      "Clarify the downstream change if positive: how developers would test, monitor, or mitigate this bias.",
+      "Include a brief statement of why a null result is still informative about model alignment and social bias limits."
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The proposal is promising and testable, but several claims are currently too broad. The central hypothesis is directionally clear, but not yet fully scoped: 'status-sensitive effort-budget representation' and 'causally mediated' are stronger than what the proposed experiments alone can establish without careful controls. The related work positioning is decent, but needs more specificity about prompt-tone, authority, sycophancy, and any prior compute/length-allocation work to avoid overclaiming novelty. Experimentally, the plan is feasible, but the design is vulnerable to confounds from lexical richness, length, politeness, persona stereotypy, and content-specific priors; these need stricter matching and pre-registered exclusions. Missing are strong controls for generic style effects, explicit measurement reliability for reasoning-token counts, and analysis of whether higher token count actually reflects more compute rather than verbose refusal or hedging. Activation patching and steering are interesting, but the causal story will be hard to defend unless paired with simpler ablations and out-of-sample replication. As written, this could be a serious ML venue paper if the effect is real and the controls are tight, but it needs tighter claims and better experimental hygiene.",
+    "revision_notes": [
+      "Downgrade causal language: say 'consistent with mediation' unless you have a true mediation design.",
+      "Add strict prompt-matching controls for length, politeness, lexical frequency, and persona stereotypy.",
+      "Predefine the exact metric for 'thinking tokens' and how you distinguish reasoning from answer verbosity or refusals.",
+      "Add a null-hypothesis-friendly analysis plan, including effect-size bounds and replication across model families.",
+      "Include baseline comparisons against generic tone/framing manipulations to isolate status specifically.",
+      "State the minimum evidence needed to claim a mechanistic representation versus a behavioral correlation.",
+      "Trim the scope or prioritize the most decisive experiments first; the current plan is too broad for one paper if executed without clear milestones."
+    ]
+  },
+  "revision_notes": [
+    "State the novelty as an inference-time compute phenomenon, not as a generic 'status affects performance' claim.",
+    "Explicitly separate finding novelty (status changes think tokens) from mechanism novelty (prompt-boundary effort budget) and from application novelty (equity bias).",
+    "Add one sentence clarifying why prior authority/sycophancy/tone papers do not already imply compute allocation effects.",
+    "Specify the exact falsifiable claim: matched content, matched length, same correct answer space, different status cue, different think-token distribution.",
+    "Add a concrete audit implication: propose 'effort parity' as a metric alongside accuracy parity.",
+    "Name the deployment contexts where the effect matters most (education, healthcare, enterprise copilots).",
+    "Clarify the downstream change if positive: how developers would test, monitor, or mitigate this bias.",
+    "Include a brief statement of why a null result is still informative about model alignment and social bias limits.",
+    "Downgrade causal language: say 'consistent with mediation' unless you have a true mediation design.",
+    "Add strict prompt-matching controls for length, politeness, lexical frequency, and persona stereotypy.",
+    "Predefine the exact metric for 'thinking tokens' and how you distinguish reasoning from answer verbosity or refusals.",
+    "Add a null-hypothesis-friendly analysis plan, including effect-size bounds and replication across model families.",
+    "Include baseline comparisons against generic tone/framing manipulations to isolate status specifically.",
+    "State the minimum evidence needed to claim a mechanistic representation versus a behavioral correlation.",
+    "Trim the scope or prioritize the most decisive experiments first; the current plan is too broad for one paper if executed without clear milestones."
+  ]
+}

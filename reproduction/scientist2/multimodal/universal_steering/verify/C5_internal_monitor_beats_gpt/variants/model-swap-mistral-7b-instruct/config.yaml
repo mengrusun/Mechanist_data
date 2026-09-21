@@ -1,0 +1,44 @@
+# Variant config — C5 model-swap: Mistral-7B-Instruct-v0.2 (RLHF, non-reasoning, Mistral arch)
+# Diff from main experiment (C5_monitoring): model_path only.
+# Diff from DeepSeek variant: model swapped to Mistral-7B-Instruct-v0.2.
+
+# ---- CHANGED vs main experiment ----
+model_path: /data/zhenqian/models/Mistral-7B-Instruct-v0.2
+
+# ---- FROZEN vs main experiment ----
+run_id: verify_C5_mistral_7b_instruct_v02
+out_dir: /data/zhenqian/Reproduction1/mechanica/multimodal/universal_steering/verify/C5_internal_monitor_beats_gpt/variants/model-swap-mistral-7b-instruct/results
+
+# Data sources (same as C5_monitoring / DeepSeek variant)
+halueval_path: /data/zhenqian/data/monitoring/hegen/data.jsonl
+toxicchat_path: /data/zhenqian/data/monitoring/toxicchat/data.jsonl
+halueval_n: 2000
+toxicchat_n: 584
+
+# Reuse exact same test splits from main experiment for fair comparison
+reuse_splits_from: /data/zhenqian/Reproduction1/mechanica/multimodal/universal_steering/runs/C5_monitoring
+
+# Reuse GPT-4o judge scores (same (prompt,response) pairs, judge is model-agnostic)
+reuse_gpt4o_from: /data/zhenqian/Reproduction1/mechanica/multimodal/universal_steering/runs/C5_baselines
+
+# Training/eval params (frozen)
+batch_size: 8
+max_length: 512
+rfm_iters: 3
+dtype: bfloat16
+device: cuda
+seed: 42
+
+# Split ratios (frozen)
+split_ratios: [0.6, 0.2, 0.2]
+
+# CUDA device (HARD constraint: GPU IDs in {0,1,2,3})
+cuda_visible_devices: "2,3"
+
+# Rationale for adding this variant (iteration 1 of AUTO_REVIEW loop):
+# Cross-architecture control on the "RLHF-tuned models generalize C5" hypothesis.
+# Mistral-7B-Instruct-v0.2 is RLHF-tuned (non-reasoning) but a different architecture
+# family (Mistral) with the same 32-block × 4096-d hidden shape. If BOTH Llama-3-8B
+# AND Mistral-7B beat GPT-4o on ToxicChat, robustness across the model swap axis
+# becomes 2/3 (Llama-3.1 + Llama-3 + Mistral pass; DeepSeek-R1 fails) supporting the
+# narrowed claim.

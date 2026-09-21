@@ -1,0 +1,37 @@
+{
+  "date": "2026-07-19",
+  "auditor": "llm-chat (cross-model reviewer)",
+  "claim_id": "C2",
+  "linked_milestones": ["M1", "M2"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "M1 Grassmann-overlap uses LoRA ΔW SVD structure — no external GT label. M2 outcome P(banana) uses task-specified gpt-5.4 judge at T=0.0 with fixed 10-way prompt. Same measurement instrument as M0; no ad hoc proxy substitution."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "p_banana = banana_n / max(1, len(labels)) where len(labels)=160 (prompt-count fixed, not model-dependent). Deltas are simple arithmetic differences between conditions. No self-referential normalization."
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "12/12 scoped runs have verdict.json. Numbers in EXPERIMENT_RESULTS.md match per-seed table. WARN: planned 8×5=40 runs reduced to 4×3=12 (70% scope cut). Seeds {200,202,205,207} selected as representative low/mid/high P(banana) sample. Interventions {ablate, amplify_x3, random_ablate} cover the three core predicates but omit amplify_x{2,4} needed for the dose-response Spearman-rho check. Scope reduction is documented and budget-motivated, not hidden."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "intervene_and_eval.py: parse_args(), _load_direction(), _estimate_sigma(), _hook(), main() all on active execution path. 12 verdict.json files on disk confirm all code paths executed. location_screen.py: shortlist.json and banana_direction.pt on disk confirm M1 code path live."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "C2 plan success criterion requires 5 predicates on >=6/8 seeds. Realized: 4 seeds, dose-response curve is single-point (amplify_x3 only). Plan's Spearman-rho >=0.9 check is not computable. Result correctly reported as not-supported [provisional — under-power]. No scope overclaim in claim text; caveat is in EXPERIMENT_RESULTS.md."
+    },
+    "eval_type": "task_specified_proxy_and_internal_svd"
+  },
+  "key_findings": [
+    "scope_reduction: 40-run grid reduced to 12 runs (4 seeds × 3 interventions) — budget-motivated, documented in EXPERIMENT_RESULTS.md",
+    "dose_response_incomplete: amplify_x3 only — cannot compute planned Spearman-rho monotonicity check",
+    "result_negative_delocalized: Δ_ablate_mean=-0.015pp (fails >=5pp gate); Δ_random indistinguishable — scientifically interpretable as delocalized carrier",
+    "methodology_sound: forward-hook steering on transformer_blocks[50], sigma-calibrated per site, correct σ_proj-units amplification, matched-random specificity control present"
+  ]
+}

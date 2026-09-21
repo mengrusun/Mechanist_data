@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The behavioral tests closely align with the hypothesis by crossing “REPETITION (0/1/3/5)” with truth and “SOURCE CREDIBILITY,” measuring endorsement against source-only and “no-repetition equal-length” controls. The proposal is strongly falsifiable: H1 requires a “monotone endorsement lift of >=8 pp” and is refuted by “<3 pp,” while H2 requires a distrusted-source lift “>=6 pp” and is refuted at “<=3 pp”; the later ablation and steering hypotheses likewise have explicit success, ambiguous, and negative regions. The main logical gap is that H2 defines ungated behavior as a “small” repetition-by-credibility interaction but its decisive threshold constrains only the absolute distrusted-source lift, so a >=6 pp low-credibility lift could pass even if the high-credibility lift were much larger and the interaction were not small. The mechanistic and intervention metrics otherwise match their stated questions, although “does not reduce the familiarity->verdict slope” lacks the numerical coupling criterion supplied for most other outcomes.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is fitting and applying the “low-credibility -> discount” steering vector so that it genuinely gates the familiarity pathway rather than merely lowering endorsement; this is custom causal engineering, but activation differences, residual-stream hooks, direction ablation, and low-rank steering are standard operations supported by current PyTorch interpretability tooling rather than an undefined magic step. The core named artifacts—“Llama-3-8B, Qwen2.5-7B, and Gemma-2-9B,” FEVER, PopQA, and T-REx—exist, and logistic probes, mixed-effects models, activation ablation, and random-direction interventions have established implementations; the exact “CrAM-style credibility attention modification” comparator is less fully specified but is not required to run the central tests. Resources are unusually concrete, including “~1,000 claims per model,” “300 held-out repeated-claim trials,” “>=400 per model,” three seeds, and 200 unrelated verification items. Negative outcomes are runnable because the design includes shuffle nulls, random-direction and reverse controls, source-only and equal-length controls, trusted-source preservation tests, and explicit failure outcomes such as “ablation has little effect” or “lift unchanged, collateral >5 pp.”",
+      "score": 8
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "novelty": {
+    "score": 7,
+    "reasoning": "Core claims needing novelty: (1) merely advertising an unused tool changes a reasoning model's internal effort and accuracy on the same underlying task; (2) this effect is not explained by real tool invocation or problem difficulty, but by a prompt-bound offloading/effort-budget state; (3) the state is steerable/patchable as a separable representation; (4) the effect generalizes across tool types and models. Relative to human cognitive offloading, this is an analogy rather than a new phenomenon. Relative to AI tool-use work, the key delta is the 'phantom' case: tool availability without invocation. That is a meaningful and non-trivial setting difference, and if real it would be a new behavioral finding in LLMs. The main novelty likely lives in the finding/setting, with a proposed mechanism. Closest prior work family is tool-augmented reasoning / tool choice / effort-control and human offloading; the actual delta is isolating belief in availability from actual use, then linking it to reduced reasoning effort and accuracy.",
+    "revision_notes": [
+      "Make the primary novelty claim narrower: 'unused tool availability causally reduces internal reasoning effort' rather than broad claims about a new general offloading theory.",
+      "Explicitly separate finding vs mechanism: the finding is the effect; the mechanism is only hypothesized unless causal evidence is strong.",
+      "Clarify why this is not reducible to a prompt-style or difficulty cue; specify the minimal semantic change.",
+      "State the closest prior AI work and the exact delta in one sentence in the intro."
+    ]
+  },
+  "impact": {
+    "score": 6,
+    "reasoning": "Problem: hidden reasoning degradation caused by tool affordances even when tools are never used. Who cares: agent/tool-use designers, efficiency-minded deployment, and interpretability/safety researchers. If true, it changes how we present tools to models and could reveal a subtle failure mode where 'availability' silently alters computation budget. Strongest one-line case: tool affordances alone can make models think less, so tool integration can degrade reasoning even before any tool is called. Impact is moderate-to-strong but not transformative: it is mostly a phenomenon/result with practical design implications, not a broad task benchmark or a direct product breakthrough. Uptake could be decent if robust, because it is surprising and actionable, but it is still niche to tool-using reasoning systems and specific model families. Real-world reach is plausible for agent orchestration and prompt design, but the effect must be robust and large enough to matter.",
+    "revision_notes": [
+      "Lead with the deployment implication: tool affordances may silently reduce reasoning quality even without invocation.",
+      "Quantify practical relevance: how much accuracy/token loss would matter in real agent systems.",
+      "Clarify the audience: agent designers vs general LLM users vs safety researchers.",
+      "Avoid overclaiming a 'safety concern' unless the effect is robust, sizable, and cross-model."
+    ]
+  },
+  "review": {
+    "score": 5,
+    "reasoning": "The proposal is interesting and reasonably scoped, but the current hypothesis is still vulnerable to confounds and over-structured mechanistic claims. Main logical gaps: a model may rationally reduce internal reasoning because it expects a tool will be used later, so 'phantom offloading' is not yet distinguished from anticipated delegation. Selection on never-invoked traces risks conditioning bias. Prompt-length, lexical style, and perceived task difficulty can all explain effort changes. The proposed mechanism (offloading/effort-budget representation at the prompt boundary) is plausible but underspecified and currently stronger than the evidence likely supports. Experiments are fairly concrete, but several are ambitious: activation patching, steering, mixed-effects, and accuracy claims all at once. The most important missing controls are: matched prompts without any tool semantics but similar length/style; explicit expectation/forecast controls; randomized tool-availability phrasing; and a direct test that the effect persists when the model is told the tool is available but unavailable for this instance vs generally available. Related work could be more specific about token-budget, effort-control, and prompt-induced behavior. Minimum viable edit: narrow the paper to a behavioral effect with strong controls, and treat mechanistic localization/steering as optional secondary evidence.",
+    "revision_notes": [
+      "Add a control that separates 'tool available now' from 'tool generally exists' and from 'you will not be allowed to use it'.",
+      "Pre-register the exclusion rule for never-invoked traces and report all traces as a robustness check.",
+      "Add matched prompt controls for length, syntax, and expectancy, plus an irrelevant-affordance control.",
+      "Downgrade the mechanistic claim from 'representation located' to 'evidence consistent with a separable state' unless patching/steering is decisive.",
+      "Reduce scope: prioritize one or two models and one strong task family before broad generalization."
+    ]
+  },
+  "revision_notes": [
+    "Make the primary novelty claim narrower: 'unused tool availability causally reduces internal reasoning effort' rather than broad claims about a new general offloading theory.",
+    "Explicitly separate finding vs mechanism: the finding is the effect; the mechanism is only hypothesized unless causal evidence is strong.",
+    "Clarify why this is not reducible to a prompt-style or difficulty cue; specify the minimal semantic change.",
+    "State the closest prior AI work and the exact delta in one sentence in the intro.",
+    "Lead with the deployment implication: tool affordances may silently reduce reasoning quality even without invocation.",
+    "Quantify practical relevance: how much accuracy/token loss would matter in real agent systems.",
+    "Clarify the audience: agent designers vs general LLM users vs safety researchers.",
+    "Avoid overclaiming a 'safety concern' unless the effect is robust, sizable, and cross-model.",
+    "Add a control that separates 'tool available now' from 'tool generally exists' and from 'you will not be allowed to use it'.",
+    "Pre-register the exclusion rule for never-invoked traces and report all traces as a robustness check.",
+    "Add matched prompt controls for length, syntax, and expectancy, plus an irrelevant-affordance control.",
+    "Downgrade the mechanistic claim from 'representation located' to 'evidence consistent with a separable state' unless patching/steering is decisive.",
+    "Reduce scope: prioritize one or two models and one strong task family before broad generalization."
+  ]
+}

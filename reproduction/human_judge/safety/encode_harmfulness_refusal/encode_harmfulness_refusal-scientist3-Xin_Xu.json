@@ -1,0 +1,234 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Xin Xu",
+    "paper_title": "LLMs Encode Harmfulness and Refusal Separately",
+    "agent": "scientist3",
+    "review_date": "2026-07-20"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "全流程只有一次 train_test_split(test_size=0.3, random_state=42) 的两分法，没有独立 test 划分；best layer 与 N_PER_CLASS 都在这 30% 上取 val_acc 的 argmax，取到的最大值又被直接当作报告指标（stage2 line 452-472 把 overall_best['val_acc'] 赋给 harmfulness_direction_probe_accuracy；stage1 line 485-496 在同一份 val 上生成 predictions/ground_truth，stage_progress.json 却记为 'test accuracy (best layer)=1.0000'），属于同一份数据既选择又报告。但核心 steering / jailbreak 结论用的是不相交留出集（stage3 line 461-463: harm_eval = harmful[200:220] vs 拟合池 harmful[:200]），未被污染。",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_b1d49e14d4ba4b84886b37becaa99043.py",
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json",
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_1123b89974864fd4b6e87b401e98f68d.py",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "harmfulness 标签用数据集来源代理（AdvBench=1 / Alpaca=0）尚可，但 refusal 标签是假定而非观测：stage3 line 324-325 明写 'on-policy assumption that the model refuses AdvBench and complies with Alpaca'，即 refusal 方向与 harmfulness 方向共用同一套标签、只换 token 位置，从未采集模型实际的拒绝/接受行为，而原论文的分离证据恰恰依赖『被接受的有害』『被拒绝的无害』这两类错配样本，因此该标签无法支撑 claim 1-3 的『两个概念分离』。此外 steering 后的『internal harm probability』把激活投影到同一条 harm_dir 再过同一个 clf（line 422-433），沿该方向加向量必然抬高投影，属循环判据。",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_4f2b5f55168344ee99ec33a3b60e8506.py",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主模型与主数据集是对的（四个 stage 都只加载 MODEL_DIR/Meta-Llama-3-8B-Instruct，数据只 join 了 DATA_DIR/AdvBench 与 DATA_DIR/Alpaca），但 idea.md 标为 'Fixed resources (always used)' 的 Llama Guard 3 8B 与 GCG/persuasion 越狱模板在全部代码中零出现（from_pretrained 只有一处、DATA_DIR 只 join 了两个数据集），claim 5 因此完全没有 baseline、claim 4 用『沿 -refusal 方向 steering』顶替真实越狱方法，均属静默缺失。更严重的是 research_summary.json 与 stage4 journal.json 的 plot_analyses 大量描述 'Latent Guard vs Llama Guard 3 8B 在 AdvBench/JBB/Sorry-Bench/CATQA 上的 F1'、'GCG/persuasion/AutoDAN 的 ASR 曲线'、'XSTest 过度拒绝'、'Llama-2-Chat-7B 与 Qwen2-Instruct-7B 跨模型验证'，这些资源代码里根本没跑过，是 VLM 看图臆造的内容。此外 AdvBench 仅取 200 条/类（stage3 line 223 N_EXTRACT=200）。",
+    "score": 1,
+    "evidence_files": [
+      "idea.md",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_4f2b5f55168344ee99ec33a3b60e8506.py",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "claim 1-2 的 probe used_n=200/类（400 条，70/30 划分）尚可，但所有行为性结论建立在 EVAL_N=20/类 的极小集上（stage3 line 461-463），refusal rate 一条样本即 5%；claim 4 的核心数字更只有 6 条支撑（stage3 notes/stage_progress.json: 'Number of non-refused harmful prompts under -R steering=6.0000' → mean harm prob=0.8556），且用 -refusal steering 代替真实越狱方法。claim 5（Latent Guard vs Llama Guard 3 8B）则完全没有对应实验，却在 research_summary.json 中被写成 'Latent Guard matches or beats Llama Guard 3 8B across AdvBench, JBB, Sorry-Bench, Alpaca'。即前四条 claim 有真实但稀薄的证据，仅第五条属未跑实验即下结论。",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+      "logs/0-run/research_summary.json",
+      "report.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "全程单种子单次运行（bfts_config.yaml: multi_seed_eval.num_seeds=1、k_fold_validation=1；四对 experiment_* 目录的 experiment_code.py 互相 diff 只多出 seed=0 一段，并非不同种子），四个 seed_aggregation_*/aggregation_plotting_code.py 的 experiment_data_path_list 都只含 1 条路径，mean_sem() 在 len<=1 时直接返回 sem=0.0，于是聚合图标着 'mean ± SEM' 却画出恒为零的误差棒、标题写 'aggregated over 1 runs'（agg_steering_harmful.png），是伪装成多次运行的不确定性。同时把零效应当作真实效应：delta_H_h=0.0000、delta_H_r=0.0000、Dissociation Score=0.0875（stage3 notes/stage_progress.json），draft_summary.json 却据此写 'Demonstrating causal dissociation via steering'。",
+    "score": 1,
+    "evidence_files": [
+      "bfts_config.yaml",
+      "logs/0-run/experiment_results/seed_aggregation_1468f758c1964591a3dd67d34dedf69e/aggregation_plotting_code.py",
+      "logs/0-run/experiment_results/seed_aggregation_1468f758c1964591a3dd67d34dedf69e/llama3_advbench_alpaca_agg_steering_harmful.png",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "确有真正的干预（activation addition steering，±harm/±refusal × harmful/benign），stage4 还做了注入层转移消融（INJECTION_LAYERS=[4,8,10,12,26,30]），在注入层 4 得到 Delta R_r=0.8750 vs Delta R_h=0.3250、DDS=0.6315 的真实行为学解离，方向与论文一致。但 rubric 点名的两项对照都缺：steering 阶段全无随机方向 baseline（stage3/4 的 steering 代码中无 randn/standard_normal，随机方向仅用于 probe），引导系数固定为 1.0×diff_norm 且无 sweep（stage3 line 431-432），而 draft_summary.json 却称 'steering ... with alpha in [-2, 2]'。此外因果读数循环：harm 效应用同一条 harm_dir 的投影度量，注入层低于读取层时 Delta H_h=0.8425/0.9059 大部分是几何必然而非模型认知；主实验（注入=读取层 10）Delta H_h=0.0000，仍被写成 'Demonstrating causal dissociation via steering'。",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_4f2b5f55168344ee99ec33a3b60e8506.py",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "实验层数字可溯源：journal.json 的 _term_out 存有真实 stdout（'cosine(harm_dir, ref_dir) = 0.2473'、'direction_dissociation_score = 0.0875'、'mean internal harmfulness prob = 0.856'），与 notes/stage_progress.json 逐条吻合；但 experiment_data.npy（stage3 line 803 写出）在交付产物中全部缺失，绘图无法复算。真正的问题在汇总层大量数字既无产物又与日志矛盾：draft_summary.json 把 loss_per_layer.png 描述成 'steering along the refusal direction, alpha −2 to 2, refusal rate 0%→100%'、把 probe_per_layer.png 描述成 'ASR: Baseline ~15% vs Refusal Suppression ~68%'、把 probe_accuracy_baselines.png 描述成 'cosine similarity ... peaks at ~0.65-0.70'（实际日志唯一的 cosine 值是 0.2473，且 stage1 代码根本没有 steering/ASR/cosine），research_summary.json 另有 'Latent Guard vs Llama Guard 3 8B F1 ~0.98 vs 0.95'、'GCG ~40% ASR at alpha=1.0' 等零实验数字，其中 'triples-plus attack success rate' 被 report.md 引为 Significance。",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/experiment_df77239ac0e24ba5a7cb35d000f5cf59_proc_395435/plotting_code.py",
+      "report.md"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "多处实质性不一致：(a) 文字结论与自身数字矛盾——research_summary.json 写 'Steering along the harmfulness axis does not flip refusal behavior for harmful prompts'，而同 run 记录的 delta_R_h=0.3750（stage3 notes/stage_progress.json）；draft_summary.json 写 'Demonstrating causal dissociation via steering'，而 delta_H_h=delta_H_r=0.0000。(b) 同一指标跨产物不同——report.md 记 good 节点 3/4/4/4（与 journal.json 的 is_buggy 统计一致），notes/stage_progress.json 却记 2/3/3/3，四个 stage 均差 1；draft_summary.json 称 'Sample size is ~150/class'，代码为 N_PER_CLASS=200。(c) 状态未传播——ablation_summary.json 是空数组 []，而 stage4 实际跑了 4 个节点并产出逐注入层 DDS；report.md 五条 claim 的 verdict 全是占位符 'See overall verdict'，且 'What the agent actually ran' 五条完全相同、都填的是 stage1 初始实现描述，claim 3/4/5 对应的 stage3/4 结果从未进入任何 claim 级判定。",
+    "score": 1,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/ablation_summary.json",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Instruction-tuned LLMs represent harmfulness perception and refusal execution as two distinct, approximately linear directions in the residual stream, and each can be recovered without disturbing the other.",
+        "method": {
+          "justification": "difference-of-means 提取方向 + 1D logistic probe，与论文 Eq.5 的 difference-in-means 同法，并配有随机方向与打乱标签两个对照；但 refusal 方向是按数据集标签（stage3 line 324-325 的 on-policy assumption）而非模型实际拒绝/接受行为提取，与论文按行为分组的做法不同。",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"
+          ]
+        },
+        "experiment": {
+          "justification": "层扫描 [10,14,16,18,20,24] 加 stage2 的 N∈{100,200,400,500} 扫描，双基线齐备；但 probe 精度是在同一 30% 上选层后报告（selection-on-eval），且 cos(harm,refusal) 只在 best layer 单点计算，未做跨层比较或与 held-out 拒绝样本对照。",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py",
+            "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_1123b89974864fd4b6e87b401e98f68d.py"
+          ]
+        },
+        "result": {
+          "justification": "实测 cos(harm_dir, refusal_dir)=0.2473，与论文报告的低相似度（Llama2 约 0.1）同向同结构，支持两方向确实不同，定性一致；但 draft_summary.json 把该结果描述成 cosine similarity peaks at ~0.65-0.70 in mid layers，与自身日志矛盾，分析层不可靠。",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+            "logs/0-run/draft_summary.json"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The two signals live at different token positions: the harmfulness judgment is written at the final instruction-token position, while the decision to refuse is committed just after the instruction, immediately before the response begins.",
+        "method": {
+          "justification": "position A（用户消息最后一个 token）与 position B（assistant header 之后、生成前最后一个 token）的定义与论文的 t_inst / t_post-inst 对应正确，取残差流激活的做法也与论文一致。",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"
+          ]
+        },
+        "experiment": {
+          "justification": "判定 metric 与 claim 错位：论文的判据是错配样本（被接受的有害 / 被拒绝的无害）在两个位置分别落入哪个簇，以及去掉 post-instruction token 后拒绝率的下降（论文 Table 1）；两项都没做——format_user_only 只在 line 211 用于计算 token 索引，从未用于生成。实际只比较了两个位置对同一套标签的 probe 精度，无法区分该位置编码的是 harmfulness 还是 refusal。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"
+          ]
+        },
+        "result": {
+          "justification": "实测 posA 0.9833 vs posB 0.9917，两位置几乎相同，本身并不支持位置分化；research_summary.json 却用 Bar chart showing refusal rate across three token positions: Last Instruction ~13-15%, Post-Instruction ~92-95% 宣称支持，而该图实为 llama3_advbench_alpaca_steering_benign.png，对应实验从未运行。不一致却被包装成一致。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Additive steering along either direction yields dissociated effects — moving along the harmfulness axis flips the model's internal judgment of whether an input is harmful, independent of whether it refuses; moving along the refusal axis flips refusal behaviour without changing that internal judgment.",
+        "method": {
+          "justification": "activation addition steering 是真正的干预，与论文 3.4/3.5 节同一方法族；但判断内部有害性是否翻转时用的是把激活投影到同一条 harm_dir 再过同一个 clf（line 422-433），属循环读数，论文改用 reply inversion task 读模型实际生成的 Certainly/No，是独立于 steering 方向的行为读数。",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"
+          ]
+        },
+        "experiment": {
+          "justification": "缺少 rubric 点名的两项对照：steering 阶段无随机方向 baseline（stage3/4 中无 randn/standard_normal），系数固定 1.0×diff_norm 且无 sweep（line 431-432）；EVAL_N=20/类；且主实验注入层与探针读取层同为 10，hook 挂在 layers[10] 输出只影响 hidden_states[11]，导致 ΔH 恒为 0。stage4 的注入层转移消融部分弥补。",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py",
+            "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_4f2b5f55168344ee99ec33a3b60e8506.py"
+          ]
+        },
+        "result": {
+          "justification": "stage4 注入层 4 得到 ΔR_r=0.8750 vs ΔH_r=0.1294、ΔR_h=0.3250，即两方向都能引出拒绝而 refusal 方向更强，与论文 Figure 4 定性一致；但主实验条件下 ΔH_h=ΔH_r=0.0000 仍被 draft_summary.json 写成 Demonstrating causal dissociation via steering，research_summary.json 更称 harmfulness axis does not flip refusal behavior，与自身 ΔR_h=0.3750 矛盾且背离论文结论。",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+            "logs/0-run/stage_4_ablation_studies_1_first_attempt/notes/stage_progress.json",
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "A notable class of successful jailbreaks operates by suppressing the refusal signal while the harmfulness signal remains active — the model still internally recognises the input as harmful yet answers — a signature that a hidden-state probe can pick up.",
+        "method": {
+          "justification": "用沿 -refusal 方向 steering 模拟越狱，而非 idea.md 指定为 fixed resources 的 GCG 对抗后缀、persuasion、对抗模板三类真实越狱方法（27 个节点代码中零出现），方法族偏离论文第 4 节。",
+          "score": 2,
+          "evidence_files": [
+            "idea.md",
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"
+          ]
+        },
+        "experiment": {
+          "justification": "判据建立在 6 条样本上（stage3 notes/stage_progress.json: Number of non-refused harmful prompts under -R steering=6.0000），且内部仍认为有害用的仍是循环的 harm_dir 投影读数，没有任何真实越狱 prompt 参与。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py",
+            "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"
+          ]
+        },
+        "result": {
+          "justification": "6 条样本的 mean internal harm probability=0.8556 方向上与论文越狱压制拒绝但模型内部仍判定有害一致；但 research_summary.json 与 stage4 journal.json 编造了 GCG suffix / persuasion / AutoDAN 的 ASR 随 alpha 曲线、GCG 在 alpha=1.0 达 ~40% ASR 等从未运行的结果。",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C5": {
+        "claim": "A lightweight \"Latent Guard\" classifier trained on the harmfulness direction matches or beats a dedicated safety judge (Llama Guard 3 8B) at flagging jailbreak attempts, at a fraction of the compute.",
+        "method": {
+          "justification": "无任何方法实现——Llama Guard 3 8B 在全部 4 个 stage 共 27 个节点的 code 字段中零出现，from_pretrained 只加载了 Meta-Llama-3-8B-Instruct，该 claim 未被实施。",
+          "score": 1,
+          "evidence_files": [
+            "idea.md",
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"
+          ]
+        },
+        "experiment": {
+          "justification": "零实验：没有 guard 分类流程、没有 JBB / Sorry-Bench / CATQA / XSTest 数据加载、没有与任何专用安全判别器的对比，也没有计算开销比较。",
+          "score": 1,
+          "evidence_files": [
+            "idea.md"
+          ]
+        },
+        "result": {
+          "justification": "research_summary.json 仍写出 Latent Guard matches or beats Llama Guard 3 8B across AdvBench, JBB, Sorry-Bench, and Alpaca 以及 F1 ~0.98 vs 0.95 等完全无产物支撑的结论，属于在未运行实验的情况下伪装成与论文一致。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/research_summary.json",
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

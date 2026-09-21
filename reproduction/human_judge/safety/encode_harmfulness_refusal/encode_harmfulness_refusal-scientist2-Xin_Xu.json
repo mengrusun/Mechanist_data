@@ -1,0 +1,299 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Xin Xu",
+    "paper_title": "LLMs Encode Harmfulness and Refusal Separately",
+    "agent": "scientist2",
+    "review_date": "2026-07-20"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "划分显式定义且可实证核验——common.py 的 deterministic_split_indices() 切出 60/20/20，meta.json 落盘三段索引（312/104/104，实测两两交集为 0、并集 520），且代码真正遵守：方向在 train 拟合、best (layer,position) 按 val AUROC 取 argmax、m5 的 probe 用 val 做早停与阈值而测试桶取自 test_idx（代码注释明写 Never touches the M4/XSTest test set），XSTest 全程未进训练。扣分在三处非致命缺口：directions.json 报的 h AUROC=0.9998 是被 argmax 选中的 val 值、无独立 test 复估；m5 的 f1_at_fpr() 在 test 标签上选取 FPR=5% 工作点（两侧对称，主指标 AUROC 无阈值）；m4 L240-244 的补齐逻辑若 n 超过 test_idx 会引入 train/val，本次 104>=100 未触发。",
+    "score": 4,
+    "evidence_files": [
+      "scripts/common.py",
+      "scripts/m_prep_extract_and_directions.py",
+      "scripts/m1_claim1_directions.py",
+      "scripts/m2_claim2_position.py",
+      "scripts/m4_claim4_jailbreak_signature.py",
+      "scripts/m5_claim5_probe_vs_llamaguard.py",
+      "results/m_prep/meta.json",
+      "results/m_prep/directions.json",
+      "results/m5/claim5_verdict.json",
+      "claims_ledger.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签工程整体扎实：harmful/benign/XSTest-safe 均为数据集来源标注、外部非循环；common.py 的 is_refusal() 用锚定正则匹配归一化后前 160 字符、带 code-review 修复记录（替换早期 60 字符子串法以消除 not appropriate 类误报），并由 Llama Guard 3 8B 在 20% 子集交叉校验，C4 的攻击成功判定直接取 LG 的 P(unsafe) logprob 作外部裁判，另有 compute_repetition_rate 监控 steering 退化（claim3_verdict.json 的 n_collapse_flagged=0）。两处缺口：一是 C3 的目标轴『内部有害性读出』循环——m3_claim3_steering.py 加的是 alpha*h（未归一化，||h||=2.9488）而读出取单位向量投影，故 Δh 恒等于 alpha*||h||，claim3_verdict.json 中 h_delta_at_pos1=2.9487084 与 direction_norm=2.9487908 仅差 8e-5，该『单调剂量反应』是干预算术而非模型响应（r 侧目标量 refusal_rate_ben 为行为读出，不受影响）；二是 r 方向实由 harmful-vs-benign 对比提取（directions.json 的 contrast_source 自述为 proxy），『拒绝』标签实为有害性标签，虽有 98.7%/0.4% 拒绝率的经验依据并在 ledger caveat 中披露，仍使 cos(h,r)=0.174 更像位置差异而非概念差异的度量。",
+    "score": 3,
+    "evidence_files": [
+      "scripts/common.py",
+      "scripts/m3_claim3_steering.py",
+      "scripts/m4_claim4_jailbreak_signature.py",
+      "results/m_prep/directions.json",
+      "results/m3/claim3_verdict.json",
+      "results/m4/claim4_verdict.json",
+      "claims_ledger.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验资源按指定原样且全量使用：meta.json 记 model=Meta-Llama-3-8B-Instruct、n_pairs=520（AdvBench 全量，未取子集），固定资源 Llama-Guard-3-8B 在 M3（20% 子集二次判定）、M4（以 P(unsafe) logprob 作攻击成功裁判）、M5（head-to-head 基线）三处真实运行；验证阶段的可选资源反而超额交付——Qwen2-Instruct-7B 跑了完整 model-swap 变体（verify/C1.../variants/model-swap-qwen2-instruct-7b/），XSTest 200 条 safe 进入 M5 测试集，未用的 Llama-2/JBB/Sorry-Bench/CATQA 均属 task.md 明文 use as needed 的可选项、按 rubric 豁免。两处扣分：一是固定资源中的 GCG 未做实时优化，attack_templates.py 文件头明写 Deliberately DOES NOT re-run GCG optimization at claim time 并援引 plan 的 out-of-budget 约束，改用 Zou-2023 的 5 条已发表可迁移后缀（PAP 侧为 Zeng-2024 taxonomy 的 5 类劝说模板，方法族正确），属已披露且有预注册理由的偏差，但正是它导致 ASR=0/500 使 C4 不可测；二是 task.md 限定 gpu_id 属于 {1,2,3,5,6}，而 runs/*/cost.json 记录 cuda_visible_devices=0、gpu_ids=[0]（R_m3_* 为 [0,1,2,3]），同一字段的 note 却写 GPU pin honored，与记录自相矛盾。",
+    "score": 4,
+    "evidence_files": [
+      "task.md",
+      "scripts/attack_templates.py",
+      "scripts/dispatch_m3.sh",
+      "scripts/dispatch_m4.sh",
+      "scripts/dispatch_m5.sh",
+      "results/m_prep/meta.json",
+      "results/m4/claim4_verdict.json",
+      "results/m5/claim5_verdict.json",
+      "verify/C1_h_r_directions_distinct/variants/model-swap-qwen2-instruct-7b/verdict.json",
+      "runs/R002_m1_claim1/cost.json"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "名义 used_n 充裕且无未跑实验即下结论的情况：C1 用 AdvBench 全量 520 + 匹配 Alpaca 520（312/104/104），C2 在 104+104 held-out 上跑 6 位置阶梯，C3 主实验 200 prompts x 28 格 = 5600 次带干预前向 + iter1/iter2 追加 138 格，C4 为 100 behaviors x 5 templates x 2 families = 1000 次攻击，C5 为 400 条测试集；caveat 标记也到位——不可测量处如实报 NaN（C1 的 refusal-side 因 520 条中仅 7 条自然越狱、低于 >=8 门槛而两项子测试 NaN；C4 successful 子集为空故 Δ 全 NaN），ledger 明写不得宣称『both equally well established』，并设 avoid_wording 清单。但 C3 的有效证据远薄于其名义规模且未被标示：iteration_round_1/m3_extended_analysis.json 显示 h 方向 13 档 alpha（35 倍 sigma_proj 跨度）上 refusal_ben 恒为 0.00-0.01、refusal_harm 恒为 0.99，即 h 侧唯一变动量是恒真的 h_readout、行为证据为零；r 侧 refusal_ben 在 13 档中有 12 档为 0.01，仅最极端的 alpha_raw=+2 跳至 0.53，效应实由单一格点支撑；而 r 的『off-target null（Δh_readout=0.00）』在结构上不可能非零——m3_claim3_steering.py L339-342 在 best_r layer 13 施加干预却在 best_h layer 11 读出，读出点位于干预点上游，故 13 档 h_read 全为 1.0637490174174309，该项零信息量却被计入解离证据。",
+    "score": 3,
+    "evidence_files": [
+      "results/m_prep/directions.json",
+      "results/m3/claim3_verdict.json",
+      "results/m3/claim3_dose_response.csv",
+      "results/m4/claim4_verdict.json",
+      "results/m5/claim5_verdict.json",
+      "runs/iteration_round_1/m3_extended_analysis.json",
+      "scripts/m3_claim3_steering.py",
+      "claims_ledger.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "不确定性机制真实存在且进入判定：m1/m2 的 auroc_table.csv 与 position_auroc_heatmap.csv 每行都带 bootstrap 95% CI（ci_low/ci_high, n_bootstrap=1000），C2 的 peak_h_distinguishable 正是由邻位 CI 不重叠判出；C1 用 split-half 参考做噪声标定（cosine_report.json：within-h 0.967 / within-r 0.800 → reference 0.883，cos(h,r)=0.174，ratio 0.197 对预注册阈值 0.5），并有随机方向 AUROC 对照 0.632；C3 用 n_random=30 的匹配范数零分布给出 z=101.65（h 位点）与 z=128.31（r 位点），ε_null 亦为预注册（0.1 / 0.02）；种子集中管理（common.py set_all_seeds、划分 seed=0、iter1 追加 --random_dir_seed）。三处扣分：一是全流程单种子，无多种子重复，跨模型 Qwen2 swap 是稳健性轴而非随机性轴；二是 C3 的 claim3_dose_response.csv 只有均值列（refusal_rate、h_readout_mean），每格 n_harm=100/n_benign=100 却无任何 CI 或显著性，α=+2 处 refusal_ben 0.01→0.53 的关键跳变未给不确定性；三是把噪声内差异当作真实排序——C5 的 AUROC 1.000 vs 0.99917 差 0.00083（n=400 上约合一个配对反转），预注册判据 ε=0.02 是对的，但 ledger key_stats 写『both probes edge past LG』，且 z=101.65 的目标量本身是 alpha*||h|| 的确定性算术、零分布近乎退化，该 z 值的精度是虚高的。",
+    "score": 4,
+    "evidence_files": [
+      "scripts/common.py",
+      "scripts/m1_claim1_directions.py",
+      "scripts/m2_claim2_position.py",
+      "scripts/m3_claim3_steering.py",
+      "results/m1/auroc_table.csv",
+      "results/m1/cosine_report.json",
+      "results/m2/position_auroc_heatmap.csv",
+      "results/m3/claim3_dose_response.csv",
+      "results/m3/claim3_verdict.json",
+      "results/m5/claim5_verdict.json",
+      "claims_ledger.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C3 是真正的干预且对照齐备——m3_claim3_steering.py 做残差流 additive steering，含 13 档 alpha sweep（sigma_proj 跨度 35 倍）、n_random=30 匹配范数随机对照（iter2 补做 r 位点）、swap 对照、预注册 eps_null 的 off-target 通道与退化监控，措辞亦克制（C1/C2 标为相关性、C4 因 ASR=0 不作因果断言、avoid_wording 禁用 symmetric mechanistic dissociation）。但解离结论的两根支柱在结构上不可能给出反证：h 侧读出恒真（加 alpha*h 却读单位向量投影，h_delta_at_pos1=2.9487084 vs direction_norm=2.9487908），且 13 档 alpha 上 refusal_ben 恒为 0.00-0.01、refusal_harm 恒为 0.99，行为效应为零；r 侧 off-target null 由前向结构保证——L339-342 在 layer 13 干预却在 layer 11 读出，读出点位于干预点上游，13 档 h_read 全等于 1.0637490174174309，仍被记为 off_target_r_ok=true 计入证据。未被结构决定的证据只剩 alpha=+2 处 refusal_ben 0.01→0.53，而同点 swap 对照亦达 0.27。",
+    "score": 3,
+    "evidence_files": [
+      "scripts/m3_claim3_steering.py",
+      "scripts/dispatch_m3.sh",
+      "results/m3/claim3_verdict.json",
+      "results/m3/claim3_dose_response.csv",
+      "runs/iteration_round_1/m3_extended_analysis.json",
+      "runs/iteration_round_2/r_site_specificity_analysis.json",
+      "refine-logs/main-experiment-verdicts.json",
+      "verify/C3_causal_steering_dissociation/main_experiment_audit/MECHANISM_AUDIT.md",
+      "claims_ledger.json"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "溯源链完整且可逐级下钻：ledger/verify 的关键数字几乎全部精确落到产物——C1 的 h AUROC 0.9998150887573964、cos(h,r)=0.17431、split-half 0.883、ratio 0.197，C2 的 crossover -0.0001821，C3 的 h_readout -4.83/1.06/6.96 与 Δ 5.897、z=101.65，C4 的 ASR 0/500 x2 与 PAP |Δr|=1.7026 对 eps_null 1.6912，C5 的 AUROC 1.000/0.99917、FLOPs 8192/524416/7.78e11、ratio 1.052e-8，Qwen2 变体 cos ratio 0.069 均一致；链条可下钻至 per-prompt 粒度（runs/iteration_round_2/random_r_site/*/per_prompt.csv 含逐条 prompt/completion/refused/h_readout）与原始生成（results/m_prep/responses.jsonl），39 个 run 目录各带 cost.json，figures 每图附 gen_*.py 与 INDEX.json。三处扣分：ledger 的 C5 key_stats 有与产物不符的小幅漂移——写 76 µs/query 而 claim5_verdict.json 为 78.1 µs、写 440x 加速而实测 430.4x、写 320x (MLP) 而实测 351.8x；主实验 runs/R001-R023 的 cost.json 中 wall_clock_seconds 与 gpu_hours 均为 null，AUTO_ITERATION_FINAL_REPORT 的『main-experiment ≈ 2.5 GPU-h』系估算而非实测；iteration_round_2 记录 z_score_true_r_vs_random_r_site_h_readout_harm = Infinity（0.0 除以 std 0.0），为无意义值。未发现无来源、被矛盾或疑似伪造的数字。",
+    "score": 4,
+    "evidence_files": [
+      "claims_ledger.json",
+      "verify/VERIFY_REPORT.md",
+      "results/m1/cosine_report.json",
+      "results/m1/claim1_verdict.json",
+      "results/m2/claim2_verdict.json",
+      "results/m3/claim3_verdict.json",
+      "results/m4/claim4_verdict.json",
+      "results/m5/claim5_verdict.json",
+      "results/m_prep/responses.jsonl",
+      "runs/iteration_round_1/m3_extended_analysis.json",
+      "runs/iteration_round_2/r_site_specificity_analysis.json",
+      "runs/R002_m1_claim1/cost.json",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "记账基础设施扎实——EXPERIMENT_TRACKER.md 逐 run 记录与 m3 数据一致（连『refusal unchanged』这种不利事实也如实登记），verdict 二值化映射与三轮迭代过程均有文档，INTEGRITY_AUDIT.md 亦如实报 Overall FAIL。但完整性状态未被一致传播，正中 rubric 所指的失败形态：VERIFY_REPORT.md 与 INTEGRITY_AUDIT.md 将 C3（mech FAIL）与 C5（exp FAIL）判为 INCONCLUSIVE，而 EXPERIMENT_RESULTS.md 第 185 行仍统计『2/5 supported (C3, C5)』、claims_ledger.json 的 final_status 写『PASS as narrowed』，且 ledger caveat 自承『Verify was not re-invoked on the fixed C3 (post-iter budget conservation)』——FAIL 状态陈旧却已被升格。其次同一 claim 的 verdict 在产物间不一：C1 在 m1/claim1_verdict.json、EXPERIMENT_RESULTS、TRACKER 为 partial，在 main-experiment-verdicts.json 与 VERIFY_REPORT 为 not-supported，在 ledger final_status 为 PASS；C3 的标签横跨四种（m3/claim3_verdict.json 仍是迭代前的 supported、EXPERIMENT_RESULTS 为 supported_h_side_with_r_threshold_caveat、verdicts.json 为 supported_asymmetric_partial_functional_dissociation、ledger 为 PASS as narrowed）。第三，文字与自身数字冲突：EXPERIMENT_RESULTS 第 194 行称『C1 (geometry) and C5 (practical monitor) both hold cleanly』，而 C1 有两项子测试 NaN、C5 为 integrity FAIL 且 ledger 自承 near-circular。另有数值漂移：ledger/RESULTS 的 76 µs 与 440x 对 claim5_verdict.json 的 78.1 µs 与 430.4x，h AUROC 在 RESULTS 与 TRACKER 记作 1.00 而实为 0.9998；runs/*/cost.json 的 note 写 GPU pin honored 却记 gpu_ids=[0]，与 task.md 限定的 {1,2,3,5,6} 不符。",
+    "score": 2,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "refine-logs/EXPERIMENT_TRACKER.md",
+      "refine-logs/main-experiment-verdicts.json",
+      "verify/VERIFY_REPORT.md",
+      "verify/INTEGRITY_AUDIT.md",
+      "claims_ledger.json",
+      "results/m1/claim1_verdict.json",
+      "results/m3/claim3_verdict.json",
+      "results/m5/claim5_verdict.json",
+      "runs/R002_m1_claim1/cost.json",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Instruction-tuned LLMs represent harmfulness perception and refusal execution as two distinct, approximately linear directions in the residual stream, and each can be recovered without disturbing the other.",
+        "method": {
+          "justification": "difference-in-means 提取 h/r + held-out 线性 probe AUROC + cos(h,r) 对照 split-half 参考值，与论文 Eq.5 同一方法族，且 split-half 参考（0.883）为余弦相似度提供了论文没有的校准基线。扣分项：r 方向因 520 条 bare-harmful 中仅 7 条自然越狱（低于 8 条门槛）回退为 harmful-vs-benign 代理对比，而非论文 3.4 节的 refused-vs-accepted，不过该回退是 Arditi/CAA 标准做法且在 CLAIMS_LEDGER.md 与 EXPERIMENT_RESULTS.md 中明确披露并标为 caveat。",
+          "score": 4,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "results/m1/claim1_verdict.json"
+          ]
+        },
+        "experiment": {
+          "justification": "60/20/20 划分（seed=0，meta.json 落盘索引），在 held-out 上报 AUROC；对照齐备——随机方向 AUROC=0.632、shuffled-refusal 控制、split-half 参考；阈值（auroc>=0.85、cos_ratio<=0.5、shuffled band [0.45,0.55]）预注册于 claim1_verdict.json 且未事后调整；并跑了 Qwen2-Instruct-7B model-swap 复核。扣分项：refusal 侧 sub-i/iii 因 98.7% 基线拒绝率恒为 NaN，三项子测试中两项结构上不可测。",
+          "score": 4,
+          "evidence_files": [
+            "results/m1/claim1_verdict.json",
+            "CLAIMS_LEDGER.md",
+            "verify/C1_h_r_directions_distinct/variants/model-swap-qwen2-instruct-7b/verdict.json",
+            "verify/VERIFY_REPORT.md"
+          ]
+        },
+        "result": {
+          "justification": "cos(h,r)=0.174 对 split-half 参考 0.883（比值 0.20），h-AUROC=0.9998 @ (L11, t_final_instr)，随机方向仅 0.632——两方向几何上明确可分，与论文报告的低余弦（Llama2 约 0.1）同向同结构，定性一致；Qwen2 上比值进一步降到 0.069，跨模型复现。分析诚实：明确写出『PASS 仅适用于子测试 (ii) 几何可分性，(i)(iii) 在 98.7% 拒绝率下不可测』，并把 refusal 侧不可测归因于数据集+对齐度而非模型特性，理由可靠。",
+          "score": 5,
+          "evidence_files": [
+            "results/m1/claim1_verdict.json",
+            "CLAIMS_LEDGER.md",
+            "verify/VERIFY_REPORT.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The two signals live at different token positions: the harmfulness judgment is written at the final instruction-token position, while the decision to refuse is committed just after the instruction, immediately before the response begins.",
+        "method": {
+          "justification": "用 6 档 position ladder 上的 per-position × per-attribute AUROC + crossover-Δ 来操作化位置分化，是相关性 probe 路线，与论文 3.2 节的簇归属分析同属相关性证据、可接受；但论文真正的判据是错配样本（被接受的有害 / 被拒绝的无害）在两位置的簇归属，以及 Table 1 的『去掉 post-instruction token 后拒绝率下降』——后者不需要行为标签、在本 run 条件下完全可做，却未被尝试，导致所选 metric 的 refusal 轴结构上必然 NaN。",
+          "score": 3,
+          "evidence_files": [
+            "results/m2/claim2_verdict.json",
+            "refine-logs/EXPERIMENT_PLAN.md",
+            "CLAIMS_LEDGER.md"
+          ]
+        },
+        "experiment": {
+          "justification": "设计本身干净：6 档位置阶梯、bootstrap 95% CI 与相邻位置非重叠、crossover_min=0.05 预注册于 claim2_verdict.json，判据未因结果事后调整，且复用 M-prep 的 held-out 20%。扣分项：判定 metric 的一半（AUROC_r）在 98.7% 拒绝率下无正类可算，等于用一个先天不可测的指标去判 claim；且未退而求其次做论文 Table 1 式的 label-free 位置测试。",
+          "score": 3,
+          "evidence_files": [
+            "results/m2/claim2_verdict.json",
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_PLAN.md"
+          ]
+        },
+        "result": {
+          "justification": "crossover_h=-0.00018（阈值 0.05），AUROC_h 在 t_final_instr=0.99982、t_post_instr=1.00000，两位置同时到顶 → 判 not-supported。与论文结论（两位置有分工）不一致，但给出的原因准确且可核查：ceiling-AUROC 下 crossover 在数学上不可能存在，并提出正确的后续测试（换一个 bare-refusal 天花板更低的模型）。属诚实的未复现，只是未指出还存在一条不依赖行为标签、本可执行的替代判据。",
+          "score": 3,
+          "evidence_files": [
+            "results/m2/claim2_verdict.json",
+            "CLAIMS_LEDGER.md",
+            "verify/VERIFY_REPORT.md"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Additive steering along either direction yields dissociated effects — moving along the harmfulness axis flips the model's internal judgment of whether an input is harmful, independent of whether it refuses; moving along the refusal axis flips refusal behaviour without changing that internal judgment.",
+        "method": {
+          "justification": "residual-stream additive steering 是真正的干预，与论文 3.4/3.5 节同一方法族，且 hook 位点做了正确的 off-by-one 处理（m3_claim3_steering.py line 99-103、156-159：hook 挂在 layers[k-1] 使干预恰好落在 hidden_states[k]，即 probe 读取的同一向量）。扣分项：『内部有害性读数』定义为 ⟨activation, h⟩，即投影到被 steer 的同一条方向上，属循环读数；论文改用 reply inversion task 的行为读数（模型实际输出 Certainly/No）来规避这一点，本 run 未实现该任务。CLAIMS_LEDGER.md 自行承认 z≈100 『partly a geometric inevitability in 4096-dim space』。",
+          "score": 3,
+          "evidence_files": [
+            "scripts/m3_claim3_steering.py",
+            "CLAIMS_LEDGER.md",
+            "results/m3/claim3_verdict.json"
+          ]
+        },
+        "experiment": {
+          "justification": "对照与剂量设计显著超出 rubric 要求：28 格 dose-response（4 方向 × 7 α）+ 迭代 1 的 σ_proj 归一化细扫（跨度 35×，α_σ ∈ [-3.73, 3.73]）+ n_random=30 matched-norm 随机方向对照在 h 位点与 r 位点各一组（z=101.65 / z=128.31）+ swap 对照 + fluency/rep-rate 能力指标 + 预注册 null-band=2× baseline SD；138 runs / 3.267 GPU-h 有 cost.json 逐条落盘。扣分项：只在 probe 最优层注入（h@L11、r@L13），未做注入层扫描，而论文 Figure 4 显示引出拒绝的效果强烈依赖层（Llama3 最优在第 9 层），这一自由度未被探索。",
+          "score": 4,
+          "evidence_files": [
+            "results/m3/claim3_dose_response.csv",
+            "runs/iteration_round_1/m3_extended_analysis.json",
+            "runs/iteration_round_2/r_site_specificity_analysis.json",
+            "refine-logs/EXPERIMENT_TRACKER.md",
+            "results/m3/claim3_verdict.json"
+          ]
+        },
+        "result": {
+          "justification": "r 侧与论文 3.5 节完全一致：r-steering 使 benign 拒绝率 0.01→0.53 而 h-readout Δ=0.00，即拒绝方向不改变有害性判断。h 侧一半一致（h-readout 单调 -4.83→+6.96，支持该方向编码有害性），但另一半与论文 3.4 节相悖——论文报告沿 harmfulness 方向 steering 可将 Llama3 的拒绝率推到 94%，本 run 在 α_σ ∈ [-3.73,+3.73] 全程 refusal_ben ≤ 0.01（m3_extended_analysis.json curve），run 却把这条平线解读为『off-target null-band holds』当作解离的正面证据，未标记为与原文的分歧，也未归因于单层注入这一设计限制。加分项：措辞被主动降级（main-experiment-verdicts.json 的 avoid_wording 列出 symmetric mechanistic dissociation / clean causal dissociation），并披露 h-readout 效应部分是几何必然（swap 控制 Δ=1.29 ≈ cos(h,r)=0.174 × 5.90）。",
+          "score": 3,
+          "evidence_files": [
+            "runs/iteration_round_1/m3_extended_analysis.json",
+            "results/m3/claim3_dose_response.csv",
+            "refine-logs/main-experiment-verdicts.json",
+            "CLAIMS_LEDGER.md"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "A notable class of successful jailbreaks operates by suppressing the refusal signal while the harmfulness signal remains active — the model still internally recognises the input as harmful yet answers — a signature that a hidden-state probe can pick up.",
+        "method": {
+          "justification": "确实引入了两个真实攻击族（GCG + PAP persuasion），方向与论文第 4 节一致；但 attack_templates.py line 3-4 明写 'Deliberately DOES NOT re-run GCG optimization at claim time — the plan pins this as out-of-budget'，改用 arXiv:2307.15043 的 5 条已发布可迁移后缀，而论文用的是针对目标模型优化的 GCG。用 2023 年的迁移后缀打 Llama-3-8B-Instruct，攻击失效是可预期的方法学后果；论文的第三类（对抗提示模板）也未纳入。",
+          "score": 2,
+          "evidence_files": [
+            "scripts/attack_templates.py",
+            "results/m4/claim4_verdict.json",
+            "refine-logs/EXPERIMENT_PLAN.md"
+          ]
+        },
+        "experiment": {
+          "justification": "设计骨架合理：100 behaviours × 5 templates × 2 族 = 1000 次攻击，Llama Guard 作二次判据（llamaguard_used=true），null-band ε_null_r=1.691 / ε_null_h=0.669 预先计算，failed 子集上的 specificity 也报了（delta_r_failed_mean GCG=-0.768 / PAP=-1.703）。扣分项：PIPELINE_SUMMARY.md 预注册的缓解措施『若 per-family ASR < 20% 则把 behaviour 集从 100 扩到 200』在 ASR=0 时并未执行；也没有换用任何 ASR>0 的攻击族，因此无法区分这是真负结果还是攻击实例化不足。",
+          "score": 2,
+          "evidence_files": [
+            "results/m4/claim4_verdict.json",
+            "refine-logs/PIPELINE_SUMMARY.md",
+            "scripts/attack_templates.py"
+          ]
+        },
+        "result": {
+          "justification": "ASR=0/500（GCG）与 0/500（PAP），successful 子集为空 → 签名不可测，判 not-supported 并标注 confidence=high、原因为『Llama-3-8B-Instruct too well-aligned for published transferable GCG/PAP templates』。结论与论文第 4 节不一致，但未做任何粉饰：数字、判据、失败原因、以及该结果对 C5 测试集的连带影响（0 个 jailbreak 项）都被如实记录并触发了 C5 的 scope 缩减。属诚实的未复现，理由基本可靠但只说到『模板太旧』，未点明真正的根因是用迁移后缀替代了论文的按模型优化 GCG。",
+          "score": 3,
+          "evidence_files": [
+            "results/m4/claim4_verdict.json",
+            "refine-logs/main-experiment-verdicts.json",
+            "refine-logs/EXPERIMENT_RESULTS.md"
+          ]
+        }
+      },
+      "C5": {
+        "claim": "A lightweight \"Latent Guard\" classifier trained on the harmfulness direction matches or beats a dedicated safety judge (Llama Guard 3 8B) at flagging jailbreak attempts, at a fraction of the compute.",
+        "method": {
+          "justification": "在 ⟨·, h⟩ @ (L11, t_final_instr) 上训 logistic probe，并加做 shallow_mlp 变体，对手是真正加载的 Llama Guard 3 8B（llamaguard_used=true, llamaguard_error=null），与论文第 5 节用 Δ_harmful 符号做二分类的思路同构，且额外量化了 FLOPs（8192 vs 7.78e11）与 wall-clock。扣分项：AUTO_REVIEW.md 自评指出 probe 在 harmful/benign 上训、又在 harmful/benign+lookalike 上测『close to circular』，这一循环性未被方法层面处理。",
+          "score": 4,
+          "evidence_files": [
+            "results/m5/claim5_verdict.json",
+            "review-stage/AUTO_REVIEW.md",
+            "refine-logs/EXPERIMENT_PLAN.md"
+          ]
+        },
+        "experiment": {
+          "justification": "400 项测试集组成透明（100 bare-harmful-refused + 100 benign-compliant + 200 XSTest-safe + 0 successful-JB），XSTest 的纳入对应论文 Table 3 的 over-refusal 列；AUROC 为主指标、F1@FPR5% 为匹配操作点次指标，ε=0.02 与 compute 阈值 5% 均预注册。扣分项：因 M4 的 ASR=0，测试集中 0 个越狱样本，论文 Table 3 的三个越狱列与 accepted-harmful（Sorry-Bench）列都未被检验；scope 是在 verify 审计判 FAIL 之后才缩窄的，属事后重述而非预注册。",
+          "score": 3,
+          "evidence_files": [
+            "results/m5/claim5_verdict.json",
+            "verify/INTEGRITY_AUDIT.md",
+            "refine-logs/EXPERIMENT_RESULTS.md"
+          ]
+        },
+        "result": {
+          "justification": "AUROC(probe)=1.000 vs Llama Guard 0.9992，F1@FPR5%=1.000 vs 0.9754，compute ratio 1.05e-8、440× 加速——方向与论文第 5 节一致（Latent Guard 持平或优于专用判别器且开销极低），其中 XSTest 上的表现也呼应论文 Table 3 中 Latent Guard 在 Refused-HL 列反超 Llama Guard 的结构。分析诚实：verdict 明确写作 supported_narrowed_scope，注明『Evidence unchanged; only scope narrowed to match what the test set actually exercises』，并把越狱检测场景显式 defer；AUTO_REVIEW 还自评『C5 novelty collapses after honest scope narrowing』。在缩窄后的范围内定性一致且不夸大。",
+          "score": 4,
+          "evidence_files": [
+            "results/m5/claim5_verdict.json",
+            "refine-logs/main-experiment-verdicts.json",
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "review-stage/AUTO_REVIEW.md"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "claim": "C4a",
+  "milestone": "M7",
+  "audit_scope": "code/eval_downstream.py + runs/M7_downstream/results.json",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "warn",
+      "note": "Real GT for substitute datasets, but substitute datasets (DTD/FashionMNIST/imagenet_val slices) don't match the claimed panel (Birds/UC-Merced/Colon/Aircraft) — scope mismatch documented as open item"
+    },
+    "B_score_normalization": {"verdict": "pass", "note": "Top-1 accuracy as fraction; no model-specific normalization"},
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "note": "All 4-dataset results verified on-disk; Δ values match citations exactly"
+    },
+    "D_dead_code": {"verdict": "pass", "note": "eval_downstream.py exercises all 4 (student x dataset) pairs"},
+    "E_scope": {
+      "verdict": "warn",
+      "note": "Claim names Birds/UC-Merced/Colon/Aircraft — none tested; substitute datasets used. Scope mismatch beyond licensed 'cost-aware compression'"
+    },
+    "F_eval_type": {"verdict": "pass", "note": "real_gt for tested datasets; scope mismatch addressed in Check E"}
+  },
+  "overall_verdict": "warn"
+}

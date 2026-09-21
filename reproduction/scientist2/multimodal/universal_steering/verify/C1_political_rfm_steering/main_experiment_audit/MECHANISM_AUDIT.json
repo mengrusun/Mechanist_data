@@ -1,0 +1,30 @@
+{
+  "claim_id": "C1",
+  "claim_dir": "C1_political_rfm_steering",
+  "overall_verdict": "warn",
+  "checks": {
+    "A_steering_coefficient_sweep": {
+      "verdict": "warn",
+      "alpha_grid": [-3, -2, -1, 0, 1, 2, 3],
+      "n_alpha_values": 7,
+      "covers_3_orders_magnitude": true,
+      "sigma_proj_scaling": "unit-norm v_c (equivalent to sigma_proj scaling)",
+      "capability_metric": "output length (mean_len) as coherence proxy — not formal perplexity",
+      "alpha_locked": "alpha selected by argmax(|delta|) over 7-alpha sweep on same 50-prompt held-out set (no strict separate dev split for alpha — matches plan spec but note overfitting risk on alpha dimension)",
+      "random_direction_control": "present at alpha=+/-3, matched norm ||alpha*v_c||; political RFM 2-3x larger than random; honesty RFM comparable to random (within noise)",
+      "sign_pattern": "political shows clean signed monotone; honesty weak positive; refusal all pinned at 1.0",
+      "block_selection": "per-block probe accuracy logged; political/refusal/formal_tone all tie at 1.0 across all 32 blocks (trivially separable) — Location step is degenerate for these concepts",
+      "agop_top_ratio": "logged; political 1.1e15, honesty 1.1e13 (high dominance for trivially-separable concepts)",
+      "convergence_check": "rfm_iters=5; cos_history not directly exposed in summary but high top_ratio suggests convergence",
+      "warn_reason": "Two WARN-level concerns: (1) block selection is degenerate for trivially-separable concepts (all 32 blocks tie at 1.0 for political/refusal/formal_tone) — Location screen fails; (2) alpha selected on same 50-prompt set used for final evaluation (no strict dev/held split for alpha)."
+    },
+    "B_direction_extraction_quality": {"verdict": "not_implemented"},
+    "C_site_layer_choice": {"verdict": "not_implemented"},
+    "D_n_effective_sufficiency": {"verdict": "not_implemented"},
+    "E_probe_vs_causal_disentanglement": {"verdict": "not_implemented"},
+    "F_intervention_scope": {"verdict": "not_implemented"}
+  },
+  "milestones_audited": ["M1_C1_screen", "M2_C1_extract", "M3_C1_alpha_sweep"],
+  "runs_audited": ["B1_extract_vectors", "C1_steer_judge", "C1b_refusal_block14"],
+  "audited_at": "2026-07-15"
+}

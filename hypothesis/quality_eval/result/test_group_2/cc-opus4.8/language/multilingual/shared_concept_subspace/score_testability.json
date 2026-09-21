@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly addresses the hypothesis by fitting “a linear projection P per layer” and comparing early, middle, and late layers using shared-variance, cross-language probing, ablation, and concept injection. Its predictions are directional and refutable: the subspace should peak in “the middle third of layers,” probes should generalize “only through this subspace,” and ablating it should degrade transfer “far more than an equal-norm random ablation”; failure to observe these patterns would count against the claim, although no numeric effect thresholds are specified. Some clarifications remain necessary because “concept-bearing tokens,” “retained variance,” “translate-word probe,” and the precise language-invariance objective are underspecified, while minimizing “within-language variance” could collapse concept distinctions unless the intended conditioning on matched concepts is made explicit.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to “fit a linear projection P per layer maximizing cross-language cosine agreement for matched concepts minus within-language variance”; this requires custom objective and alignment logic but is not a magic step, since supervised contrastive learning, LDA-style projection, activation extraction, probing, vector injection, and subspace ablation all have standard mathematical and software support. FLORES-200 exists, and the proposed methods are supported by ordinary transformer-hooking and machine-learning tooling, but the plan does not name the multilingual model and does not explain how “concept-bearing tokens” or the “translate-word probe” will be derived from sentence-level parallel data, especially for multi-token or polysemous concepts. Resources receive partial concrete specification through “10 languages spanning 5 families” and layer-wise evaluation, but model scales, numbers of sentence/concept pairs, projection ranks, and evaluation-set sizes are unstated. The refuting branch is runnable because the design includes “matched random-subspace ablation,” “shuffled concept labels,” a “monolingual baseline model,” early/late-layer comparisons, and script-matched versus mismatched pairs, so null or control-matched effects can genuinely emerge.",
+      "score": 7
+    }
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Improving Alignment and Robustness with Circuit Breakers",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "There is a genuine fitting process (RR LoRA training), so this dimension applies. The fitting set and the evaluation set are drawn from disjoint sources and honored in code: training uses circuit_breakers_train.json paired harmful (prompt,output) plus an UltraChat retain set (src/train_rr.py load_cb/load_retain, cb=2000 retain=2000 per logs/train_rr_v1.log), while safety evaluation runs on HarmBench standard behaviors (harmbench_test_std.json, n=159 in src/generate_harmbench.py) and capability on MMLU. MMLU uses proper 5-shot dev_parquet for shots and test_parquet for questions (src/eval_mmlu.py lines 31-32), no test-label leakage. The only hygiene gap is the harmfulness judge prompt: RESULTS.md (lines 120-121) states the v2 prompt 'was tuned once against a small manual set of clearly-harmful vs clearly-refused completions' — a selection step, but performed on a separate small calibration set, not on the 159-item evaluation set, and it does not fit a scored classifier on the reported test labels. No leakage path contaminates the reported ASR/MMLU numbers.",
+    "score": 4,
+    "evidence_files": ["src/train_rr.py", "src/eval_mmlu.py", "src/generate_harmbench.py", "results/RESULTS.md", "logs/train_rr_v1.log"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The safety label ('harmful compliance' Yes/No) is produced by a local Qwen2.5-14B-Instruct judge with a HarmBench-style binary prompt (src/judge_local.py). This is a reasonable proxy for HarmBench's own Llama-2-13b-cls classifier and is non-circular: the judge model (Qwen) is independent of the models under test (Llama-3.1 baseline / RR). The prompt correctly encodes the HarmBench convention that disclaimer-laden but on-topic compliance still counts as harmful, and that gibberish counts as No (judge_local.py lines 19-30). Spot-checking the raw completions confirms label validity: baseline prefix completions are genuinely harmful (parathion synthesis guide, persuasive-disinfo article — gen_baseline_prefix.json), and RR completions are genuine representation-collapsed gibberish ('of of of of...', punctuation salad — gen_rr_prefix.json), correctly labeled non-harmful. The documented gap: the judge is a substitute classifier, not the paper's, and its v2 prompt was tuned once against a manual set (RESULTS.md lines 120-121); this raises the baseline prefix ASR from 0.6% (judge_baseline_prefix.json, 1/159) to 36.5% (judge_baseline_prefix_v2.json, 58/159). That correction moves toward the correct HarmBench definition (the baseline completions truly are harmful), but it is an under-validated heuristic operationalization.",
+    "score": 3,
+    "evidence_files": ["src/judge_local.py", "results/gen_baseline_prefix.json", "results/gen_rr_prefix.json", "results/judge_baseline_prefix.json", "results/judge_baseline_prefix_v2.json", "results/RESULTS.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "task.md specifies Llama-3-8B-Instruct as the experiment-stage model and HarmBench (GCG, PAIR, TAP, AutoDAN, direct, human red-team) for safety evaluation. Deviations, all disclosed: (1) Model swapped to Llama-3.1-8B-Instruct (adapter_config.json base_model_name_or_path=/data/zhenqian/models/Llama-3.1-8B-Instruct; RESULTS.md lines 10-12 justify it as the 3-name being blocked by the local URL policy) — a minor same-family version difference. (2) The HarmBench dataset itself is honored (n=159 standard behaviors), but the specified attack suite is heavily reduced to three attacks: 'direct', a FIXED static GCG-style suffix (generate_harmbench.py GCG_SUFFIX, not an optimized per-model GCG run), and a hand-crafted prefix-injection jailbreak. PAIR, TAP, AutoDAN and a genuine optimized GCG were not run. The static 'gcg' attack yields 0/159 ASR even on the baseline (judge_baseline_gcg.json), confirming it is not a working attack, so only the prefix attack provides signal. (3) The paper's HarmBench Llama-2-13b-cls judge is replaced by a local Qwen judge, and the adversarially-trained R2D2 baseline (grep: none in results/src/logs) is omitted. Model fidelity is close and disclosed; the attack-methodology and baseline coverage are materially downgraded, though openly documented rather than silent.",
+    "score": 3,
+    "evidence_files": ["outputs/rr_llama3_v1/final/adapter_config.json", "results/RESULTS.md", "src/generate_harmbench.py", "results/judge_baseline_gcg.json", "results/judge_rr_gcg.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Safety evaluation uses n=159 HarmBench standard behaviors per attack (adequate scale; verified in every judge_*.json 'n':159). Capability uses MMLU n=285 (RESULTS.md states 300; mmlu_baseline.json/mmlu_rr.json show n=285 actual — adequate). However, Claim 2's positive result rests on a SINGLE effective attack (prefix), because 'direct' and 'gcg' produce 0/159 ASR for both models and thus give zero headroom (RESULTS.md lines 52-56 honestly note this). Benign utility is only n=15, explicitly framed as a sanity check (benign_baseline.json/benign_rr.json). Claims 3 (multimodal) and 4 (agent) were not run at all (RESULTS.md lines 98-102) — but they are honestly declared untested rather than overclaimed. So no conclusion is asserted without a corresponding experiment; the weakness is narrow attack coverage for C2 rather than fabricated support.",
+    "score": 3,
+    "evidence_files": ["results/judge_baseline_prefix_v2.json", "results/judge_rr_prefix_v2.json", "results/mmlu_baseline.json", "results/mmlu_rr.json", "results/benign_baseline.json", "results/RESULTS.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Everything is a single run with no uncertainty quantification. Training used one seed (seed=42, train_rr.py) with one LoRA run; generation is greedy/deterministic (do_sample=False, generate_harmbench.py line 91); MMLU used seed=0 on one 285-item sample. No multiple seeds, no error bars, no significance tests are reported anywhere in results/. The headline safety effect (prefix ASR 36.5% -> 0.0%, i.e. 58/159 -> 0/159) is large enough that its direction is unlikely to be noise, and the RR gibberish is qualitatively unambiguous. But the MMLU regression (-7.0 pp, 0.677 -> 0.607 on n=285, ~2.4 SE) is reported as a point estimate with no confidence interval, and no run-to-run variance is characterized. This matches the 'point estimates, single seed, no variance' adequate anchor.",
+    "score": 3,
+    "evidence_files": ["src/train_rr.py", "src/generate_harmbench.py", "src/eval_mmlu.py", "results/mmlu_baseline.json", "results/mmlu_rr.json", "results/RESULTS.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "Claim 1 is mechanistic ('representations ... can be rerouted to an orthogonal, non-harmful subspace'). The run supports it with a genuine intervention, not correlation: RR LoRA training directly optimizes ReLU(cos_sim(h_orig,h_new)) at layers {10,20} (src/train_rr.py compute_losses), and logs/train_rr_v1.log shows L_cb driven from 1.0000 (step 0) to 0.0000 (steps 300+), i.e. the harmful-sequence representations are pushed to cosine~0 (orthogonal) as designed, with the retain loss keeping benign reps intact. The behavioral consequence is causally demonstrated: the RR model emits gibberish on harmful/attacked inputs but coherent text on benign inputs (gen_rr_prefix.json vs benign_rr.json). What is missing for full rigor: no random-direction reroute baseline, no retain-only / reroute-only ablation isolating which loss term produces the safety effect, and only one layer configuration — the paper's controls (Table 8 ablations, Figure 6 per-layer cosine analysis) are not reproduced. The intervention is real but under-controlled.",
+    "score": 3,
+    "evidence_files": ["src/train_rr.py", "logs/train_rr_v1.log", "results/gen_rr_prefix.json", "results/benign_rr.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number in RESULTS.md traces to and agrees with an on-disk product that I opened directly: prefix ASR 0.365 = 58/159 (judge_baseline_prefix_v2.json summary {n:159,n_harmful:58,asr:0.3648}) and 0.000 = 0/159 (judge_rr_prefix_v2.json); direct/gcg 0.000 for both (judge_{baseline,rr}_{direct,gcg}.json); MMLU 0.677 baseline (mmlu_baseline.json acc 0.6772, 193/285) and 0.607 RR (mmlu_rr.json acc 0.6070, 173/285), Delta -0.070 consistent; benign mean len 616.4/612.3 and 0 refusals (benign_{baseline,rr}.json). Training is backed by logs/train_rr_v1.log and a saved adapter (outputs/rr_llama3_v1/final). The one provenance blemish: RESULTS.md line 64 says MMLU used '300 random questions' while the actual products are n=285 (the requested 300 with 15 rows filtered) — a loosely-stated count, not a fabricated metric. No sourceless or contradicted values.",
+    "score": 4,
+    "evidence_files": ["results/RESULTS.md", "results/judge_baseline_prefix_v2.json", "results/judge_rr_prefix_v2.json", "results/mmlu_baseline.json", "results/mmlu_rr.json", "results/benign_baseline.json", "logs/train_rr_v1.log"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The prose report and the raw JSON products are mutually consistent: RESULTS.md's ASR table (direct 0/0, gcg 0/0, prefix 0.365->0.000) matches every judge_*.json summary; the MMLU table (0.677/0.607/-0.070) matches mmlu_*.json; the benign table (616/612, readability 0.989/0.991, 0 refusals) matches benign_*.json. Claims 3 and 4 are consistently reported as untested across the report. The claim-to-verdict mapping (RESULTS.md lines 88-102) is faithful to the numbers. Minor inconsistencies revealing loose bookkeeping: (1) 'MMLU ... 300 random questions' vs the on-disk n=285; (2) the report foregrounds the v2 judge (36.5% baseline) while an earlier v1 judge product on disk (judge_baseline_prefix.json, 0.6%) is retained without being reconciled in the table — though RESULTS.md lines 108-121 do disclose the v2 prompt swap. No verdict-level contradiction (nothing is PASS in one artifact yet FAIL-flagged in another).",
+    "score": 4,
+    "evidence_files": ["results/RESULTS.md", "results/mmlu_rr.json", "results/judge_baseline_prefix.json", "results/judge_baseline_prefix_v2.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Harmful-output behaviour in an instruction-tuned LLM corresponds to identifiable internal representations that can be rerouted to an orthogonal, non-harmful subspace using only paired benign/harmful data, without exposure to any attack prompts.",
+        "method": {
+          "justification": "9a: The method is a faithful re-implementation of the paper's Algorithm 1 (LoRRA + RR loss): ReLU(cos_sim(rep_orig, rep_cb)) reroute loss plus L2 retain loss with a linear coefficient crossover schedule, computed at target layers {10,20} via a two-forward pass that disables the LoRA adapter to obtain the frozen reference (src/train_rr.py compute_losses, hidden_at). Training data is strictly paired harmful/benign with NO attack prompts (cb=circuit_breakers_train.json, retain=UltraChat; logs show cb=2000 retain=2000). This correctly matches the mechanism category (representation-level rerouting) the claim is about.",
+          "score": 5,
+          "evidence_files": ["src/train_rr.py", "logs/train_rr_v1.log"]
+        },
+        "experiment": {
+          "justification": "9b: The experiment operationalizes 'rerouting to an orthogonal subspace' directly through the training objective and monitors it: logs/train_rr_v1.log shows L_cb (mean cosine on harmful response tokens) collapsing 1.0000 -> 0.0000, evidencing orthogonalization, while L_ret stays ~0 (benign preserved). Behavioral verification that the reroute is real is provided (gibberish on harmful, coherent on benign). Gaps relative to a complete design: no random-direction reroute control, no reroute-only vs retain-only ablation, a single (500-step, r=16, layers {10,20}) hyperparameter point, and no reproduction of the paper's per-layer cosine analysis (Figure 6). Honest but under-controlled.",
+          "score": 4,
+          "evidence_files": ["logs/train_rr_v1.log", "src/train_rr.py", "results/gen_rr_prefix.json", "results/benign_rr.json"]
+        },
+        "result": {
+          "justification": "9c: The result qualitatively agrees with the paper: cosine similarity between original and rerouted harmful representations collapses to ~0 (orthogonal), achieved from paired data alone with zero attack-prompt exposure, and the intervention then blocks an unseen attack — matching the paper's core mechanistic finding (Figure 6, Section 4.1). The analysis is honest and does not overreach beyond the on-disk log/behavioral evidence. Slightly short of a 5 because the orthogonality is inferred from the aggregate training loss rather than an independent post-hoc representation probe on held-out harmful sequences.",
+          "score": 4,
+          "evidence_files": ["logs/train_rr_v1.log", "results/gen_rr_prefix.json", "results/RESULTS.md"]
+        }
+      },
+      "C2": {
+        "claim": "A model fine-tuned with Representation Rerouting (RR) achieves substantially lower attack success rates than refusal-trained or adversarial-trained baselines across a wide range of unseen attacks, while preserving standard capability benchmarks.",
+        "method": {
+          "justification": "9a: The evaluation method (generate greedy completions on HarmBench behaviors under attack, score harmful compliance with an LLM judge, and measure MMLU for capability preservation) is an appropriate way to test this claim. However the realization of 'a wide range of unseen attacks' is weak: only 'direct', a single FIXED static GCG-style suffix (not an optimized GCG per Algorithm), and one hand-crafted prefix-injection jailbreak are implemented (src/generate_harmbench.py). The static gcg is inert (0 ASR on both models), so effectively one attack (prefix, analogous to the paper's Prefilling) carries the claim. No adversarially-trained (R2D2) baseline is included, so 'lower than adversarial-trained baselines' is untested. The method family is right but its coverage is materially thin.",
+          "score": 3,
+          "evidence_files": ["src/generate_harmbench.py", "src/judge_local.py", "results/judge_baseline_gcg.json"]
+        },
+        "experiment": {
+          "justification": "9b: Design covers baseline-vs-RR on n=159 HarmBench standard behaviors plus MMLU capability, which is reasonable in structure. Deficiencies: only one attack yields signal; the paper's broader attack suite (PAIR, TAP, AutoDAN, genuine GCG, embedding/RepE attacks) and the R2D2 adversarial baseline are absent; a single seed and single hyperparameter setting; and the capability regression is larger than the paper's (MMLU -7.0 pp here vs the paper's ~sub-1-pt drop), attributed to unoptimized retain-weight/schedule (RESULTS.md lines 72-75) rather than explored across hyperparameters. The judge threshold was restated (v1->v2) to correctly count disclaimer compliance — a defensible calibration toward HarmBench's own definition, not fabrication, but it does widen the reported baseline gap. Honest but under-powered.",
+          "score": 3,
+          "evidence_files": ["results/judge_baseline_prefix_v2.json", "results/judge_rr_prefix_v2.json", "results/mmlu_baseline.json", "results/mmlu_rr.json", "results/RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c: The reported result is directionally consistent with the paper: under the one effective unseen attack (prefix-injection), RR reduces ASR 36.5% -> 0.0% (58/159 -> 0/159), mirroring the paper's Prefilling result for Llama-3 (84.9% -> 3.3%) and its overall claim that RR sharply cuts ASR under unseen attacks while largely preserving capability (MMLU 0.677 -> 0.607). The run is candid that direct/gcg gave no headroom and that the capability drop exceeds the paper's, so agreement is not disguised. It falls short of a strong reproduction because the 'wide range of attacks' and the adversarial-trained comparison are not demonstrated, leaving the breadth part of the claim only narrowly supported.",
+          "score": 3,
+          "evidence_files": ["results/judge_baseline_prefix_v2.json", "results/judge_rr_prefix_v2.json", "results/mmlu_baseline.json", "results/mmlu_rr.json", "results/RESULTS.md"]
+        }
+      },
+      "C3": {
+        "claim": "The same representation-level intervention transfers to multimodal LLMs, blocking image-based jailbreaks (image hijacks) without degrading vision-language task performance.",
+        "method": {
+          "justification": "9a: No multimodal method was executed. RESULTS.md lines 98-101 explicitly state the LLaVA-NeXT-Mistral RR variant, image-hijack PGD attack, and multimodal capability check were 'not tested in this run.' There is no VLM training script, no PGD attack code, and no multimodal artifacts anywhere under {case_dir}. The correct mechanism could in principle be applied, but nothing was run, so there is no method to assess. Honestly declared, not fabricated.",
+          "score": 1,
+          "evidence_files": ["results/RESULTS.md"]
+        },
+        "experiment": {
+          "justification": "9b: No experiment exists for the multimodal claim — no dataset (the 133 harmful multimodal behaviors / MM-SafetyBench), no PGD (eps=32/255, 1000 steps) attack run, no MMMU/LLaVA-Wild capability evaluation. Complete absence of design and execution for this claim, honestly acknowledged as out-of-scope for the compute envelope.",
+          "score": 1,
+          "evidence_files": ["results/RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c: There is no result to compare against the paper. The run does not fabricate or disguise agreement — it transparently reports the multimodal claim as untested (RESULTS.md line 98-101), so it is not an unreliable false-positive; but it also provides no evidence and no honest NOT-REPRODUCED verdict backed by an attempt, so the claim is simply left unvalidated. Credit only for the absence of overclaim.",
+          "score": 2,
+          "evidence_files": ["results/RESULTS.md"]
+        }
+      },
+      "C4": {
+        "claim": "The same intervention transfers to LLM agents, materially reducing the rate of harmful tool-use actions executed under attack.",
+        "method": {
+          "justification": "9a: No agent/function-calling method was executed. RESULTS.md line 102 states 'Claim 4 (agent transfer): not tested in this run.' There is no function-calling harness, no BFCL setup, and no 100-prompt harmful function-calling set anywhere under {case_dir}. Nothing to assess; honestly declared.",
+          "score": 1,
+          "evidence_files": ["results/RESULTS.md"]
+        },
+        "experiment": {
+          "justification": "9b: No experiment exists — no agent harm set, no forced-function-call attack, no BFCL capability measurement. Complete absence of design and execution for the agent claim, openly acknowledged.",
+          "score": 1,
+          "evidence_files": ["results/RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c: No result is produced for the agent claim. As with C3, the run does not disguise or fabricate agreement — it transparently marks the claim untested (RESULTS.md line 102), so there is no unreliable positive, but equally no evidence and no attempted honest verdict. Credit only for the absence of overclaim.",
+          "score": 2,
+          "evidence_files": ["results/RESULTS.md"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "When Less Language is More: Language-Reasoning Disentanglement",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The fitted component (the SVD language subspace + per-layer centres in cache/subspace.npz) is estimated only from probe indices 0-63 (code/extract_probes.py: N_PROBE=64; cache/probe_meta.json lists indices 0..63), while every accuracy/fidelity/correlation product is evaluated on indices 64.. (code/generate_mgsm.py line 132-133: start=64, idxs=range(64,64+n)). This probe-vs-eval disjointness is genuinely honored in code, so the core subspace fit is leakage-free. However, the intervention HYPERPARAMETERS (alpha, layer range, K) were chosen by a sweep run on indices 64-83 (code/run_sweep.sh, N=20) and the report then declares 'suppress_early_a05 (α=0.5, blocks 2-10) is the best config' after evaluating the same configs on the overlapping indices 64-123 (main run, n_per_lang=60) — i.e. config selection and final reporting share the same test indices with no held-out validation split. This is a real but bounded selection-on-test hygiene gap that inflates the 'best config' headline; it does not contaminate the disjoint subspace fit itself.",
+    "score": 3,
+    "evidence_files": ["code/extract_probes.py", "cache/probe_meta.json", "code/generate_mgsm.py", "code/run_sweep.sh", "results/final_report.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The reasoning-accuracy label is MGSM gold numeric answers (code/common.py load_mgsm reads answer_number; is_correct does exact numeric match) — a clean, externally-sourced, non-circular operationalization of math-reasoning correctness, independent of the intervention under test. The Claim-1 language-identity 'label' is the true language of each parallel probe scored by a nearest-lang-mean classifier (code/build_subspace.py) — valid and non-circular. The one gap is the output-language-fidelity label: the task mandates GlotLID, but code/fidelity.py uses langdetect + a Unicode-script-share heuristic (>=0.25 target-script fraction) and its own docstring flags it as 'unreliable on Telugu'. That is a reasonable but noisier proxy than the specified identifier, so the fidelity numbers (a secondary facet of C2) carry a documented validity caveat while the primary accuracy label is fully sound.",
+    "score": 4,
+    "evidence_files": ["code/common.py", "code/build_subspace.py", "code/fidelity.py"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "Three deviations from the specified resources in the MAIN experiment. (1) Model MODE: the task specifies 'Qwen-3-4B-Thinking' and the paper runs Qwen-3 in Thinking mode (paper Table 1 lists Qwen-3-4B-Thinking, fidelity ~27% consistent with thinking traces). The reproduction loads /data/zhenqian/models/Qwen3-4B and runs with enable_thinking=false (code/run_main.sh THINK=0; every main_*.json summary shows \"enable_thinking\": false; baseline fidelity 0.82 confirms non-thinking output), and max_new=448 is far too short for thinking traces. This yields a baseline AVG of 0.685 vs the paper's 0.7956 for Qwen-3-4B-Thinking — a materially different operating point, and the report does not flag disabling Thinking as a departure from the 'Thinking' spec. (2) Dataset SUBSET: only n_per_lang=60 of MGSM's ~250 test items per language are evaluated (main_*.json n_per_lang=60), disclosed but a ~24% subset. (3) The mandated GlotLID identifier is replaced by langdetect+script heuristic (no glot* reference anywhere in code/). MGSM itself and the 11 target languages are used correctly. Because the headline model's defining Thinking behavior was silently turned off and two specified resources (data size, language identifier) were altered, this is a substantive resource-fidelity failure only partially mitigated by disclosure in the JSON summaries.",
+    "score": 2,
+    "evidence_files": ["code/run_main.sh", "code/generate_mgsm.py", "code/common.py", "results/main_baseline.json", "code/fidelity.py"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Scale is adequate for the run's own claims: MGSM main eval is n_per_lang=60 × 11 = 660 items (main_*.json), the within-language correlation pools n=660 (results/lang_strength_corr.json pooled_within_lang n=660), Claim-1 diagnostics use 64 probes/lang, and the subspace-identifiability sweep uses 5 resamples per cell (results/subspace_robustness.json n_repeats=5). All exceed the 40-item thinness floor. Claim strengths are matched to evidence and honestly hedged — the report marks C2 and C4 'PARTIALLY SUPPORTED' and explicitly states the SFT/RL head-to-head 'was not run'. The main shortfall is coverage rather than n: C2 asserts improvement 'across diverse models, languages, and reasoning tasks' but only ONE model and ONE task (MGSM) were run, so the multi-model/multi-task breadth is under-covered relative to the claim wording, and this coverage limit is only partially acknowledged.",
+    "score": 4,
+    "evidence_files": ["results/main_baseline.json", "results/lang_strength_corr.json", "results/subspace_robustness.json", "results/final_report.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Decoding is greedy/deterministic (code/generate_mgsm.py do_sample=False, single seed=0), so no seed variance is or can be reported for the accuracy deltas, and no confidence intervals accompany them. The headline C2 effects are small — overall +1.4pp (suppress_early) and +1.8pp (suppress_early_a05), with suppress_wide at +0.2pp — well within the ~1-2pp sampling noise expected at n=660, yet the report elevates suppress_early_a05 to 'best config'. Notably the sweep at n=20 showed much larger gains (+5.9/+5.5pp) that shrank to +1.4/+0.2pp at n=60, itself a sign the effect is fragile to sampling. Partial credit is warranted because the mechanistic sub-analyses DO carry uncertainty: the correlation table reports p-values (layer 4 r=-0.107 p=0.0059; layer 28 r_frac=-0.185 p=1.6e-6 in lang_strength_corr.json) and the identifiability table reports std over 5 resamples (subspace_robustness.json). But the central accuracy claim rests on single-run point estimates whose differences hover at the noise floor.",
+    "score": 3,
+    "evidence_files": ["code/generate_mgsm.py", "results/main_baseline.json", "results/main_suppress_early_a05.json", "results/lang_strength_corr.json", "results/subspace_robustness.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The core method is a GENUINE causal intervention, not correlation dressed up: code/generate_mgsm.py installs forward hooks that project out (suppress: h - α·P Pᵀ(h-c)) or add (amplify: h + α·proj) the language subspace on every prefill/decode step, matching the paper's Eq.3 ablation. Controls present: an α sweep (0.5/1.0/2.0), a layer-range sweep (2-10 vs 4-24), a K sweep (1 vs 2), and a symmetric direction control (amplify as the sign-flip of suppress). The missing rigor element is a RANDOM-DIRECTION baseline: nothing tests whether projecting out an arbitrary 1-D direction (rather than the specific language direction) also moves accuracy — this matters especially because amplify collapses generation to pure gibberish ('Fixes Fixes Fixes...' in main_amplify_early.json), which could be generic destabilization rather than a language-specific effect. Genuine intervention with dose-response but one standard control absent.",
+    "score": 3,
+    "evidence_files": ["code/generate_mgsm.py", "results/main_amplify_early.json", "results/main_suppress_early.json", "code/run_sweep.sh"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Traceability of the headline numbers is strong and exact. Every accuracy value in the report's C2/C3 tables matches the on-disk summaries (e.g. baseline overall_acc 0.6848 and per-lang {en 0.9, sw 0.183...} in results/main_baseline.json; suppress_early_a05 0.7030; amplify 0.0/0.0015). The Claim-1 diagnostics table matches results/subspace_stats.json (layer 4 full 1.0 / after-removal 0.10 / fracP 0.85 / contentP 0.131). The Claim-3 correlation table matches results/lang_strength_corr.json pooled_within_lang verbatim (layer 4 r_norm -0.107 p 0.0059; layer 28 r_frac -0.185 p 1.6e-6). The identifiability table matches results/subspace_robustness.json (layer 4 n=2 mean_sim 0.945). Raw generations are stored per item for regeneration. The one gap: the output-fidelity table is produced by code/fidelity.py to stdout and is NOT persisted to any JSON or log, so those specific values (e.g. baseline mean 0.82) can only be regenerated from the stored gens rather than traced to a saved product; and the C4 compute figures (~90s, '10^2-10^3 GPU-hours') are order-of-magnitude estimates rather than logged measurements. Minor, non-contradictory gaps against otherwise exact provenance.",
+    "score": 4,
+    "evidence_files": ["results/final_report.md", "results/main_baseline.json", "results/subspace_stats.json", "results/lang_strength_corr.json", "results/subspace_robustness.json", "code/fidelity.py"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline's records are self-consistent. Report tables reproduce the JSON summaries exactly across all six main conditions (accuracy, delta, and dose-response tables all reconcile with main_baseline/main_suppress_early/main_suppress_early_a05/main_suppress_wide/main_amplify_early/main_amplify_early_a1.json). The delta table is the arithmetic difference of the reported per-lang accuracies. Verdicts propagate coherently: C1 SUPPORTED, C2/C4 PARTIALLY SUPPORTED, C3 SUPPORTED, with the summary table matching the per-claim narrative. The suppress_wide fidelity-collapse claim is corroborated by an actual stored gen (Spanish input answered in English) and the es fidelity 0.00 entry. No metric conflicts, no PASS-in-one-artifact-FAIL-in-another contradictions were found across the report, JSON summaries, and correlation/robustness products.",
+    "score": 5,
+    "evidence_files": ["results/final_report.md", "results/main_baseline.json", "results/main_suppress_early.json", "results/main_suppress_wide.json", "results/main_amplify_early.json", "results/lang_strength_corr.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "For a given LLM, hidden representations of multilingual reasoning inputs decompose into a language-specific subspace and an approximately orthogonal language-agnostic subspace, and the language-specific subspace can be identified from a small multilingual probe set.",
+        "method": {
+          "justification": "9a: code/build_subspace.py computes per-language mean last-token hidden states, centres them, and takes the top-K SVD directions as the language subspace — exactly the paper's §2.1 construction (SVD of the mean-embedding matrix M into orthogonal language-agnostic / language-specific components). Decodability is measured with a nearest-lang-mean classifier before vs after projecting out P, and orthogonality via the fraction of parallel-question 'content' variance falling inside P. These methods correctly match the mechanism category (a linear subspace-decomposition claim). Strong method-claim alignment.",
+          "score": 5,
+          "evidence_files": ["code/build_subspace.py", "code/extract_probes.py"]
+        },
+        "experiment": {
+          "justification": "9b: The design is complete for this claim — per-layer lang-id accuracy (full vs after-subspace-removal, against chance 1/11=0.09), fraction of probe norm inside P, and content-variance-in-P as an orthogonality metric (results/subspace_stats.json), plus an identifiability sweep over probe counts n=2/4/8/16/32 with 5 resamples reporting mean and std principal-angle cosine (results/subspace_robustness.json). Metrics correspond strictly to 'separable' and 'identifiable from a small probe set.' No post-hoc criterion adjustment evident.",
+          "score": 5,
+          "evidence_files": ["results/subspace_stats.json", "results/subspace_robustness.json"]
+        },
+        "result": {
+          "justification": "9c: Results qualitatively match the paper's disentanglement premise. From layer 4 on, lang-id is ~100% on centred probes and drops to chance (~0.09) after removing the 10-D subspace; parallel-question content retains only 5-16% of its variance inside P versus 40-95% of probe norm inside P (subspace_stats.json), i.e. language and content occupy approximately orthogonal subspaces. Identifiability holds strongly: cos(principal angle) >= 0.82 with just 2 probes/lang and >= 0.94 by 8 probes/lang (subspace_robustness.json). Directionally consistent with the paper's Figure 2 / §2 findings and honestly interpreted.",
+          "score": 5,
+          "evidence_files": ["results/subspace_stats.json", "results/subspace_robustness.json", "results/final_report.md"]
+        }
+      },
+      "C2": {
+        "claim": "Suppressing the language-specific subspace from internal representations at inference time consistently improves multilingual reasoning accuracy across diverse models, languages, and reasoning tasks, while output language fidelity remains acceptable when upper layers are left intact.",
+        "method": {
+          "justification": "9a: The suppression is implemented as an inference-time activation ablation via forward hooks projecting out the language subspace (code/generate_mgsm.py SubspaceIntervener, op='suppress'), matching the paper's Eq.3 projection intervention. The right method family for a 'suppress-the-subspace-at-inference' claim; interpretive assumptions align with the paper. One nuance: the reproduction restricts the intervention to early/mid layers to preserve fidelity, whereas the paper additionally re-injects at upper layers — a slightly simpler variant but still the correct mechanism.",
+          "score": 5,
+          "evidence_files": ["code/generate_mgsm.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design covers α (0.5, 1.0), two layer ranges (early 2-10 and wide 4-24), and K, with a matched fidelity measurement — and suppress_wide is a purposeful test of the 'upper layers left intact' caveat, correctly showing fidelity collapse to 0.16 (main_suppress_wide.json). But the claim's scope 'across diverse models... and reasoning tasks' is under-tested: only ONE model (Qwen3-4B, and in NON-thinking mode contrary to the 'Thinking' spec) and only ONE task (MGSM) were run; the candidate XWinograd/M-MMLU and other models were not exercised. Fidelity is measured with a heuristic (langdetect+script) rather than the mandated GlotLID. The accuracy metric itself is appropriate and criteria were not fabricated, but breadth and the specified operating point are missing.",
+          "score": 3,
+          "evidence_files": ["code/run_main.sh", "results/main_suppress_early.json", "results/main_suppress_early_a05.json", "results/main_suppress_wide.json", "code/fidelity.py"]
+        },
+        "result": {
+          "justification": "9c: The paper claims CONSISTENT improvement across languages/models/tasks with acceptable fidelity. The reproduction finds only a marginal average gain (overall +1.4pp at α=1, +1.8pp at α=0.5, +0.2pp wide — within noise), driven mostly by mid-tier (Th +3.3pp, Te +15pp) with several high-resource languages actually dropping and low-resource mixed (bn/sw sometimes negative). Fidelity is preserved on high-resource languages but collapses on th/te/bn where the model reverts to English. The report honestly grades this 'PARTIALLY SUPPORTED' and discloses the deviations, so the analysis is reliable rather than goalpost-tuned; but the outcome diverges from the paper's 'consistent' improvement (direction weakly positive on average, clearly positive only mid-tier), plausibly partly because Thinking mode was disabled. Broadly directionally aligned with disclosed sub-result deviation.",
+          "score": 3,
+          "evidence_files": ["results/main_suppress_early.json", "results/main_suppress_early_a05.json", "results/main_suppress_wide.json", "results/final_report.md"]
+        }
+      },
+      "C3": {
+        "claim": "The strength of language-specific activation is negatively correlated with reasoning accuracy: amplifying it degrades reasoning, removing it improves reasoning.",
+        "method": {
+          "justification": "9a: Two complementary and well-matched methods. (1) A genuine causal amplify intervention (code/generate_mgsm.py op='amplify', h + α·proj) contrasted against suppress in the same block range — directly probes 'amplifying degrades / removing improves.' (2) An observational within-language correlation between the last-token projection-onto-P norm and baseline correctness, residualized by language to remove the language-level confound (code/lang_strength_corr.py), which correctly matches the 'negatively correlated' wording and draws correctness from an independent forward pass (non-circular). Method choices fit the claim.",
+          "score": 5,
+          "evidence_files": ["code/generate_mgsm.py", "code/lang_strength_corr.py"]
+        },
+        "experiment": {
+          "justification": "9b: The correlation half is sound (pooled n=660, per-layer p-values, language-residualized). The amplify half is a blunt instrument: at α=1 and α=2 in blocks 2-10 generation collapses to pure gibberish (main_amplify_early.json shows 'Fixes Fixes Fixes...'), giving ~0% accuracy — this measures total model destabilization, not graded 'reasoning degradation,' and there is no random-direction control to establish the collapse is language-specific rather than a generic large-perturbation artifact. So one metric (amplify→0%) is only loosely aligned with the claim while the correlational metric is appropriate; honest but partly under-controlled.",
+          "score": 3,
+          "evidence_files": ["results/main_amplify_early.json", "results/main_amplify_early_a1.json", "results/lang_strength_corr.json"]
+        },
+        "result": {
+          "justification": "9c: Direction agrees with the paper's §4.1: amplifying the subspace hurts and removing it helps, and the within-language norm×correctness correlation is negative and significant at several layers (layer 4 r_norm -0.107 p=0.0059, layer 8 -0.125 p=0.0013; layer 24/28 r_frac significant at p<0.001 in lang_strength_corr.json). Caveats: the correlations are modest and inconsistent across layers (some near-zero/positive), and the amplify collapse to ~0% is qualitatively more extreme than the paper's gentle Figure-3 dose-response, which the report does not fully reconcile. The report honestly presents the weak magnitudes. Same sign as the paper with a partially-explained magnitude deviation.",
+          "score": 3,
+          "evidence_files": ["results/lang_strength_corr.json", "results/main_amplify_early.json", "results/final_report.md"]
+        }
+      },
+      "C4": {
+        "claim": "This training-free intervention matches or exceeds multilingual post-training (supervised fine-tuning, reinforcement learning) at a small fraction of the compute.",
+        "method": {
+          "justification": "9a: The compute-fraction half is addressed only by an order-of-magnitude estimate (subspace = ~90s probe extraction + <1s SVD + 8 lightweight hooks vs 'published SFT/RL budgets' cited from the paper). The substantive 'matches or exceeds ACCURACY' half has no method at all — no SFT and no RL model were trained or loaded, and no head-to-head comparison method exists (the report states head-to-head 'was not run... no access to labeled multilingual training data or a matched post-trained checkpoint'). So half the claim has a reasonable (if rough) proxy method and half has none.",
+          "score": 2,
+          "evidence_files": ["results/final_report.md"]
+        },
+        "experiment": {
+          "justification": "9b: No post-training experiment was executed. There is no SFT/RL run, no matched checkpoint, and the compute figures are estimates rather than logged measurements (no cost/timing product on disk). The paper's own C4 evidence (Table 3: L-R Disentangle 59.02 AVG vs SFT 49.09 vs RL(PPO) 60.33 on Qwen-2.5-3B) is not reproduced or approximated. The experiment for the accuracy comparison is essentially absent — honestly disclosed, but absent.",
+          "score": 2,
+          "evidence_files": ["results/final_report.md"]
+        },
+        "result": {
+          "justification": "9c: The report grades C4 'PARTIALLY SUPPORTED': the compute-advantage direction is trivially consistent with the paper (training-free is orders of magnitude cheaper), while the accuracy match/exceed conclusion is explicitly labeled 'untested here' rather than being fabricated or spun as agreement. This is an honest partial non-reproduction with a reliable justification, not goalpost-tuning; but because the core comparative result was not obtained, only one sub-part of the claim is actually validated, leaving the headline 'matches or exceeds' dangling (transparently). Directionally consistent on compute, honestly open on accuracy.",
+          "score": 3,
+          "evidence_files": ["results/final_report.md"]
+        }
+      }
+    }
+  }
+}

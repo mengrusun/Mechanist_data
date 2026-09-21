@@ -1,0 +1,47 @@
+{
+  "variant": "model-swap-qwen-14b",
+  "claim_id": "C4",
+  "dimension": "model",
+  "swap": "DeepSeek-R1-Distill-Qwen-14B (replaces DeepSeek-R1-Distill-Llama-8B)",
+  "judgment_date": "2026-07-15",
+  "judged_by": "result-to-claim (automated, n_distinct computation)",
+  "main_experiment_verdict": "not-supported (positive-partial — n_distinct(steering)=4 > n_distinct(prompt)=2 for expressing_uncertainty; preservation misses 3pt floor)",
+  "results_summary": {
+    "steering_alpha_neg2": {"coherence_rate": 0.35, "behaviour_rate": 0.0, "accuracy": 0.0},
+    "steering_alpha_neg1": {"coherence_rate": 0.4, "behaviour_rate": 0.0, "accuracy": 0.0},
+    "steering_alpha_pos1": {"coherence_rate": 0.016666666666666666, "behaviour_rate": 0.0, "accuracy": 0.0},
+    "steering_alpha_pos2": {"coherence_rate": 0.0, "behaviour_rate": "nan", "accuracy": null},
+    "prompt_suppress": {"coherence_rate": 1.0, "behaviour_rate": 0.13333333333333333, "accuracy": 0.8},
+    "prompt_amplify": {"coherence_rate": 1.0, "behaviour_rate": 0.35, "accuracy": 0.7},
+    "thinking_intervention_suppress": {"coherence_rate": 1.0, "behaviour_rate": 0.6666666666666666, "accuracy": 0.7666666666666667},
+    "thinking_intervention_amplify": {"coherence_rate": 1.0, "behaviour_rate": 0.6333333333333333, "accuracy": 0.7166666666666667}
+  },
+  "n_distinct_computation": {
+    "steering_pts_raw": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], ["nan", null]],
+    "steering_pts_after_nan_filter": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
+    "n_distinct_steering": 0,
+    "prompt_pts": [[0.13333333333333333, 0.8], [0.35, 0.7]],
+    "n_distinct_prompt": 2,
+    "ti_pts": [[0.6666666666666666, 0.7666666666666667], [0.6333333333333333, 0.7166666666666667]],
+    "n_distinct_ti": 2,
+    "eps_r": 0.05,
+    "eps_a": 0.01
+  },
+  "sigma_proj_finding": {
+    "qwen14b_sigma_proj": 886.0052,
+    "llama8b_sigma_proj": 10.52,
+    "ratio": 84.2,
+    "interpretation": "sigma_proj=886 causes coef = alpha * 886 at alpha=1 => coef=886, which completely destroys output coherence. All steering controllers collapse to incoherent outputs or zero behaviour rate."
+  },
+  "success_criterion": "n_distinct(steering) > n_distinct(prompt) AND n_distinct(steering) > n_distinct(TI) for expressing_uncertainty",
+  "success_criterion_met": false,
+  "primary_predicate_check": {
+    "n_distinct_steering_gt_prompt": false,
+    "n_distinct_steering_gt_ti": false,
+    "both_required": true
+  },
+  "binary_judgment": "fail",
+  "consistency": "INCONSISTENT",
+  "consistency_rationale": "Main experiment showed n_distinct(steering)=4 > n_distinct(prompt)=2 for uncertainty (primary predicate passed). Variant on Qwen-14B shows n_distinct(steering)=0 due to sigma_proj=886 causing complete incoherence at all alpha values. The claim that steering offers more distinct operating points does NOT generalize to Qwen-14B with the sigma_proj-scaled coefficient formula.",
+  "m4_results_source": "verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/m4_14b/results_summary.json"
+}

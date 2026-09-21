@@ -1,0 +1,129 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Mengru_Wang",
+    "paper_title":         "Aligning Machine and Human Visual Representations across Abstraction Levels",
+    "agent":         "scientist1",
+    "review_date":         "2026-07-19"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "headline用了教师在拟合集上的测试效果，而不是在held-out集上的测试效果",
+    "score": 3,
+    "evidence_files": ["results/summary.md", "results/things_eval_with_aligned.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "严重问题。全流程的 ground truth 不是 claim 所针对的 THINGS 人类 triplet odd-one-out 判断，而是被替换成 sensevec（一个 300 维语义嵌入，源自自由联想/语义属性数据）",
+    "score": 2,
+    "evidence_files": ["results/summary.md", "code/fit_teacher.py", "results/baseline_things_eval.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "人类三元组判断这一核心资源被静默替换为 sensevec ",
+    "score": 2,
+    "evidence_files": ["results/summary.md", "code/fit_teacher.py"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "实验规模本身充分计入维度 2/9），使得『支持论文人类对齐 claim』的解读相对真实证据被夸大。",
+    "score": 5,
+    "evidence_files": ["results/hierarchical_eval.json", "results/downstream_eval.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "统计严谨性薄弱：results/*.json 与 summary 全为单次运行的点估计，未报告任何种子重复、方差、误差棒或显著性检验。效应量普遍很大且跨层级方向一致（如 rho 0.119→0.424、entropy Pearson 0.109→0.489），不像纯噪声；但缺乏不确定性量化，尤其 C4 的 OOD 增益很小（kNN OOD +0.016、linear OOD CLS +0.021）时，无法排除落在噪声内。",
+    "score": 3,
+    "evidence_files": ["results/downstream_eval.json", "results/hierarchical_eval.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "无干预claim",
+    "score": "n/a",
+    "evidence_files": ["results/things_eval_with_aligned.json", "results/downstream_eval.json", "code/distill_dinov2b.py"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "可溯源性好：summary.md 中的每个关键数字都能在 results/*.json 精确对上——教师 rho 0.879 / triplet 0.810、baseline dinov2-base rho 0.119、aligned-proj rho 0.424 → things_eval_with_aligned.json；coarse/mid/fine 0.870/0.756/0.391 与 entropy Pearson 0.489、KL 0.200 → hierarchical_eval.json；下游 kNN/linear 及 OOD 各值 → downstream_eval.json，均一致。未见无来源或与日志矛盾的数值，结果扎根于真实执行。唯一小缺口：Claim 1 表格里的 held-out（15% split）rho 0.477 / triplet 0.567 未出现在这几份 JSON 落盘里（应来自 fit_teacher 的验证输出/日志），无法在 results/ 下直接定位。",
+    "score": 5,
+    "evidence_files": ["results/summary.md", "results/things_eval_with_aligned.json", "results/hierarchical_eval.json", "results/downstream_eval.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "各产物之间自洽：summary.md 的数字与四份 results/*.json 逐一对齐，文字结论与其数字方向相符，模型行数/命名一致。可交叉核对的面较窄（仅 summary + 4 个 JSON，无独立的 tracker/verify/ledger 体系）。轻微不一致：summary 同时引用 held-out 0.477 与 mixed-train/val 0.879 作为 Claim 1 支撑，但在 bottom-line（第 82 行）只写『all-concept rho 0.23→0.88』而未同时标注该数含拟合集泄漏；held-out 数亦未落盘到 results/。属记账瑕疵，不改变判定。",
+    "score": 4,
+    "evidence_files": ["results/summary.md", "results/things_eval_with_aligned.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "task.md Claim 1：拟合到 THINGS 人类 triplet 判断的教师模型能捕捉人类相似性结构，好到可对大规模无标注图库合成跨多个抽象层级的人类式相似性判断。",
+        "method": {
+          "justification": "方法族与论文一致——在冻结 SigLIP-So400m 上加一个可学习头（3 层 MLP + 残差旁路）以逼近人类相似性参照，形式上对应论文『linearly/affine align teacher』。",
+          "score": 4,
+          "evidence_files": ["code/fit_teacher.py", "results/summary.md"]
+        },
+        "experiment": {
+          "justification": "没用Things人类真实三元组判断，而是使用了sensevec语义嵌入作为参照，Train/val有重叠",
+          "score": 2,
+          "evidence_files": ["results/summary.md", "results/things_eval_with_aligned.json"]
+        },
+        "result": {
+          "justification": "定性方向与论文一致——教师明显优于未对齐 SigLIP（held-out 0.228→0.477），支持『教师能捕捉参照结构』。但『参照』是 sensevec 而非人类三元组",
+          "score": 3,
+          "evidence_files": ["results/summary.md", "results/things_eval_with_aligned.json"]
+        }
+      },
+      "C2": {
+        "claim": "task.md Claim 2：通过专用对齐损失把人类式相似性结构蒸馏进预训练视觉基础模型（主实验 DINOv2 ViT-B），可在多个抽象层级显著提升与人类相似性判断的 Spearman 相关。",
+        "method": {
+          "justification": "蒸馏方法合理：解冻 top-4 transformer blocks + 新增投影头，损失=逐图余弦对齐 + 批内 RSM-MSE 匹配教师 + 对冻结原始 CLS 的保留损失，和原文全参数微调略有不同",
+          "score": 4,
+          "evidence_files": ["code/distill_dinov2b.py", "results/summary.md"]
+        },
+        "experiment": {
+          "justification": "所有 Spearman 仍以 sensevec 为参照。",
+          "score": 4,
+          "evidence_files": ["results/hierarchical_eval.json", "results/things_eval_with_aligned.json"]
+        },
+        "result": {
+          "justification": "方向与论文强一致：sensevec-RSM rho 0.119→0.424，coarse 0.599→0.870、mid 0.561→0.756 大幅提升、fine 0.349→0.391 提升最小——正复现论文『改进最大在 coarse、fine 最难注入』的结构（summary 第 48 行且如实指出 fine 缺口）。折扣同 C1：参照是 sensevec 而非人类三元组；数字真实、无凑数迹象。",
+          "score": 4,
+          "evidence_files": ["results/hierarchical_eval.json", "results/summary.md"]
+        }
+      },
+      "C3": {
+        "claim": "task.md Claim 3：对齐后的学生模型比未对齐版本更准确地再现人类的行为模式与不确定性。",
+        "method": {
+          "justification": "odd-oue-out是根据sensevec派生的分布，不是human真实分布。",
+          "score": 4,
+          "evidence_files": ["results/summary.md", "results/hierarchical_eval.json"]
+        },
+        "experiment": {
+          "justification": "实验设置较合理。问题同method",
+          "score": 4,
+          "evidence_files": ["results/hierarchical_eval.json", "results/summary.md"]
+        },
+        "result": {
+          "justification": "数字方向看似复现（OOO agreement 0.509→0.678、entropy Pearson 0.109→0.489、KL 0.353→0.200），但『匹配人类不确定性』这一 claim 从未对人类不确定性做过检验——参照全是 sensevec 熵，故结果对 Claim 3（尤其 uncertainty 侧）的支撑名不副实。作者披露了代理性质、未编造，但把 sensevec 熵表述为『human uncertainty』的解读偏乐观。",
+          "score": 3,
+          "evidence_files": ["results/hierarchical_eval.json", "results/summary.md"]
+        }
+      },
+      "C4": {
+        "claim": "task.md Claim 4：对齐与实用性不冲突——对齐后的学生模型在多样下游任务上匹配或超过原模型，并改善分布外（OOD）鲁棒性。",
+        "method": {
+          "justification": "构造 BREEDS-animal10 超类的 source→target 子群漂移 OOD。实验方法合理",
+          "score": 5,
+          "evidence_files": ["code/downstream_eval.py", "results/downstream_eval.json"]
+        },
+        "experiment": {
+          "justification": " OOD 覆盖窄：只有 BREEDS-animal10 一个超群。",
+          "score": 3,
+          "evidence_files": ["results/downstream_eval.json", "results/summary.md"]
+        },
+        "result": {
+          "justification": "方向与论文一致，但是在一个ood上增幅较小，在噪声范围内",
+          "score": 3,
+          "evidence_files": ["results/downstream_eval.json", "results/summary.md"]
+        }
+      }
+    }
+  }
+}

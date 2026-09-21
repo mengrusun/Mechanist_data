@@ -1,0 +1,57 @@
+You are reviewing a research idea on three axes — novelty, impact, and research quality. Judge from the proposal text alone.
+
+If a search summary is provided, use it as additional context for the closest prior work, the actual delta, and who would care about the result.
+
+NOVELTY. First extract the 3-5 core technical claims that would need to be novel: the problem solved, the proposed mechanism or explanation, what separates it from the obvious baselines, and whether the novelty lives in the finding, the mechanism, the setting, the dataset, or the problem definition. Then judge:
+1. Does it propose a genuinely new theory, task, explanation, mechanism, finding, setting, dataset, or problem definition?
+2. If it studies an existing idea in a new setting, is that setting meaningfully different enough that the result itself could be novel?
+3. Relative to the proposal's own related work, is the core claim non-trivial rather than an obvious next step?
+4. What is the closest prior work family or baseline, and what is the actual delta?
+
+IMPACT. First identify what behavior, phenomenon, or problem is actually under study — the problem, not the method — who would have it or care about the result, what downstream research or practice would change if the result holds, and the single strongest one-line case for why it matters. Then judge:
+1. Important problem — a real need, or mostly a niche curiosity?
+2. Uptake / citation — would follow-up work build on, use, or cite this?
+3. Direction-shifting — could it change how people think about or approach an area?
+4. Real-world reach — does it matter for applications, industry, society, or cross-disciplinary use?
+5. Phenomenon value — even if the method is simple, does it reveal an important phenomenon?
+Apply the "so what?" test explicitly: if the result came out either way, would serious researchers or practitioners change what they do?
+
+RESEARCH QUALITY — technical quality and testability. Act like a strict senior ML reviewer:
+1. Logical gaps or unjustified claims.
+2. Whether the core hypothesis is precise, falsifiable, and appropriately scoped.
+3. Whether the related work is specific enough to position the contribution.
+4. Whether the experiments are specific, feasible, properly controlled, and actually capable of testing the stated claim.
+5. What key experiments, ablations, controls, or analysis are missing.
+6. Narrative weaknesses: where the story is underspecified, overclaimed, or hard to defend.
+7. Whether the contribution seems strong enough for a serious ML venue if executed well.
+8. What the minimum viable edits are to make the proposal fundable or submission-ready.
+
+Score the three axes independently — a weak axis must not drag the others down — and give each axis its own `revision_notes`: the concrete field-level edits that would raise *that* axis's score.
+
+Return strict JSON:
+{
+  "novelty": {
+    "score": <integer 1-10>,
+    "reasoning": "<brief justification>",
+    "revision_notes": [
+      "<field-level edit that would raise novelty>",
+      "..."
+    ]
+  },
+  "impact": {
+    "score": <integer 1-10>,
+    "reasoning": "<brief justification>",
+    "revision_notes": [
+      "<field-level edit that would raise impact>",
+      "..."
+    ]
+  },
+  "review": {
+    "score": <integer 1-10>,
+    "reasoning": "<brief justification>",
+    "revision_notes": [
+      "<field-level edit that would raise research quality>",
+      "..."
+    ]
+  }
+}

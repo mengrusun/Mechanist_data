@@ -1,0 +1,65 @@
+{
+  "direction": "Extract and utilize concept representations from LLM internals for steering and monitoring — RFM (Recursive Feature Machines) supervised feature learning applied to Llama-3.1-8B-Instruct residual-stream activations, evaluated on 5 sub-claims: (1) baseline steering, (2) code-language high-precision steering, (3) cross-lingual transfer, (4) compositionality, (5) internal-feature monitoring vs LLM judges.",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "RFM per-block linear concept vectors extracted from an 8B RLHF-tuned instruct model's residual stream can be applied additively at inference for steering and used as classifiers on activations for monitoring; the resulting utility varies sharply across sub-tasks — clean signed monotone steering on well-formed semantic concepts (political stance) but null on RLHF-installed safety (refusal); clean per-benchmark AUROC gain over GPT-4o output judges (large on hallucination, RLHF-bounded on toxicity).",
+      "status": "established",
+      "behavior_conclusion": "The concept-vector representation exists and is exploitable, but its practical utility is sharply task-dependent and (for toxicity) training-regime-bounded. Signed monotone steering works when the target concept is a well-formed semantic direction linearly separable in mid-block residuals (political stance: α=-3→3.08, α=0→3.66, α=+3→4.02, Δ_range=0.94 vs random-control |Δ|≤0.30). It fails when the target property is (a) protected by RLHF safety-training (refusal: null across α∈[-3,+12], gibberish at α≥+8), (b) requires an output-modality switch rather than a semantic shift (Python→C++: v_cpp encodes 'Language: X.' prefix rather than syntactic C++, no language switch at α=+3), or (c) the underlying mono-lingual signal is small enough that cross-lingual transfer is masked by judge noise (honesty EN Δ=+0.14, ZH +0.32, ES +0.20, FR reverses to -0.10, no lang p<0.05). Internal-feature classifiers cleanly beat GPT-4o as an output judge on hallucination (HaluEval, Δ≈+0.30 AUROC, universal across 4 tested 8B models) but only for RLHF-tuned models on toxicity (ToxicChat, RLHF-8B beats GPT-4o=0.882; reasoning-distilled DeepSeek-R1-Distill-Llama-8B=0.858 falls below — a documented boundary condition).",
+      "impact": {
+        "assessment": "Central to activation-engineering / representation-engineering: it establishes when RFM as a supervised feature-learning primitive supplants unsupervised SAEs and when it does not. The per-benchmark RLHF boundary condition on ToxicChat is a concrete falsifiable finding that any future 'universal internal-monitor' claim must respect.",
+        "recommendation": "PROCEED WITH CAUTION",
+        "assessed_in_round": 1
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Tuning & Editing → Location",
+          "family": "Representation and Parameter Analysis / activation-steering (RFM concept-vector, supervised) + Probing / Linear-probing",
+          "headline": "RFM-extracted per-block concept vectors (screened by linear-probe accuracy across 32 blocks of Llama-3.1-8B-Instruct, extracted via AGOP 3-5 iterations, applied additively at inference) yield a **bimodal utility profile**: (i) headline positive — internal-feature classifiers beat GPT-4o as an output judge for hallucination detection (HaluEval AUROC 0.986 probe / 0.984 RFM vs GPT-4o 0.685, Δ≈+0.30, universal across 4 tested 8B models: Llama-3.1-8B-Instruct, Meta-Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.2, DeepSeek-R1-Distill-Llama-8B); (ii) per-benchmark bounded positive — for toxicity detection, only RLHF-tuned instruct models beat GPT-4o (Llama-3.1=0.945, Llama-3 pass, Mistral pass; DeepSeek-R1-Distill=0.858 below GPT-4o=0.882 — reasoning-distilled models lack the toxicity-signal representation); (iii) clean semantic-steering positive on political-stance (α=-3→3.08 to α=+3→4.02, Δ_range=0.94, RFM 2-3× larger than matched-random control) but null on RLHF-installed refusal (all α at 1.0, gibberish at α≥+8); (iv) mixed / non-diagnostic on Python→C++ (v_cpp encodes 'Language: X.' training prefix, no language switch, provisional under-power at n=10), cross-lingual honesty (ZH/ES preserve sign, FR reverses, none stat-significant, underlying EN signal Δ=+0.14 is intrinsically small), and compositionality (single-vector rubric ceiling ~5.0 makes strict predicate uninformative on tested prompts).",
+          "claims": [
+            {
+              "id": "C1_exp",
+              "statement": "Per-block linear RFM concept vectors added additively to Llama-3.1-8B-Instruct residual-stream activations can steer behaviour on well-formed semantic concepts (political stance) with matched-random-direction-control gap, but do not defeat RLHF-installed safety training (refusal) and are within-judge-noise on subtle values (honesty) — headline overclaim demoted to a political-only preliminary case study.",
+              "method": "Per concept, screen 32 residual-stream blocks via linear probe on ~300 paired concept-positive vs concept-negative activations, pick argmax block, extract top AGOP eigenvector via 3-5 RFM iterations, apply α·v_c additively at every generated-token position, sweep α ∈ {-3..+3} against a matched-random-direction control at ‖α·v_c‖, judge 50 held-out generations with GPT-4o rubric.",
+              "conclusion": "Political stance shows clean signed monotone steering (α=-3→3.08, α=0→3.66, α=+3→4.02, Δ_range=0.94; matched-random |Δ|=0.30/0.12, RFM 2-3× larger); honesty within judge noise (α=+3 Δ=+0.14 vs judge std=1.25); refusal null across α∈[-3,+12] (Llama-3.1-8B RLHF safety unbroken, gibberish at α≥+8); the 3-scenario predicate was overclaim so the claim was narratively narrowed to a political-only preliminary case study — refusal's Location-screen degeneracy (probe ties at 1.0 across 32 blocks on trivially-separable assistant-text) is documented as a general failure mode of RFM's Location step."
+            },
+            {
+              "id": "C2_exp",
+              "statement": "A C++ concept vector extracted by RFM on 400 paired Python/C++ snippets and added additively at α=+3 to Llama-3.1-8B-Instruct residuals does not raise HackerRank test-case pass rate above the default Python baseline — a provisional negative under-powered by realized held-out sample size.",
+              "method": "RFM extract v_cpp at block 19 (screened by probe accuracy on paired snippets), apply α*v_cpp additively at inference, compare test-case pass rate on 10 held-out HackerRank problems × 2 seeds against (a) default Python, (b) prompt-only 'Answer in C++.'",
+              "conclusion": "Default Python pass=0.600, prompt-only C++ pass=0.433, α=+3 steered pass=0.567 (cpp_frac=0.00 — no language switch); success predicate steered>max(default,prompt) fails. Root cause: v_cpp likely encodes the 'Language: X.\\n' training-data prefix rather than intrinsic C++ syntax. Verdict is provisional (suspected under-power: used_n 20/60, seeds 2/N, grid 1 α_star only — UNDERPOWER=tag, not a confirmed falsification)."
+            },
+            {
+              "id": "C3_exp",
+              "statement": "A concept vector (v_honesty at block 15, α=+3) extracted from English paired data does not reliably steer Llama-3.1-8B-Instruct in Chinese, French, and Spanish — sign preserved in ZH and ES (largest ZH +0.32) but reverses in FR (-0.10); no language reaches p<0.05, but the underlying EN signal (Δ=+0.14) is intrinsically small so noise-level cross-lingual verdicts track underlying weakness rather than a transfer failure per se.",
+              "method": "Translate 50 EN held-out prompts once into ZH/FR/ES via GPT-4o, apply the same v_honesty at same block/α, judge each response with GPT-4o multilingual 5-point rubric, per-lang Wilcoxon vs unsteered baseline (no multiple-comparisons correction).",
+              "conclusion": "Direction preserved in 3 of 4 langs (EN +0.20 p=0.23, ZH +0.32 p=0.11, ES +0.20 p=0.27) but reverses in FR (-0.10 p=0.67); no lang stat-significant, no MC correction applied. The 'transfers to Chinese, French, Spanish' predicate is falsified by FR reversal; narrowed to ZH/ES preservation with the caveat that the underlying honesty vector is intrinsically weak in EN itself."
+            },
+            {
+              "id": "C4_exp",
+              "statement": "Sum of two RFM concept vectors on tested combos (honesty+refusal_neg; formal_tone+technical_persona) does not exhibit compositional gain over single-vector alternatives — but this is a measurement-ceiling failure (single-vector rubric scores saturate at 4.87-5.00), not a compositionality falsification; the test is non-diagnostic on these prompt sets.",
+              "method": "Two 2-vector combos at pinned block 14; compare v1_only, v2_only, sum on 15 held-out prompts each × 3 conditions; judge each target effect independently with GPT-4o; predicate = sum's rubric on target-1 > v2_only's rubric on target-1 AND sum's on target-2 > v1_only's on target-2 (no matched-random-direction control).",
+              "conclusion": "Combo1 sum r1(honesty)=4.73 ≤ v2_only r1=4.87 (predicate fails); Combo2 all metrics saturate ~5.0/~4.7. Both combos hit single-vector ceiling on tested prompts, making the strict predicate trivially unachievable — non-diagnostic. Missing matched-random-direction control (present on C1) further weakens the test. Compositionality remains untested on this prompt set; needs harder held-out prompts before a real test is possible."
+            },
+            {
+              "id": "C5_v2",
+              "statement": "Internal-feature classifiers built on RLHF-tuned 8B instruct models' residual-stream activations detect hallucinations across all 4 tested 8B models (HaluEval AUROC > GPT-4o) but detect toxicity only for RLHF-tuned instruct models (ToxicChat AUROC > GPT-4o for Llama-3.1, Llama-3, Mistral; DeepSeek-R1-Distill — a reasoning-distilled model — falls below GPT-4o and defines the boundary condition).",
+              "method": "Per concept (hallucinated vs faithful; toxic vs non-toxic) and per model: screen 32 residual-stream blocks with linear probe on train (HaluEval 1200 / ToxicChat 350), extract RFM at each block, score held-out (HaluEval 400 test; ToxicChat 118 balanced test) by <h_l, v_c> or fitted probe, compare AUROC vs GPT-4o called as output judge. Predicate applied per benchmark and per model.",
+              "conclusion": "HaluEval-General is a universal 8B result: Llama-3.1-8B-Instruct probe=0.986 / RFM=0.984, Llama-3-8B-Instruct pass, Mistral-7B-Instruct-v0.2 pass, DeepSeek-R1-Distill-Llama-8B=0.985 — all beat GPT-4o=0.685 (Δ≈+0.30). ToxicChat is RLHF-bounded: Llama-3.1 RFM=0.945, Llama-3 pass, Mistral pass all beat GPT-4o=0.882 (Δ≈+0.06); DeepSeek-R1-Distill=0.858 falls below GPT-4o and defines the documented boundary — reasoning distillation gives weaker toxicity-signal representation than RLHF harmlessness tuning. Robustness=0.667 (2/3 non-baseline RLHF variants; DeepSeek-R1 is the boundary case). Publication-defensible headline: internal RLHF-8B features robustly beat GPT-4o on hallucination; only RLHF-tuned models beat GPT-4o on toxicity."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Causal Intervention",
+        "Formation Tracing",
+        "Unit Interpretation",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

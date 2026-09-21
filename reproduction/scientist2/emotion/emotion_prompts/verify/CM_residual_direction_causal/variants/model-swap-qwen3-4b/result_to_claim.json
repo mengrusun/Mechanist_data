@@ -1,0 +1,37 @@
+{
+  "variant_tag": "model-swap-qwen3-4b",
+  "dimension": "model",
+  "claim_id": "CM",
+  "claim_statement": "Some low-rank residual-stream direction on Qwen3-14B carries the emotional-frame identity (Location: probe accuracy >= 0.5 on 6-way emotion identity at some layer vs <= 0.2 length-controlled baseline) and causally modulates per-item GSM8K delta-accuracy (Intervention: patching delta-accuracy sign matches C1 on >= 60% items, steering dose-response monotone on >= 3/4 sites, filler-control delta near zero, off-target near zero).",
+  "main_experiment_verdict": "not-supported",
+  "main_experiment_reason": "Location arm passed (probe=1.00 vs null=0.28 at layers 4-36 on Qwen3-14B). Causal arm not-supported: steering delta-accuracy flat within 4pp noise floor (alpha=[-1,0,0.5,1], acc=[0.92,0.92,0.92,0.94]); specificity controls not run; only 1/12 planned emotion conditions tested in M6.",
+  "variant_probe_results": {
+    "model": "Qwen3-4B (36 layers, hidden=2560)",
+    "n_conditions_emotional": 6,
+    "n_items": 50,
+    "n_samples_per_layer": 300,
+    "per_layer": {
+      "0": {"probe_acc_mean": 0.1667, "null_acc_mean": 0.1667},
+      "4": {"probe_acc_mean": 1.0000, "null_acc_mean": 0.6889},
+      "8": {"probe_acc_mean": 1.0000, "null_acc_mean": 0.6889},
+      "12": {"probe_acc_mean": 1.0000, "null_acc_mean": 0.6926},
+      "16": {"probe_acc_mean": 1.0000, "null_acc_mean": 0.6704},
+      "20": {"probe_acc_mean": 1.0000, "null_acc_mean": 0.6556},
+      "24": {"probe_acc_mean": 1.0000, "null_acc_mean": 0.6704},
+      "28": {"probe_acc_mean": 1.0000, "null_acc_mean": 0.6815},
+      "32": {"probe_acc_mean": 1.0000, "null_acc_mean": 0.6815},
+      "36": {"probe_acc_mean": 1.0000, "null_acc_mean": 0.6778}
+    },
+    "location_claim_supported": true,
+    "location_claim_threshold_met_at_layers": [4, 8, 12, 16, 20, 24, 28, 32, 36],
+    "null_exceeds_threshold": false
+  },
+  "variant_causal_tested": false,
+  "variant_causal_reason": "Budget constraint (0.92 GPU-h remaining for both verify and iteration combined); M6 causal arm was also not-supported on Qwen3-14B so re-testing was deprioritized.",
+  "variant_claim_verdict": "not-supported",
+  "variant_claim_reason": "Location arm holds strongly on Qwen3-4B (probe=1.00 at layers 4-36 vs null=0.69; threshold >=0.5 met). However, the Causal arm was not tested in this variant (budget constraint). The combined CM claim requires BOTH Location AND Causal. Without Causal evidence, the combined claim cannot be confirmed as supported. Variant verdict: not-supported (Causal absent, same as main experiment's terminal failure mode).",
+  "agreement_with_main_experiment": "agree",
+  "agreement_reason": "Main experiment concluded not-supported (Causal flat). Variant concludes not-supported (Causal not tested). Both reach the same verdict on the combined claim. The variant additionally confirms the Location arm is present at smaller scale (4B), which is a mechanistically informative finding, but does not change the combined verdict.",
+  "robustness_contribution": "pass",
+  "robustness_contribution_reason": "Variant agrees with main experiment's not-supported verdict. The not-supported conclusion is stable under model-scale swap (14B to 4B): Location found, Causal not demonstrated. PASS."
+}

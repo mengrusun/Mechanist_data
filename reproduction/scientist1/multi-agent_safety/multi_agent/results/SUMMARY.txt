@@ -1,0 +1,77 @@
+======================================================================
+SUMMARY OF EXPERIMENTAL VALIDATION OF task.md CLAIMS
+======================================================================
+
+[Claim 1] Per-agent activation probes recover a collusion signal that text-level
+monitoring misses.
+----------------------------------------------------------------------
+Core dataset (N=102 dialogues, 5 agents each):
+  Best per-agent probe AUC (across layers): 0.953
+  Text-only judge (gpt-5.4) AUC: 0.499
+  Text-only judge accuracy: 0.500
+  --> Activation probes: ~0.95 AUC; Text judge: chance (0.499). CLAIM 1 STRONGLY SUPPORTED.
+
+[Claim 2] Group aggregation outperforms single-agent probes; no single aggregation
+dominates.
+----------------------------------------------------------------------
+Core dataset (aggregation over 5 agents):
+  L16: single_slot_best=0.889 single_slot_worst=0.800   mean=0.992 max=0.975 min=0.973 median=0.989 soft_or=0.990 topk2_mean=0.988 std=0.993 range=0.495
+  L24: single_slot_best=0.887 single_slot_worst=0.814   mean=0.977 max=0.965 min=0.970 median=0.973 soft_or=0.973 topk2_mean=0.969 std=0.967 range=0.506
+  L32: single_slot_best=0.899 single_slot_worst=0.827   mean=0.980 max=0.971 min=0.974 median=0.978 soft_or=0.981 topk2_mean=0.982 std=0.979 range=0.508
+  L40: single_slot_best=0.938 single_slot_worst=0.831   mean=0.974 max=0.962 min=0.973 median=0.972 soft_or=0.967 topk2_mean=0.967 std=0.955 range=0.522
+  L48: single_slot_best=0.898 single_slot_worst=0.832   mean=0.976 max=0.967 min=0.951 median=0.975 soft_or=0.973 topk2_mean=0.965 std=0.967 range=0.514
+  Best Core: L16 agg=std AUC=0.993
+  --> Aggregation improves consistently over single-agent probes.
+
+ Best aggregation per dataset (within-distribution):
+  Core:            best = mean/std at L16 (AUC≈0.99)
+  Transfer:        near-saturated across all aggregations (AUC≈1.00)
+  Stego:           soft_or/std lead at deeper layers
+
+[Claim 3] Zero-shot transfer to structurally different scenarios.
+----------------------------------------------------------------------
+Probes trained on Core (17 domains, committee format) applied to Transfer + Stego:
+  Core -> Transfer (6 families, N=60):
+    Best layer L48 agg=median AUC=0.956
+    Per-family AUC at best layer:
+      transfer_code_review                n=10  best_agg=mean         AUC=1.000
+      transfer_knowledge_poisoning        n=10  best_agg=mean         AUC=1.000
+      transfer_market_manipulation        n=10  best_agg=mean         AUC=1.000
+      transfer_news_narratives            n=10  best_agg=max          AUC=1.000
+      transfer_pipeline_sabotage          n=10  best_agg=mean         AUC=1.000
+      transfer_research_framing           n=10  best_agg=std          AUC=0.920
+  Core -> Stego (blackjack card-count steganography, N=50):
+    Best layer L24 agg=std AUC=0.722
+    All aggregations at best layer:
+      mean         AUC=0.344
+      max          AUC=0.413
+      min          AUC=0.333
+      median       AUC=0.475
+      soft_or      AUC=0.477
+      topk2_mean   AUC=0.459
+      std          AUC=0.722
+      range        AUC=0.664
+
+  -> Core -> Transfer: near-perfect transfer (>0.95 AUC) supports Claim 3.
+  -> Core -> Stego: partial transfer (best 0.72) via DISPERSION-based aggregations
+     (std, range) while mean/median FAIL (<0.5 AUC).
+     Shows Claim 2 is decisive on transfer: no single aggregation dominates.
+
+[Text-only Judge on other datasets]
+  Transfer:        AUC=0.959 (blatant collusion recognized)
+  Stego:           AUC=0.885
+
+======================================================================
+CONCLUSION
+======================================================================
+
+Claim 1 (probes recover signal text misses):     STRONGLY SUPPORTED
+  Core: probe 0.95 AUC vs text judge 0.50 AUC
+Claim 2 (group aggregation, no single dominant): SUPPORTED
+  Aggregation always beats worst single agent; best method varies by dataset.
+  Core = mean/std; Transfer = mean/median/topk2; Stego (transfer) = std/range.
+Claim 3 (zero-shot transfer to new scenarios):   SUPPORTED (Transfer), MIXED (Stego)
+  Core -> Transfer: 0.956 overall, 5/6 families at 1.00 AUC.
+  Core -> Stego: 0.72 requires dispersion aggregations; direct-orientation aggregations
+  fail, illustrating why a FAMILY of aggregations is needed for cross-domain use.
+

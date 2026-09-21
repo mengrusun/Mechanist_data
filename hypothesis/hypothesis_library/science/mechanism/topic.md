@@ -1,0 +1,1 @@
+Investigate whether interpretable internal features can be causally manipulated to control the properties of generated proteins, DNA sequences, molecules, materials, or other scientific objects. Evaluate whether such interventions preserve validity and improve design efficiency.

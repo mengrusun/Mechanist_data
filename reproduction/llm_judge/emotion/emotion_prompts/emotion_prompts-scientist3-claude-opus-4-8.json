@@ -1,0 +1,184 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Do Emotions in Prompts Matter? Effects of Emotional Framing on LLMs",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The run is inference-only: it draws a fixed 50-example subset of the GSM8K test split (rng=RandomState(42), best_solution_53d3cfaac986487096197ddb0dfb230b.py:216-219) and scores neutral+6 emotion prefixes by exact-match accuracy. There is no fitted classifier/probe/threshold — the EmotionRL policy (which alone would require a train/test split) was never implemented. So the leakage surface is structurally near-absent (largely n/a). The one hygiene note: stage 3 performs a max_new_tokens hyperparameter sweep (256/512/1024) and reports the 'best' hparam on the very same 50 test items it evaluates emotions on (experiment_data.npy accuracy_per_hparam), i.e. tuning-and-reporting on the eval set; this does not contaminate the emotion-vs-neutral deltas that the claims care about, so it is a minor gap rather than leakage.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py",
+      "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The ground truth is the GSM8K gold numeric answer parsed from the '#### N' field (extract_gt, best_solution...py:83-88) and correctness is exact numeric match after normalization (best_solution...py:112-119, 267-270). This is the standard, valid operationalization of math-problem correctness and is fully independent of the system under test (gold labels come from the dataset, not the model). ground_truth lists (len 50) and per-template predictions are stored in experiment_data.npy, and raw_outputs confirm the model emits proper '#### 36' style answers that the regex captures. The metric measures exactly what the accuracy-based claims assert. (The emotion prefixes themselves are hardcoded ad-hoc sentences rather than the paper's GPT-4o-generated stimuli, but that is a stimulus-fidelity issue, not a label-validity one.)",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py",
+      "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The task's experiment-stage resources are model=Qwen3-14B and dataset=GSM8K. The run loads MODEL_DIR/Qwen3-14B (best_solution...py:134) and real Qwen-style reasoning output ('#### 36') confirms it actually ran that model, and it loads GSM8K test (py:20-80) — so model id and dataset name are honored exactly. However the main experiment silently subsets GSM8K to only N_SAMPLES=50 of the ~1319 test items (py:216-219; n_samples=50 in experiment_data.npy), an undisclosed ~4% subset. The verify-stage resources (Llama-3.3-70B, DeepSeek-V3.2; MedQA/BBH/BoolQ/OpenBookQA/SocialIQA) and the specified prompt-template richness (GPT-4o-generated stimuli, two intensity levels, human-written variants) were never used — only a single hardcoded prefix per emotion at one intensity. The model/dataset identity is correct but the data volume is heavily and silently shrunk, so this is a largely-honored-with-a-material-subset case.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py",
+      "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy",
+      "report.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "used_n = 50 GSM8K items (experiment_data.npy n_samples=50), one model (Qwen3-14B), one task, one seed. The reproduction target has four claims spanning diverse domains, multiple models, emotion intensity, and an adaptive policy; the run produced evidence for at most a thin slice of C1/C3 on GSM8K only. C2 (social vs math contrast) and C4 (EmotionRL) have zero supporting experiment. Per-template accuracy differences (0.88-0.96 = swings of one or two of 50 questions) are far too small at n=50 to support fine claims. The run itself is honest about this — report.md marks the pipeline 'incomplete' and 'Not assessable via automation' rather than overclaiming — so this is thin/absent evidence rather than prose overclaim, but the evidence base is well below what the claims need.",
+    "score": 2,
+    "evidence_files": [
+      "report.md",
+      "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy",
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Every reported number is a single-seed point estimate (rng=RandomState(42), decoding temperature=0.0). No variance, error bars, or significance are reported anywhere. The 'seed_aggregation' artifacts are misleading: aggregation_plotting_code.py for seed_aggregation_998376c1... loads a single experiment_data path (n_runs=1), so no real cross-seed variance exists. With n=50, the emotion-vs-neutral deltas (e.g. disgust 0.96 vs neutral 0.92 = +2 questions; anger 0.88 = -2 questions) are well within binomial noise, yet the stage best_metric tracking labels disgust the 'best' template. The conclusion about which emotion helps is therefore not distinguishable from noise, and no uncertainty quantification is attached.",
+    "score": 2,
+    "evidence_files": [
+      "experiment_results/seed_aggregation_998376c1bfa2438790e769aef3853238/aggregation_plotting_code.py",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a — no mechanistic/interpretability causal claim. The claims are behavioral (does emotional framing change accuracy), and the reproduction tests them by a genuine intervention: prepending an emotion prefix to an otherwise-identical question and comparing against an explicit neutral baseline (TEMPLATES with neutral='', best_solution...py:122-130), holding decoding fixed at temperature=0.0. No probing/patching/steering is claimed, so there is no correlational-dressed-as-causal risk. The one causal-flavored claim actually run (emotion prefix -> accuracy change) rests on a controlled neutral-baseline intervention, which is the appropriate design.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every number that exists traces to a concrete on-disk product and agrees with it. experiment_data.npy for experiment_53d3cfaac986... stores metrics.val (neutral@512=0.92, happiness=0.90, anger=0.88, disgust=0.96, surprise=0.92) plus accuracy_per_hparam (mnt_256=0.6629, mnt_512=0.9171, mnt_1024=0.9171); these match verbatim the best_metric strings recorded in logs/0-run/stage_2/.../notes/stage_progress.json and stage_3 stage_progress.json. Real per-item raw_outputs are stored (e.g. a full Qwen chain-of-thought ending '#### 36'), confirming genuine execution rather than back-filled numbers. report.md is a generic heuristic template that does not itself assert numeric results (it points the reader to the journals/npy), so there are no sourceless reported figures to reconcile.",
+    "score": 5,
+    "evidence_files": [
+      "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy",
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The numbers are self-consistent across artifacts: the stage_2 and stage_3 stage_progress.json best_metric blocks report identical GSM8K per-template accuracies (256: neutral0.66/disgust0.56...; 512: neutral0.92/disgust0.96...; 1024 same as 512) that match the experiment_53d3cfaac986... experiment_data.npy metrics.val entries exactly, and the earlier stage_1/stage_2 50-sample runs (experiments 9496de63... and 505d2080...) both report the same neutral0.92/disgust0.96 default (mnt=512) set. report.md honestly propagates the 'incomplete / not assessable' state consistent with the missing finalization markers. The only weakness is loose bookkeeping, not contradiction: report.md's per-claim verdict table is left as empty placeholders ('See overall verdict') and the 'Artifacts' table lists draft/research/baseline/ablation summaries that do not exist on disk. No metric conflicts or PASS-vs-broken contradictions were found.",
+    "score": 4,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json",
+      "experiment_results/experiment_9496de630bbd4a8b961b934a3c09be24_proc_2173433/experiment_data.npy"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Across diverse task domains, static emotional prefixes change LLM accuracy only by small, input-dependent amounts and do not behave as a general-purpose enhancement.",
+        "method": {
+          "justification": "9a — The chosen method (prepend a first-person emotion prefix to an unchanged question, compare accuracy against a neutral='' baseline under fixed deterministic decoding) is exactly the operationalization the paper uses for static emotional prompting (best_solution...py:122-130,175-188). It is well-suited to measuring emotion-induced accuracy shifts. The only method limitation is that 'across diverse task domains' cannot be probed with a single-domain harness — the machinery itself is right, but it was only wired to GSM8K.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b — Design covers neutral+6 emotions on GSM8K with Qwen3-14B, n=50, single seed, single intensity, hardcoded prefixes, plus a max_new_tokens sweep. This exercises only one of six intended domains and one of three models, omits the paper's GPT-4o-generated stimuli, and offers no cross-domain axis — so the 'diverse task domains' and 'input-dependent' facets are structurally untestable here. The accuracy-delta metric is correct and thresholds were not gamed, but coverage is thin and under-powered.",
+          "score": 2,
+          "evidence_files": [
+            "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy",
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py"
+          ]
+        },
+        "result": {
+          "justification": "9c — On the tested slice the data qualitatively agree with the paper: at mnt=512 emotion accuracies sit within +/-4% of neutral (neutral 0.92; range anger 0.88 to disgust 0.96), i.e. small, non-systematic changes rather than a general-purpose boost — the paper's core finding. No fabrication or goalpost-tuning; report.md honestly flags the run as incomplete/not-assessable. But agreement is demonstrated only for math/GSM8K, and the 'diverse domains'/'input-dependent' scope is not shown, so the reproduction of C1 is partial and directional.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json",
+            "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy",
+            "report.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The effect of emotional framing is most pronounced on socially grounded tasks (interpersonal/social reasoning), where the emotional context interacts meaningfully with task content; on tasks like mathematical reasoning or factual QA the effect is markedly smaller.",
+        "method": {
+          "justification": "9a — Validating this claim requires contrasting a socially grounded task (e.g. SocialIQA) against math/factual tasks. Only GSM8K (math) was ever run; no social or factual-QA benchmark was loaded (no SocialIQA/MedQA/BoolQ/OpenBookQA code path executed). The cross-domain comparison method that the claim demands was not deployed at all.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b — No experiment addresses this claim: there is exactly one domain in the artifacts (GSM8K), so the 'social vs math/factual' effect-size contrast cannot be computed. The design provides zero coverage of the comparison the claim is about.",
+          "score": 1,
+          "evidence_files": [
+            "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy",
+            "report.md"
+          ]
+        },
+        "result": {
+          "justification": "9c — No result exists for C2; report.md leaves it as a placeholder ('See overall verdict (claim 2/4)') and the pipeline stopped before running any social task. This is an honest non-attempt (no fabricated agreement), but the claim is left entirely unvalidated with no reliable conclusion, so it cannot count as a faithful reproduction of C2.",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "No single basic emotion among {happiness, sadness, fear, anger, disgust, surprise} provides a consistent benefit across all models and tasks; stronger emotional wording does not yield proportionally larger gains.",
+        "method": {
+          "justification": "9a — For the first half ('no single emotion consistently beneficial') the method — sweeping all six emotions vs neutral — is appropriate and present (TEMPLATES, best_solution...py:122-130). But 'across all models and tasks' needs multiple models/tasks (only Qwen3-14B/GSM8K run) and the 'stronger wording -> proportional gains' half needs an intensity manipulation (paper's slight/moderate/extreme), which is absent — a single fixed-intensity prefix per emotion. The method covers only part of the claim's mechanism.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b — The six-emotion sweep exists but only on one model and one task at one intensity, with no intensity ladder and no second model/task, so 'consistency across models and tasks' and the intensity-proportionality sub-claim cannot be tested. n=50 also makes emotion-to-emotion differences noise-dominated. Honest but materially under-powered for C3.",
+          "score": 2,
+          "evidence_files": [
+            "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy",
+            "logs/0-run/stage_2_baseline_tuning_1_first_attempt/notes/stage_progress.json"
+          ]
+        },
+        "result": {
+          "justification": "9c — On the single available slice no emotion consistently beats neutral (disgust +4%, anger -4%, others within +/-2%), which is weakly, directionally consistent with 'no single emotion is consistently beneficial'. But this is one model/task within noise, and the intensity-proportionality half of the claim is untested, so agreement is only partial and cannot be generalized. No fabrication or threshold-bending.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+            "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "An adaptive policy that selects the emotional prefix per query (EmotionRL) yields more reliable accuracy gains than any fixed emotional prefix or neutral baseline.",
+        "method": {
+          "justification": "9a — EmotionRL (frozen sentence-embedding state, a policy MLP over the six emotions, an offline grouped-reward cache) is never implemented. The only stage-3 'creative research' node is a max_new_tokens hyperparameter sweep, not a learned emotion-selection policy (best_solution_53d3cfaac986...py). The method required to validate C4 is entirely absent.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b — No EmotionRL experiment exists: there is no reward cache, no policy training, no train/test protocol, and no adaptive-vs-fixed-vs-neutral comparison anywhere in experiment_results or the logs. The design does not test C4 at all.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "experiment_results/experiment_53d3cfaac986487096197ddb0dfb230b_proc_2710252/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "9c — No result for C4; report.md leaves it as a placeholder ('See overall verdict (claim 4/4)') and the run terminated before any EmotionRL work. Honest non-attempt (nothing fabricated), but the claim is completely unvalidated, so it cannot be a faithful reproduction.",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

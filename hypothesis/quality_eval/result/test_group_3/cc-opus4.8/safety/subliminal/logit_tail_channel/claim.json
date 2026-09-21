@@ -1,0 +1,23 @@
+{
+  "Name": "logit_tail_channel",
+  "Title": "The Signal Is in the Tails: Low-Probability Token Structure Carries the Subliminal Payload",
+  "Short Hypothesis": "The subliminal trait is encoded primarily in the fine structure of the teacher's output distribution over low-probability tokens (the tail), not in the high-probability tokens that dominate the visible text. We hypothesize that (i) truncating generation to top-k / high-nucleus (removing tail structure) sharply reduces trait transmission, (ii) distilling on full soft logits transmits more trait than distilling on sampled hard tokens, and (iii) the trait-relevant perturbation to the teacher's logits is approximately low-rank and aligned with a trait direction. This pinpoints the informational carrier of the channel and explains why sampling temperature and format affect transmission.",
+  "Related Work": "Cloud et al. (2025) note sensitivity to data format and use sampled tokens, and mention soft-label effects in their MLP experiments, but do not isolate the tail of the distribution as the carrier or systematically vary truncation. Knowledge distillation theory (Hinton et al., 2015) emphasizes 'dark knowledge' in soft-label tails, but for capability transfer, not covert traits. Watermarking and stego work manipulates low-probability tokens deliberately; here we test whether the model does so implicitly. We uniquely localize the subliminal payload to distributional tails and connect it to soft-vs-hard distillation and truncation.",
+  "Abstract": "Where in a token stream does a subliminal trait actually live? We hypothesize the payload is carried by the fine structure of the teacher's output distribution over low-probability tokens—the same 'dark knowledge' that classical distillation exploits—rather than by the visible high-probability tokens. We test three predictions. First, truncating the teacher's sampling (top-k or high nucleus threshold), which discards tail structure, should reduce the trait a student acquires; sweeping the truncation level should trace a dose-response. Second, distilling students on the teacher's full soft logits should transmit the trait more strongly than distilling on hard sampled tokens, because soft labels preserve the tail. Third, the trait-carrying perturbation of the teacher's logits, isolated as the difference between trait and non-trait teacher logit vectors on identical prefixes, should be approximately low-rank and correlate with an independently defined trait direction. We evaluate across benign traits and misalignment, and check that truncation strong enough to block transmission does not by itself explain the result via generic quality loss (capability controls). Confirmation gives a concrete, measurable substrate for the hidden signal—the geometry of the logit tail—and actionable levers (truncation, hard-label distillation) that reduce covert trait leakage in distillation pipelines, while clarifying why temperature, top-k, and output format modulate subliminal strength.",
+  "Experiments": [
+    "Generate teacher data at varying truncation (top-k in {full, 100, 40, 10} and nucleus p in {1.0, 0.9, 0.5}); finetune students; measure trait strength vs truncation (dose-response).",
+    "Soft vs hard distillation: finetune one student set on teacher soft logits (KL objective) and another on sampled hard tokens for identical prefixes; compare trait strength.",
+    "Logit-perturbation analysis: on identical prefixes, compute delta = logit_trait_teacher - logit_nontrait_teacher; measure its rank (SVD energy) and cosine with a trait direction / unembedding-projected trait vector.",
+    "Temperature sweep during generation to test whether higher temperature (more tail sampling) increases transmission.",
+    "Capability control: verify that truncation levels that block transmission do not merely destroy data usefulness (track student perplexity/task accuracy).",
+    "Format cross-check: repeat soft-vs-hard comparison for code and CoT outputs.",
+    "Report transmission-vs-truncation curves, soft/hard trait gap, and tail-perturbation rank."
+  ],
+  "Risk Factors and Limitations": [
+    "Soft-logit distillation requires teacher logit access, unavailable for many API models, limiting scope to open models.",
+    "Truncation both removes tail structure and reduces data diversity/quality, confounding the mechanism with generic degradation.",
+    "The low-rank claim may hold only approximately or be prefix-dependent.",
+    "Effects may vary strongly with tokenizer and vocabulary size.",
+    "Hard-label transmission being nonzero would show the tail is not the sole carrier, complicating the clean story."
+  ]
+}

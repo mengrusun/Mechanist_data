@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The experiments align closely with the hypothesis and specify what is varied, measured, and compared, with strong directional and numeric refutation criteria such as “each direction retains AUROC >=0.70” versus “retained AUROC <=0.55,” and “anchor suppression recovers >=35% while query-time amplification recovers <=15%.” However, the central anchor target is not fully coherent: the “model-specific default year” appears fixed for a model, so it is unclear how an “anchor probe” can predict it across examples or yield a meaningful AUROC, while “regressed on training-era frequency” does not resolve what the varying labels are. The proposal is nevertheless decisively falsifiable through explicit negative outcomes and well-aligned causal, prevalence, transfer, and collateral-damage tests, although clarification of the anchor variable and per-item storage criterion is required before implementation.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is deriving “an anchor probe (target: the model-specific default year)” and then a “rank<=8 default-anchor vector”; unlike activation extraction, probing, residualization, and patching, this is not yet a standard operation as specified because the apparently constant probe target and construction of matched “default-era-dominant vs. query-time-dominant states” are underdefined. The named artifacts and methods—Wikidata, Llama-3-8B, GPT-J-6B, Qwen2.5-7B, Pythia, ROME/MEMIT, linear probes, activation patching, and standard regression—exist and are supported by mature ML and interpretability tooling, although the Wikidata “edit dates / entity popularity” proxy is not a direct measurement of pretraining-era answer frequency. Resources are unusually concrete, including “6,000 (subject, year) items,” “target 1,500,” “target 800,” three models, seeds “0/1/2,” and two 200-item collateral controls. The refuting branch is runnable because label shuffles, random directions, matched nulls, time-unspecified positive controls, correctly answered facts, and time-invariant facts are designed in, but the anchor-extraction ambiguity remains a material custom-engineering roadblock.",
+      "score": 7
+    }
+  }
+}

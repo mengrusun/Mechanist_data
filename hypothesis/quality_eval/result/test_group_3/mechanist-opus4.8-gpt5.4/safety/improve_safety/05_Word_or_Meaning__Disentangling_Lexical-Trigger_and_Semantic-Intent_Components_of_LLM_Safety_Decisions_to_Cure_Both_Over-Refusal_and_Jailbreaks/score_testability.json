@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The experiments closely address the hypothesis by varying lexicon while holding meaning fixed and vice versa, measuring harmfulness-projection changes, and testing the resulting intervention against both over-refusal and jailbreak outcomes. Falsifiability is unusually strong: H1 specifies outcomes such as \"|cosine| <=0.3\" versus the negative result \"|cosine| >0.6,\" while H2 requires both FPR and ASR to drop \"greater than or equal to 10 points\" and explicitly fails if improving one worsens the other. The main gap is that the exact mathematical construction of the separate \"lexical projection\" and \"semantic projection\" is not fully specified, and Experiment 2 leaves the reference population for \"below-median semantic projection\" ambiguous, so implementation would require a few clarifications.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is to \"estimate the lexical-trigger contribution (via the localized trigger-token attention paths and a lexical projection learned from the same-meaning swap pairs) and subtract it,\" which is custom but implementable with standard activation hooks, vector estimation, patching, and residual-stream interventions; however, the estimator and aggregation of attention paths are not specified precisely enough to be entirely turnkey. The core artifacts—including the named Llama, Qwen, and Gemma models, HarmBench, XSTest, OR-Bench, MMLU, MT-Bench, activation patching, probes, and attacks such as GCG, AutoDAN, and PAIR—exist and are supported by standard interpretability and evaluation tooling, although some recent named datasets or baselines such as \"OKTest,\" \"D-STT,\" and \"SCANS\" could not be independently verified here. Resources are exceptionally well quantified, including \"~500 pairs each,\" a \"10% random sample,\" \"100 HarmBench behaviors per model,\" and explicit evaluation-set sizes, while negative-result branches are runnable through no-intervention baselines, four prompt groups, \"a control that subtracts the semantic (not lexical) component,\" utility evaluations, and adaptive attacks.",
+      "score": 7
+    }
+  }
+}

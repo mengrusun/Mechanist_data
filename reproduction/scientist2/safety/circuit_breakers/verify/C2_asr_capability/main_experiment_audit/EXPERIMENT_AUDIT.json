@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4, via llm-chat MCP)",
+  "claim_id": "C2",
+  "linked_milestones": ["M2", "M3", "M5"],
+  "overall_verdict": "fail",
+  "integrity_status": "fail",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Real HarmBench eval-reserve prompts (disjoint from train) with LLM-as-judge. Real MT-Bench parquet. Real MMLU labels via log-likelihood. No synthetic GT."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "ASR, MT-Bench, MMLU all computed against true labels/outcomes. No self-normalization detected."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All result files exist. Numbers match EXPERIMENT_RESULTS.md: B0_ASR=0.333, B1_ASR=0.000, RR_ASR=0.356, B0_MTBench=6.30, RR_MTBench=5.85, B0_MMLU=0.580, RR_MMLU=0.570. Tracker M5a-M5i all done."
+    },
+    "dead_code": {
+      "status": "warn",
+      "details": "No dead code producing misleading outputs. WARN: 'gcg-lite' is a fixed suffix template (m5_eval.py:69), not actual GCG optimization. B1 is R2D2-lite (12 templates), not 512-GCG. Both documented as proxies but weaker than named."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "180 HarmBench prompts (6x30), 40 MT-Bench (plan=80), 300 MMLU. Single model, single seed. B1 underpowered. GCG-lite not real GCG. All limitations clearly documented. Negative result honestly disclosed."
+    },
+    "eval_type": "real_gt with LLM-as-judge (HarmBench/MT-Bench) + real labels (MMLU)"
+  }
+}

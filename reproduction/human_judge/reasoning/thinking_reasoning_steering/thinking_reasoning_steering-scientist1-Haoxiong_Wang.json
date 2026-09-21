@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "Understanding Reasoning in Thinking Language Models via Steering Vectors",
+    "agent":         "scientist1",
+    "review_date":         "2026-07-19"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "train/val 划分清晰；steering 在独立的 eval 问题上评估，无泄漏。",
+    "score": 5,
+    "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/src/probe_and_direction.py", "scientist1/reasoning/thinking_reasoning_steering/results/probe_accuracy.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "行为的 present/absent 对比对与强度打分都由同一 GPT-5.4 生成/评判，标签为 LLM 定义的代理、未经独立校验。",
+    "score": 3,
+    "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/src/gen_contrastive_pairs.py", "scientist1/reasoning/thinking_reasoning_steering/src/judge_behaviour.py"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主模型 DeepSeek-R1-Distill-Llama-8B 与要求完全一致；但指定的 500 题基准被缩为 ~15 道自生成题、实际只用 8 道做 steering 评估，数据量大幅下调。",
+    "score": 3,
+    "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/REPORT.md", "scientist1/reasoning/thinking_reasoning_steering/data/eval_problems_small.json", "scientist1/reasoning/thinking_reasoning_steering/task.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "steering/prompt 评估仅 8 题、探针 val 每行为约 12 对，证据偏薄。",
+    "score": 3,
+    "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/results/analysis.json", "scientist1/reasoning/thinking_reasoning_steering/REPORT.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "单次运行、无多种子、无方差/置信区间；仅在 7 个 α×8 题上给 Spearman/OLS，且用单一 LLM judge。",
+    "score": 3,
+    "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/results/analysis.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "steering 为真实干预且有 α 剂量扫描与 prompt baseline，但缺随机方向对照。",
+    "score": 3,
+    "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/src/steer_generate.py", "scientist1/reasoning/thinking_reasoning_steering/results/analysis.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "报告数字与原始 json 文件一致且可追溯。",
+    "score": 5,
+    "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/results/analysis.json", "scientist1/reasoning/thinking_reasoning_steering/results/probe_accuracy.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "报告表格与落盘产物数值自洽。",
+    "score": 5,
+    "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/REPORT.md", "scientist1/reasoning/thinking_reasoning_steering/results/analysis.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Distinct reasoning behaviours (uncertainty, example-generation, backtracking) each map onto an approximately linear direction in the residual stream.",
+        "method": {
+          "justification": "均值差方向 + 线性投影探针，与论文相符。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/src/probe_and_direction.py"]
+        },
+        "experiment": {
+          "justification": "逐层留出 val 精度、matched present/absent 对，判据可靠。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/results/probe_accuracy.json"]
+        },
+        "result": {
+          "justification": "val_acc 1.00/0.96/0.96 远高于随机 0.5，与论文'行为编码为线性方向'定性一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/results/probe_accuracy.json"]
+        }
+      },
+      "C2": {
+        "claim": "Each behaviour direction can be extracted from a small pool of contrastive activation pairs (present vs absent).",
+        "method": {
+          "justification": "仅用均值差、不拟合系数，与论文一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/src/probe_and_direction.py"]
+        },
+        "experiment": {
+          "justification": "约 49 训练对即在多层达 >0.95 可分性，设计合理。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/results/probe_accuracy.json"]
+        },
+        "result": {
+          "justification": "小对比池足以稳定提取方向、非单层侥幸，与论文一致。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/results/probe_accuracy.json"]
+        }
+      },
+      "C3": {
+        "claim": "Adding/subtracting the steering vector amplifies/suppresses the behaviour dose-dependently via a single scalar coefficient.",
+        "method": {
+          "justification": "残差流加性 steering + α 扫描，是论文的因果干预方法。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/src/steer_generate.py"]
+        },
+        "experiment": {
+          "justification": "有 α 剂量扫描，但缺随机方向对照、仅 8 题，且负向抑制无法演示(基线强度已≈0)，只能测放大侧。",
+          "score": 3,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/results/analysis.json"]
+        },
+        "result": {
+          "justification": "放大侧单调、Spearman 0.61–0.79，与论文剂量可控一致；但抑制侧因基线触底未能复现，理由如实披露，故仅单向一致。",
+          "score": 3,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/results/analysis.json"]
+        }
+      },
+      "C4": {
+        "claim": "Steering-vector control is finer-grained than prompt engineering while preserving downstream reasoning accuracy.",
+        "method": {
+          "justification": "steering 与自然语言指令基线对照、并按 α 记录准确率，操作化合理。",
+          "score": 5,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/src/prompt_baseline.py"]
+        },
+        "experiment": {
+          "justification": "仅 8 题，且这些简单题基线强度≈0，prompt'无效'可能是题目触底所致而非提示本身，存在混淆；准确率保持的证据也太薄。",
+          "score": 3,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/results/analysis.json", "scientist1/reasoning/thinking_reasoning_steering/results/prompt_baseline.json"]
+        },
+        "result": {
+          "justification": "steering 将强度从 0 拉到 ~4.6 而 prompt 保持 0，方向上支持'比提示更细粒度'；但'保持准确率'仅由 8 题支撑，结论偏弱。",
+          "score": 3,
+          "evidence_files": ["scientist1/reasoning/thinking_reasoning_steering/REPORT.md", "scientist1/reasoning/thinking_reasoning_steering/results/analysis.json"]
+        }
+      }
+    }
+  }
+}

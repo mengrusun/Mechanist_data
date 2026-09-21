@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The procedure directly tests the hypothesis by using “k-hop datasets (k=1..4),” probing “each intermediate value,” and measuring whether patching an intermediate changes the final answer, with metrics that align well to latent computation, causal use, and verbalization. The prediction is directional and refutable: the claim expects models to “reliably compute 2-3 silent hops,” exhibit a layerwise “pipeline,” and benefit from CoT mainly “when silent capacity is exceeded”; failure to decode those hops, cause answer changes, or observe the predicted CoT pattern would count against it. However, “reliably-computed,” “substantial,” and the criterion for an answer change to establish causal support have no numeric decision thresholds, while the use of “linear/MLP probes” leaves ambiguous whether the central claim is specifically linear decodability or broader nonlinear recoverability.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to “activation-patch the internal representation of intermediate j,” because the plan does not specify how that representation is localized, extracted, aligned between runs, or patched without off-target disruption; activation patching itself is standard and well supported, but selecting a faithful intermediate-specific representation requires custom methodological choices rather than a magic capability. Llama-3-8B/70B and Qwen2.5 exist, and residual-stream capture, linear or MLP probes, shuffled-label controls, and activation interventions are supported by established PyTorch and interpretability tooling. The negative branch is runnable because “shuffle-label probes to bound leakage” and “irrelevant-intermediate patching as negative control” can distinguish genuine decoding and causal specificity from artifacts, although there is no control explicitly addressing memorized direct factual associations. Resources are only partly quantified—“k=1..4” and “Llama-3-8B/70B” are concrete, but the Qwen2.5 size, dataset sample counts, train/test construction, number of seeds, and other experimental magnitudes are unstated.",
+      "score": 6
+    }
+  }
+}

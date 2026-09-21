@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "LASA: Language-Agnostic Semantic Alignment",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The final reported results are pure inference-time evaluation of a pretrained model, with essentially no fitting/selection whose result is then re-evaluated on the same data. The best/final node (logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_code.py) loads LLaMA-3.1-8B-Instruct and computes ASR over MultiJail prompts (no classifier/probe fitted for the headline metric). The layer-selection step computes cross-lingual cosine similarity over 20 parallel prompts and takes an argmax over the SAME 20 prompts (no held-out set), and the discarded stage-1 linear-probing 'language separability' analysis fits and scores a probe without an explicit train/test split — but neither feeds the headline ASR conclusion, and the one node that DID fit a steering direction from seen languages and evaluate on all languages (stage_3 node 96ceec55) was flagged buggy and abandoned, so it is not part of the reported results. There is thus no leakage path into the reported ASR numbers, but the auxiliary layer-selection/probing is done on non-disjoint data, a minor unverifiable hygiene gap.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_code.py",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The ASR ground-truth is produced by a hand-written regex refusal detector (REFUSAL_PATTERNS in experiment_code.py: is_refusal() returns True on ~35 fixed phrases across languages, and treats any response <5 chars as refusal; attack_success = not refused). This is a weak, noisy proxy: it measures whether the output contains a refusal phrase, NOT whether the content is actually harmful. The task.md explicitly specifies 'Judge model for ASR: GPT-4o (harmfulness evaluator) plus a small human-verified subset', which was NOT used. The run's own draft_summary.json flags the problem: English ASR=0.8 with the note 'the rule-based judge may over-count attacks (false positives)', and the stage_3 analysis notes the model 'likely produces garbage/repetition ... that the regex marks as non-refusal, inflating ASR.' The label therefore materially over-counts attack success in several languages, so absolute ASR numbers are unreliable even if the relative resource-level ordering is directionally credible.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_code.py",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "Base model fidelity is honored: the code resolves and loads LLaMA-3.1-8B-Instruct exactly as specified (MODEL_PATH search for 'Llama-3.1-8B-Instruct'), confirmed by experiment_data.npy runs. Dataset is MultiJail, but subset to MAX_PER_LANG=30 per language (verified: 300 predictions total, 30 per each of en/zh/it/vi/ar/ko/th/bn/sw/jv) out of the full benchmark, and the layer analysis uses only 20 parallel prompts; the subset is disclosed in code but is a ~10% sample. Two specified resources were effectively swapped/omitted: (1) the ASR judge was silently downgraded from the specified GPT-4o harmfulness evaluator to a regex detector, which directly determines the primary metric; (2) the always-used training data (PKU-SafeRLHF, UltraFeedback) and the LASA training procedure were never used at all, because the core alignment method (Claim 2) was never implemented. Base model and dataset are largely right, but the judge downgrade on the headline metric plus the total absence of the training resources for the core claim are substantive.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_code.py",
+      "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_data.npy",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_e2feee9374ab47d7a468610af29fceb5.py",
+      "idea.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "For the multilingual safety-gap observation (part of Claim 1's motivation), evidence is modest but present: used_n=30 prompts per language, 300 total, yielding the resource-level ordering high=0.4667 / medium=0.5333-0.5444 / low=0.8167 (draft_summary.json / research_summary.json), a fairly large gap. The bottleneck-layer geometry rests on only 20 parallel prompts. For the CORE intervention Claim 2 ('aligning safety at this layer yields substantially lower ASR ... while preserving general task performance'), NO valid experiment exists in the reported results: the only attempt (stage_3 steering node) was buggy and abandoned, and there is no trained aligned model, no surface-baseline comparison, and no capability-retention measurement (MMLU/MT-Bench/MGSM). Nonetheless report.md's per-claim table lists Claim 2 as 'partially or fully supported', an overclaim relative to a non-existent experiment. Thin evidence for the gap and essentially absent evidence for the headline intervention claim.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "report.md",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The headline baseline ASR is a single deterministic greedy run (do_sample=False) with no seed replication and no error bars/CI; the metric is a point estimate (overall ASR 0.6267). A seed_aggregation stage exists (logs/0-run/experiment_results/seed_aggregation_fe5d9c0f...), but inspection of its aggregation_plotting_code.py shows it references only a single experiment run directory (experiment_24addaf...), so no genuine cross-seed variance is estimated for the final result. The stage_4 sampling ablation adds stochastic decoding with n_samples=3, but that varies the attack, not the metric's seed robustness, and reports no significance test. The resource-level ordering (0.47 vs 0.82) is a large effect likely exceeding noise at n~90-120 per level, but no uncertainty is quantified anywhere. Single-seed point estimates with no variance/significance.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_code.py",
+      "logs/0-run/experiment_results/seed_aggregation_fe5d9c0fc4ab450094a714a11660f575/aggregation_plotting_code.py",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_e2feee9374ab47d7a468610af29fceb5.py"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "Claim 2 is intrinsically causal/interventional (aligning safety AT the bottleneck layer YIELDS lower ASR vs surface-level baselines). In the FINAL reported results there is no intervention whatsoever — only baseline observation of ASR and correlational cross-lingual cosine geometry. The single interventional attempt (stage_3 node 96ceec55: activation steering with a refusal direction at the bottleneck, with surface_control and late_control layer conditions and an alpha sweep) did include controls, but it was buggy: the steering sign was inverted (direction = harmful_mean - benign_mean, then ADDED), the 'bottleneck' was selected as layer 2 (identical to the surface control), and the result showed ASR rising 0.62->1.0. The node's own analysis diagnosed these bugs and it was abandoned without applying the proposed fixes (sign flip, matched-vs-random layer selection, alpha sweep incl. small/negative). Thus the causal claim is left untested by any valid controlled intervention; an intervention with controls exists but is broken and discarded.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json",
+      "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_data.npy"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "The key numbers trace to on-disk products and agree with them. I loaded logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_data.npy and confirmed: 300 predictions (30/language), layer_semantic_alignment length 33 with min=0.3241, max=0.9994, mean=0.9172, argmax layer=2 — matching draft_summary.json Key_numerical_results exactly (0.9994, 0.3241, 0.9172) and research_summary.json per-language/resource ASR values (overall 0.6267, high 0.4667, low 0.8167, it 0.1, en 0.8, bn/jv/sw 1.0). So the headline numbers are grounded in real execution, not fabricated. One provenance weakness: draft_summary.json narrates the bottleneck via a 'linear-probing accuracy U-shape with minimum at layers 14-16, red star marks the semantic bottleneck', which does not correspond to the final node's product (best_bottleneck_layer=2 from a monotonically-decreasing cosine curve); the descriptive path for the 'bottleneck at ~14-16' claim is not the file actually driving the final result. Numbers are traceable; the layer interpretation path is muddled.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_data.npy",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Multiple material inconsistencies. (1) The identified semantic-bottleneck layer is contradictory: the final on-disk best node reports best_bottleneck_layer=2 (a surface layer, cosine argmax), while draft_summary.json describes the bottleneck as an intermediate layer (~14-16) via a U-shaped probing curve — the summary narrative and the final artifact disagree on the KEY scientific finding, unreconciled. (2) medium-resource ASR is 0.5333 in draft_summary.json but 0.5444 in research_summary.json for the same best node. (3) research_summary.json's vlm_feedback_summary and plot_analyses discuss 'image classification datasets (fashion_mnist, dtd, imagenet-val, imagenette)' and 'training/validation loss curves' that have nothing to do with the actual MultiJail safety experiments — clearly stale/hallucinated feedback contaminating the record. (4) report.md marks Claim 2 as 'partially or fully supported' although no valid LASA experiment was run and the only steering attempt was flagged buggy (ASR rising 0.62->1.0) and abandoned. The pipeline's own records contradict each other on the headline finding.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json",
+      "report.md",
+      "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_data.npy"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "There exists an intermediate \"semantic bottleneck\" layer in multilingual LLMs whose hidden-state geometry is dominated by shared meaning rather than by language identity.",
+        "method": {
+          "justification": "9a — The paper (paper.pdf Sec.3, Eq.1) identifies the Semantic Bottleneck as Ls = argmax_l (S(P_Sem) - S(P_Lang)), i.e. the layer maximizing semantic-clustering silhouette OVER language-clustering silhouette, plus t-SNE. The reproduction's driving/final method is instead argmax over raw cross-lingual mean-pooled cosine similarity (experiment_code.py get_layer_reps + sim accumulation), which conflates semantic content with surface/embedding structure and monotonically decreases with depth — precisely the flaw the run's own stage_3 analysis diagnosed ('raw mean-pooled hidden-state cosine similarity ... is dominated by token/embedding-level structure and monotonically decreases with depth'), driving selection to layer 2. A better auxiliary method (stage-1 linear-probing for language separability, min at ~14-16) was run but not carried into the final best node. The method actually determining the reported bottleneck is misaligned with the claim's semantic-vs-language mechanism.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_code.py",
+            "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json"
+          ]
+        },
+        "experiment": {
+          "justification": "9b — Design is thin and lacks the control that isolates the claimed effect: only 20 parallel prompts, all 32 layers, a single similarity metric (max cosine), NO matched-vs-random-pair contrast and NO silhouette/CKA to separate semantic signal from language-identity signal (the paper's core methodology and the run's own recommended fix). The judgment metric (max cross-lingual cosine similarity) does not strictly correspond to 'semantic dominance over language identity' — a surface layer trivially maximizes it. No control against a mismatched-pair baseline means a high cosine value cannot distinguish shared meaning from shared template/embedding structure. Under-powered and missing the key control.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_code.py",
+            "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "9c — The final on-disk result selects layer 2 (best_bottleneck_layer=2, cosine max=0.9994) — a SURFACE layer, qualitatively CONTRADICTING the paper's finding that the bottleneck is an intermediate/middle layer. Yet draft_summary.json narrates the bottleneck as intermediate (~14-16, via probing) and concludes 'results support the LASA hypothesis', papering over the contradiction between the summary and the final artifact. The one genuinely paper-consistent signal (stage-1 probing U-shape with minimal language separability at ~14-16) exists but is not the reported final result and the discrepancy is undisclosed. So the reported conclusion is internally contradictory and the headline artifact disagrees with the paper while being presented as agreement.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_24addaf7046642ef8ebd278706f34c35_proc_2175194/experiment_data.npy",
+            "logs/0-run/draft_summary.json",
+            "report.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Aligning safety at this layer yields substantially lower attack success rates across high-, medium-, and low-resource languages (including languages unseen during alignment training) compared with surface-level safety alignment baselines, while preserving general task performance.",
+        "method": {
+          "justification": "9a — The paper's LASA (paper.pdf Sec.4, Algorithm 1) trains a Safety Semantic Interpreter on frozen hidden states at the bottleneck layer and performs Semantic-Conditioned preference alignment (DPO-style) on seen languages (En/Zh/Ko). The reproduction did NOT implement any of this — no SSI, no preference training, no aligned model. The only interventional method attempted was inference-time activation steering (stage_3 node 96ceec55), a fundamentally different mechanism, and it was buggy (steering sign inverted, applied at the surface layer 2) and abandoned. The reported/final results contain no method that tests C2 at all.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json",
+            "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_e2feee9374ab47d7a468610af29fceb5.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b — No valid experiment for C2 exists. The specified training data (PKU-SafeRLHF, UltraFeedback) was never used; there is no surface-baseline-vs-LASA comparison in the final results and no general-capability-retention evaluation (MMLU/MT-Bench/MGSM) as the claim's 'while preserving general task performance' requires. The single steering attempt used the flawed layer-2 'bottleneck' (making the bottleneck and surface conditions identical), an alpha sweep of only {4,8} (both large, no small/negative sanity check), the noisy regex judge, and a broken predictions-storage branch — then was discarded without the fixes its own analysis prescribed. This is under-powered to the point of absence; a true negative cannot be distinguished from non-implementation.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json",
+            "logs/0-run/ablation_summary.json",
+            "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_e2feee9374ab47d7a468610af29fceb5.py"
+          ]
+        },
+        "result": {
+          "justification": "9c — There is no valid result for C2. The only data point (stage_3 steering) showed ASR INCREASING under 'LASA' (0.62 -> 0.976/1.0 at the bottleneck/surface conditions), the OPPOSITE of the paper's 24.7%->2.8% drop; the run correctly recognized this as a bug artifact and did not fabricate or dress it as success — but it also never produced a corrected result. Meanwhile report.md's per-claim table still labels Claim 2 'partially or fully supported', an unearned surface verdict given no valid experiment. This is neither a genuine reproduction nor an honestly-reported, well-justified NOT-REPRODUCED (which would score higher) — the claim's headline conclusion is left dangling with an unsupported 'supported' label.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json",
+            "report.md",
+            "logs/0-run/draft_summary.json"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-14",
+  "auditor": "executor (Claude Sonnet 4.6) + evidence review",
+  "claim_id": "C3a",
+  "linked_milestones": ["M4"],
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Post-hoc analysis on M2/M3 results. No new GT derivation. Dataset-provided correctness labels flow through unchanged from M2/M3 (already verified as real_gt). Eval type: real_gt (inherited).",
+      "evidence": ["scripts/analyze_c3.py:29-43"]
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "acc(vec) = sum/len. Per-emotion mean = np.mean over 4 cells. Argmax over raw proportions. No model-derived normalization.",
+      "evidence": ["scripts/analyze_c3.py:46-47", "scripts/analyze_c3.py:92-101"]
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "M2 (26 files) and M3 (52 files) exist. reports/M4_c3_analysis.json exists (status=done). argmax_by_task={gsm8k:fear, socialiqa:surprise, medqa:fear} matches EXPERIMENT_RESULTS.md. C3a.PASS=True consistent with set({fear,surprise}) having len>1.",
+      "evidence": ["reports/M4_c3_analysis.json", "refine-logs/EXPERIMENT_RESULTS.md:116-117"]
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "C3a logic in analyze_c3.py:89-115 is called in main() and results written to JSON. No dead code.",
+      "evidence": ["scripts/analyze_c3.py:89-115"]
+    },
+    "scope": {
+      "status": "pass",
+      "details": "3 task families compared — exactly what the claim requires. No scope overclaim. Argmax over 4 cells per emotion per task.",
+      "evidence": ["scripts/analyze_c3.py:89-115"]
+    },
+    "eval_type": "real_gt"
+  }
+}

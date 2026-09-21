@@ -1,0 +1,19 @@
+{
+  "phase": "3-step0",
+  "date": "2026-07-15",
+  "cap_source": "MAX_VERIFY_CLAIMS=1",
+  "admitted_pool": [],
+  "picked_claims": [],
+  "picked_rationale": "All 4 target claims failed Phase 2 (combined main-experiment integrity verdict = FAIL for each). No claim was admitted to the Stage 2 pool. The admitted_pool is empty. Phase 3 step 0 cannot pick any claim — the top-K selection is vacuous. All claims proceed directly to Phase 11 as INCONCLUSIVE.",
+  "stage2_deferred": [],
+  "rejected_pool": ["C1", "C2", "C3", "C4"],
+  "rejected_reasons": {
+    "C1": "combined Phase 2 verdict = FAIL (exp=warn, mech=fail) — mechanism rigor broken (no alpha sweep, no sigma_proj scaling, no capability metric at sweep points, n_random=1, reroute not demonstrated). See verify/C1_identifiability_reroute/main_experiment_audit/MECHANISM_AUDIT.json",
+    "C2": "combined Phase 2 verdict = FAIL (exp=fail, mech=fail) — both experiment integrity and mechanism rigor broken. Exp: R2D2-lite B1 substitution + GCG-lite eval design weaken competitive comparison. Mech: same as C1 (M3 in scope). See verify/C2_asr_capability/main_experiment_audit/{EXPERIMENT,MECHANISM}_AUDIT.json",
+    "C3": "combined Phase 2 verdict = FAIL (exp=warn, mech=fail) — mechanism rigor broken on Mistral RR fine-tune (M6T, same Check A failures as M3). Full PGD + VLM eval skipped (budget-gated). See verify/C3_vlm_transfer/main_experiment_audit/MECHANISM_AUDIT.json",
+    "C4": "combined Phase 2 verdict = FAIL (exp=warn, mech=fail) — mechanism rigor broken (M7 reuses M3 adapter; same Check A failures). Floor effect in harmful tool-use rate. See verify/C4_agent_transfer/main_experiment_audit/MECHANISM_AUDIT.json"
+  },
+  "note": "Had any claim been admitted, the top-1 pick by importance would have been C1 (mechanism-level claim on which C2/C3/C4 all depend; highest importance per FINAL_PROPOSAL.md §6 and IDEA_REPORT.md). The planned Mistral-7B-Instruct-v0.2 model-swap variant (artifacts/m6/m1_mistral, m3_mistral, m4_mistral already on disk from M6) would have been cited as the Stage 2 variant without re-running. However, since C1 itself failed Phase 2, Stage 2 cannot run.",
+  "variants_run": 0,
+  "dimensions": "model"
+}

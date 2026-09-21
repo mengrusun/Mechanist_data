@@ -1,0 +1,52 @@
+{
+  "score": 5,
+  "verdict": "almost",
+  "weaknesses": [
+    "Mechanism engagement is now proven, but C1 still fails because benign activations are dragged along the harmful direction by 0.156, above the 0.10 gate",
+    "Current signed-cos objective has no stopping condition, so it keeps driving harmful cos to -1.0 even after the pass threshold is reached, wasting capacity and increasing spillover",
+    "Retention weighting is presently too weak relative to the aggressive RR term, as evidenced by perfect harmful anti-alignment alongside systematic benign drift at every site",
+    "The reproducible tail-step instability remains present (step-490 grad spike and retention blow-up), so final-step checkpoints are unreliable even if best-checkpoint behavior is acceptable",
+    "Because harmful reroute overshot the target by a large margin, this run does not yet demonstrate controlled selective rerouting, only maximal inversion"
+  ],
+  "action_type": "\u2461",
+  "fix_axis": "rr_margin_saturation",
+  "fix_spec": {
+    "run": "M3+M4 rerun only",
+    "cli_flags": [
+      "--rr_loss signed_hinge",
+      "--rr_margin 0.3",
+      "--alpha 10.0",
+      "--beta 1.0",
+      "--lambda_lm 1.0",
+      "--lora_r 16",
+      "--lora_alpha 32",
+      "--target_modules q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj",
+      "--learning_rate 2e-4",
+      "--lr_scheduler_type cosine",
+      "--warmup_ratio 0.05",
+      "--max_steps 400",
+      "--effective_batch_size 8",
+      "--train_pairs 384",
+      "--bf16 true",
+      "--sites 9,10,11,12,13,14",
+      "--direction_source probe_coef",
+      "--heldout_pairs 128",
+      "--save_best_on heldout_c1"
+    ],
+    "code_diffs": [
+      "Add a new RR loss option `signed_hinge`.",
+      "Implement it as L_rr = mean(max(cos(a_site, d_site) + m, 0)) over harmful examples/sites, where `m` is provided by `--rr_margin` and set to 0.3 for this run.",
+      "Interpretation: optimization stops pushing once cosine reaches -0.30, matching the actual success threshold instead of driving toward -1.0.",
+      "Keep all other objective terms unchanged to isolate saturation of the reroute term as the single causal change.",
+      "Retain per-site train and held-out cosine logging every 25 steps for both harmful and benign examples.",
+      "Shorten training from 500 to 400 steps to avoid the known collapse tail; select/report best checkpoint by held-out C1-composite rather than final step."
+    ]
+  },
+  "rationale": "Iteration 1 validated my prior diagnosis: the loss, not capacity, was the blocker. But the new failure is the mirror image: pure signed cosine has constant incentive to keep pushing after the gate is already passed, so the adapter spends excess freedom driving harmful residuals to -1 and drags benign residuals with it. The cleanest one-iteration fix is therefore to saturate the RR objective at the actual target boundary, not to globally weaken it. A hinge at margin 0.3 preserves the strong O(1) gradient near cos\u22480 that successfully engaged the mechanism, but turns that gradient off once the required reroute level is achieved. That directly targets the observed pathology\u2014overshoot-induced benign bleed\u2014without introducing a confound from rebalancing multiple coefficients. I am also accepting a 400-step cap because the step-490 collapse is already replicated and contributes no useful evidence. If this works, we should see harmful held around the pass region while benign drift drops under the gate.",
+  "expected_signal": "Held-out M4 should show \u0394cos(a_h, d_h) in roughly [-0.45, -0.30] with per-site harmful cos near the margin rather than -0.99, \u0394cos(a_h, d_ctrl) remaining ~0, and \u0394cos(a_b, d_h) improving from -0.156 to within [-0.10, 0.00]. C1 should pass on both harmful and benign sides at the best checkpoint, with no reliance on the unstable final steps.",
+  "budget_gpu_hours": 0.35,
+  "still_unresolved_after_fix": [
+    "C3",
+    "Tail-step training instability remains only partially addressed unless the shorter run fully avoids it"
+  ]
+}

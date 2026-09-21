@@ -1,0 +1,400 @@
+{
+  "feature_idx": 1600,
+  "max_act_ref": 107.86650085449219,
+  "trigger_threshold": 21.573300170898438,
+  "sage": {
+    "candidates": [
+      "Hyphenated \u201c-wide\u201d compounds, especially forms like \u201csystem-wide\u201d/\u201ccity-wide\u201d where the feature may target the second piece \u201cwide\u201d or the whole hyphenated construction.",
+      "A very specific memorized token-context around the phrase break \u201conto the\u201d across a newline, rather than a general feature for the token \u201cthe\u201d after prepositions.",
+      "A sparse polysemantic feature for rare boundary continuations after punctuation/hyphen/newline, with strongest evidence on hyphenated \u201c-wide\u201d compounds and possibly another isolated memorized newline continuation."
+    ],
+    "top": "Hyphenated \u201c-wide\u201d compounds, especially forms like \u201csystem-wide\u201d/\u201ccity-wide\u201d where the feature may target the second piece \u201cwide\u201d or the whole hyphenated construction.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on the second token of split compounds or phrasal forms where a short preposition/adverb is attached to the previous word by punctuation, such as \"onto the\" or \"city-wide\".",
+            "positive_probes": [
+              "They launched a city-wide recycling campaign yesterday.",
+              "Please move onto the next agenda item.",
+              "Our coast-side cottages filled quickly in summer.",
+              "She switched over-to manual control after midnight.",
+              "The team approved a company-wide hiring freeze."
+            ],
+            "positive_acts": [
+              0.0,
+              9.741398811340332,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "They launched a city wide recycling campaign yesterday.",
+              "Please move on to the next agenda item.",
+              "The team approved a nationwide hiring freeze."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 1.9482797622680663
+          },
+          {
+            "hypothesis": "The feature detects tokens immediately following a hyphen or after a word ending in a directional particle, especially when the resulting phrase forms a common spatial/layout expression.",
+            "positive_probes": [
+              "Place the icon top-right on the toolbar.",
+              "Align the caption left-aligned beneath the photo.",
+              "Keep the badge bottom-left near the margin.",
+              "Move the legend right-aligned beside the chart.",
+              "Set the menu center-left for balance."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Place the icon in the upper corner.",
+              "Align the caption neatly beneath the photo.",
+              "Keep the badge near the left margin."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "The feature responds to line-break or formatting-boundary continuations in prose, where a highly frequent function word or suffix-like continuation token completes the preceding expression across punctuation/newline boundaries.",
+            "positive_probes": [
+              "She whispered,\nand then disappeared into the fog.",
+              "The old map ended:\nof the valley, nothing remained.",
+              "His warning was clear;\nto ignore it meant disaster.",
+              "I kept the letter\u2014\nfrom my brother\u2014folded away.",
+              "Their anthem began,\nwith a single trembling note."
+            ],
+            "positive_acts": [
+              9.681736946105957,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "She whispered and then disappeared into the fog.",
+              "The old map of the valley was badly torn.",
+              "Their anthem began with a single trembling note."
+            ],
+            "distractor_acts": [
+              9.777512550354004,
+              0.0,
+              0.0
+            ],
+            "score": -1.3228234608968101
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "Token-level feature for the wordpiece/token \" the\" specifically when it appears as the second part of a merged form like \"onto the\" (i.e., the model tokenization yields a boundary before \"the\" inside a larger phrase).",
+            "positive_probes": [
+              "He set the cup onto the shelf.",
+              "They walked into the theater quietly.",
+              "She looked up to the ceiling fan.",
+              "We drove over to the old mill.",
+              "The cat ran under the table."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "He set the cup on the shelf.",
+              "They walked into theaters quietly.",
+              "She looked up toward the ceiling fan."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "Secondary/polysemantic possibility: activation on the token \"wide\" when it is the second part of a hyphenated form like \"city-wide\".",
+            "positive_probes": [
+              "The policy applies company-wide starting next Monday.",
+              "They launched a campus-wide recycling initiative this spring.",
+              "A city-wide curfew began after the storm.",
+              "The update caused system-wide outages for hours.",
+              "We conducted a nation-wide survey on healthcare access."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              9.016498565673828,
+              0.0
+            ],
+            "distractor_probes": [
+              "The road was wide and nearly empty.",
+              "They launched a wide-ranging recycling initiative this spring.",
+              "A citywide curfew began after the storm."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 1.8032997131347657
+          },
+          {
+            "hypothesis": "Formatting/newline continuation is not the core feature; if present at all, it is only incidental to specific frequent continuations rather than generic line-break-boundary words.",
+            "positive_probes": [
+              "Ingredients:\\n- Flour\\n- Sugar\\n- Eggs",
+              "Dear Sir or Madam,\\nI am writing",
+              "Q: What is photosynthesis?\\nA: Process plants use",
+              "The following table shows:\\nName | Age | City",
+              "Once upon a time,\\nthere lived a king"
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Line breaks can appear in many formats.",
+              "Continue on the next line if needed.",
+              "Boundary words near newlines are not special."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Hyphenated \u201c-wide\u201d compounds, especially forms like \u201csystem-wide\u201d/\u201ccity-wide\u201d where the feature may target the second piece \u201cwide\u201d or the whole hyphenated construction.",
+            "positive_probes": [
+              "The outage caused system-wide delays all morning.",
+              "City-wide curfews remained in effect overnight.",
+              "We launched a company-wide security review yesterday.",
+              "Campus-wide Wi-Fi upgrades start next week.",
+              "A nationwide alert replaced the region-wide warning."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              10.097600936889648,
+              13.359463691711426
+            ],
+            "distractor_probes": [
+              "The system is wide open after the update.",
+              "The city was wide awake before dawn.",
+              "We reviewed security across the whole company yesterday."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 4.691412925720215
+          },
+          {
+            "hypothesis": "A very specific memorized token-context around the phrase break \u201conto the\u201d across a newline, rather than a general feature for the token \u201cthe\u201d after prepositions.",
+            "positive_probes": [
+              "He stepped onto the\nplatform without looking back.",
+              "They carried it onto the\nstage before sunrise.",
+              "She climbed onto the\nroof to watch fireworks.",
+              "We rolled the crate onto the\ntruck at dawn.",
+              "The cat jumped onto the\nwindowsill and purred."
+            ],
+            "positive_acts": [
+              8.273850440979004,
+              9.475127220153809,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "He stepped onto the platform without looking back.",
+              "They carried it into the\nstage before sunrise.",
+              "She climbed over the\nroof to watch fireworks."
+            ],
+            "distractor_acts": [
+              8.225298881530762,
+              0.0,
+              0.0
+            ],
+            "score": 0.808029238382975
+          },
+          {
+            "hypothesis": "A sparse polysemantic feature for rare boundary continuations after punctuation/hyphen/newline, with strongest evidence on hyphenated \u201c-wide\u201d compounds and possibly another isolated memorized newline continuation.",
+            "positive_probes": [
+              "The policy applies company-wide effective immediately.",
+              "A campus-wide alert was issued overnight.",
+              "We launched a city-wide recycling initiative yesterday.",
+              "The software update rolled out system-wide this morning.",
+              "Please read the memo\ncarefully before signing."
+            ],
+            "positive_acts": [
+              0.0,
+              11.724616050720215,
+              0.0,
+              7.818324089050293,
+              0.0
+            ],
+            "distractor_probes": [
+              "The policy applies across the whole company immediately.",
+              "A campus alert was issued overnight.",
+              "We launched a citywide recycling initiative yesterday."
+            ],
+            "distractor_acts": [
+              0.0,
+              12.110799789428711,
+              0.0
+            ],
+            "score": -0.1283452351888017
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "He plotted the data on a log-log scale.",
+    "15,000, left with one kilogram of cocaine, and was arrested immediately thereafter. Wilson was talking on\n\na cell phone at the time of his arrest and the person to whom he was speaking was exclaiming \"police, police,",
+    "of the road two cars in front of her. She testified that the man in the pickup truck was speaking with someone on the sidewalk. According to the witness, after she honked her horn twice, the truck \"took off,\" and the witness",
+    "The train from Milan arrived twenty minutes late.",
+    "The recipe called for a pinch of saffron.",
+    "The old library sat quietly at the edge of the park.",
+    "well stocked. Almost everyone on the TV shows is from the second group and they control the voice that comes over the city-wide PA system telling everyone what a fine equality-loving society they all live in. Almost everyone in political power is from the second",
+    "Small pebbles crunched under his boots on the path.",
+    "She whisked the eggs and folded them into the batter."
+  ],
+  "heldout_true_acts": [
+    0.0,
+    97.44112396240234,
+    89.20521545410156,
+    0.0,
+    0.0,
+    0.0,
+    107.24088287353516,
+    0.0,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "elements related to communication technology and interactions",
+      "generative": {
+        "trigger_rate": 0.375,
+        "mean_max": 29.948575615882874,
+        "sentences": [
+          "She sent a text message from her smartphone.",
+          "The router dropped our video call again.",
+          "I emailed the file through the company server.",
+          "They chatted instantly on the social media app.",
+          "His microphone failed during the online meeting.",
+          "A satellite transmitted signals to the mobile network.",
+          "We posted updates through the messaging platform.",
+          "The radio operator received an urgent transmission."
+        ],
+        "activations": [
+          14.5868501663208,
+          13.270615577697754,
+          15.766642570495605,
+          35.042137145996094,
+          16.938562393188477,
+          18.02691078186035,
+          67.18660736083984,
+          58.77027893066406
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9701708722625146,
+        "spearman": 0.9002613999474232,
+        "preds": [
+          1.0,
+          9.0,
+          5.0,
+          0.0,
+          0.0,
+          0.0,
+          8.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Hyphenated \u201c-wide\u201d compounds, especially forms like \u201csystem-wide\u201d/\u201ccity-wide\u201d where the feature may target the second piece \u201cwide\u201d or the whole hyphenated construction.",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 3.3171740770339966,
+        "sentences": [
+          "The update triggered a system-wide reboot.",
+          "City-wide alerts sounded at dawn.",
+          "They launched a company-wide training program.",
+          "A network-wide outage halted services.",
+          "School-wide testing begins tomorrow morning.",
+          "We need a campus-wide policy change.",
+          "Nation-wide celebrations filled the streets.",
+          "The bug caused an application-wide failure."
+        ],
+        "activations": [
+          0.0,
+          17.89752960205078,
+          0.0,
+          8.639863014221191,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 0.5214506485112259,
+        "spearman": 0.3796283011826483,
+        "preds": [
+          2.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 62.602519035339355,
+  "layer": 20,
+  "sae_info": {
+    "layer": 20,
+    "width": "16k",
+    "l0": 71,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_20/width_16k/average_l0_71/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "elements related to communication technology and interactions"
+}

@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "LLMs Encode Harmfulness and Refusal Separately",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The pipeline DOES have fitting/selection processes (difference-of-means directions in directions.py, a logistic-regression probe in latent_probe_only.py/latent_guard.py, and layer selection in directions.py), so the dimension is applicable. Splits are defined in extract_activations.py: train sets use seed=0 (n=200) and test sets use seed=1 (n=100), both drawn by INDEPENDENT random sampling from the SAME source pool (common.load_advbench / load_alpaca_benign), not a disjoint partition. I loaded the on-disk activation prompt arrays and confirmed advbench_train vs advbench_test overlap = 41/100 test rows (verified via acts_llama3 npz prompts), i.e. 41% of the 'held-out' AdvBench test set was in the training contrast/probe-fit set. The Alpaca side is clean (0 overlap, large pool). Consequently the reported advbench_test AUROC=1.0 (results/direction_stats.json) and advbench_test probe accuracy=1.0 (results/latent_guard.json, latent_probe_only.json) are contaminated. Mitigating factors: the directions are difference-of-means (a robust low-variance estimator), the alpaca side is disjoint, and the load-bearing cross-dataset evaluations (jbb_harmful/benign, catqa, sorrybench, and steering/jailbreak sets drawn on seeds 2/5/7) are genuinely disjoint different datasets, so the qualitative conclusions do not hinge on the leaked IID metric. The probe layer (15) was not tuned on test. This is a real, code-verified leakage path affecting one IID metric but not the main conclusions.",
+    "score": 3,
+    "evidence_files": ["extract_activations.py", "common.py", "acts_llama3/manifest.json", "directions.py", "latent_probe_only.py", "results/direction_stats.json", "results/latent_guard.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Labels are dataset-level harmful/benign assignments (AdvBench=harmful, Alpaca=benign, JBB harmful/benign, CATQA=harmful, Sorry-Bench=harmful) — standard, externally-sourced datasets matching the paper's operationalization, and independent of the system under test (common.py loaders). The probe is trained on AdvBench/Alpaca labels and evaluated against each dataset's own label, so it is non-circular. Refusal behaviour is measured by a substring heuristic (common.is_refusal / REFUSAL_SUBSTRINGS) which is the exact convention used by the paper (Zou et al./Arditi et al.) and prior work; it is a reasonable but noisy proxy (e.g. a 'Sure, here is...' prefill followed by a disclaimer, or jbb_benign prompts flagged 35% by the probe, show heuristic imperfection). The 'harmfulness projection' Δ is the object of study rather than a ground-truth label, so its use is not circular. Overall labels validly operationalize the target behaviour with only minor heuristic noise.",
+    "score": 4,
+    "evidence_files": ["common.py", "latent_guard.py", "results/latent_guard.json", "results/jailbreak_analysis.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment uses exactly the user-specified resources: Meta-Llama-3-8B-Instruct (common.LLAMA3_PATH), AdvBench (harmful_behaviors.csv), Alpaca as the benign contrast set, Llama-Guard-3-8B as the fixed baseline judge (common.LLAMA_GUARD_PATH), and the additional harmful/jailbreak benchmarks JBB, Sorry-Bench, CATQA, plus XSTest loaded. Data sizes are honored (200/200 train, 100/100 test, 200 catqa/sorrybench). The cross-model verify candidates (Llama-2-Chat-7B, Qwen2-Instruct-7B) were NOT run, but the task explicitly marks these verify-stage variants as 'use as needed, not necessarily all', so their omission is permitted. One instantiation shortcut: the GCG attack (jailbreak_attacks.py GCG_SUFFIX) is a fixed well-known transferable suffix rather than an optimized/model-specific GCG, disclosed in a code comment; it does not transfer to Llama-3 (ASR=1.25% in results/jailbreak_analysis.json), which weakens the GCG portion of Claim 4/5 but is not a main-model/dataset swap. No silent downgrade of the lead model or datasets.",
+    "score": 4,
+    "evidence_files": ["common.py", "extract_activations.py", "jailbreak_attacks.py", "results/jailbreak_analysis.json", "results/latent_guard.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "used_n is adequate for most claims: directions fit on 200 harmful + 200 benign, evaluated on 100+100 held-out (direction_stats.json); probe evaluated on jbb_harmful/benign 100 each, catqa 200, sorrybench 200 (latent_guard.json); jailbreak analysis on 80 prompts/attack, jbb_role 120 (jailbreak_analysis.json). The steering causal experiment uses n=30 per condition (steering_orth.json 'n':30), which is on the small side but the effects are enormous and unambiguous (refusal 0.00 vs 1.00; proj_h -0.01 vs +1.98). Claim strength is matched to evidence and caveats are attached honestly (C2 'under-determined', C4 refuted for some attacks). No claim is asserted without a corresponding run. Minor thinness only in the steering sample size.",
+    "score": 4,
+    "evidence_files": ["results/direction_stats.json", "results/latent_guard.json", "results/jailbreak_analysis.json", "results/steering_orth.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Point estimates are reported from a single seed per experiment; there are no multiple-seed repeats, no significance tests, and no cross-run error bars. The steering results do report per-condition std across the 30 samples (steering.json/steering_orth.json proj_*_std), and AUROC/Cohen-d are computed over 100-200 samples with Cohen-d values of 5-8 (direction_stats.json), so effect sizes vastly exceed plausible noise and the qualitative dissociations (refusal 0.00 vs 1.00) cannot be noise. However robustness to seed/randomness is unverified — no repeated runs, and the layer/coefficient choices are single points. Effect sizes are large enough to avoid the 'within-noise' failure mode, but uncertainty quantification is thin.",
+    "score": 3,
+    "evidence_files": ["results/direction_stats.json", "results/steering_orth.json", "results/steering.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "Claim 3 is an explicitly causal/mechanistic claim and is tested with a GENUINE intervention: steering.py's Steerer registers a forward hook on decoder block 11 that adds alpha*v_unit to the residual stream during both extraction and generation (activation addition), matching the paper's steering method. The orthogonalized-refusal design (steering_orth.py, orthogonalize_directions.py) acts as a control that isolates the pure-refusal component from harmfulness, and the contrast conditions (v_h vs v_r_orth, on benign and harmful) demonstrate dissociation causally rather than correlationally. Missing rigor elements: there is NO random-direction baseline, and the reported steering uses a single coefficient (alpha=6) at a single intervention layer (11) with no coefficient/layer sweep in the causal experiment (the layer scan exists only for the passive jailbreak projection reading, not for steering). The paper additionally performs a full layer sweep and a reply-inversion task that the reproduction does not implement. So an intervention with partial controls exists but two standard controls (random-direction baseline, coefficient sweep) are absent.",
+    "score": 3,
+    "evidence_files": ["steering.py", "steering_orth.py", "orthogonalize_directions.py", "results/steering_orth.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every key number I spot-checked traces exactly to an on-disk product. Claim 3 table in results.md (benign+v_r_orth proj_h=-0.01, proj_r_orth=+3.52, refusal 1.00; harmful-v_r_orth proj_h=+1.98, proj_r_orth=-1.28, refusal 0.07) matches results/steering_orth.json (-0.008, 3.518, 1.0; 1.984, -1.280, 0.0667). Claim 1 (v_inst@t_inst best AUROC 1.0 at layer 10; cos peak 0.69 at layer 12) matches results/direction_stats.json (best_layer 10; cos_v_inst_v_post[12]=0.687). Claim 5 (advbench_test 1.0/0.95; pooled ACC 0.853/0.887; F1 0.898/0.922; latency 29ms/241ms) matches results/latent_guard.json (0.8525/0.8875; 0.8976/0.9220; 0.0291/0.2410 s). Claim 4 layer-20 raw numbers (H_pfl_jb +3.52, H_harm +3.48, H_ben -2.53, R_pfl_jb -0.35, R_harm +5.94, R_ben -2.74) match results/jailbreak_layer_scan.json row 20 (3.525, 3.484, -2.533, -0.348, 5.939, -2.742) exactly. The fitted directions_llama3.npz / directions_llama3_orth.npz are present in results/. One caveat: the raw per-sample activation npz files are not physically inside {case_dir} (acts_llama3/ contains only manifest.json pointing to the original absolute run path), but all metric-level products are present and self-consistent, and I confirmed the raw acts exist at the referenced path. Metric provenance is complete and agrees with the report.",
+    "score": 5,
+    "evidence_files": ["results.md", "results/steering_orth.json", "results/direction_stats.json", "results/latent_guard.json", "results/jailbreak_layer_scan.json", "results/jailbreak_analysis.json", "acts_llama3/manifest.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The narrative report (results.md) and the raw JSON products are consistent: the per-claim tables reproduce the JSON values, and the final 'Summary of verification' verdict table (C1 Supported, C2 Under-determined, C3 Partially supported, C4 Supported-for-prefill/refuted-for-suffix, C5 Supported-for-compute/lower-F1) agrees with the per-claim prose and the underlying numbers. No metric differs across artifacts, no prose conclusion contradicts its own numbers, and integrity states (partial/refuted) are propagated consistently rather than being silently upgraded to PASS. The only bookkeeping quirk is that acts_llama3/manifest.json and the script ACT_DIR/OUT_DIR constants encode a stale absolute path (/data/zhenqian/Reproduction1/cc/...) different from the case_dir location — a portability issue, not a numeric inconsistency. Records are self-consistent.",
+    "score": 5,
+    "evidence_files": ["results.md", "results/direction_stats.json", "results/steering_orth.json", "results/latent_guard.json", "acts_llama3/manifest.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Instruction-tuned LLMs represent harmfulness perception and refusal execution as two distinct, approximately linear directions in the residual stream, and each can be recovered without disturbing the other.",
+        "method": {
+          "justification": "9a: Directions are extracted by difference-of-means (directions.py compute_direction: v = harm.mean(0) - ben.mean(0)) at t_inst and t_post, exactly the paper's difference-in-means method (Eq 5). Linearity is assessed by held-out AUROC/Cohen-d of the projection, and 'each recoverable without disturbing the other' is operationalized by orthogonalizing v_post against v_inst (orthogonalize_directions.py). The method matches the paper's mechanism category (linear-direction extraction) and its interpretive assumptions are literature-supported.",
+          "score": 5,
+          "evidence_files": ["directions.py", "orthogonalize_directions.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design computes per-layer held-out AUROC for all four (direction, apply-position) combinations, per-layer cosine similarity between v_inst and v_post, and orthogonalization to isolate the pure-refusal axis (direction_stats.json). This is a reasonable design for the 'two distinct linear directions' claim. Weakness: the AdvBench held-out set is 41% contaminated by the training set (Dimension 1), which inflates the AUROC=1.0 evidence, though the clean Alpaca side and the distinct-axis cosine (peak 0.69, so ~73% of v_post lies outside v_inst) and the downstream steering dissociation independently support distinctness.",
+          "score": 4,
+          "evidence_files": ["directions.py", "results/direction_stats.json"]
+        },
+        "result": {
+          "justification": "9c: Both DoM directions reach AUROC=1.0 on held-out data (approximately linear) and cos(v_inst,v_post) <= 0.69 across layers, so they are numerically distinct axes; orthogonalization + steering show each can be manipulated separately. This qualitatively agrees with the paper's core conclusion that harmfulness and refusal are separate, approximately-linear directions. Reported honestly as 'Supported'.",
+          "score": 5,
+          "evidence_files": ["results.md", "results/direction_stats.json"]
+        }
+      },
+      "C2": {
+        "claim": "The two signals live at different token positions: the harmfulness judgment is written at the final instruction-token position, while the decision to refuse is committed just after the instruction, immediately before the response begins.",
+        "method": {
+          "justification": "9a: The reproduction tests position by computing DoM-projection AUROC of each direction applied at each of t_inst and t_post. This method structurally CANNOT resolve the positional claim, because a harmful-vs-benign signal separates perfectly at BOTH positions (the report itself states AUROC 'does not discriminate ... a harmful vs benign signal is present everywhere by early layers'). The paper's actual discriminating method for C2 — the clustering analysis with misbehaving cases (accepted-harmful and refused-harmless prompts falling into opposite clusters at the two positions, Fig 2) — was NOT implemented. Only indirect support comes from steering/jailbreak reading proj_h at t_inst and proj_r at t_post.",
+          "score": 3,
+          "evidence_files": ["directions.py", "results/direction_stats.json"]
+        },
+        "experiment": {
+          "justification": "9b: The key discriminating experiment (paper Fig 2: whether accepted-harmful cluster by harmfulness at t_inst and refused-harmless cluster by refusal at t_post) was not run. The chosen AUROC test cannot separate the position hypothesis, so the design is under-powered for this specific claim — one cannot tell a true negative from an unrun experiment. The report is honest about this limitation but did not attempt the paper's positional test.",
+          "score": 2,
+          "evidence_files": ["directions.py", "results.md"]
+        },
+        "result": {
+          "justification": "9c: The report reaches an honest non-confirmation ('Under-determined ... the strict different-token-position part is under-determined by linear separation alone'), NOT a disguised agreement, and notes the distinct DoM vectors and dissociable steering as partial support. This is honest and not goalpost-tuned. However the non-confirmation stems from under-exploration (not running the paper's clustering experiment) rather than a fundamental barrier, so it neither confirms nor cleanly refutes the paper's conclusion; the disclosure of the reason is partial.",
+          "score": 3,
+          "evidence_files": ["results.md"]
+        }
+      },
+      "C3": {
+        "claim": "Additive steering along either direction yields dissociated effects — moving along the harmfulness axis flips the model's internal judgment of whether an input is harmful, independent of whether it refuses; moving along the refusal axis flips refusal behaviour without changing that internal judgment.",
+        "method": {
+          "justification": "9a: Genuine activation-addition steering (steering.py Steerer forward-hook adds alpha*v to the residual stream at layer 11) with harmfulness (v_inst) and orthogonalized-refusal (v_p_orth) directions, reading internal projections at a downstream layer (20) and behavioural refusal rate. This directly matches the paper's steering intervention (Section 3.4/3.5) and is the correct causal-method category for the claim.",
+          "score": 5,
+          "evidence_files": ["steering.py", "steering_orth.py"]
+        },
+        "experiment": {
+          "justification": "9b: Six conditions (benign/harmful baselines +/- v_h, +/- v_r_orth), n=30 each, measuring proj_h@t_inst, proj_r_orth@t_post and refusal rate (steering_orth.json). Orthogonalization is a sensible control isolating pure refusal. Missing: no random-direction baseline, single steering coefficient (alpha=6) and single layer (11) with no sweep, and the paper's reply-inversion task is not reproduced. Adequate to demonstrate the effect but not a complete design; can partly under-determine the raw-harmfulness-direction result.",
+          "score": 3,
+          "evidence_files": ["steering_orth.py", "results/steering_orth.json"]
+        },
+        "result": {
+          "justification": "9c: benign+v_r_orth keeps harmfulness projection at benign level (proj_h=-0.01) yet drives refusal to 1.00; harmful-v_r_orth keeps harmfulness elevated (+1.98) yet drops refusal to 0.07 — a clean dissociation of the refusal direction from the harmfulness judgment. The report honestly reports that the RAW harmfulness direction remains entangled (steering it also changes refusal), which actually agrees with the paper's own finding that steering harmfulness also elicits refusal. Verdict 'partially supported' is qualitatively consistent with the paper and honestly caveated.",
+          "score": 5,
+          "evidence_files": ["results.md", "results/steering_orth.json", "results/steering.json"]
+        }
+      },
+      "C4": {
+        "claim": "A notable class of successful jailbreaks operates by suppressing the refusal signal while the harmfulness signal remains active — the model still internally recognises the input as harmful yet answers — a signature that a hidden-state probe can pick up.",
+        "method": {
+          "justification": "9a: Computes harmfulness (t_inst) and refusal (t_post) projections/belief scores on attacked prompts, splits by jailbreak success, and performs a per-layer scan (analyze_jailbreak.py, jailbreak_layer_scan.py), plus probe flag rates. This mirrors the paper's use of the internal belief scores (Eq 3/4) to analyze jailbreaks and is the correct method category.",
+          "score": 5,
+          "evidence_files": ["analyze_jailbreak.py", "jailbreak_layer_scan.py", "jailbreak_attacks.py", "jailbreak_stronger.py"]
+        },
+        "experiment": {
+          "justification": "9b: Six attacks (plain, gcg, dan, persuasion, jbb_role, prefill), n=80-120; prefill is a properly-constructed assistant-prefix attack with correct t_inst offset handling (jailbreak_stronger.py). Weakness: GCG uses a fixed non-transferable suffix (ASR=1.25%), and dan/persuasion/jbb_role also mostly fail to jailbreak Llama-3 (ASR ~0-6%, jailbreak_analysis.json), so the 'successful jailbreak' subset is essentially only prefill (ASR 94%). The signature is therefore characterized on one attack family; the GCG '0% harmfulness' inference is drawn from all (mostly-failed) attacks, conflating a failed attack with an obfuscation attack. Design adequate for prefill, under-powered/under-explored for the other attack families.",
+          "score": 3,
+          "evidence_files": ["jailbreak_stronger.py", "results/jailbreak_analysis.json", "results/jailbreak_layer_scan.json"]
+        },
+        "result": {
+          "justification": "9c: For prefill the signature holds cleanly — harmfulness preserved (H_pfl_jb +3.52 vs H_harm +3.48) while refusal collapses (R_pfl_jb -0.35 vs R_harm +5.94) and the probe flags 100% (latent_probe_only.json), directionally matching the paper's claim. The report honestly reports that obfuscation-style attacks (gcg/role-play) instead lower the harmfulness signal and the probe fails on gcg (0%) — this nuance is consistent with the paper's own statement that not all jailbreaks reverse the harmfulness judgment (some persuasion attacks yield negative Δharmful). Qualitatively consistent with honest caveats; slight over-reading of the failed GCG case.",
+          "score": 4,
+          "evidence_files": ["results.md", "results/jailbreak_layer_scan.json", "results/latent_probe_only.json"]
+        }
+      },
+      "C5": {
+        "claim": "A lightweight \"Latent Guard\" classifier trained on the harmfulness direction matches or beats a dedicated safety judge (Llama Guard 3 8B) at flagging jailbreak attempts, at a fraction of the compute.",
+        "method": {
+          "justification": "9a: A logistic-regression probe on the Llama-3 layer-15 t_inst residual stream (latent_guard.py / latent_probe_only.py) vs Llama-Guard-3-8B run with its own chat template. The paper's Latent Guard uses a centroid/threshold on the Delta_harmful belief; the reproduction substitutes an equivalent linear classifier on the same harmfulness representation, which is a valid operationalization of the same mechanism, though not identical to the paper's centroid formulation.",
+          "score": 4,
+          "evidence_files": ["latent_guard.py", "latent_probe_only.py"]
+        },
+        "experiment": {
+          "justification": "9b: Probe trained on 200 AdvBench + 200 Alpaca, evaluated on 6 held-out sets plus 6 jailbreak-attack sets against Llama-Guard-3-8B, with a fair latency comparison (probe forward pass with output_hidden_states vs Llama Guard generating up to 20 tokens) — latent_guard.json / lg_on_jailbreak.json. Good coverage. Weaknesses: the advbench_test evaluation is 41% contaminated (though the clean jbb/catqa/sorrybench sets carry the comparison), and XSTest (loaded in common.py) is not actually evaluated, so the paper's over-refusal 'Refused HL' column is not reproduced.",
+          "score": 4,
+          "evidence_files": ["latent_guard.py", "results/latent_guard.json", "results/lg_on_jailbreak.json"]
+        },
+        "result": {
+          "justification": "9c: Pooled probe ACC 0.853 vs LG 0.887 and probe F1 0.898 vs LG 0.922 (probe slightly lower, not strictly beating overall), comparable per-dataset, and ~8x cheaper per sample (29ms vs 241ms), with the probe still catching bypass-style prefill jailbreaks 100%. The report honestly states 'matches on most benchmarks, F1 ~3pts lower, 8-100x cheaper' rather than overclaiming a clean win. This qualitatively agrees with the paper's 'comparable to or better than Llama Guard 3' claim and strongly supports the compute-efficiency part; the honest slight-underperformance is not disguised.",
+          "score": 4,
+          "evidence_files": ["results.md", "results/latent_guard.json"]
+        }
+      }
+    }
+  }
+}

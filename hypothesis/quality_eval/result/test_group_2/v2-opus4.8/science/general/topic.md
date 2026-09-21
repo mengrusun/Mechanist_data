@@ -1,0 +1,1 @@
+Investigate what scientific concepts, structures, and functional relationships are represented inside foundation models for biology, chemistry, medicine, physics, or materials science. Determine whether these representations correspond to established scientific mechanisms.

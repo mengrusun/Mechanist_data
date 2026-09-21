@@ -1,0 +1,14 @@
+\begin{table}[t]
+\centering
+\caption{C5 — head-to-head against Llama Guard 3 8B on the 400-item mixed test set (bare-harmful vs benign/safe-lookalike; 0 successful-jailbreak items due to M4 ASR=0). Both a 1-d logistic-regression probe on $\langle \text{activation}, h\rangle$ and a 2-layer 64-unit MLP match/edge-past LG on AUROC (1.000 vs 0.9992), at $\sim\!10^{-7}$--$10^{-8}$ of the per-query FLOPs and $\sim\!440\times$ / $320\times$ per-query wall-clock speedup. Scope narrowed in iteration~1 to bare-harmful vs benign/safe-lookalike (jailbreak-detection framing deferred until an attack family with ASR>0 is available).}
+\label{tab:c5_probe_vs_lg}
+\begin{tabular}{lrrrrr}
+\toprule
+Classifier & AUROC & F1 @ FPR=5\% & Wall-clock/query & FLOPs/query & Compute ratio vs LG \\
+\midrule
+linear\_probe & 1.0000 & 1.000 & 78 µs & 8.2 K & 1.05e-08 \\
+shallow\_mlp & 1.0000 & 1.000 & 106 µs & 524.4 K & 6.74e-07 \\
+Llama Guard 3 8B (baseline) & 0.9992 & 0.975 & 33.6 ms & 778.46 G & 1.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}

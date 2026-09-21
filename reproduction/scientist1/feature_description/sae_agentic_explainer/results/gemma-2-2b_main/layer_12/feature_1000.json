@@ -1,0 +1,408 @@
+{
+  "feature_idx": 1000,
+  "max_act_ref": 10.644156455993652,
+  "trigger_threshold": 2.1288312911987304,
+  "sage": {
+    "candidates": [
+      "Activates on near-literal mentions of the Go module path `github.com/Azure/go-autorest/autorest/...`, especially continuations under that path such as `/azure`, `/adal`, `/to`, or similar import/package references.",
+      "A narrower sub-sense may prefer the exact GitHub-style prefix `github.com/Azure/go-autorest/autorest/` rather than generic mentions of 'Azure autorest'; activation seems driven by the repository/import-path surface form more than by semantics.",
+      "Possible secondary memorized phrase sense: exact or very close surface forms around `collected from various sites of ...`, but only as a brittle lexical fragment rather than a productive semantic concept."
+    ],
+    "top": "Activates on near-literal mentions of the Go module path `github.com/Azure/go-autorest/autorest/...`, especially continuations under that path such as `/azure`, `/adal`, `/to`, or similar import/package references.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on the exact or near-exact Go import path segment \"go-autorest/autorest/azure\", especially with the token \"autorest\" in a GitHub package string.",
+            "positive_probes": [
+              "Import github.com/Azure/go-autorest/autorest/azure in Go.",
+              "The path go-autorest/autorest/azure appears in this package.",
+              "Use Azure's go-autorest/autorest/azure client module here.",
+              "github.com/Azure/go-autorest/autorest/azure is the exact import.",
+              "This repo references go-autorest/autorest/azure for authentication."
+            ],
+            "positive_acts": [
+              7.123177528381348,
+              0.0,
+              0.0,
+              7.762312412261963,
+              0.0
+            ],
+            "distractor_probes": [
+              "Import github.com/Azure/go-autorest/autorest instead of azure.",
+              "The Azure SDK package avoids go-autorest entirely.",
+              "Use github.com/Azure/azure-sdk-for-go services package here."
+            ],
+            "distractor_acts": [
+              7.098727226257324,
+              3.625819444656372,
+              5.320459842681885
+            ],
+            "score": -2.3712375164031982
+          },
+          {
+            "hypothesis": "The feature activates on prepositional phrases of provenance using \"from\" followed by a plural location/source noun phrase, as in \"collected from various sites of Europe.\"",
+            "positive_probes": [
+              "Artifacts were gathered from ancient villages overseas.",
+              "Samples arrived from remote islands in winter.",
+              "Migrants returned from neighboring countries last spring.",
+              "Data were collected from several archives abroad.",
+              "Seeds came from tropical forests across continents."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Artifacts were gathered in ancient villages overseas.",
+              "Samples arrived from a remote island in winter.",
+              "Data were collected from the European archive abroad."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "The feature is polysemantic for tokens inside stereotyped retrieval/source contexts, including software dependency source paths and textual descriptions of material being gathered from external sources.",
+            "positive_probes": [
+              "Download package sources from /usr/local/src dependencies.",
+              "Fetched the tarball from an external mirror source.",
+              "Vendor libraries are retrieved from third-party source paths.",
+              "Collecting raw materials from outside suppliers and sources.",
+              "Install build dependencies from source repositories under /opt/src."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              3.3429386615753174,
+              0.0
+            ],
+            "distractor_probes": [
+              "The package depends on several optional runtime libraries.",
+              "She cited the source of her inspiration in interviews.",
+              "Materials were organized neatly inside the storage room."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.6685877323150635
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "Activates on the specific GitHub Go import string pattern \"github.com/Azure/go-autorest/autorest/...\", especially when the full package path includes \"/azure\" or nearby \"autorest\" tokens in an import statement.",
+            "positive_probes": [
+              "import \"github.com/Azure/go-autorest/autorest/azure/auth\"",
+              "Use github.com/Azure/go-autorest/autorest/azure in the import.",
+              "Imported github.com/Azure/go-autorest/autorest/to and azure helpers.",
+              "The code imports github.com/Azure/go-autorest/autorest/adal package.",
+              "Add import github.com/Azure/go-autorest/autorest/azure/cli for login."
+            ],
+            "positive_acts": [
+              7.865990161895752,
+              7.105109214782715,
+              6.944568157196045,
+              6.963607311248779,
+              7.043045520782471
+            ],
+            "distractor_probes": [
+              "import \"github.com/Azure/azure-sdk-for-go/services/storage\"",
+              "Use github.com/Azure/go-autorest logger without autorest slash path.",
+              "Imported github.com/aws/aws-sdk-go/aws in the Go file."
+            ],
+            "distractor_acts": [
+              4.7501301765441895,
+              7.159361362457275,
+              0.0
+            ],
+            "score": 3.2146335601806637
+          },
+          {
+            "hypothesis": "May also activate on the rare literal phrase fragment \"from various sites of\" or very close lexical continuations in prose about collection/provenance, rather than on general provenance phrases.",
+            "positive_probes": [
+              "Artifacts were gathered from various sites of excavation.",
+              "The samples came from various sites of collection.",
+              "Bones arrived from various sites of recovery.",
+              "These records derive from various sites of provenance.",
+              "Specimens were obtained from various sites of discovery."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Artifacts were gathered from several excavation sites.",
+              "The samples came from many collection points.",
+              "Bones arrived from different recovery locations."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "Activates on memorized surface forms rather than a broad semantic concept: one sense is the literal Go import path containing \"go-autorest/autorest/azure\", and another possible sense is the exact prose fragment \"collected from various sites of ...\".",
+            "positive_probes": [
+              "Import path includes go-autorest/autorest/azure in the module list.",
+              "The dependency string go-autorest/autorest/azure appears verbatim here.",
+              "Error mentions github.com/Azure/go-autorest/autorest/azure during build.",
+              "Samples were collected from various sites of the web.",
+              "These notes were collected from various sites of old newspapers."
+            ],
+            "positive_acts": [
+              4.211610317230225,
+              0.0,
+              7.28476619720459,
+              0.0,
+              3.7840230464935303
+            ],
+            "distractor_probes": [
+              "Import path includes go-autorest/autorest but omits azure.",
+              "Samples were gathered from many websites across the internet.",
+              "Azure autorest generated the client package for Go."
+            ],
+            "distractor_acts": [
+              4.273739814758301,
+              0.0,
+              0.0
+            ],
+            "score": 1.631499973932902
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Activates on near-literal mentions of the Go module path `github.com/Azure/go-autorest/autorest/...`, especially continuations under that path such as `/azure`, `/adal`, `/to`, or similar import/package references.",
+            "positive_probes": [
+              "Import github.com/Azure/go-autorest/autorest/azure in your Go code.",
+              "The package github.com/Azure/go-autorest/autorest/adal handles authentication.",
+              "Use github.com/Azure/go-autorest/autorest/to for pointer helpers.",
+              "Dependency path: github.com/Azure/go-autorest/autorest/date appears in go.mod.",
+              "Reference github.com/Azure/go-autorest/autorest within the import block."
+            ],
+            "positive_acts": [
+              7.092037200927734,
+              7.07115364074707,
+              7.136505126953125,
+              6.970439434051514,
+              7.196314334869385
+            ],
+            "distractor_probes": [
+              "Import github.com/Azure/azure-sdk-for-go/services/storage in your code.",
+              "The Azure autorest generator creates clients from Swagger specs.",
+              "Use autorest/azure authentication helpers from the documentation."
+            ],
+            "distractor_acts": [
+              4.8591532707214355,
+              0.0,
+              0.0
+            ],
+            "score": 5.47357219060262
+          },
+          {
+            "hypothesis": "A narrower sub-sense may prefer the exact GitHub-style prefix `github.com/Azure/go-autorest/autorest/` rather than generic mentions of 'Azure autorest'; activation seems driven by the repository/import-path surface form more than by semantics.",
+            "positive_probes": [
+              "Import github.com/Azure/go-autorest/autorest for client generation.",
+              "The package path github.com/Azure/go-autorest/autorest appears in go.mod.",
+              "Use github.com/Azure/go-autorest/autorest with Azure SDK code.",
+              "Vendor github.com/Azure/go-autorest/autorest into this Go project.",
+              "Reference github.com/Azure/go-autorest/autorest directly in the import block."
+            ],
+            "positive_acts": [
+              7.058483600616455,
+              7.208490371704102,
+              7.153028964996338,
+              6.6228532791137695,
+              7.182895183563232
+            ],
+            "distractor_probes": [
+              "Azure autorest generates REST clients for cloud services.",
+              "Use AutoRest from Azure to build SDK clients.",
+              "Import github.com/Azure/go-autorest/autorest/adal for authentication flows."
+            ],
+            "distractor_acts": [
+              3.8880741596221924,
+              0.0,
+              7.119582653045654
+            ],
+            "score": 3.3759313424428306
+          },
+          {
+            "hypothesis": "Possible secondary memorized phrase sense: exact or very close surface forms around `collected from various sites of ...`, but only as a brittle lexical fragment rather than a productive semantic concept.",
+            "positive_probes": [
+              "Samples were collected from various sites of the estuary.",
+              "Data collected from various sites of the river basin.",
+              "Specimens collected from various sites of the island.",
+              "Soil was collected from various sites of the farm.",
+              "Water collected from various sites of the watershed."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Samples were gathered from several locations across the estuary.",
+              "Data collected at various sites in the river basin.",
+              "Specimens collected from diverse sites of the island."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "Network/vpnSites/{vpnSiteName}\", pathParameters),\n\t\tautorest.WithJSON(vpnSiteParameters),\n\t\tautorest.With",
+    "The mountain trail wound past three small lakes.",
+    "In.\n\nin this website we recommend Images about Map Of London 32 Boroughs Neighborhoods In that we have collected from various sites of\nEurope, and of course what we recommend is the most excellent of Free World Map Wallpaper and Free World Map",
+    "The recipe called for a pinch of saffron.",
+    "/*\n** Copyright (c) 2012 The Khronos Group Inc.\n**\n** Permission is hereby granted, free of charge, to any person obtaining a\n** copy of this software and/or associated documentation files (the",
+    "Rain drummed on the tin roof through the night.",
+    ".g-truc.net)\r\n/// Permission is hereby granted, free of charge, to any person obtaining a copy\r\n/// of this software and associated documentation files (the \"",
+    "The senator refused to comment before the hearing.",
+    "Small pebbles crunched under his boots on the path.",
+    "A soft breeze moved the curtains at dawn.",
+    "and Free World Map Wall Murals For Everyone in our web, please feel free to visit again and get happiness in our web. And if you want to see more pictures more we recommend the gallery below you can see as a reference from your Map Of London"
+  ],
+  "heldout_true_acts": [
+    10.517419815063477,
+    0.0,
+    10.663054466247559,
+    0.0,
+    8.926058769226074,
+    0.0,
+    10.776328086853027,
+    0.0,
+    0.0,
+    0.0,
+    8.140953063964844
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "references to software packages, libraries, or APIs",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 0.0,
+        "sentences": [
+          "I installed NumPy and pandas with pip.",
+          "The app uses React, Redux, and Axios.",
+          "Query the OpenAI API for chat completions.",
+          "Import TensorFlow before loading the saved model.",
+          "We added the Stripe SDK for payments.",
+          "This script depends on Express and Mongoose.",
+          "Call the Google Maps API for geocoding.",
+          "She updated the Django package yesterday."
+        ],
+        "activations": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 0.6138244711070912,
+        "spearman": 0.6682678175654135,
+        "preds": [
+          9.0,
+          0.0,
+          0.0,
+          0.0,
+          4.0,
+          0.0,
+          3.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Activates on near-literal mentions of the Go module path `github.com/Azure/go-autorest/autorest/...`, especially continuations under that path such as `/azure`, `/adal`, `/to`, or similar import/package references.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 7.507712423801422,
+        "sentences": [
+          "Import github.com/Azure/go-autorest/autorest in this package.",
+          "Use github.com/Azure/go-autorest/autorest/azure for cloud endpoints.",
+          "The code references github.com/Azure/go-autorest/autorest/adal directly.",
+          "Add github.com/Azure/go-autorest/autorest/to for pointer helpers.",
+          "Package github.com/Azure/go-autorest/autorest/date handles timestamps.",
+          "We vendor github.com/Azure/go-autorest/autorest/validation today.",
+          "See github.com/Azure/go-autorest/autorest/mocks in tests.",
+          "Client code depends on github.com/Azure/go-autorest/autorest/azure/auth."
+        ],
+        "activations": [
+          7.044690132141113,
+          7.085392475128174,
+          7.371216297149658,
+          7.371384620666504,
+          7.9505839347839355,
+          7.2993998527526855,
+          8.043142318725586,
+          7.895889759063721
+        ]
+      },
+      "predictive": {
+        "pearson": 0.38835124103891533,
+        "spearman": 0.32714985408376246,
+        "preds": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 59.64942026138306,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "references to software packages, libraries, or APIs"
+}

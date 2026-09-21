@@ -1,0 +1,50 @@
+{
+  "novelty": {
+    "score": 6,
+    "reasoning": "The behavioral claim is mostly a re-packaging of known batch-prompting/resource-competition results; the novel part is the proposed mechanism that peer context dilutes attention to the lone question and the causal attention-capping intervention in isolation. The setting change (single problem vs embedded among unrelated peers) is interesting but not enough by itself to make the core phenomenon novel. Relative to prior work, the attention-fixation mechanism and head-level intervention are non-trivial if they hold, but the phenomenon claim alone is weakly novel.",
+    "revision_notes": [
+      "Separate clearly the already-known behavioral effect from the truly new mechanistic claim.",
+      "State the closest prior work explicitly and quantify the delta: batch prompting reduced tokens; you add a mechanistic explanation plus an isolation intervention.",
+      "Tighten the claim to the causal mechanism and intervention, not the existence of fewer tokens in batched contexts.",
+      "Pre-register which result would count as novel even if the behavioral effect is replicated but the mechanism fails."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "The problem is important for efficient reasoning, benchmark design, and interpretability: if isolated benchmarks systematically overestimate overthinking, that changes how people measure and deploy reasoning models. The strongest case is that a cheap context-design or attention intervention can cut reasoning cost without harming accuracy. Real-world reach is moderate-to-high for labs and benchmark builders, less so for end users. Phenomenon value is decent because it could shift how we think about apparent self-doubt/overthinking, but the impact depends on whether the mechanism generalizes beyond the studied models/tasks.",
+    "revision_notes": [
+      "Make the downstream consequence explicit: benchmark protocols may need batched or context-controlled evaluation.",
+      "Clarify who benefits: reasoning-model researchers, evaluation designers, and inference-efficiency practitioners.",
+      "Add a one-line statement of practical significance: same accuracy, fewer tokens, lower inference cost.",
+      "Discuss whether the effect changes deployment decisions or only evaluation methodology."
+    ]
+  },
+  "review": {
+    "score": 5,
+    "reasoning": "The hypothesis is directionally testable, but the proposal mixes a replicative behavioral effect with a stronger causal mechanism claim, and the latter may be underspecified and vulnerable to confounds. Main gaps: attention-to-own-question is a proxy, not a direct mechanism; batch-vs-isolation may still reflect context-length, interference, or pattern-induction effects; the proposed cap may be out-of-distribution. The experiments are reasonably concrete, but some success criteria are broad and could be satisfied by heterogeneous effects. Venue strength is decent if the mechanistic intervention works; otherwise it is mainly a careful repackaging of known behavior.",
+    "revision_notes": [
+      "Narrow the central hypothesis into 1-2 falsifiable claims: behavioral effect and causal mechanism.",
+      "Specify how attention-to-own-question is measured, which heads are fixed, and how causal caps are implemented.",
+      "Add stronger controls for length, interference, and generic context crowding beyond the current filler control.",
+      "Include explicit failure modes: when would you conclude the mechanism is wrong but the behavioral phenomenon is real?",
+      "Reduce the number of experiments and highlight the minimum viable set that can actually test the mechanism.",
+      "Strengthen related-work positioning by distinguishing resource competition, first-impression bias, and pattern-induction accounts."
+    ]
+  },
+  "revision_notes": [
+    "Separate clearly the already-known behavioral effect from the truly new mechanistic claim.",
+    "State the closest prior work explicitly and quantify the delta: batch prompting reduced tokens; you add a mechanistic explanation plus an isolation intervention.",
+    "Tighten the claim to the causal mechanism and intervention, not the existence of fewer tokens in batched contexts.",
+    "Pre-register which result would count as novel even if the behavioral effect is replicated but the mechanism fails.",
+    "Make the downstream consequence explicit: benchmark protocols may need batched or context-controlled evaluation.",
+    "Clarify who benefits: reasoning-model researchers, evaluation designers, and inference-efficiency practitioners.",
+    "Add a one-line statement of practical significance: same accuracy, fewer tokens, lower inference cost.",
+    "Discuss whether the effect changes deployment decisions or only evaluation methodology.",
+    "Narrow the central hypothesis into 1-2 falsifiable claims: behavioral effect and causal mechanism.",
+    "Specify how attention-to-own-question is measured, which heads are fixed, and how causal caps are implemented.",
+    "Add stronger controls for length, interference, and generic context crowding beyond the current filler control.",
+    "Include explicit failure modes: when would you conclude the mechanism is wrong but the behavioral phenomenon is real?",
+    "Reduce the number of experiments and highlight the minimum viable set that can actually test the mechanism.",
+    "Strengthen related-work positioning by distinguishing resource competition, first-impression bias, and pattern-induction accounts."
+  ]
+}

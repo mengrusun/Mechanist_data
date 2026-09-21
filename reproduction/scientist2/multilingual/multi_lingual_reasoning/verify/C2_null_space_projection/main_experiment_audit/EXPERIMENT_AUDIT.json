@@ -1,0 +1,16 @@
+{
+  "date": "2026-07-14",
+  "auditor": "gpt-5.4 via dmxapi (cross-model)",
+  "claim_id": "C2",
+  "linked_milestones": ["M2"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {"status": "pass", "details": "MGSM gold answers loaded from dataset parquet files; numeric_equal grading; no model-generated GT."},
+    "score_normalization": {"status": "pass", "details": "macro_acc = mean(per-lang correct/n_problems) with fixed n_problems=25; no model-output denominator."},
+    "result_existence": {"status": "pass", "details": "All M2 result files verified: baseline=0.7618, screen_r2_k12=0.0655, screen_r8_k12=0.0291, random_ctrl=0.4291."},
+    "dead_code": {"status": "pass", "details": "extract_answer/numeric_equal/grade all called in m2_projection_eval.py evaluation loop."},
+    "scope": {"status": "warn", "details": "Only mid layer_group (not early/all_non_upper), only rank_r={2,8}, 1 seed, n=25/lang. Stage B aborted. Documented in EXPERIMENT_TRACKER.md; verdict honest given 65-73pp collapse but scope narrower than plan."},
+    "eval_type": "real_gt"
+  }
+}

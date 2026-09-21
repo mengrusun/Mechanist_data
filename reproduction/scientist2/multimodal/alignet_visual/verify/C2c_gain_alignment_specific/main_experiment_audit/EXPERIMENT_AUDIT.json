@@ -1,0 +1,20 @@
+{
+  "claim": "C2c",
+  "milestone": "M3+M5",
+  "audit_scope": "runs/M3_aligned_dinov2/eval_things_multilevel.json + runs/M5_control_dinov2/eval_things_multilevel.json",
+  "checks": {
+    "A_gt_provenance": {"verdict": "pass", "note": "THINGS human behavioral data; M5 uses SigLIP teacher but eval GT remains THINGS human labels"},
+    "B_score_normalization": {"verdict": "pass", "note": "Same Spearman computation as C2a; no model-specific normalization"},
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "note": "M5 spearman_aggregate=0.2736 verified on-disk; Δ(M3-M5)=+0.281 (77% of +0.366) all computed correctly from on-disk values"
+    },
+    "D_dead_code": {"verdict": "pass", "note": "Same eval_student_similarity.py pipeline; no dead code"},
+    "E_scope": {
+      "verdict": "pass",
+      "note": "Matched-cost control design sound: identical schedule/dataset/seeds, only teacher signal differs (aligned vs unaligned SigLIP)"
+    },
+    "F_eval_type": {"verdict": "pass", "note": "real_gt"}
+  },
+  "overall_verdict": "pass"
+}

@@ -1,0 +1,16 @@
+{
+  "overall_verdict": "pass",
+  "variant": "model-swap-gpt-oss-20b",
+  "claim": "C4",
+  "audit_phase": 9,
+  "checks": {
+    "A_fake_gt": {"verdict": "pass", "note": "GT = Neuronpedia cached maxValue; no LLM forward pass"},
+    "B_score_normalization": {"verdict": "pass", "note": "per-feature min-max on held-out true_max"},
+    "C_phantom_results": {"verdict": "pass", "note": "45 features, all with non-null scores"},
+    "D_dead_metric_code": {"verdict": "pass", "note": "pred_pearson computed and aggregated for all features"},
+    "E_scope_overclaim": {"verdict": "pass", "note": "predictive accuracy only, correctly scoped to C4"},
+    "F_test_leakage": {"verdict": "pass", "note": "80/20 split, SAGE sees train only, scoring on held-out only"},
+    "G_statistical_validity": {"verdict": "pass", "note": "n=45, paired bootstrap CI 10k resamples"}
+  },
+  "integrity_status": "pass"
+}

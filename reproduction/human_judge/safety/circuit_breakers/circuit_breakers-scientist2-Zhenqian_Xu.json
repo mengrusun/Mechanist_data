@@ -1,0 +1,93 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Zhenqian Xu",
+    "paper_title":         "Improving Alignment and Robustness with Circuit Breakers",
+    "agent":         "scientist2",
+    "review_date":         "2026-07-20"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "本 run 确实存在拟合/选择过程（M1 线性探针选层、M3 的 RR-LoRA 微调、M2 的 R2D2-lite 对抗基线），因此本维度适用。划分是真实落盘且互不相交。",
+    "score": 5,
+    "evidence_files": ["data/paired_train.jsonl", "data/paired_heldout.jsonl", "data/harmbench_eval_reserve.jsonl", "refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "ASR 的 ground truth 由独立的 LLM judge判定合适",
+    "score": 5,
+    "evidence_files": ["artifacts/iteration_round_5/m5/RR_harmbench_records.json", "scripts/m5_eval.py", "artifacts/iteration_round_5/m7/RR_bfcl_records.json", "verify/C2_asr_capability/main_experiment_audit/EXPERIMENT_AUDIT.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "资源遵循task.md，由于claim1，2结果不好，没继续做claim3,4，较合理",
+    "score": 4,
+    "evidence_files": ["task.md", "artifacts/iteration_round_5/m3_refuse/training_summary.json", "refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md", "verify/C2_asr_capability/main_experiment_audit/EXPERIMENT_AUDIT.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "各 claim 的 used_n 都足够",
+    "score": 5,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "artifacts/iteration_round_5/m4/activation_drift.json", "artifacts/iteration_round_5/m5/RR_harmbench.json", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "全流程为单种子、单次运行，未报告方差/误差棒/显著性检验，但这是因为关键效应量明显超出噪声。同时实验失败，优先的迭代是反复修正方法，而不是也没有挑种子，也有合理性。",
+    "score": 3,
+    "evidence_files": ["artifacts/iteration_round_5/m3_refuse/training_summary.json", "artifacts/iteration_round_5/m4/activation_drift.json", "verify/VERIFY_REPORT.md"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "不是典型的因果claim",
+    "score": "n/a",
+    "evidence_files": ["verify/C1_identifiability_reroute/main_experiment_audit/MECHANISM_AUDIT.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md", "artifacts/iteration_round_5/m5/RR_harmbench_records.json", "verify/INTEGRITY_AUDIT.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "可溯源性很强。没有发现无来源、被回填或伪造的数字。",
+    "score": 5,
+    "evidence_files": ["artifacts/iteration_round_5/m4/activation_drift.json", "artifacts/iteration_round_5/m5/RR_harmbench.json", "artifacts/iteration_round_5/m5/RR_mtbench.json", "artifacts/iteration_round_5/m5/RR_mmlu.json", "artifacts/iteration_round_5/m7/RR_agent.json", "artifacts/iteration_round_5/m3_refuse/training_summary.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "各产物间的数字层面高度自洽。",
+    "score": 5,
+    "evidence_files": ["verify/VERIFY_REPORT.md", "verify/INTEGRITY_AUDIT.md", "CLAIMS_LEDGER.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md", "artifacts/iteration_round_5/m3_refuse/training_summary.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Harmful-output behaviour in an instruction-tuned LLM corresponds to identifiable internal representations that can be rerouted to an orthogonal, non-harmful subspace using only paired benign/harmful data, without exposure to any attack prompts.",
+        "method": {
+          "justification": "用探针找一个harmful方向，将所有有害prompt的表征都推离这个方向。问题在于，共享harmful方向是用探针找的，不一定准。且由于该方向有很多噪声，原始激活在它上面的投影本来就小，以它为loss会会梯度消失。所以迭代更换了损失函数解决了梯度问题。迭代4中屈服使用了 token-level 的 refusal-CE，这与原论文微调representation的理念不符，不过该改动是根据下游结果改正的，与该claim无关，扣分点放在下面的claim",
+          "score": 4,
+          "evidence_files": ["CLAIMS_LEDGER.md", "scripts/m3_rr_train.py", "refine-logs/MECHANISM_ROUTING.md"]
+        },
+        "experiment": {
+          "justification": "按method训练梯度消失后，迭代换损失公式（cos²→signed_hinge，margin 经 0.20/0.30 试探后定 0.30）并叠加 refusal-CE ，更换损失函数有了作用。",
+          "score": 4,
+          "evidence_files": ["artifacts/iteration_round_5/m4/activation_drift.json", "verify/C1_identifiability_reroute/main_experiment_audit/MECHANISM_AUDIT.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        },
+        "result": {
+          "justification": "结果与论文定性一致：Δcos_harmful=-0.434（达标）、benign 漂移 -0.044（在 0.10 容差内）、特异性对照 -0.004 表明旋转是靶向的，说明『harmful 表征可识别且可被路由到（超）正交子空间』这一半确实被复现，方向与论文相符（论文求正交，本 run 驱到 -0.43，同向更强）。分析中也如实交代了原始 cos² 失败的梯度量级诊断。identifiability + reroute 这一机制层结论是真实取得的。",
+          "score": 4,
+          "evidence_files": ["artifacts/iteration_round_5/m4/activation_drift.json", "CLAIMS_LEDGER.md", "figures/C1/INDEX.json"]
+        }
+      },
+      "C2": {
+        "claim": "A model fine-tuned with Representation Rerouting (RR) achieves substantially lower attack success rates than refusal-trained or adversarial-trained baselines across a wide range of unseen attacks, while preserving standard capability benchmarks.",
+        "method": {
+          "justification": "设计的对照实验较合理：原始 Instruct 模型。方法框架对得上论文：训练 RR-LoRA；adversarial-trained 基线；与 refusal-only base（B0）、对抗训练 baseline（B1）对比，在攻击集上用 LLM 判官测 ASR，并测 MT-Bench/MMLU 能力。整体套路与论文 Table 1 / Fig 2 同类。但 RR 的身份因叠加 refusal-CE 而被稀释——headline 0-ASR 的直接成因是模型学会了干净拒答，而非论文强调的『representation rerouting 打断有害生成』。",
+          "score": 4,
+          "evidence_files": ["scripts/m5_eval.py", "CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_PLAN.md"]
+        },
+        "experiment": {
+          "justification": "实验设计合理",
+          "score": 4,
+          "evidence_files": ["verify/C2_asr_capability/main_experiment_audit/EXPERIMENT_AUDIT.md", "refine-logs/EXPERIMENT_RESULTS.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        },
+        "result": {
+          "justification": "0-ASR 来自 refusal-CE 诱导的干净拒答，而非RR 机制；且『胜过对抗训练基线』这一子结论并未成功。",
+          "score": 2,
+          "evidence_files": ["artifacts/iteration_round_5/m5/RR_harmbench_records.json", "artifacts/iteration_round_5/m5/RR_mtbench.json", "artifacts/iteration_round_5/m5/RR_mmlu.json", "CLAIMS_LEDGER.md"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,91 @@
+[M5] fitting GOR-windowed independent predictor ...
+[M5] baseline=200 library=200 chosen_alpha=16.0
+`torch_dtype` is deprecated! Use `dtype` instead!
+Some weights of EsmModel were not initialized from the model checkpoint at facebook/esm2_t33_650M_UR50D and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+[M5] baseline scored 50/200
+[M5] baseline scored 100/200
+[M5] baseline scored 150/200
+[M5] baseline scored 200/200
+[M5] library scored 50/200
+[M5] library scored 100/200
+[M5] library scored 150/200
+[M5] library scored 200/200
+[M5] RESULT written to /data/wanghaoxiong/Mechanist-DNA-experiment/simple_20260819_v4/runs/iteration_round_1/M5_structural_gc_control.json
+{
+  "full_uplift": {
+    "esm2": {
+      "mean_baseline": 31.02,
+      "mean_library": 46.53,
+      "delta": 15.51,
+      "ci95": [
+        9.29,
+        21.56
+      ],
+      "mwu_p_greater": 1.8831778206012995e-07
+    },
+    "gor": {
+      "mean_baseline": 39.83,
+      "mean_library": 54.85,
+      "delta": 15.02,
+      "ci95": [
+        9.52,
+        20.77
+      ],
+      "mwu_p_greater": 3.7896702626325103e-07
+    },
+    "cf": {
+      "mean_baseline": 67.28,
+      "mean_library": 80.86,
+      "delta": 13.58,
+      "ci95": [
+        9.26,
+        18.1
+      ],
+      "mwu_p_greater": 5.310570313155521e-10
+    }
+  },
+  "gc_overlap_matched": {
+    "esm2": {
+      "n_base": 5,
+      "n_lib": 170,
+      "mean_baseline": 49.91,
+      "mean_library": 47.5,
+      "delta_at_matched_GC": -2.41,
+      "ci95": [
+        -31.66,
+        28.91
+      ],
+      "perm_p": 0.8794,
+      "survives_gc_control": false
+    },
+    "gor": {
+      "n_base": 5,
+      "n_lib": 170,
+      "mean_baseline": 61.58,
+      "mean_library": 54.67,
+      "delta_at_matched_GC": -6.91,
+      "ci95": [
+        -34.23,
+        25.6
+      ],
+      "perm_p": 0.6417,
+      "survives_gc_control": false
+    },
+    "cf": {
+      "n_base": 5,
+      "n_lib": 170,
+      "mean_baseline": 89.37,
+      "mean_library": 80.47,
+      "delta_at_matched_GC": -8.9,
+      "ci95": [
+        -17.29,
+        2.81
+      ],
+      "perm_p": 0.3571,
+      "survives_gc_control": false
+    }
+  },
+  "grounding": "sequence-predictor-supported (2 independent predictors GOR + Chou-Fasman) + GC/composition controls; NOT structurally confirmed"
+}
+M5_DONE

@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the hypothesis by measuring layerwise alignment and then proposing to “project out the dominant-language direction at pivot layers” while comparing reasoning accuracy across languages, with random-direction and cross-model controls. The prediction is directional—“distant/low-resource languages suffer disproportionately”—and is refuted if pivot alignment does not increase with language distance or pivot ablation does not selectively harm those languages beyond the equal-norm control. However, no decision thresholds are given, and key definitions such as how “pivot layers” are selected and how “abstract concept probes” distinguish shared concepts from lexical translation remain underspecified.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "Logit-lens evaluation, linear directions from parallel activations, projection ablation, lang2vec/URIEL features, and GSM8K-style evaluation all exist and are supported by standard interpretability and machine-learning tooling. The hardest step is “test whether pivot activations decode to dominant-language lexical items vs abstract concept probes,” which requires custom probe and label construction and is insufficiently defined, whereas the central direction-ablation experiment is a standard operation. The negative branch is runnable because the plan includes “ablate a random equal-norm direction” and stratified language comparisons, although the exact model, 15 languages, translated dataset construction, factual-chain dataset, sample sizes, and number of runs are not named. The concrete figure of “15 languages” helps, but resource specification otherwise remains generic.",
+      "score": 6
+    }
+  }
+}

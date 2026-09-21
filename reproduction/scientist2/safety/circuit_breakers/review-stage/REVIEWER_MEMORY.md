@@ -1,0 +1,23 @@
+# Reviewer Memory (suspicion log)
+
+Cross-iteration tracking of what the reviewer suspects, whether each hypothesis was tested, and the outcome.
+
+| Iter | Suspicion / hypothesis | Test | Outcome |
+|---|---|---|---|
+| 1 | The `cos_sq_plus_signed` loss collapses to `cos²` because cos<0 already at init, killing gradient. | Swap to `--rr-loss signed` (pure signed cosine, drives cos → −1). | **Confirmed.** L_rr crossed from +1e-3 to −0.9995 in 400 steps; Δcos_harmful jumped from −0.02 to −0.977. Mechanism engagement proven. |
+| 1 | Direction file `directions.pt` is probe-coef, not mean-diff (script deviates from plan §5.4). | Reviewed script; probe direction stayed as-is (mean-diff has even smaller cos magnitude). | Acknowledged. Probe direction is the reasonable choice; mean-diff would exacerbate the small-cos gradient problem. |
+| 2 | Pure signed cosine has no stopping condition; overshoots to cos = −1 which drags benign residuals with it. | Add `signed_hinge` = `mean(max(0, cos + m))` with m=0.30 so gradient turns off at the target boundary. Cut to 400 steps. | **Partially confirmed.** Δcos_harmful settled at −0.572 (not −1), Δcos_benign improved 55% → 10% over gate. Not fully at gate yet — hinge overshoots the m=0.3 margin because held-out cos is smaller-magnitude than train (batch-averaged saturation on train doesn't hold pointwise on held-out). |
+| 2 | Tail-step (step ≥ 480) cosine LR schedule drives L_ret spike + grad explosion. | Cut steps 500 → 400. | **Confirmed.** No grad spike, L_ret stayed bounded. |
+
+| 3 | Tightening m from 0.30 to 0.20 will bring benign drift from 0.11 to 0.05-0.09 without harming Δcos_harmful. | Rerun M3 with m=0.20, then M4. | **Refuted.** Δcos_harmful shrank to −0.456 (still passes ≤−0.30) but Δcos_benign WORSENED to −0.127. Margin lever alone can't rebalance; the LoRA finds a different weight configuration that leaks differently on benign. |
+| 4 | Iter-2 is close enough on C1; the real question is whether the mechanism-level reroute translates to downstream safety on HarmBench/MMLU/MT-Bench/M7. Move on to downstream eval. | Deploy M5 (HarmBench+MT+MMLU) and M7 on iter-2 adapter across GPUs 0-3. | **Confirmed the eval is the right move; the answer was catastrophic.** Iter-2 adapter INCREASED HarmBench ASR from 0.333 → 0.522 and agent harm rate 0.010 → 0.310. Mechanism-vs-behavior gap: our reconstructed loss erases the model's own "prompt-is-harmful" signal at early sites, disabling downstream refusal. |
+| 5 | The reconstructed RR objective is directionally wrong for safety by itself. Adding direct behavioral supervision (refusal-token CE on harmful) as the dominant term, with RR as a mechanistic regularizer, will produce a model that BOTH passes C1 mechanism gates AND is safer in behavior. | Modify M3 to support `--lambda-refuse`; train from base with α=5, β=1, λ_refuse=5, m=0.30, 400 steps. Then M4 + M5 (all suites) + M7. | **Strongly confirmed.** M4 both gates PASS for the first time (Δcos_harmful=−0.434, Δcos_benign=−0.044). HarmBench collapses from 0.522 (iter-2) → 0.000 (iter-5); Agent harm 0.310 → 0.010 (matches B0 floor). MT-Bench 6.15, MMLU 0.56, BFCL 1.00 — all preserved. |
+| 6 | STOP: three-dimensional STOP rule satisfied on C1/C2/C4. C3 remains open (M6/PGD never re-run) but is a distinct transfer claim best deferred rather than spending the last iteration on. | Consult reviewer for final scoring decision. | **Confirmed.** Reviewer chose option B (STOP) with score=8, verdict="ready". |
+
+## Persistent open suspicions / carried notes
+
+- **S1 (resolved)**: benign drift under signed-cos was over-rotation, not per-token effect. Refuse-CE absorbing capacity fixed it in iter 5.
+- **S2 (resolved)**: alpha lever isn't independent; alpha=5 with refuse-CE=5 works because refusal-CE is now the dominant behavioral gradient signal.
+- **S3 (resolved)**: mechanism-behavior gap was real and large. M4 pass is necessary but NOT sufficient; downstream ASR is what matters.
+- **S4 (new, open)**: C3 (VLM PGD image-hijack) never tested with the working recipe. Expected direction: refuse-CE should transfer via the shared Mistral base LM, but PGD attack loop is a separate optimization loop that could reveal a genuine mechanism gap even if the LM refuses text-input harmful prompts.
+- **S5 (new, open)**: The refusal-CE approach essentially collapses to SFT-for-refusal + weak RR regularizer. Whether the RR term is CAUSALLY responsible for any of the safety gain, or whether the refusal-CE alone would suffice, is an ablation not tested here. Future work: run the same recipe with `--lambda-refuse 5 --alpha 0` to isolate the RR contribution.

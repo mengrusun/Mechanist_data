@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The goal and method are tightly aligned: the proposal reads \"step-wise difficulty trajectory,\" relates it to truncate-and-resume residual work, and causally tests localized heads through steering rather than relying only on correlation. It provides directional, decidable criteria throughout, including intermediate AUROC >= 0.70, a mean difficulty drop > 0.3, and explicit negative outcomes such as \"< 0.1 or increasing\" and \"< 5 points over control, or indistinguishable from confidence-probe steering.\" The main logical gap is that the headline predicts difficulty should \"decline monotonically,\" whereas Experiment 2 measures only \"mean signed change ... from first to last step,\" which cannot establish monotonic contraction within traces; additionally, the scaling needed to compute the \"area between difficulty and residual-work trajectories\" is unstated. Despite these gaps, the measured variables, comparisons, success thresholds, and refuting outcomes are unusually concrete and mostly non-overlapping.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is constructing the oracle-like residual-work labels by truncating at each sampled boundary and finding \"the minimum number of additional true steps ... after which forced-exit accuracy first reaches and holds the final accuracy\"; this is a custom and somewhat underspecified labeling operation, but it is implementable with standard generation, answer extraction, and activation-hook tooling rather than a magic step. The named core artifacts—DeepSeek-R1-Distill-Qwen models, Qwen3, GSM8K, MATH500, AIME, and GPQA-Diamond—exist, while linear probes, head ablation, activation steering, and confidence probes are all supported by standard interpretability frameworks. Resources are exceptionally well quantified, including model scales \"1.5B/7B/14B,\" exact dataset sizes, \"32 samples/item,\" three seeds, a \"max 16k thinking tokens,\" and \"<= 8xA100-80GB.\" The refuting branch is runnable because the design includes \"control heads,\" \"norm-matched random directions,\" confidence-probe steering, early high-residual-work timing, fixed truncation, and no-intervention controls, although the residual-work definition and forced-answer evaluation require additional implementation decisions.",
+      "score": 8
+    }
+  }
+}

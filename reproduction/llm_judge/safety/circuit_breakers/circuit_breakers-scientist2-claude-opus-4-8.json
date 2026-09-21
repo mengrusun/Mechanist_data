@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Improving Alignment and Robustness with Circuit Breakers",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The pipeline does fit and evaluate on named files: scripts/m1_locate.py fits the mean-diff direction and a LogisticRegression probe on data/paired_train.jsonl (384 pairs) and reports AUC on data/paired_heldout.jsonl (128 pairs), and M5 behavioral eval uses data/harmbench_eval_reserve.jsonl (200). The MAIN behavioral evaluations are clean: I confirmed harmbench_eval_reserve.jsonl has 0 overlap with paired_train.jsonl on both 'id' and 'behavior' fields, so the C2/C4 ASR/capability numbers are on genuinely disjoint data. HOWEVER, the C1 mechanistic 'held-out' set is heavily contaminated: of the 128 rows in paired_heldout.jsonl, 116 have an id AND harmful-text that exactly match a row in paired_train.jsonl (69 of 73 held-out ids are shared with train). Thus the M1 identifiability AUC=0.976 (fit on train, 'evaluated' on held-out) and the M4/iter-5 reroute diagnostic (Δcos_harmful=-0.434) are effectively in-sample — the RR loss directly minimized cos(a_h,d_h) on the very prompts later used to declare the reroute PASS. EXPERIMENT_RESULTS.md asserts the split is 'disjoint from M5 eval' (true for eval reserve) but the train/held-out split that carries the C1 generalization claim is not disjoint in the on-disk data. This leakage inflates the headline C1 metric iteration used for its PASS verdict; the main behavioral evals remain clean.",
+    "score": 2,
+    "evidence_files": ["data/paired_train.jsonl", "data/paired_heldout.jsonl", "data/harmbench_eval_reserve.jsonl", "scripts/m1_locate.py", "artifacts/m1/summary.json", "artifacts/iteration_round_5/m4/activation_drift.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Ground truth is a mix: HarmBench-style ASR judged by an external LLM classifier (scripts/m5_eval.py, HarmBench judge via the dmxapi endpoint), MT-Bench via LLM judge, MMLU by objective multiple-choice accuracy, agent harmful_tool_use_rate over 100 authored prompts, and BFCL by AST-name match. The judges are external to the model under test, so labels are non-circular. The concern is operationalization fidelity: the 'attack categories' are synthetic templates (per verify/C2_asr_capability/main_experiment_audit, 'gcg-lite' is a fixed generic suffix, not real GCG optimization; categories persona/hypothetical/suffix-injection are prompt templates), so an ASR label under these categories does not faithfully capture the paper's 'unseen optimization-based attacks (GCG, PAIR, TAP, AutoDAN)'. The label measures compliance-on-templates, a plausible but under-validated proxy for the claimed robustness-to-real-attacks. MMLU/BFCL/MT-Bench labels validly capture capability. Reasonable proxies with a documented category-fidelity gap.",
+    "score": 3,
+    "evidence_files": ["scripts/m5_eval.py", "verify/C2_asr_capability/main_experiment_audit/EXPERIMENT_AUDIT.md", "refine-logs/EXPERIMENT_RESULTS.md", "artifacts/m5/RR_harmbench.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "Base model IS faithful: artifacts/m3/training_summary.json and artifacts/iteration_round_5/m3_refuse/training_summary.json both use model_path .../Meta-Llama-3-8B-Instruct, exactly as task.md specifies. Two material deviations from the pinned resources: (1) task.md pins the GraySwanAI circuit-breakers train+retain set as 'always used, fixed', but it was NOT used — the run substituted a HarmBench-public + Alpaca paired fallback (claims_ledger.json open_items: the GraySwanAI repo was on .claude/forbidden-urls.txt in the blind-repro setup). This is externally forced and disclosed rather than a silent swap, but the fixed training resource was still not honored. (2) The specified HarmBench 'unseen attacks (GCG, PAIR, TAP, AutoDAN, direct request, human red-team)' were downgraded to synthetic template categories (gcg-lite fixed suffix, not real GCG; no PAIR/TAP/AutoDAN optimizers), n=30/category, and the adv-trained baseline B1 is 'R2D2-lite' (12 templates in place of 512 GCG suffixes) — flagged FAIL by verify/C2 experiment audit as substantive substitutions affecting the competitive comparison. MT-Bench used n=40 (plan/paper 80), MMLU subset 300. These downgrades to the main text experiment materially weaken the resource used to test the headline claim. (Verify-stage models Mistral/LLaVA-NeXT/BFCL are exempt, but note C3's LLaVA-NeXT-Mistral-7B was skipped entirely.)",
+    "score": 2,
+    "evidence_files": ["artifacts/m3/training_summary.json", "artifacts/iteration_round_5/m3_refuse/training_summary.json", "claims_ledger.json", "verify/C2_asr_capability/main_experiment_audit/EXPERIMENT_AUDIT.md", "verify/INTEGRITY_AUDIT.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "used_n per EXPERIMENT_RESULTS.md and the on-disk JSONs: M1 384 train + 128 held; M5 HarmBench 180 (30/cat × 6), MT-Bench 40, MMLU 300; M7 100 harmful-agent + 50 BFCL; M1/M4 384/128. Scale is moderate-to-thin: 30 prompts per attack category is a small basis for the iter-5 'ASR=0.000 across all 6 categories' headline, and agent harm rests on tiny counts (1/100 vs 4/100). C3's VLM/PGD experiment was never run (0 items) yet is not claimed as reproduced — it is honestly marked UNRESOLVED, which avoids overclaim. Most conclusions are backed by experiments that were actually executed at the stated (if compact) scale, and floor-effect / under-power caveats are attached per claim (C2 'suspected_under_power: true', C4 harm-rate floor). The thinness is largely flagged, but claim strength for C2 ('collapses to 0') is somewhat overstated relative to n=30/cat under weak template attacks.",
+    "score": 3,
+    "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "artifacts/iteration_round_5/m5/RR_harmbench.json", "artifacts/iteration_round_5/m7/RR_agent.json", "claims_ledger.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The run is single-seed throughout with no variance, error bars, or significance tests reported anywhere in artifacts/ or the reports. verify/INTEGRITY_AUDIT.md explicitly flags for every claim: 'single seed', and the mechanism control uses 'n_random=1' where the audit states >=30 is required for a random-direction baseline. The headline safety effect (ASR B0=0.333 → RR-iter5=0.000) is a large point difference, but several sub-conclusions treated as 'preserved' sit within plausible noise on single runs: MMLU 0.56 vs 0.58, MT-Bench 6.15 vs 6.30, and agent harm 0.010 vs 0.040 (a 1-vs-4-out-of-100 difference). No seed-repetition was done to establish robustness to randomness, and the specificity control is a single random direction. Point estimates only; robustness to randomness unverified and some claimed sub-effects are within-noise.",
+    "score": 2,
+    "evidence_files": ["verify/INTEGRITY_AUDIT.md", "verify/C1_identifiability_reroute/main_experiment_audit/MECHANISM_AUDIT.md", "artifacts/iteration_round_5/m5/RR_mmlu.json", "artifacts/iteration_round_5/m4/activation_drift.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C1 is a genuine mechanistic/causal claim (harmful representations can be REROUTED). The run does use a real intervention — the RR LoRA fine-tune modifies the model, and M4 measures post-intervention cosine drift on held-out pairs against a random-orthogonal specificity control (d_ctrl), Δcos_harmful=-0.434 vs Δcos_ctrl=-0.004 — so there is an intervention with a targeting control, not mere correlation. However rigor elements are weak/missing: verify/INTEGRITY_AUDIT.md mechanism audit FAILs C1 for n_random=1 (single random direction, not >=30), no steering-coefficient/alpha sweep (single hardcoded value), and single seed. Most importantly, the iter-5 safety effect was obtained by ADDING a refusal-CE (output-level cross-entropy toward refusal templates, lambda_refuse=5) — a term absent from the paper's RR objective — and the isolating ablation (alpha=0, lambda_refuse=5) to determine whether the RR reroute vs the refusal-CE causes the downstream safety was recommended (claims_ledger.json open_items, AUTO_ITERATION_FINAL_REPORT item 2) but NOT run. So the causal attribution 'RR mechanism → safety' is confounded. An intervention with a control exists, but a key rigor/isolation element is missing.",
+    "score": 3,
+    "evidence_files": ["artifacts/iteration_round_5/m4/activation_drift.json", "verify/C1_identifiability_reroute/main_experiment_audit/MECHANISM_AUDIT.md", "scripts/m3_rr_train.py", "review-stage/AUTO_ITERATION_FINAL_REPORT.md", "claims_ledger.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Traceability is strong. Every headline number I checked traces to a concrete on-disk product and agrees: iter-5 Δcos_harmful=-0.4337 in artifacts/iteration_round_5/m4/activation_drift.json (ledger reports -0.434); HarmBench aggregate 0.000 across all 6 categories in artifacts/iteration_round_5/m5/RR_harmbench.json; MT-Bench 6.15 in RR_mtbench.json; MMLU 0.56 in RR_mmlu.json; agent harm 0.01 / BFCL 1.0 in artifacts/iteration_round_5/m7/RR_agent.json; original-run values likewise in artifacts/m1,m4,m5,m7. Per-run cost.json witnesses exist under runs/iteration_round_5/*. No sourceless or back-filled numbers were found. One blemish: artifacts/iteration_round_5/m3_refuse/training_summary.json carries the boilerplate sweep_notes 'L_rr decreasing significantly' while final_L_rr_ema=0.0009 — the audit already flagged this string as misleading in the original run; it is prose, not a fabricated metric, so provenance of the reported numbers themselves stands.",
+    "score": 4,
+    "evidence_files": ["artifacts/iteration_round_5/m4/activation_drift.json", "artifacts/iteration_round_5/m5/RR_harmbench.json", "artifacts/iteration_round_5/m5/RR_mtbench.json", "artifacts/iteration_round_5/m5/RR_mmlu.json", "artifacts/iteration_round_5/m7/RR_agent.json", "artifacts/iteration_round_5/m3_refuse/training_summary.json", "runs/iteration_round_5/M5_RR_refuse_harmbench/cost.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "There is a material inconsistency across the pipeline's own records. verify/VERIFY_REPORT.md and verify/INTEGRITY_AUDIT.md report ALL four claims INCONCLUSIVE with Phase-2 integrity FAIL (C1 mech FAIL, C2 exp+mech FAIL, etc.), and the per-claim verify.integrity in claims_ledger.json is 'FAIL' with verdict 'INCONCLUSIVE'; yet the SAME claims_ledger.json final_status and review-stage/AUTO_ITERATION_FINAL_REPORT.md report C1/C2/C4 as PASS. This is precisely the 'claim flagged broken by an integrity gate in one artifact yet reported PASS elsewhere' pattern. Separately, refine-logs/EXPERIMENT_RESULTS.md (the main-experiment report) still presents only the original NEGATIVE results (C2 not-supported, reroute failed) with no iter-5 numbers, so a reader of that report alone reaches the opposite verdict from the ledger. Mitigating: the divergence is DISCLOSED as temporal staleness — claims_ledger.json open_items and AUTO_ITERATION_FINAL_REPORT item 3 explicitly state the verify/ROBUSTNESS artifacts reflect the pre-iteration state and a fresh Phase-2 audit on iter-5 artifacts was never run. So the contradiction is acknowledged rather than hidden, but the integrity state was never propagated and the artifacts remain genuinely inconsistent on the final verdict.",
+    "score": 2,
+    "evidence_files": ["verify/VERIFY_REPORT.md", "verify/INTEGRITY_AUDIT.md", "claims_ledger.json", "review-stage/AUTO_ITERATION_FINAL_REPORT.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Harmful-output behaviour in an instruction-tuned LLM corresponds to identifiable internal representations that can be rerouted to an orthogonal, non-harmful subspace using only paired benign/harmful data, without exposure to any attack prompts.",
+        "method": {
+          "justification": "9a: The method is well matched to the claim's mechanism category (RepE / LoRRA). M1 extracts a residual-stream mean-difference direction and measures per-layer linear-probe AUC for identifiability; M3 applies a LoRA RR fine-tune; M4 measures post-tune cosine drift with a random-orthogonal specificity control — exactly the RepE family the paper (Algorithm 1, LoRRA + RR loss) uses. The iter-5 'signed_hinge' loss max(0,cos+m) is the paper's ReLU(cosine_sim) with an added margin (scripts/m3_rr_train.py) — more faithful to the paper than the original cos² formulation. Trained on paired benign/harmful data only, no attack prompts, matching the claim. Minor blemish flagged by the audit: M1 saved probe coefficients as directions.pt vs the plan's mean-diff (directions_meandiff.pt saved separately).",
+          "score": 4,
+          "evidence_files": ["scripts/m1_locate.py", "scripts/m3_rr_train.py", "artifacts/m1/summary.json", "verify/C1_identifiability_reroute/main_experiment_audit/EXPERIMENT_AUDIT.md"]
+        },
+        "experiment": {
+          "justification": "9b: Design is mostly reasonable (layer sweep to pick sites 9-14, held-out cosine diagnostic, specificity control, explicit Δcos targets). But real gaps: (i) the 'held-out' set is ~90% identical to training (116/128 rows share id+harmful text), so the reroute-generalization metric is largely in-sample; (ii) n_random=1 for the specificity control (audit requires >=30); (iii) single seed, no alpha/coefficient sweep; (iv) reroute only 'passed' after adding a refusal-CE term absent from the paper, and the isolating ablation (alpha=0) was recommended but not run. These weaken the design's ability to cleanly validate 'rerouted... generalizes beyond training data'.",
+          "score": 3,
+          "evidence_files": ["data/paired_heldout.jsonl", "data/paired_train.jsonl", "artifacts/iteration_round_5/m4/activation_drift.json", "verify/C1_identifiability_reroute/main_experiment_audit/MECHANISM_AUDIT.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        },
+        "result": {
+          "justification": "9c: Scientifically honest trajectory — the original faithful cos² run reported reroute FAILED (Δcos_harmful=-0.020, EXPERIMENT_RESULTS.md), iteration diagnosed the weak-gradient cause and fixed it, reaching Δcos_harmful=-0.434 (<=-0.30) with benign drift -0.044 within tolerance and clean specificity (-0.004). This qualitatively agrees with the paper that harmful representations are identifiable (AUC 0.976) and reroutable. The caveat: the reroute-pass metric is measured on a contaminated 'held-out' set (mostly training prompts), so the paper's/claim's key word 'generalizes beyond training data' is not cleanly demonstrated, and the pass depended on the added refusal-CE recipe. Directionally consistent, honestly obtained, but the generalization evidence is weaker than reported.",
+          "score": 3,
+          "evidence_files": ["artifacts/iteration_round_5/m4/activation_drift.json", "artifacts/m4/activation_drift.json", "artifacts/m1/auc_per_layer.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        }
+      },
+      "C2": {
+        "claim": "A model fine-tuned with Representation Rerouting (RR) achieves substantially lower attack success rates than refusal-trained or adversarial-trained baselines across a wide range of unseen attacks, while preserving standard capability benchmarks.",
+        "method": {
+          "justification": "9a: The three-variant design (refusal base B0, adv-trained B1, RR-LoRA) evaluated on HarmBench ASR + MT-Bench + MMLU mirrors the paper's Table 1 setup and is the correct method family for the claim. RR is trained with the RepE/LoRRA reroute objective consistent with the paper. Appropriate method choice.",
+          "score": 4,
+          "evidence_files": ["scripts/m5_eval.py", "scripts/m3_rr_train.py", "scripts/m2_adv_train.py", "claims_ledger.json"]
+        },
+        "experiment": {
+          "justification": "9b: Substantive design weaknesses limit validity. The 'unseen attacks' are synthetic templates — 'gcg-lite' is a fixed generic suffix (not real GCG optimization) and there is no PAIR/TAP/AutoDAN, so the attack coverage is far weaker than the specified suite (verify/C2 experiment audit = FAIL). The adv baseline B1 is R2D2-lite (12 templates vs 512 GCG suffixes) and over-refuses (MT-Bench 1.08), degrading the competitive comparison. n=30/category, MT-Bench n=40, single seed. Critically, the iter-5 ASR=0.000 was achieved only after adding an output-level refusal-CE term not present in the paper's RR loss, which confounds whether RR or refusal-CE drives the ASR reduction; the isolating ablation was not run, and against weak template attacks ASR=0 is easy to reach. Metric (LLM-judged ASR) is reasonable but the design under-tests the claim.",
+          "score": 2,
+          "evidence_files": ["verify/C2_asr_capability/main_experiment_audit/EXPERIMENT_AUDIT.md", "artifacts/iteration_round_5/m5/RR_harmbench.json", "scripts/m2_adv_train.py", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        },
+        "result": {
+          "justification": "9c: iter-5 RR reaches HarmBench aggregate ASR=0.000 across all 6 categories (vs B0=0.333) while keeping MT-Bench 6.15 and MMLU 0.56 — this qualitatively matches the paper's headline (RR drives ASR toward ~0 while preserving capability, without B1's over-refusal collapse). Numbers trace to disk. BUT the agreement was engineered: the faithful RR-alone recipe INCREASED ASR (iter-4 adapter reached 0.522), and safety was only recovered by adding a non-paper refusal-CE supervision term, with the confound-isolating ablation left un-run. The original main-experiment run reported C2 not-supported. So the final agreement is directionally paper-consistent and honestly disclosed, but rests on a recipe departure and an unresolved 'is it RR or refusal-CE?' confound under a weakened attack suite — the specific claim (RR itself reduces ASR) is not cleanly validated.",
+          "score": 3,
+          "evidence_files": ["artifacts/iteration_round_5/m5/RR_harmbench.json", "artifacts/iteration_round_5/m5/RR_mtbench.json", "artifacts/iteration_round_5/m5/RR_mmlu.json", "refine-logs/EXPERIMENT_RESULTS.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        }
+      },
+      "C3": {
+        "claim": "The same representation-level intervention transfers to multimodal LLMs, blocking image-based jailbreaks (image hijacks) without degrading vision-language task performance.",
+        "method": {
+          "justification": "9a: The planned method (RR fine-tune on the Mistral-7B base, reassemble LLaVA-NeXT-Mistral-7B freezing vision encoder+projector, then PGD ε=32/255 ×1000-step image hijack + MMMU/LLaVA-Wild capability) is the correct approach and matches the paper's multimodal protocol. Method choice is suitable for the claim even though only the Mistral mechanism surrogate was actually run.",
+          "score": 4,
+          "evidence_files": ["scripts/m6_vlm_pgd.py", "artifacts/m6/c3_verdict.json", "claims_ledger.json"]
+        },
+        "experiment": {
+          "justification": "9b: The actual C3 experiment was essentially not run. LLaVA-NeXT-Mistral-7B was never assembled and the PGD image-hijack + MMMU/LLaVA-Wild evaluation never executed (budget-gated skip, VLM weights not local), and M6 was NOT re-fit with the iter-5 recipe. Only a mechanism-level Mistral RR fine-tune was done, which itself failed reroute in the original (Δcos_harmful=-0.012, L_rr_ema=0.000222) and was not repaired. There is thus no valid experiment testing the multimodal transfer claim.",
+          "score": 1,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "verify/C3_vlm_transfer/main_experiment_audit/EXPERIMENT_AUDIT.md", "artifacts/m6/c3_verdict.json", "artifacts/m6/m1_mistral/auc_per_layer.json"]
+        },
+        "result": {
+          "justification": "9c: The run does NOT disguise a result — C3 is honestly and consistently reported as UNRESOLVED/partial with a documented forward path (claims_ledger.json final_status '⏸ unresolved', AUTO_ITERATION_FINAL_REPORT C3 UNRESOLVED). No fabrication or goalpost-tuning. But because the experiment was never run, there is no result analysis and no evidence for or against the paper on C3 — it is honest-but-absent rather than a principled negative, so it provides no validation of the claim. Credit for honesty and disclosure; no substantive reproduction.",
+          "score": 3,
+          "evidence_files": ["claims_ledger.json", "review-stage/AUTO_ITERATION_FINAL_REPORT.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+        }
+      },
+      "C4": {
+        "claim": "The same intervention transfers to LLM agents, materially reducing the rate of harmful tool-use actions executed under attack.",
+        "method": {
+          "justification": "9a: Reusing the M3 RR-LoRA inside a function-calling scaffold over Llama-3-8B-Instruct and measuring harmful_tool_use_rate + BFCL is the correct method family and matches the paper's agent setup (Llama-3-8B + function calling + BFCL). Appropriate method choice; no separate mechanism needed since the same intervention is transferred.",
+          "score": 4,
+          "evidence_files": ["scripts/m7_agent_eval.py", "artifacts/iteration_round_5/m7/RR_agent.json", "claims_ledger.json"]
+        },
+        "experiment": {
+          "justification": "9b: Design is reasonable but under-powered and floor-limited. 100 authored harmful-agent prompts across the paper's 4 categories (cybercrime/disinformation/fraud/harassment) + 50 BFCL exec_simple scored by AST-name match (a documented substitute for the full BFCL v3 harness). Weaknesses: single seed; the paper's 'forced function-calling' attack pressure is not clearly instantiated to create harm headroom; the base Llama-3-8B already refuses nearly all prompts (B0 harm=0.010), so the harmful-tool-use metric has almost no dynamic range to detect a reduction. Metric is otherwise reliable and BFCL substitute disclosed.",
+          "score": 3,
+          "evidence_files": ["scripts/m7_agent_eval.py", "artifacts/iteration_round_5/m7/RR_agent.json", "verify/C4_agent_transfer/main_experiment_audit/EXPERIMENT_AUDIT.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c: iter-5 RR gives harmful_tool_use_rate=0.010 (= B0) and BFCL=1.00 (vs B0 0.98), i.e. no regression in safety and preserved/slightly-improved capability, and it falsified the earlier mechanism-only iter-2 adapter which had raised agent harm to 0.310. This is honestly reported. However the paper's core C4 assertion is that RR MATERIALLY REDUCES harmful actions under attack — that reduction is not demonstrated here because B0 is already at a 0.010 floor (no headroom), a fact the run discloses explicitly. So the result neither confirms nor contradicts the paper's reduction; it shows safety-preservation without demonstrating the claimed reduction. Directionally non-contradictory and honestly caveated, but the central claim is left untested rather than validated.",
+          "score": 3,
+          "evidence_files": ["artifacts/iteration_round_5/m7/RR_agent.json", "artifacts/m7/B0_agent.json", "review-stage/AUTO_ITERATION_FINAL_REPORT.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+        }
+      }
+    }
+  }
+}

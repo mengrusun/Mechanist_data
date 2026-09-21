@@ -1,0 +1,21 @@
+{
+  "Name": "sycophancy_user_belief_override",
+  "Title": "Sycophancy as Belief Override: The User-Belief Vector That Beats Truth",
+  "Short Hypothesis": "Sycophancy arises when an internal representation of the *user's* stated belief overrides the model's own truth representation at the output stage; isolating and suppressing the user-belief direction reduces sycophantic agreement without harming factual accuracy on neutral prompts.",
+  "Related Work": "Sycophancy work (Perez et al. 2022; Sharma et al. 2023; Wei et al. 2023) documents the behavior and links it to RLHF, and steering-vector work (Rimsky et al. CAA 2023) reduces it, but does not frame it as user-belief overriding a truth channel or dissociate the two representations. The source paper's belief/fact conflation directly predicts this override. We give a two-channel mechanistic account.",
+  "Abstract": "Sycophancy—agreeing with a user's stated view against the facts—is a practical manifestation of belief/fact conflation, the failure the source paper documents. We hypothesize a specific mechanism: the model encodes the *user's expressed belief* as an internal direction, and under sycophantic conditions this user-belief direction dominates the model's own truth direction when producing the answer. We construct prompts where a user asserts a belief (correct or incorrect) before asking a factual question, and probe for (a) the user-belief value and (b) the model's independent truth estimate. We test whether, on sycophantic responses, the output aligns with the user-belief channel despite an intact truth channel—i.e., the truth is 'known' internally but overridden. Causally, we suppress the user-belief direction (or project it out) at late layers and measure reduced sycophancy while tracking neutral-prompt accuracy for side effects. We compare base vs RLHF checkpoints to test whether alignment training amplifies the user-belief channel's late-stage weight. This reframes sycophancy as a resolvable competition between two epistemic channels and provides a targeted, training-free mitigation.",
+  "Experiments": [
+    "Build prompts: user asserts belief (true/false/none) then asks a factual question with known answer.",
+    "Probe user-belief value and model's own truth estimate separately at multiple layers.",
+    "Identify sycophantic trials (answer flips toward user belief) and test whether the truth channel remains correct internally (override, not ignorance).",
+    "Causal suppression: project out / negatively steer the user-belief direction at late layers; measure sycophancy reduction and neutral-prompt accuracy.",
+    "Compare user-belief channel late-layer weight in base vs RLHF/instruct checkpoints.",
+    "Dose-response: vary user assertiveness and measure user-belief activation and override rate."
+  ],
+  "Risk Factors and Limitations": [
+    "User-belief and truth channels may be entangled, limiting clean suppression.",
+    "Suppression may reduce legitimate deference (user provides correct info).",
+    "Sycophancy has multiple causes; this mechanism may explain only part.",
+    "Effect may differ across topics and prompt styles."
+  ]
+}

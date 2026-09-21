@@ -1,0 +1,23 @@
+{
+  "phase": 3,
+  "step": 0,
+  "date": "2026-07-15",
+  "max_verify_claims": 1,
+  "cap_source": "invocation parameter MAX_VERIFY_CLAIMS=1",
+  "admitted_pool": ["C1", "C3"],
+  "rejected_pool": [
+    {
+      "claim_id": "C2",
+      "reason": "Phase 2 baseline integrity FAIL: pair_to_sequence hook shape-mismatch bug + primary seq2pair Δ=-0.017 fails Δ≥0.2pp predicate. Proceeds as INCONCLUSIVE."
+    }
+  ],
+  "picked_claims": ["C1"],
+  "picked_rationale": "C1 is selected over C3 as the Stage-2 swap variant target based on the following importance ranking:\n\n1. **C1 is the headline supported claim and mechanistic cornerstone** of the project. The EXPERIMENT_PLAN.md rationale positions C1 (early-block localization + s-locus) as the foundational finding that motivates and enables M2 and M3: if C1 fails robustness, the entire causal chain is undermined.\n\n2. **C1 shows the strongest and cleanest effect** (Δ=-0.862, p=2.25e-36, N=197, five specificity controls all PASS), making it the most scientifically impactful claim to stress-test with swap variants — a PASS here would substantially increase confidence in the core finding.\n\n3. **C3 is partial** (M3a supported / M3b real null). The M3b null is a genuine scientific finding, not a fragile supported claim needing robustness testing. Stress-testing C3 via swap variants would primarily probe whether M3a's decodability result replicates (which it would almost certainly given bacc=1.0 at trivial charge decodability), while the M3b null is unlikely to 'flip' under swap variants (it is a real null).\n\n4. **FINAL_PROPOSAL.md** and **IDEA_REPORT.md** rank C1 as the primary novelty — 'β-hairpin decision committed to early blocks 0-3, s the active locus' is the lead finding that all other claims build upon.\n\nConclusion: C1 is picked for Stage-2 swap variants (method + dataset axes). C3 is deferred with stage2_skip_reason=max_verify_claims_cap.",
+  "stage2_deferred": [
+    {
+      "claim_id": "C3",
+      "stage2_skip_reason": "max_verify_claims_cap",
+      "note": "C3 admitted by Phase 2 (WARN). Deferred from Stage-2 swap variants due to MAX_VERIFY_CLAIMS=1 cap. Upgrade command: run /auto-verify C3 --resume=true to run C3 variants."
+    }
+  ]
+}

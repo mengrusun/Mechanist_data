@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan clearly varies readout position and monitor type, measures “probe accuracy/AUROC by layer,” and makes directional predictions such as “latent probe > CoT-text classifier” and reduced attack success after intervention; failure to observe these improvements would refute those predictions, although no effect-size threshold is specified. A major construct-validity gap remains: the probe is trained “to predict human-labeled true harmfulness of the request,” so “harmful latent + refusing output” can simply mean the model correctly recognized a harmful request and refused it, rather than a “faked refusal,” while “safe latent + harmful output” can be probe error rather than a genuine “silent override.” Thus the measurements are executable and directionally falsifiable, but the stated 2x2 taxonomy does not by itself establish that a latent decision was formed and subsequently overridden.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is to “project each answer-phase token's activation onto the verdict direction and identify where the safe verdict decays into compliance”; this requires a custom collapse-point rule but is a standard activation-extraction and projection pipeline rather than an undefined magic step. The named DeepSeek-R1-Distill-Qwen-7B/14B and QwQ-32B models, datasets including “AdvBench, HarmBench, StrongREJECT,” and methods such as logistic probes, Llama-Guard evaluation, GCG attacks, and activation steering exist and are supported by standard ML and interpretability tooling, though “a distilled Llama reasoning model” is not specified precisely. Resources receive useful quantification through the 7B/14B/32B model scales and “TPR@1%FPR,” but dataset sample counts, labeling counts, and run-level figures are absent; nevertheless, prompt-position, text-monitor, output-monitor, always-on-steering, paraphrase, and leave-one-attack-out controls make the negative branch runnable.",
+      "score": 8
+    }
+  }
+}

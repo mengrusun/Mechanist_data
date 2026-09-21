@@ -1,0 +1,44 @@
+{
+  "Experiment_description": "A minimal end-to-end pipeline for LLM-committee collusion detection: loading Qwen3-32B-AWQ (bypassing transformers' AWQ quantizer via AutoAWQForCausalLM.from_quantized), generating a synthetic NARCBench-Core-like dataset of committee deliberations across 17 domains, extracting per-agent residual-stream activations from a middle layer, and training logistic-regression probes over multiple aggregations (per-agent, mean-pool, max-pool, concat) alongside TF-IDF and random-feature control baselines using 5-fold stratified cross-validation.",
+  "Significance": "This is a foundational sanity check for the paper's central claim that internal activations reveal covert coordination invisible to text-level features. The result \u2014 that a simple TF-IDF baseline matches probe performance at ceiling (1.0 AUROC) \u2014 indicates the current synthetic dataset lacks the lexical-cue-minimization needed to make the comparison scientifically meaningful. This drives an important design requirement for subsequent stages: either use adversarially controlled scenarios where text features are demonstrably insufficient, or elicit real behavioral diversity (currently the committee is stuck in ~100% unanimous-approve mode).",
+  "Description": "The pipeline: (1) installs AWQ dependencies with a gptqmodel fallback; (2) loads Qwen3-32B-AWQ via AutoAWQForCausalLM.from_quantized().model to enable output_hidden_states; (3) generates a synthetic dataset of committee deliberations across 17 domains, intended to share vocabulary but differ in coordination pattern; (4) extracts per-agent activations from a middle transformer layer using tokenizer offset mappings for span alignment; (5) caches activations to disk; (6) trains logistic-regression probes across per-agent, mean-pool, max-pool, concat aggregations plus TF-IDF and random-feature controls under 5-fold stratified CV; (7) reports AUROC per variant, treating the best group-aggregated probe as the primary collusion_detection_auroc.",
+  "List_of_included_plots": [
+    {
+      "path": "experiments/2026-07-13_11-03-14_multi_agent_attempt_0/logs/0-run/experiment_results/experiment_30544dfdb11a4b41b9ab07e6b950c8e7_proc_968037/NARCBench-Core-Synthetic_auroc_foldstd_by_variant.png",
+      "description": "Bar chart of committee voting outcome counts (Unanimous Approve, Unanimous Reject, Split Decision) across 17 domains (D01\u2013D17).",
+      "analysis": "Reveals a strong systematic approval bias: nearly all domains produce Unanimous Approve, with only a handful of domains showing any rejects or splits. This behavioral homogeneity undermines using vote outcomes as ground truth for distinguishing genuine consensus from collusion, and motivates injecting explicit collusion-inducing conditions or adversarial prompts to produce meaningful positive/negative labels."
+    },
+    {
+      "path": "experiments/2026-07-13_11-03-14_multi_agent_attempt_0/logs/0-run/experiment_results/experiment_30544dfdb11a4b41b9ab07e6b950c8e7_proc_968037/NARCBench-Core-Synthetic_auroc_bar_by_variant.png",
+      "description": "Bar chart of average committee confidence by voting outcome: Split Decision \u22480.85, Unanimous Approve \u22480.80, Unanimous Reject \u22480.72, with error bars.",
+      "analysis": "Counterintuitively, split decisions carry the highest confidence, suggesting agents disagree with strong individual convictions rather than uncertainty. The narrow ~0.13 confidence range across outcomes indicates confidence is a weak text-level discriminator, supporting the motivation to look beyond behavioral surface signals into internal representations."
+    },
+    {
+      "path": "experiments/2026-07-13_11-03-14_multi_agent_attempt_0/logs/0-run/experiment_results/experiment_30544dfdb11a4b41b9ab07e6b950c8e7_proc_968037/narcbench_core_auroc_by_variant.png",
+      "description": "Per-agent vote distribution across five committee members, showing overwhelming approval (~80+ approve of ~85 votes) with only ~5\u201310 rejects per member.",
+      "analysis": "Vote distributions are near-identical across all five members, meaning no single agent behaviorally stands out. This uniformity implies per-agent behavioral signals are highly correlated and weak, arguing for group-aggregated activation probes; it also flags insufficient behavioral diversity in the current preliminary data for robust probe training."
+    }
+  ],
+  "Key_numerical_results": [
+    {
+      "result": 1.0,
+      "description": "5-fold CV AUROC for per-agent probes (agent1, agent2, agent3) on NARCBench-Core-Synthetic.",
+      "analysis": "Perfect separability at the individual-agent level indicates the synthetic dataset is trivially easy, not that per-agent activations are uniquely informative."
+    },
+    {
+      "result": 1.0,
+      "description": "5-fold CV AUROC for group-aggregated probes (mean_pool, max_pool, concat).",
+      "analysis": "Ceiling performance across aggregation strategies prevents any comparison between per-agent vs group-aggregated hypotheses at this stage."
+    },
+    {
+      "result": 1.0,
+      "description": "5-fold CV AUROC for the TF-IDF text baseline.",
+      "analysis": "Critical finding: a bag-of-words text baseline matches activation probes, meaning the synthetic data still contains strong lexical cues. The paper's core claim (internal representations detect collusion invisible to text) cannot be tested on this dataset \u2014 it must be redesigned to suppress surface lexical differences."
+    },
+    {
+      "result": 0.5236,
+      "description": "5-fold CV AUROC for the random-features control baseline.",
+      "analysis": "Near-chance performance confirms the classification pipeline is well-calibrated (no label leakage into the CV split) and that the 1.0 scores of other variants are genuine signal, not an evaluation bug."
+    }
+  ]
+}

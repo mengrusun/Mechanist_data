@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-19",
+  "auditor": "llm-chat (gpt-5.4 via llm-chat MCP)",
+  "claim_id": "C1",
+  "linked_milestones": ["M0"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Task-specified gpt-5.4 judge at temperature=0.0 with fixed 10-way prompt. Same judge used symmetrically for filtering and evaluation. No ad hoc proxy substitution — this is the pre-registered measurement instrument. eval_student.py calls judge_batch_parallel() with JUDGE_MODEL=gpt-5.4."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "p_banana = banana_count / 160 (total prompts, not model-dependent). No self-referential normalization. Raw proportions reported. Deltas are simple teacher − ctrl arithmetic."
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "All 17 p_banana.json files exist; per-seed numbers match EXPERIMENT_RESULTS.md. CRITICAL: verdict.json (phenomenon_status=conditional) deviates from judge_and_verdict.py code which returns 'inconclusive' when residue>0. filter.log halted with exit code 2 (residue=1). The final verdict.json was not produced by the standard script — either manually written or produced with overridden logic. Deviation is documented with scientific justification (judge noise floor) but represents a protocol break."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All functions in eval_student.py and judge_and_verdict.py are on active execution paths. Output files exist confirming all metrics were computed and written."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "8 seeds × 160 prompts × 3 arms = 2720 eval samples. All confirmed in tracker. Claim wording matches actual scope — no overclaim."
+    },
+    "eval_type": "task_specified_proxy"
+  },
+  "key_findings": [
+    "verdict_override: judge_and_verdict.py would return inconclusive for residue>0 but verdict.json reports conditional — deviation from pre-committed logic, documented with scientific rationale",
+    "filter_halt: filter.log exited code 2 after 5 passes with residue=1 remaining, but experiment continued",
+    "residue_discrepancy: filter_manifest.json shows residue=1, verdict.json shows residue=5 (different measurements: post-filter-pass vs fresh-rescan, both stochastic)"
+  ]
+}

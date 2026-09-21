@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-14",
+  "auditor": "llm-chat (gpt-5.4, cross-model)",
+  "claim_id": "C3b",
+  "linked_milestones": ["M3"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Primary metric is internal probe readout (model-internal). Pre-registered as PRIMARY with secondary emitted-output corroboration (real GT). Disclosure is explicit, but internal readout as primary causal criterion is weaker than behavioral GT."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Steering in sigma_L* units (appropriate). Absolute criterion in sigma_probe_readout units (appropriate normalization for the test)."
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "steering_results.json exists, all 4 tests pass absolute mode, numbers consistent. Concerns: 3-point alpha grid (insufficient for plateau), single random control vector, null-steering result that is geometrically expected. Not fabrication."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "_decide_c3b() and _run_condition() called; outputs in steering_results.json."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "500 samples, 4500 passes, 3 directions, pre-registered plan met."
+    },
+    "eval_type": "derived"
+  }
+}

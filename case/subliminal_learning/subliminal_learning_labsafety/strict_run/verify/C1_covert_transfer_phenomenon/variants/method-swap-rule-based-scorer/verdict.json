@@ -1,0 +1,19 @@
+{
+  "variant_tag": "method-swap-rule-based-scorer",
+  "dimension": "method",
+  "claim_id": "C1",
+  "claim_statement": "In the fixed Qwen3.5-9B -> Qwen3.5-9B multimodal transfer setup and the exact task.md recipe, text-only tuned-teacher-generated filtered data causes a >=3pp drop in QA_I accuracy vs BOTH Ctrl-A and Ctrl-B, per seed across all 3 pre-registered seeds {42, 123, 2026}.",
+  "main_experiment_verdict": "supported",
+  "variant_metric": "rule_based_acc: treated_mean=0.101, ctrlb_mean=0.261, ctrl_a=0.233; per-seed gaps (gap_A, gap_B): seed42=(+15.8pp, +16.5pp), seed123=(+15.0pp, +21.1pp), seed2026=(+9.0pp, +10.5pp); all 3 seeds pass both >=3pp inequalities under rule-based scorer",
+  "main_experiment_metric": "llm_judge_acc: treated_mean=0.526, ctrlb_mean=0.777, ctrl_a=0.782; min gap_B=+15.8pp (seed2026); all 3 seeds pass both >=3pp inequalities",
+  "delta": "absolute accuracy levels lower under rule-based scorer (Ctrl-A: 0.233 vs 0.782 under LLM judge) — expected: regex conservative, many prose answers lack leading letter; relative arm gap preserved in same direction with larger margins",
+  "claim_supported": "pass",
+  "consistent_with_main_experiment": "pass",
+  "confidence": "high",
+  "reasoning": "The rule-based scorer re-scores the same generated model outputs without any new model inference. All 3 pre-registered seeds pass the >=3pp gap criterion vs BOTH Ctrl-A and Ctrl-B under the regex scorer: min gap_B = +10.5pp (seed2026), which is 3.5x the pre-registered threshold. The absolute accuracy levels shift (rule scorer is more conservative on prose answers), but the treated arm remains dramatically lower than both controls in all 3 seeds. The >=3pp gap criterion is satisfied with large margins (minimum gap 9pp vs threshold 3pp). The variant's conclusion (claim supported) agrees with the main experiment's conclusion (claim supported). consistent_with_main_experiment = pass.",
+  "integrity_status": "pass",
+  "integrity_breakdown": {
+    "experiment": "pass",
+    "mechanism": "n/a"
+  }
+}

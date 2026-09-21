@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal has a clear directional hypothesis: an activation-derived signal should predict answer stabilization and enable adaptive stopping that \"beats fixed budgets and output-based confidence,\" with comparisons against \"fixed token budgets, self-consistency voting, and output-entropy early-exit.\" The main procedure is understandable, and the concrete \"self-consistency (5,10 samples)\" settings and accuracy-versus-compute comparison improve decidability, but key quantities such as \"answer-stability,\" \"confidence plateaus,\" and the threshold for beating baselines are not operationally defined, while the mechanistic claim about components \"writing the confidence direction\" remains underspecified. It is falsifiable because the probe can fail to predict correctness or stability, adaptive stopping can fail to improve the stated curves, and hard items need not receive more steps, but an expert would still need clarification about the exact stopping criterion, statistical decision rule, and how intermediate-step correctness is labeled.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest operational step is to \"generate stepwise traces\" and \"force an answer to label step-wise correctness/stability\"; activation hooks, answer extraction, linear/MLP probes, entropy calculation, threshold sweeps, and reliability diagrams are standard operations, but the forcing procedure and stability label require custom engineering rather than being fully specified. The required general methods and tooling—forward activation extraction, probe training, attribution, and inference-time early stopping—are supported by standard interpretability and machine-learning libraries, although no particular model, dataset, or concrete artifact is named in the claim, and the proposed component-level attribution / \"overlap with commit/verification circuits\" is less mature and not methodologically defined. The design includes runnable negative comparisons through fixed budgets, output confidence, and self-consistency, but it does not specify causal ablations or matched controls to distinguish genuine confidence from a probe that merely tracks answer stability; resources are only generic (\"mean tokens/FLOPs\" and \"5,10 samples\") rather than naming model, dataset, sample size, or run allocation, so feasibility is established at a standard-prototype level but not at a fully executable protocol level.",
+      "score": 6
+    }
+  }
+}

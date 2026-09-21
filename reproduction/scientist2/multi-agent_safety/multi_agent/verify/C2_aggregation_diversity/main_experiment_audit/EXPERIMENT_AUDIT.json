@@ -1,0 +1,15 @@
+{
+  "claim_id": "C2",
+  "milestone_scope": ["M2"],
+  "audit_date": "2026-07-14",
+  "checks": {
+    "A_gt_provenance": {"verdict": "pass", "note": "Same design-attribute GT as C1/M1; no LLM-derived labels"},
+    "B_score_normalization": {"verdict": "pass", "note": "Train-split StandardScaler; no self-referential normalization"},
+    "C_result_existence": {"verdict": "pass", "note": "All agg_*.json, diversity.json, verdict.json confirmed; numbers match"},
+    "D_dead_code": {"verdict": "pass", "note": "All aggregation evaluation functions called; diversity test live"},
+    "E_scope": {"verdict": "warn", "note": "Diversity test on 16/17 domains (loan-approval single-class excluded); under-power on 0.025 gap at N=49 test"},
+    "F_eval_type": {"verdict": "pass", "note": "Supervised binary, real_gt design attribute"}
+  },
+  "overall_verdict": "warn",
+  "summary": "Methodology sound; WARN from 16/17-domain diversity test and small-N delta measurement."
+}

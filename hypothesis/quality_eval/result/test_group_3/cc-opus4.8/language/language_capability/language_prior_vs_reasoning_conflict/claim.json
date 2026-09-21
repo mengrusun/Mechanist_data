@@ -1,0 +1,24 @@
+{
+  "Name": "language_prior_vs_reasoning_conflict",
+  "Title": "When Fluency Fights Logic: Circuits That Arbitrate Language Priors and Reasoning",
+  "Short Hypothesis": "We hypothesize that on items where a strong linguistic/statistical prior conflicts with the correct reasoned answer (e.g., high-frequency continuations, cognitively-appealing-but-wrong answers), the model contains an identifiable 'prior' pathway and a 'reasoning' pathway whose competition is resolved by specific late-layer components, and that reasoning failures correspond to the prior pathway dominating. This is the ideal setting to study the language-vs-intelligence relationship as an internal tug-of-war rather than a black-box error rate.",
+  "Related Work": "Cognitive-reflection-style LLM errors and 'memorization vs reasoning' have been studied behaviorally (e.g., McCoy et al. 'Embers of Autoregression', 2023; heuristics in NLI, McCoy et al. 2019). Mechanistic work on competing subnetworks and 'copy vs compute' exists in narrow tasks. We provide a general circuit-level account of prior-vs-reasoning arbitration across conflict items, localizing the arbitration and testing whether strengthening the reasoning pathway fixes errors, going beyond behavioral demonstrations of prior-dominance.",
+  "Abstract": "Language models often default to fluent, high-probability answers that are logically wrong, revealing tension between language priors and reasoning that is central to their intelligence. We localize the arbitration mechanism. We curate conflict items where the statistically-expected continuation differs from the correct answer (frequency-baited arithmetic, garden-path inferences, base-rate-neglect word problems, adversarial NLI) alongside matched no-conflict controls. Using logit attribution and path patching, we trace two contributions to the final logit: a prior pathway (early-token/embedding-driven, frequency-sensitive) and a reasoning pathway (mid-layer, computation-driven). We test whether errors coincide with prior-pathway logit dominance, whether up-weighting the reasoning pathway's contribution (activation steering along its direction) reduces errors without harming controls, and whether a small set of late-layer heads act as arbiters whose ablation shifts the model toward the prior. We predict a consistent, steerable prior-vs-reasoning decomposition and that arbitration is concentrated in identifiable components. This yields a mechanistic theory of a core failure mode (fluent-but-wrong), a diagnostic for predicting such errors from internal pathway balance, and an intervention to strengthen reasoning over prior without retraining, illuminating how linguistic statistics can both enable and impede machine intelligence.",
+  "Experiments": [
+    "Curate 600 conflict items across 4 categories plus 600 matched non-conflict controls with verified answers.",
+    "Direct-logit attribution: decompose final-answer logit into per-layer/per-head contributions; label frequency-driven vs computation-driven components using correlation with unigram/bigram statistics.",
+    "Path patching to confirm the two pathways and locate late-layer arbiter heads.",
+    "Error analysis: test whether prior-pathway logit share predicts item-level errors (AUC).",
+    "Steering intervention: add the reasoning-pathway direction to residual stream at inference; measure accuracy on conflict items and side effects on controls.",
+    "Ablation: remove candidate arbiter heads; measure shift toward prior-consistent answers.",
+    "Metrics: pathway-dominance/error AUC, steering accuracy gain, control side-effect, arbiter-ablation prior-shift.",
+    "Models: Llama-3-8B, Mistral-7B, Qwen2.5-7B for cross-model consistency."
+  ],
+  "Risk Factors and Limitations": [
+    "Cleanly separating 'prior' from 'reasoning' contributions may be impossible where they share components.",
+    "Frequency-based labeling of components is heuristic and may mislabel pathways.",
+    "Steering can degrade unrelated behavior; side-effect measurement may be incomplete.",
+    "Conflict-item construction can inadvertently include easier/harder items, confounding.",
+    "Arbitration may be distributed rather than head-localized."
+  ]
+}

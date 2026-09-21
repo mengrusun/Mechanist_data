@@ -1,0 +1,297 @@
+{
+  "feature_idx": 0,
+  "max_act_ref": 4.240234375,
+  "trigger_threshold": 0.8480468750000001,
+  "sage": {
+    "candidates": [
+      "This feature activates on words beginning with \"para-\" where the tokenizer likely splits after \"par\", causing the next subtoken to start with sequences like \"ain\" or \"ap\"\u2014e.g. parainfluenza, paraplegic, paraparetic.",
+      "This feature targets specific biomedical/public-health terms starting with \"para-\", especially parainfluenza and neurological disability terms like paraplegic/paraparesis/paraparetic, rather than all biomedical words.",
+      "This feature responds to the middle subtoken inside certain \"para...\" words, especially when the word is tokenized into \"par\" + continuation such as \"ain\" or \"ap\", rather than to the overall medical meaning alone."
+    ],
+    "top": "This feature activates on words beginning with \"para-\" where the tokenizer likely splits after \"par\", causing the next subtoken to start with sequences like \"ain\" or \"ap\"\u2014e.g. parainfluenza, paraplegic, paraparetic.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "This feature activates on the character sequence \"par\" followed by an accented-vowel-like continuation such as \"ain\" or \"ap\" inside medical words like \"parainfluenza,\" \"paraplegic,\" and \"paraparetic.\"",
+            "positive_probes": [
+              "Parainfluenza outbreaks increased in the pediatric ward.",
+              "The paraplegic patient started intensive rehabilitation today.",
+              "Neurology evaluated a new paraparetic admission this morning.",
+              "Paraparetic symptoms worsened after the spinal lesion.",
+              "Doctors isolated parainfluenza in several hospitalized infants."
+            ],
+            "positive_acts": [
+              3.302734375,
+              3.880859375,
+              4.333984375,
+              3.427734375,
+              3.896484375
+            ],
+            "distractor_probes": [
+              "Influenza outbreaks increased in the pediatric ward.",
+              "The quadriplegic patient started intensive rehabilitation today.",
+              "Neurology evaluated a new paresis admission this morning."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 3.768359375
+          },
+          {
+            "hypothesis": "This feature detects biomedical terminology beginning with the prefix \"para-\", especially disease names and neurological disability terms in clinical or public-health text.",
+            "positive_probes": [
+              "Paraplegia prevalence increased after the regional spinal injury outbreak.",
+              "Clinicians monitored paratyphoid cases during the crowded refugee camp.",
+              "The report linked paraparesis to untreated tropical myelopathy.",
+              "Public-health teams tracked paragonimiasis across several river villages.",
+              "Neurologists documented progressive paralysis and paraparesis in survivors."
+            ],
+            "positive_acts": [
+              3.427734375,
+              2.224609375,
+              3.583984375,
+              0.0,
+              4.333984375
+            ],
+            "distractor_probes": [
+              "Clinicians monitored typhoid cases during the crowded refugee camp.",
+              "The report linked paresis to untreated tropical myelopathy.",
+              "Public-health teams tracked tuberculosis across several river villages."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 2.7140625
+          },
+          {
+            "hypothesis": "This feature responds to token boundaries where the subtoken captures the middle of a longer word starting with \"para...\", particularly when the split lands on pieces like \"ain\" in \"parainfluenza\" or \"ap\" in \"paraplegic\"/\"paraparetic\".",
+            "positive_probes": [
+              "Parainfluenza outbreaks strain pediatric clinics every winter.",
+              "The report described a newly paraplegic patient.",
+              "Neurology evaluated a paraparetic child after surgery.",
+              "Researchers tracked parainfluenza transmission across daycare centers.",
+              "Rehabilitation began immediately for the paraplegic athlete."
+            ],
+            "positive_acts": [
+              3.302734375,
+              3.333984375,
+              4.146484375,
+              4.333984375,
+              3.755859375
+            ],
+            "distractor_probes": [
+              "Influenza outbreaks strain pediatric clinics every winter.",
+              "The report described a newly paralyzed patient.",
+              "Neurology evaluated a paretic child after surgery."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 3.774609375
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "This feature activates on words beginning with \"para-\" where the tokenizer likely splits after \"par\", causing the next subtoken to start with sequences like \"ain\" or \"ap\"\u2014e.g. parainfluenza, paraplegic, paraparetic.",
+            "positive_probes": [
+              "Parainfluenza outbreaks spread quickly through crowded schools.",
+              "The patient became paraplegic after the spinal injury.",
+              "Doctors noted paraparetic weakness in both legs.",
+              "Researchers tracked parainfluenza transmission during the winter.",
+              "Rehabilitation helps paraplegic patients regain daily independence."
+            ],
+            "positive_acts": [
+              3.302734375,
+              3.802734375,
+              4.771484375,
+              4.333984375,
+              4.271484375
+            ],
+            "distractor_probes": [
+              "Influenza outbreaks spread quickly through crowded schools.",
+              "The patient became quadriplegic after the spinal injury.",
+              "Doctors noted paretic weakness in both legs."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0927734375
+            ],
+            "score": 4.065559895833333
+          },
+          {
+            "hypothesis": "This feature responds to the middle subtoken inside certain \"para...\" words, especially when the word is tokenized into \"par\" + continuation such as \"ain\" or \"ap\", rather than to the overall medical meaning alone.",
+            "positive_probes": [
+              "He felt pain around the incision yesterday.",
+              "A cheap trap snapped shut near camp.",
+              "The doctor noted paraplegia after the accident.",
+              "We discussed paracetamol dosage during rounds.",
+              "She carried a parachute onto the plane."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              3.912109375,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "The patient reported severe back pain overnight.",
+              "Parallel lines covered the page in blue ink.",
+              "The medic prescribed aspirin for the headache."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.782421875
+          },
+          {
+            "hypothesis": "This feature targets specific biomedical/public-health terms starting with \"para-\", especially parainfluenza and neurological disability terms like paraplegic/paraparesis/paraparetic, rather than all biomedical words.",
+            "positive_probes": [
+              "Parainfluenza outbreaks increased among hospitalized infants this winter.",
+              "The patient became paraplegic after a traumatic spinal injury.",
+              "Neurology noted progressive paraparesis in both lower limbs.",
+              "Rehabilitation focused on a young paraparetic athlete's mobility.",
+              "Parainfluenza vaccination research targets vulnerable pediatric populations."
+            ],
+            "positive_acts": [
+              3.302734375,
+              3.802734375,
+              4.521484375,
+              3.693359375,
+              3.302734375
+            ],
+            "distractor_probes": [
+              "Influenza outbreaks increased among hospitalized infants this winter.",
+              "The patient developed quadriplegia after a traumatic spinal injury.",
+              "Neurology noted progressive paresis in both lower limbs."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 3.724609375
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "He plotted the data on a log-log scale.",
+    ").\nThe human myocardium is composed of a variety of cardiac cell types that synthesise cardioactive factors with autocrine, paracrine and endocrine functions. These cardioactive factors include a family of structurally and functionally related peptides, natriure",
+    "ercle bacilli and other pathogenic mycobacteria.\nPathogenic mycobacteria, including those that cause tuberculosis and paratuberculosis, cross mucosal barriers by endocytosis within mucosal lymphoepithelial sites. These entry sites",
+    "A soft breeze moved the curtains at dawn.",
+    "The old library sat quietly at the edge of the park.",
+    "The mountain trail wound past three small lakes.",
+    "user\nSomatosensory and magnetic evoked potentials in a postoperative paraparetic patient: case report.\nSomatosensory evoked potential (SSEP) testing is increasingly being used to test",
+    "Small pebbles crunched under his boots on the path.",
+    "A single cloud drifted over the harbor."
+  ],
+  "heldout_true_acts": [
+    0.0,
+    3.458984375,
+    3.099609375,
+    0.0,
+    0.0,
+    0.0,
+    4.271484375,
+    0.0,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "Words containing \"para\"",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 0.0,
+        "sentences": [
+          "The paragraph begins with a paradox.",
+          "Please paraphrase that comparison clearly.",
+          "Parallel lines appear in the diagram.",
+          "Her paramedic training saved a life.",
+          "A parasite damaged the tomato plants.",
+          "We studied parabolic motion in physics."
+        ],
+        "activations": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 0.98645192481117,
+        "spearman": 0.9761870601839528,
+        "preds": [
+          0.0,
+          10.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "This feature activates on words beginning with \"para-\" where the tokenizer likely splits after \"par\", causing the next subtoken to start with sequences like \"ain\" or \"ap\"\u2014e.g. parainfluenza, paraplegic, paraparetic.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 3.7141927083333335,
+        "sentences": [
+          "Parainfluenza spread quickly through the daycare.",
+          "The paraplegic athlete won another race.",
+          "Doctors diagnosed a paraparetic gait disorder.",
+          "Her paraparesis worsened after the accident.",
+          "Researchers tracked parainfluenza in hospitalized infants.",
+          "A paraplegic patient requested adaptive equipment."
+        ],
+        "activations": [
+          3.302734375,
+          3.880859375,
+          4.240234375,
+          2.708984375,
+          4.333984375,
+          3.818359375
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9887091724335542,
+        "spearman": 0.9764705882352942,
+        "preds": [
+          0.0,
+          6.0,
+          7.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 139.8225929737091,
+  "layer": 12,
+  "model_id": "qwen3-4b",
+  "neuronpedia_ref": "Words containing \"para\""
+}

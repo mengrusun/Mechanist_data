@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "A Implies B: Circuit Analysis for Propositional Logic",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "A selection/fitting step exists: M1 (scripts/attribution_screen.py) ranks all L*H+L components by attribution and takes a shortlist under a 15% cap; downstream necessity (M2), sufficiency (M3), completeness and role-dissociation (M4) reuse the SAME anchor cell (k3_chain2_natural, corrupt_fact, the same 500 pairs). So component selection and the necessity/completeness evaluation share the same distribution — a mild circularity intrinsic to circuit discovery. This is meaningfully controlled: (a) a held-out resample pool is built from structurally-different k=4 prompts (build_propositional_dataset.py build_resample_pool, pool_resample = 800 prompts) and used as the ablation source, kept disjoint from the patching pairs; (b) a matched-size random NON-shortlist specificity control is run in M2/M3 (control_recovery.logit_diff=0.119 vs full 0.955 in results/M2_necessity.json); (c) generalisation is tested on genuinely different cells (M4.stab: k5_chain2, k3_chain3 in results/M4stab.json) and a different family (M5 Gemma-2-9B). Ground truth is deterministic (no label leakage). The only residual gap is that C1 completeness (0.955) and necessity are read on the same data the shortlist was selected from, which can inflate those positive numbers; the negative results (minimality 0.0014, sufficiency 0.113) are not affected by this path.",
+    "score": 4,
+    "evidence_files": ["scripts/attribution_screen.py", "scripts/build_propositional_dataset.py", "results/M2_necessity.json", "results/M4stab.json", "refine-logs/EXPERIMENT_PLAN.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The ground-truth answer (True/False) is computed by an exact deterministic forward-chaining engine over facts+rules (build_propositional_dataset.py _derive_answer, lines 91-104), fully independent of the model under test — non-circular. The metric is the softmax logit-difference between the True and False answer tokens (true_token_id=6110, false_token_id=8250 in results/M0_setup.json), which directly measures whether the model computes the correct propositional answer — exactly what the reasoning claim asserts. Corruption pools each isolate a distinct causal axis (corrupt_fact / corrupt_rule / corrupt_answer with an answer-flip check, plus corrupt_neutral as a matched no-flip control) and the builder re-derives the corrupted answer and enforces the expected flip (lines 300-323). Anchor accuracy 0.810 (M0) sits inside the paper's reported 70-86% band, confirming the task is genuinely solvable. The label validly operationalises the target behaviour. Minor departure from the paper (which analyses the first proof token in a few-shot proof under a LogOp 'A or B implies C' template) is a design choice, not a label defect.",
+    "score": 5,
+    "evidence_files": ["scripts/build_propositional_dataset.py", "results/M0_setup.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment uses exactly the specified lead model: results/M0_setup.json records model_path=/data/zhenqian/models/Mistral-7B-v0.1 with fallback_used=false (the Instruct fallback was NOT taken), and every Mistral milestone (M1/M2/M3/M4/M4.stab) runs at the planned n_pairs (500 for M1/M2/M3, 300 for M4, 200/cell for M4.stab). The dataset is the 'custom minimal propositional-logic problem set' task.md calls for, built by build_propositional_dataset.py. The verify-stage cross-family candidate Gemma-2-9B was actually run (results/M5_gemma9b.json, LLM-Research/gemma-2-9b via modelscope, 500 pairs). Gemma-2-27B was skipped because it is not locally present and would need a ~55GB fresh download; task.md lists the Gemma verify models as 'use as needed, not necessarily all', and the skip is explicitly disclosed (EXPERIMENT_RESULTS.md M5.contingent, CLAIMS_LEDGER Open Items). No silent downgrade or subsetting of the main-experiment resources occurred; the 27B omission is a disclosed verify-stage coverage gap (relevant to the cross-scale claim, not to main-experiment resource fidelity).",
+    "score": 5,
+    "evidence_files": ["results/M0_setup.json", "results/M5_gemma9b.json", "refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Sample sizes are well above the thin-evidence threshold: n_pairs=500 for M1/M2/M3 and Gemma M5, 300 for M4, 200/cell for M4.stab, with 5 resample seeds for sufficiency (results/M3_sufficiency.json). Claim strength matches evidence: negative results are stated as negative (C1 partial, C2 refuted, C3 sufficiency fail) and caveats are attached. The disclosed thinness is coverage, not scale: C2's role-dissociation was run on the top-40 of the 158-component shortlist (results/M4_roles.json shortlist_size=40) and Gemma role-dissociation on the top-20 (cross_family_verify.py line 123) for compute reasons — flagged in EXPERIMENT_RESULTS.md Notes and justified by the M2 dose-response (top-31 already recovers 0.946). No conclusion is asserted without a run.",
+    "score": 5,
+    "evidence_files": ["results/M3_sufficiency.json", "results/M4_roles.json", "scripts/cross_family_verify.py", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Rigor is mixed but above single-point: (a) sufficiency (M3) reports 5 resample seeds with per-seed std (LD std=0.0355, seeds listed in results/M3_sufficiency.json) confirming the 0.113 recovery is stable, not noise; (b) C2 uses a null-shuffle permutation test (100 relabelings) yielding p-values (fact 0.05, rule 1.0, answer 1.0 in results/M4_roles.json) — a genuine significance control; (c) necessity uses a dose-response sweep and a matched random control (specificity_gap=0.836) as an effect-vs-baseline comparison. Weakness: the core necessity/completeness point estimates (M1 completeness 0.955, M2 recovery 0.955) are single-run with n=500 but no seeds or error bars, so their robustness to run-to-run randomness is unverified. Cross-family replication (Gemma-2-9B) substitutes for some of this by showing the pattern is not a single-model artifact.",
+    "score": 4,
+    "evidence_files": ["results/M3_sufficiency.json", "results/M4_roles.json", "results/M2_necessity.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The claims are explicitly causal (necessity/sufficiency of a circuit) and are backed by genuine interventions with proper controls. Necessity (scripts/path_patch_necessity.py) splices clean activations into corrupted-prompt runs at the shortlisted components and measures logit-diff/prob-diff/KL recovery, with a matched-size RANDOM non-shortlist specificity control (control LD 0.119 vs full 0.955) and a 0->full dose-response sweep. Sufficiency (run_reinsertion_sufficiency in prop_circuit_lib.py) resample-ablates every non-shortlisted component from a held-out pool and reinserts only the shortlist's clean activations, over 5 seeds, again with a random-control reinsertion (~0.000). Role dissociation adds a null-shuffle permutation control. This is interventional evidence, not correlational projection dressed up as causal; the reproduction is careful to label the sole correlational piece (attribution screen) as a screen, then verify causally.",
+    "score": 5,
+    "evidence_files": ["scripts/path_patch_necessity.py", "scripts/prop_circuit_lib.py", "results/M2_necessity.json", "results/M3_sufficiency.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number in results/final_report.md and CLAIMS_LEDGER.md traces to a concrete on-disk product and agrees with it: M0 anchor_accuracy 0.810 (results/M0_setup.json anchor_accuracy=0.81); M1 shortlist_size=158, sparsity 0.150, completeness 0.955, minimality 0.0014 (results/M1_attribution.json); M2 recovery LD 0.955 / PD 0.905 / control 0.119 / specificity_gap 0.836 and the 7-point dose-response (results/M2_necessity.json, incl. raw_full_patch clean/corrupt/patch logit-diffs); M3 sufficiency 0.113 with the five per-seed values and std 0.0355 (results/M3_sufficiency.json); M4 median dominance 1.197->1.20, dissociation {fact 0.089,...} (results/M4_roles.json); M4.stab Jaccard fact 0.75/answer 0.77/rule 0.36 (results/M4stab.json); M5 Gemma necessity 1.018 / sufficiency 0.019 (results/M5_gemma9b.json). Each milestone also has runs/<M>/cost.json and run.log. No sourceless or back-filled numbers were found.",
+    "score": 5,
+    "evidence_files": ["results/final_report.md", "results/M0_setup.json", "results/M1_attribution.json", "results/M2_necessity.json", "results/M3_sufficiency.json", "results/M5_gemma9b.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Numbers and verdicts are consistent across final_report.md, CLAIMS_LEDGER.md, EXPERIMENT_RESULTS.md, refine-logs/main-experiment-verdicts.json, VERIFY_REPORT.md and INTEGRITY_AUDIT.md. main-experiment-verdicts.json marks all three claims 'not-supported' (C1 completeness-yes/minimality-no, C2 refuted, C3 necessity-yes/sufficiency-no), matching every report. The one point demanding care — C3 shows verify State=PASS while its main-experiment verdict is 'not-supported' — is handled consistently: verdict.json sets claim_supported='fail' and consistent_with_main_experiment='pass', and every artifact defines the PASS as robustness-of-the-finding (the necessity-yes/sufficiency-no asymmetry replicates on Gemma-2-9B), not as claim support. Integrity states (Phase2 WARN for all three, Phase9 PASS for the C3 variant) are propagated identically in VERIFY_REPORT.md and INTEGRITY_AUDIT.md. No metric differs across artifacts and no claim is PASS-as-supported anywhere it is elsewhere flagged broken.",
+    "score": 5,
+    "evidence_files": ["refine-logs/main-experiment-verdicts.json", "verify/VERIFY_REPORT.md", "verify/INTEGRITY_AUDIT.md", "verify/C3_necessity_sufficiency/variants/model-swap-gemma2-9b/verdict.json", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "A sparse subset of specific attention heads and MLP components jointly implements the minimal propositional-logic reasoning task — the circuit is small relative to the full model.",
+        "method": {
+          "justification": "9a — Attribution patching (Syed et al. 2024) to rank every attention head and MLP by gradient-weighted contribution to the answer logit-diff, followed by completeness (resample-ablate the complement) and minimality (single-component removal) verification, is a standard, literature-grounded method for isolating a sparse component set and correctly matches the 'localisation' category the claim is about. It is a coarser gradient approximation than the paper's exact iterative CMA head patching, but appropriate and non-misaligned.",
+          "score": 5,
+          "evidence_files": ["scripts/attribution_screen.py", "refine-logs/EXPERIMENT_PLAN.md"]
+        },
+        "experiment": {
+          "justification": "9b — Design has a-priori targets (sparsity<=0.15, completeness>=0.9, minimality>=0.05), a resample-ablation completeness test and a minimality sweep, n=500. Two weaknesses: (i) the shortlist size is set by a hard 15% cap rather than a cumulative-effect stop (cumulative_effect only 0.758 in results/M1_attribution.json), so 'sparse' is partly imposed by the cap rather than discovered — a large 158-component set is guaranteed; (ii) minimality was estimated on a 20/158 sample and this approximation was not surfaced in the per-claim verdict (Phase-2 WARN, INTEGRITY_AUDIT.md). Completeness is read on the same data the shortlist was selected from. Honest and reasonable, with these design caveats.",
+          "score": 4,
+          "evidence_files": ["results/M1_attribution.json", "verify/INTEGRITY_AUDIT.md", "verify/C1_sparse_component_set/main_experiment_audit/EXPERIMENT_AUDIT.md"]
+        },
+        "result": {
+          "justification": "9c — The paper finds a genuinely tiny sparse circuit (~13 attention heads for Gemma-2-9B, a very small fraction of the model). The reproduction reports a 158-component (15%) shortlist that is complete (0.955) but NOT minimal (single-removal drop 0.0014 vs 0.05 target), i.e. heavily redundant — so it does not confirm the paper's strong 'sparse' claim and honestly labels C1 'partial/not-supported', interpreting it as a distributed, redundant code. The divergence is disclosed and analysed, but is partly a product of the cap-driven method (which cannot easily recover a ~13-head set), so it is a qualified, honestly-reported non-reproduction rather than a clean falsification of the paper's sparsity.",
+          "score": 4,
+          "evidence_files": ["results/final_report.md", "results/M1_attribution.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C2": {
+        "claim": "The circuit decomposes into a small number of modular sub-circuits with distinct functional roles (e.g., identifying the facts in the prompt, applying an implication rule, projecting the derived truth value into the answer token) rather than presenting as an entangled mixture.",
+        "method": {
+          "justification": "9a — Role dissociation via type-specific counterfactual corruption (fact/rule/answer swaps), building a per-component role-assignment matrix, dominance ratio, dissociation score, a null-shuffle permutation test and cross-cell Jaccard stability, is a reasonable and quantitative operationalisation of 'modularity'. It broadly fits the claim, but departs from the paper's fine-grained method (per-head query/key/value sub-component patching plus attention-pattern inspection to identify locate/move/process/decide heads) and collapses the paper's four roles into three (fact/rule/answer), which may under-detect the paper's actual decomposition.",
+          "score": 4,
+          "evidence_files": ["scripts/role_dissociation.py", "refine-logs/EXPERIMENT_PLAN.md"]
+        },
+        "experiment": {
+          "justification": "9b — The design includes a-priori thresholds (median dominance>=2, dissociation>=0.1, null-p<=0.01, Jaccard>=0.6), a genuine null-shuffle control and a cross-cell stability check — good controls. But two things weaken its power to fairly test the paper's claim: (i) it runs on only the top-40 of 158 components (results/M4_roles.json shortlist_size=40), a disclosed scope reduction (Phase-2 WARN) that means role structure carried by lower-ranked components is unseen; (ii) the three-role taxonomy does not align cleanly with the paper's four-role structure, so a genuinely modular circuit in the paper's sense could be missed. It is honest but somewhat under-powered/mismatched, making a true negative hard to distinguish from a taxonomy/coverage artifact.",
+          "score": 3,
+          "evidence_files": ["results/M4_roles.json", "results/M4stab.json", "verify/C2_modular_decomposition/main_experiment_audit/EXPERIMENT_AUDIT.md"]
+        },
+        "result": {
+          "justification": "9c — The reproduction finds NO modular decomposition (median dominance 1.20 vs 2.0; only 'fact' borderline at dissociation 0.089/p=0.05; rule and answer null-p=1.0; rule cross-cell Jaccard 0.36), directly contradicting the paper's central modularity finding, and reports it honestly as refuted with caveats (fact/answer stable, rule noisy). However, because the method did not replicate the paper's actual role-identification procedure and was run on a reduced shortlist and a coarser 3-role taxonomy, the negative may partly reflect method mismatch rather than a genuine absence of modularity — a possibility only partially acknowledged. Honest non-reproduction, but its reliability as a refutation of the paper's specific claim is limited.",
+          "score": 3,
+          "evidence_files": ["results/final_report.md", "results/M4_roles.json", "results/M4stab.json"]
+        }
+      },
+      "C3": {
+        "claim": "Activation-patching / causal-mediation experiments show that the identified components are both necessary (patching them from a clean run into a corrupted run restores correct behaviour) and sufficient (their outputs alone drive the answer).",
+        "method": {
+          "justification": "9a — Path-patching necessity (clean activations spliced into corrupted runs at the shortlist) plus resample-ablation reinsertion sufficiency, each with matched random-control specificity, a dose-response sweep and 5 seeds, is precisely the causal-mediation methodology the claim (and the paper) call for. Method choice is fully aligned with the mechanism category.",
+          "score": 5,
+          "evidence_files": ["scripts/path_patch_necessity.py", "scripts/prop_circuit_lib.py", "results/M2_necessity.json"]
+        },
+        "experiment": {
+          "justification": "9b — Strong design: necessity and sufficiency each have a matched random-control set (specificity_gap 0.836 nec, ~0.11 suf), a 0->158 dose-response showing saturation at ~31 components, three metrics (LD/PD/KL), 5 resample seeds with reported std, and a-priori >=0.8 targets that were not relaxed to force a pass. The KL scaling artifact (tiny baseline KL=0.043) is disclosed and LD/PD used as definitive. Cross-family replication on Gemma-2-9B stress-tests the pattern. Metrics correspond strictly to the necessity/sufficiency claim.",
+          "score": 5,
+          "evidence_files": ["results/M2_necessity.json", "results/M3_sufficiency.json", "results/M5_gemma9b.json"]
+        },
+        "result": {
+          "justification": "9c — Split outcome: necessity strongly reproduces the paper (LD recovery 0.955 Mistral, 1.018 Gemma, both PASS), qualitatively agreeing with the paper's necessity result. Sufficiency does NOT reproduce (0.113 Mistral, 0.019 Gemma) whereas the paper's Table 1 reports circuit sufficiency ~0.94 — a direct disagreement, reported honestly as 'necessary but not sufficient' and shown to recur cross-family. The likely root is that the reproduction's sufficiency operationalisation (resample-ablate ALL 85% non-shortlist components incl. MLPs from a random pool, then reinsert only the shortlist) is far harsher than the paper's (freeze only the complement of ~13 attention heads to counterfactual activations), so the disagreement is plausibly a definitional/method difference rather than a true contradiction; the report frames it as distributed code but does not clearly attribute the gap to this sufficiency-test difference. Necessity half faithful; sufficiency deviation honestly reported but with an incompletely-disclosed reason.",
+          "score": 3,
+          "evidence_files": ["results/final_report.md", "results/M3_sufficiency.json", "results/M5_gemma9b.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C4": {
+        "claim": "The high-level circuit schema recurs across LLM families and scales — the same modular decomposition shows up in Mistral-7B, Gemma-2-9B, and Gemma-2-27B — while the specific heads / MLPs realising each role differ between models.",
+        "method": {
+          "justification": "9a — Replaying the full pipeline (attribution screen + necessity + sufficiency + abbreviated role-dissociation) on a second family at the same anchor cell (scripts/cross_family_verify.py, Gemma-2-9B) is the correct method for testing schema recurrence, and it correctly expects head indices to differ while looking for the schema to hold. Method is sound for the models actually tested.",
+          "score": 4,
+          "evidence_files": ["scripts/cross_family_verify.py", "results/M5_gemma9b.json"]
+        },
+        "experiment": {
+          "justification": "9b — Only Gemma-2-9B was run (n_pairs=500 for screen/necessity/sufficiency, top-20 components for role-dissociation). Gemma-2-27B — the paper's key scale point and the model where the paper reports the extra logical-operator heads and a more-parallel circuit — was skipped (not locally available, disclosed). So the 'across scales' half of the claim is entirely untested, and the role-dissociation replication is abbreviated. Honest and disclosed, but a full third of the claim's models (and the whole scale axis) is absent, leaving the design materially incomplete for validating C4.",
+          "score": 3,
+          "evidence_files": ["results/M5_gemma9b.json", "refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md"]
+        },
+        "result": {
+          "justification": "9c — What recurs on Gemma-2-9B is the reproduction's own (largely negative) pattern: ~15% complete-but-not-minimal shortlist, necessity-yes/sufficiency-no (1.018/0.019), and weak role dissociation (median dominance 1.02, all roles <0.1). Relative to the paper's positive claim that the MODULAR four-role schema recurs, the reproduction reports non-reproduction — the modular schema is absent in both tested models and the absence is consistent cross-family — rather than confirming the paper. This is reported honestly, but the paper's actual schema-recurrence claim is neither confirmed nor faithfully tested at scale (no 27B), and the C2 method limitations (above) also constrain how much the role-recurrence finding can be trusted. Honest, cross-family-consistent, but incomplete and only qualifiedly reliable as a test of the paper's C4.",
+          "score": 3,
+          "evidence_files": ["results/M5_gemma9b.json", "results/final_report.md", "CLAIMS_LEDGER.md"]
+        }
+      }
+    }
+  }
+}

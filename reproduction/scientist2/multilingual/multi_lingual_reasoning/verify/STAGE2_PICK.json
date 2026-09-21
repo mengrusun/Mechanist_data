@@ -1,0 +1,18 @@
+{
+  "phase": "3_step_0",
+  "date": "2026-07-14",
+  "max_verify_claims": 1,
+  "cap_source": "MAX_VERIFY_CLAIMS=1 (orchestrator arg)",
+  "admitted_pool": ["C1", "C3"],
+  "rejected_pool": ["C2", "C4"],
+  "picked_claims": ["C3"],
+  "picked_rationale": "C3 (signed dose-response α sweep) is picked over C1 (subspace decomposition) as the single Stage-2 claim because: (1) C3 directly tests the causal mechanism under study — the specificity and directionality of V_lang steering is the hypothesis's load-bearing claim, and a model-swap tests whether this signed dose-response pattern is model-specific or general; (2) C3's mechanism audit returned WARN (not N/A as for C1), meaning the mechanism intervention is active and a cross-model swap is informative about whether the steering specificity generalises; (3) the main-experiment verdict (not-supported: monotone-decreasing leg refuted, V_lang is disruptive in both directions) is more nuanced than C1's clean N/A mechanism, making the model-swap a stronger discriminator; (4) IDEA_REPORT.md identifies the language-specific subspace directionality as the core scientific claim — C3 operationalises this most directly.",
+  "stage2_deferred": ["C1"],
+  "stage2_deferred_reason": {
+    "C1": "max_verify_claims_cap — admitted but not picked (K=1 cap; C3 selected as higher importance for model-swap). To swap-test C1 later: /auto-verify C1 -- resume: true"
+  },
+  "dimensions": ["model"],
+  "variant_model": "DeepSeek-R1-Distill-Llama-8B",
+  "variant_model_path": "/data/zhenqian/models/DeepSeek-R1-Distill-Llama-8B/",
+  "rationale_model_choice": "DeepSeek-R1-Distill-Llama-8B is a different training family (LLaMA-8B backbone, distilled from DeepSeek-R1) vs the main experiment's Qwen-3-4B-Thinking, providing a genuine family-level robustness test. Comparable scale (~8B vs 4B). Available at /data/zhenqian/models/DeepSeek-R1-Distill-Llama-8B/."
+}

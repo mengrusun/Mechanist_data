@@ -1,0 +1,412 @@
+{
+  "feature_idx": 1900,
+  "max_act_ref": 37.25529861450195,
+  "trigger_threshold": 7.451059722900391,
+  "sage": {
+    "candidates": [
+      "The feature detects the literal substring/token \"artist\", especially when it appears as a metadata/schema label or identifier in structured text such as JSON keys/values, config fields, and machine-readable records (e.g. type/category/field names like \"artist\", \"artist_id\").",
+      "The feature is primarily lexical: it fires on the exact substring \"artist\" across many contexts, with boosted activation in structured or metadata-like environments; near-matches such as \"artisan\" are much weaker, while words containing the same character sequence like \"artistry\" can still partially trigger it.",
+      "A strong sub-case of the feature is \"artist\" inside machine-readable resource paths or URIs, especially artist endpoints/resource identifiers such as \"/artist/12345-Name\" and escaped variants."
+    ],
+    "top": "The feature detects the literal substring/token \"artist\", especially when it appears as a metadata/schema label or identifier in structured text such as JSON keys/values, config fields, and machine-readable records (e.g. type/category/field names like \"artist\", \"artist_id\").",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "This feature fires on the token \"artist\" when it appears as a structured schema label or key in serialized data such as JSON fields like \"type\":\"artist\".",
+            "positive_probes": [
+              "{\"type\":\"artist\",\"name\":\"Bowie\"}",
+              "{\"role\":\"artist\",\"id\":42}",
+              "{\"category\":\"artist\",\"active\":true}",
+              "{\"entity\":\"artist\",\"country\":\"UK\"}",
+              "{\"occupation\":\"artist\",\"works\":12}"
+            ],
+            "positive_acts": [
+              37.8851203918457,
+              34.232139587402344,
+              37.51963806152344,
+              38.296260833740234,
+              35.51467514038086
+            ],
+            "distractor_probes": [
+              "The artist painted a bright mural yesterday.",
+              "{\"type\":\"artistry\",\"name\":\"Bowie\"}",
+              "{\"type\":\"painter\",\"artist_name\":\"Bowie\"}"
+            ],
+            "distractor_acts": [
+              35.116249084472656,
+              37.8787727355957,
+              36.09841537475586
+            ],
+            "score": 0.3250877380371122
+          },
+          {
+            "hypothesis": "This feature fires on \"artist\" inside URL or URI path segments that denote an artist resource, such as \"/artist/12345-Name\" or escaped variants.",
+            "positive_probes": [
+              "Open https://music.example.com/artist/12345-Name for details.",
+              "The API path /v1/artist/9876 returns profile data.",
+              "Fetch the URI spotify:artist:1Xyo4u8uXC1ZmMpatF05PJ now.",
+              "Escaped route /artist%2F54321-AnotherName should resolve correctly.",
+              "Navigate to /library/artist/2468-Singer to view albums."
+            ],
+            "positive_acts": [
+              35.82936477661133,
+              35.60288619995117,
+              34.29884719848633,
+              35.529300689697266,
+              37.03471755981445
+            ],
+            "distractor_probes": [
+              "The artist painted a portrait in bright oils.",
+              "Open https://music.example.com/artists/12345 for listings.",
+              "Use /album/artist-notes/123 for metadata only."
+            ],
+            "distractor_acts": [
+              35.14247512817383,
+              30.55976104736328,
+              30.698047637939453
+            ],
+            "score": 3.525595347086586
+          },
+          {
+            "hypothesis": "This feature fires on the word \"Artist\" as a metadata header introducing an artist name in formatted text, such as \"Artist: The Roots\".",
+            "positive_probes": [
+              "Artist: The Roots",
+              "Artist: Bj\u00f6rk Gu\u00f0mundsd\u00f3ttir",
+              "Track info \u2014 Artist: Radiohead",
+              "Now playing | Artist: Miles Davis",
+              "Album metadata lists Artist: Nina Simone"
+            ],
+            "positive_acts": [
+              32.864593505859375,
+              32.83531188964844,
+              37.74833297729492,
+              37.0405158996582,
+              33.45347595214844
+            ],
+            "distractor_probes": [
+              "The artist painted portraits all afternoon.",
+              "Featured artist performances begin at sunset.",
+              "Artistry matters more than fame in music."
+            ],
+            "distractor_acts": [
+              35.14700698852539,
+              33.05908966064453,
+              32.807125091552734
+            ],
+            "score": 1.1173721313476577
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "This feature fires on the exact token/string \"artist\" when it appears as a machine-readable schema/category value or resource label in structured data, especially JSON fields and API/URI resource names like \"type\":\"artist\" or \"/artist/12345-Name\".",
+            "positive_probes": [
+              "{\"type\":\"artist\",\"id\":42}",
+              "GET /api/v1/artist/12345/details",
+              "resource_name=artist in config.yaml",
+              "{\"category\":\"artist\",\"name\":\"Prince\"}",
+              "POST /artist/9876-albums HTTP/1.1"
+            ],
+            "positive_acts": [
+              37.78921127319336,
+              34.50566482543945,
+              33.52651596069336,
+              37.4811897277832,
+              35.75447082519531
+            ],
+            "distractor_probes": [
+              "The artist painted a vivid mural yesterday.",
+              "She met an artist at the gallery opening.",
+              "Artistry matters, but artisan tools differ."
+            ],
+            "distractor_acts": [
+              35.16056823730469,
+              33.57653045654297,
+              32.807125091552734
+            ],
+            "score": 1.9633359273274777
+          },
+          {
+            "hypothesis": "This feature fires on \"artist\" inside URL/URI/API path segments denoting an artist resource, especially forms like \"/artist/12345-Name\", escaped variants, or similar machine-readable identifiers.",
+            "positive_probes": [
+              "GET /artist/12345-The-Beatles returns JSON metadata.",
+              "Fetch api/v2/artist/9876-Adele for profile details.",
+              "The URI /music/artist/42-Prince loads correctly.",
+              "Request /artist%2F551-Taylor-Swift from the endpoint.",
+              "Use /artist/abc123-David-Bowie in the API call."
+            ],
+            "positive_acts": [
+              34.5686149597168,
+              33.3875617980957,
+              35.92020797729492,
+              36.06376266479492,
+              32.37302017211914
+            ],
+            "distractor_probes": [
+              "The artist painted a bright landscape yesterday.",
+              "Open /artistry/12345 for the design resource.",
+              "Call /album/12345-Beatles instead of the artist endpoint."
+            ],
+            "distractor_acts": [
+              35.14247512817383,
+              35.735294342041016,
+              29.38143539428711
+            ],
+            "score": 1.042898559570311
+          },
+          {
+            "hypothesis": "This feature may more generally detect the literal token/substring \"artist\" across contexts, with stronger activation when embedded in structured or metadata-like text rather than ordinary prose.",
+            "positive_probes": [
+              "artist: Claude Monet",
+              "role=artist; status=active",
+              "metadata field \"artist\" is required",
+              "artist_id maps to legacy records",
+              "JSON key \"artist\" contains a string"
+            ],
+            "positive_acts": [
+              34.69573974609375,
+              33.6944465637207,
+              35.49660873413086,
+              34.769161224365234,
+              36.54429244995117
+            ],
+            "distractor_probes": [
+              "the painter sold three landscapes",
+              "artistry matters more than fame",
+              "the artisan restored an old mural"
+            ],
+            "distractor_acts": [
+              4.026008605957031,
+              34.60042953491211,
+              6.776952743530273
+            ],
+            "score": 19.905586115519206
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "The feature detects the literal substring/token \"artist\", especially when it appears as a metadata/schema label or identifier in structured text such as JSON keys/values, config fields, and machine-readable records (e.g. type/category/field names like \"artist\", \"artist_id\").",
+            "positive_probes": [
+              "JSON field \"artist\" contains the performer name.",
+              "Set artist_id before importing the media record.",
+              "Config key: artist=Unknown in the metadata block.",
+              "The schema includes an artist field and title.",
+              "Record type lists category, artist, and album."
+            ],
+            "positive_acts": [
+              35.799434661865234,
+              29.526046752929688,
+              33.09374237060547,
+              34.63386154174805,
+              33.3499755859375
+            ],
+            "distractor_probes": [
+              "The painter signed the canvas yesterday.",
+              "Store performer metadata beside the album title.",
+              "Set artisanal_mode=true in the config file."
+            ],
+            "distractor_acts": [
+              3.399890899658203,
+              7.414335250854492,
+              5.721835136413574
+            ],
+            "score": 27.76859175364177
+          },
+          {
+            "hypothesis": "A strong sub-case of the feature is \"artist\" inside machine-readable resource paths or URIs, especially artist endpoints/resource identifiers such as \"/artist/12345-Name\" and escaped variants.",
+            "positive_probes": [
+              "Fetch /artist/12345-Name from the music API.",
+              "The URI includes /artist/887-JoniMitchell metadata.",
+              "Resolve https://example.com/artist/42-Bowie now.",
+              "Encoded path %2Fartist%2F9912-Prince should decode correctly.",
+              "Query the endpoint /v1/artist/555-Adele/details today."
+            ],
+            "positive_acts": [
+              33.3222770690918,
+              34.61353302001953,
+              37.959869384765625,
+              34.98921585083008,
+              35.50197219848633
+            ],
+            "distractor_probes": [
+              "The artist painted a vivid mural downtown.",
+              "Open /album/12345-Name from the music API.",
+              "Resolve https://example.com/artists/42-Bowie now."
+            ],
+            "distractor_acts": [
+              35.11668014526367,
+              0.0,
+              32.97617721557617
+            ],
+            "score": 12.579754384358726
+          },
+          {
+            "hypothesis": "The feature is primarily lexical: it fires on the exact substring \"artist\" across many contexts, with boosted activation in structured or metadata-like environments; near-matches such as \"artisan\" are much weaker, while words containing the same character sequence like \"artistry\" can still partially trigger it.",
+            "positive_probes": [
+              "Artist: Claude Monet; Title: Water Lilies.",
+              "The artist signed the canvas yesterday.",
+              "metadata field artist = Nina Simone",
+              "Unknown artist, medium oil, year 1889.",
+              "Every artist needs time alone."
+            ],
+            "positive_acts": [
+              32.83282470703125,
+              35.03762435913086,
+              32.319522857666016,
+              27.932331085205078,
+              34.40456771850586
+            ],
+            "distractor_probes": [
+              "The artisan carved a wooden bowl carefully.",
+              "Her artistry impressed the entire audience.",
+              "The painter signed the canvas yesterday."
+            ],
+            "distractor_acts": [
+              6.732531547546387,
+              18.58980941772461,
+              3.37796688079834
+            ],
+            "score": 22.938604863484706
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "Apache celebrates teenage angst through the power of lo-fi rock n\u2019 roll.\n\nFind out more about Apache. Visit their artist page on their label, Birdman Records.<bos>\ufeffnamespace ScriptableObjectArchitecture\r\n{\r\n    public static class SO",
+    "in mancanza di soggetto) (2002)\n CORPO  SOTTILE  (2001)\n\nArtist involved\n\n Absalon (IL)\n Aernout Mik (Nl)\n Alessandro Bosetti (IT/DE)",
+    "A single cloud drifted over the harbor.",
+    "Rain drummed on the tin roof through the night.",
+    "The company announced quarterly earnings yesterday afternoon.",
+    "1334785233.jpeg.jpg\",\"title\":\"Medicine (2)\",\"uri\":\"\\/artist\\/71224-Medicine-2\",\"resource_url\":\"https:\\/\\/api.discogs.com\\/artists",
+    "He plotted the data on a log-log scale.",
+    "827\",\"type\":\"artist\",\"id\":1957827}]}\n07-10 06:11:",
+    "The train from Milan arrived twenty minutes late.",
+    "The senator refused to comment before the hearing.",
+    "-1160815350.jpeg.jpg\",\"title\":\"Bruce Licher\",\"uri\":\"\\/artist\\/307086-Bruce-Licher\",\"resource_url\":\"https:\\/\\/api.discogs.com",
+    "mp4\",\"order_key\":null,\"category_hierarchy\":\"Travel > America > The United States\",\"avatar\":null,\"artist_page_url\":\"\\/contributor\\/205281284\\/elena-suvorova?load"
+  ],
+  "heldout_true_acts": [
+    35.0461311340332,
+    35.6025276184082,
+    0.0,
+    0.0,
+    0.0,
+    36.41395950317383,
+    0.0,
+    36.98712158203125,
+    0.0,
+    0.0,
+    36.20707321166992,
+    36.3204460144043
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "references to artists and artistic identities",
+      "generative": {
+        "trigger_rate": 0.5,
+        "mean_max": 15.047290563583374,
+        "sentences": [
+          "Picasso was a revolutionary painter and sculptor.",
+          "She identifies as a multidisciplinary visual artist.",
+          "The poet performed alongside a jazz musician.",
+          "Banksy remains an anonymous street artist.",
+          "He studied under a renowned classical composer.",
+          "Frida Kahlo became an iconic Mexican artist.",
+          "They call themselves experimental performance artists.",
+          "The gallery celebrated emerging Indigenous painters."
+        ],
+        "activations": [
+          6.845680236816406,
+          28.911914825439453,
+          6.084273338317871,
+          22.61681365966797,
+          3.6637020111083984,
+          24.93640899658203,
+          23.073436737060547,
+          4.246094703674316
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9755925174797739,
+        "spearman": 0.7831577932751101,
+        "preds": [
+          9.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          8.0,
+          0.0,
+          8.0,
+          0.0,
+          0.0,
+          8.0,
+          6.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "The feature detects the literal substring/token \"artist\", especially when it appears as a metadata/schema label or identifier in structured text such as JSON keys/values, config fields, and machine-readable records (e.g. type/category/field names like \"artist\", \"artist_id\").",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 33.41519594192505,
+        "sentences": [
+          "The JSON field \"artist\" is required.",
+          "Set artist_id before saving the record.",
+          "Metadata includes artist: \"Miles Davis\".",
+          "Use {\"artist\":\"unknown\"} as the default.",
+          "Schema label artist maps to performer_name.",
+          "The config file defines an artist key.",
+          "Record type=artist in the database.",
+          "Update the artist field in YAML."
+        ],
+        "activations": [
+          35.581478118896484,
+          29.627429962158203,
+          34.06398391723633,
+          36.47834014892578,
+          30.127727508544922,
+          33.43019104003906,
+          33.640159606933594,
+          34.372257232666016
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9221484103994548,
+        "spearman": 0.9798772180991865,
+        "preds": [
+          3.0,
+          7.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          10.0,
+          10.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 62.1065514087677,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "references to artists and artistic identities"
+}

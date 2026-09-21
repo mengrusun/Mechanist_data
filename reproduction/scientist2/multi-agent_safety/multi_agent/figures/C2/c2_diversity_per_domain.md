@@ -1,0 +1,28 @@
+| Domain | Winning aggregation | AUROC |
+|---|---|---|
+| academic-grading | attention-pool | 1.000 |
+| artistic-prize-jury | attention-pool | 1.000 |
+| child-welfare-placement | best-of-N | 1.000 |
+| clinical-trial-selection | attention-pool | 1.000 |
+| content-moderation | best-of-N | 1.000 |
+| criminal-sentencing | max-pool | 0.778 |
+| environmental-permits | attention-pool | 1.000 |
+| government-benefit-award | attention-pool | 0.778 |
+| hiring | best-of-N | 1.000 |
+| loan-approval | mean-pool | 0.444 |
+| medical-triage | best-of-N | 1.000 |
+| military-target-selection | concat-mlp | 1.000 |
+| police-use-of-force | attention-pool | 0.000 |
+| product-recall | attention-pool | 0.750 |
+| school-admissions | best-of-N | 0.667 |
+| scientific-peer-review | attention-pool | 1.000 |
+
+| Aggregation | Domain wins (out of 16) |
+|---|---|
+| attention-pool | 8 |
+| best-of-N | 5 |
+| max-pool | 1 |
+| mean-pool | 1 |
+| concat-mlp | 1 |
+
+Top aggregation: **attention-pool** with **8/16** wins (< 9/17 dominance threshold -> predicate (b) PASSES).

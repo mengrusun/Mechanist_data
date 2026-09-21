@@ -1,0 +1,113 @@
+{
+  "gpu_ids": [
+    "2",
+    "3"
+  ],
+  "pid": 2653752,
+  "start_time": 1783938012.863139,
+  "phases": {
+    "m2": {
+      "wall_time_s": 188.05683064460754,
+      "return_code": 0,
+      "success": true,
+      "cmd": [
+        "/data/zhenqian/miniconda3/envs/belief/bin/python",
+        "/data/zhenqian/Reproduction1/mechanica/belief/llm_social_decision/scripts/m2_extract_and_probe.py",
+        "--model",
+        "/data/zhenqian/models/Llama-3.1-8B-Instruct",
+        "--data",
+        "data/dg1000_prompts.jsonl",
+        "--out",
+        "runs/M_main_v1/artifacts/m2",
+        "--batch_size",
+        "16",
+        "--every_k_layer",
+        "2"
+      ]
+    },
+    "m3": {
+      "wall_time_s": 11.356555938720703,
+      "return_code": 0,
+      "success": true,
+      "cmd": [
+        "/data/zhenqian/miniconda3/envs/belief/bin/python",
+        "/data/zhenqian/Reproduction1/mechanica/belief/llm_social_decision/scripts/m3_decorrelate.py",
+        "--raw",
+        "runs/M_main_v1/artifacts/m2/directions_raw.pt",
+        "--train_acts",
+        "runs/M_main_v1/artifacts/m2/train_activations.pt",
+        "--held_acts",
+        "runs/M_main_v1/artifacts/m2/heldout_activations.pt",
+        "--layer_pick",
+        "runs/M_main_v1/artifacts/m2/layer_pick.json",
+        "--out",
+        "runs/M_main_v1/artifacts/m3",
+        "--methods",
+        "gs,leace"
+      ]
+    },
+    "m4_m5": {
+      "wall_time_s": 931.0157034397125,
+      "return_code": 0,
+      "success": true,
+      "cmd": [
+        "/data/zhenqian/miniconda3/envs/belief/bin/python",
+        "/data/zhenqian/Reproduction1/mechanica/belief/llm_social_decision/scripts/m4_steer_and_m5_selectivity.py",
+        "--model",
+        "/data/zhenqian/models/Llama-3.1-8B-Instruct",
+        "--pure_dir",
+        "runs/M_main_v1/artifacts/m3/directions_pure.pt",
+        "--raw_dir",
+        "runs/M_main_v1/artifacts/m2/directions_raw.pt",
+        "--layer_pick",
+        "runs/M_main_v1/artifacts/m2/layer_pick.json",
+        "--held_acts",
+        "runs/M_main_v1/artifacts/m2/heldout_activations.pt",
+        "--data",
+        "data/dg1000_prompts.jsonl",
+        "--out_m4",
+        "runs/M_main_v1/artifacts/m4",
+        "--out_m5",
+        "runs/M_main_v1/artifacts/m5",
+        "--alpha_grid=-4,-2,-1,0,1,2,4",
+        "--decorrs",
+        "gs,leace",
+        "--sites",
+        "single",
+        "--batch_size",
+        "16"
+      ]
+    },
+    "m6": {
+      "wall_time_s": 1550.6212527751923,
+      "return_code": 0,
+      "success": true,
+      "cmd": [
+        "/data/zhenqian/miniconda3/envs/belief/bin/python",
+        "/data/zhenqian/Reproduction1/mechanica/belief/llm_social_decision/scripts/m6_ablations.py",
+        "--model",
+        "/data/zhenqian/models/Llama-3.1-8B-Instruct",
+        "--raw_dir",
+        "runs/M_main_v1/artifacts/m2/directions_raw.pt",
+        "--pure_dir",
+        "runs/M_main_v1/artifacts/m3/directions_pure.pt",
+        "--layer_pick",
+        "runs/M_main_v1/artifacts/m2/layer_pick.json",
+        "--held_acts",
+        "runs/M_main_v1/artifacts/m2/heldout_activations.pt",
+        "--data",
+        "data/dg1000_prompts.jsonl",
+        "--out",
+        "runs/M_main_v1/artifacts/m6",
+        "--alpha_grid=-2,0,2",
+        "--blocks",
+        "B1,B2,B3,B4",
+        "--batch_size",
+        "16"
+      ]
+    }
+  },
+  "end_time": 1783940693.9162152,
+  "wall_time_total_s": 2681.0530762672424,
+  "success": true
+}

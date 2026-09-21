@@ -1,0 +1,33 @@
+{
+  "claim_id": "C1",
+  "milestones_audited": ["M1", "M2"],
+  "audit_date": "2026-07-14",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "detail": "Hidden states from model's own forward pass; no external-model labels used for ground truth."
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "detail": "R(l) = Sem(l)/Lang(l) is a ratio of two cosines on same scale; no circular self-normalization by model's own max."
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "detail": "results/M1_bottleneck_diagnostic.json (L*=10, R_max=1.371) and results/M2_patch.json (A=0.738, B=0.962, C=0.458, D=0.755) both exist non-empty. Run cost.json files present for M1 (gpu_ids=[1]) and M2 (gpu_ids=[2])."
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "detail": "All functions in m1_bottleneck_diagnostic.py and m2_cross_lingual_patch.py are called in main(). No unused helpers detected."
+    },
+    "E_scope": {
+      "verdict": "warn",
+      "detail": "C1 frozen claim requires A>C AND A>D (matched-control specificity). A>C confirmed (+0.28, paired bootstrap CI non-overlapping). A>D FAILS (A=0.738 ≈ D=0.755). The claim predicate 'causally confirmed by... matched-control patch' is not met. EXPERIMENT_RESULTS.md honestly reports partial verdict. Scope discrepancy is between claim statement and outcome, not a fabricated result."
+    },
+    "F_eval_type": {
+      "verdict": "pass",
+      "detail": "Self-diagnostic (model's own internal residual states) + self-referential semantic scorer (LLaMA top-layer mean-pool). Standard for mechanistic interpretability; no external GT required."
+    }
+  },
+  "overall_verdict": "warn",
+  "overall_reason": "WARN driven by Check E: claim predicate requires matched-control specificity (A>D) which fails at M2. All other checks pass. Experiment results are honestly reported."
+}

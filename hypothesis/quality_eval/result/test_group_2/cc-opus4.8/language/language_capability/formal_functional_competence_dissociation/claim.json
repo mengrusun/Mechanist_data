@@ -1,0 +1,24 @@
+{
+  "Name": "formal_functional_competence_dissociation",
+  "Title": "Separable Circuits for Grammar and Meaning: A Mechanistic Test of the Formal/Functional Split",
+  "Short Hypothesis": "We hypothesize that linguistic form (grammaticality/syntax) and functional-semantic reasoning (world knowledge, inference) are implemented by partially dissociable circuits, such that one can be selectively ablated while sparing the other. Concretely, syntactic well-formedness is computed by identifiable early-to-mid heads whose ablation destroys grammaticality judgments but leaves factual/inferential accuracy, and vice versa. This is the sharpest setting to test whether 'knowing language' and 'being intelligent' are the same faculty inside the network.",
+  "Related Work": "Mahowald et al. (2024) argue conceptually that LLMs have strong formal but weaker functional competence; behavioral studies (e.g., BLiMP for syntax) test them separately but not mechanistically. Syntactic-circuit work (agreement, Finlayson et al.; number-agreement heads) localizes form. We unify these threads by causally testing double dissociation: whether form-circuits and meaning-circuits can be independently knocked out, moving from a behavioral dichotomy to a circuit-level one.",
+  "Abstract": "A leading conceptual account holds that language models excel at formal linguistic competence (producing well-formed language) while lagging at functional competence (reasoning and world use), yet no mechanistic evidence establishes that these are separable systems inside the model. We test for a double dissociation of circuits. We assemble matched probes: BLiMP-style minimal pairs for syntax (agreement, filler-gap, negative polarity) and inference/factual items for functional competence, controlling surface overlap. Using path patching and head/feature ablation, we identify heads and SAE features most causal for grammaticality judgments and, separately, for inferential accuracy. We then test dissociation: ablating form-circuits should collapse grammaticality discrimination while preserving inference above chance, and ablating meaning-circuits should do the reverse. We quantify overlap of the two causal circuits and their layer distribution, predicting form-circuits concentrate earlier and meaning-circuits later. We further test whether scaling widens the functional gap by comparing dissociation sharpness across model sizes. If confirmed, the results give the formal/functional distinction a concrete mechanistic basis, explain why fluent models can still fail at reasoning (intact form-circuits, weak meaning-circuits), and suggest targeted interventions to strengthen functional competence without disturbing fluency.",
+  "Experiments": [
+    "Construct matched datasets: 1k BLiMP-style syntactic minimal pairs across phenomena; 1k inference/factual items with controlled lexical overlap.",
+    "Establish behavioral baselines on GPT-2-large, Llama-3-8B, and Llama-3-70B.",
+    "Attribution: path patching to rank heads for (a) grammaticality margin and (b) inferential correctness; fit SAEs and rank features similarly.",
+    "Selective ablation: knock out top form-circuit components; measure grammaticality vs inference change. Repeat for meaning-circuit.",
+    "Compute circuit overlap (Jaccard of causal components) and layer histograms for each function.",
+    "Scale comparison: measure dissociation index across the three model sizes; test whether functional circuits are relatively smaller/later at scale.",
+    "Metrics: double-dissociation index (selectivity of each ablation), circuit overlap, layerwise distribution, per-size dissociation.",
+    "Control: ablate random matched-size component set to gauge nonspecific damage."
+  ],
+  "Risk Factors and Limitations": [
+    "Form and meaning may be entangled enough that clean double dissociation is impossible.",
+    "BLiMP-style items and inference items differ in many dimensions besides form/meaning, risking confounds.",
+    "Ablation damage may be nonspecific; matched-size controls only partially address this.",
+    "Results may vary by syntactic phenomenon, making a single 'form circuit' an oversimplification.",
+    "The formal/functional dichotomy itself may be too coarse to map onto circuits."
+  ]
+}

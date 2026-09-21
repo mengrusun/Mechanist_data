@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal has a clear directional hypothesis and a well-aligned test: it asks whether the model encodes \"R_t and its side relative to 1 ... beyond what recent curve shape/slope predicts\" and then tests this with matched-curve, opposite-side cases. Its numeric decision rules, such as \"index >= 0.10 with CI lower bound > 0.03\" and a separation ratio with \"CI lower bound > 1.5\" plus direction accuracy above 0.65, make the claim explicitly falsifiable and deserve substantial credit. However, \"after regressing out the momentum-predictable component\" is not fully specified for an accuracy-based index, and the statement that an opposite-R pair \"must separate\" is too strong when the observed input windows are nearly identical and latent epidemiological state is unavailable to the model; the exact forecast-direction operationalization is also left implicit. These are meaningful but repairable specification gaps rather than a failure of logical coherence.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is constructing \"matched trajectory pairs whose recent observed windows are made near-indistinguishable ... but that sit on opposite R_t sides\" and then performing \"matched-magnitude perturbations along the R direction\"; this requires careful custom simulator and activation-intervention engineering, but it is not a magic step because SIR/SEIR generation, window matching, forward hooks, ridge probes, and activation steering are implementable with standard tooling. Chronos, TimesFM, and Lag-Llama, synthetic epidemic simulators, linear probes, and random/slope-direction controls are established dependencies; the recent \"epidemiology-aware CAPE\" artifact should be independently verified before relying on its claimed interface, while the plan can proceed with the other models. The refuting branch is runnable because it includes \"same-R control pairs,\" residual matching-error audits, random-label and random-direction controls, and explicit null criteria, and resources are partly quantified through \">= 20,000 windows\" and \"3 seeds,\" although real-data sample sizes and the number of matched pairs are unspecified.",
+      "score": 7
+    }
+  }
+}

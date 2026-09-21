@@ -1,0 +1,177 @@
+{
+  "project": "Emotion-Specific Global Circuits in Llama-3.2-3B-Instruct (SEV)",
+  "direction": "Localisable emotion circuits in LLMs (from task.md): identify per-emotion component sets, prove they are causal + stable, and use them for reliable emotion control that beats prompting and single-direction steering.",
+  "date_range": {"start": "2026-07-13", "end": "2026-07-14"},
+  "models": {"claim": "claude-opus-4-7", "experiment": "claude-opus-4-7", "verify": "claude-sonnet-4-6", "iteration": "claude-opus-4-7"},
+  "pipeline_status": "completed",
+  "round_end": {"qualifier": "", "detail": "", "remedy": "", "see": "", "partial_artifacts": [], "next_round_options": []},
+  "journey_summary": {
+    "claim": "given (3 claims C1/C2/C3 fixed by task.md); refined into 5-milestone plan (M0.5 data-prep + M1 Location + M2 Causal + M3 Applied + M4 Qwen swap)",
+    "mechanism_strategy": "Location → Causal Intervention → Tuning & Editing",
+    "mechanism_routing": "family=Causal Attribution / Ablation, submethod=paired-contrast direction extraction + Stage-A probe/cosine + Stage-B single-component enhancement prefix-logprob gain; ablation=mean-substitute; enhancement=additive activation injection",
+    "experiment": "5 milestones, ~4.3 GPU-hours realized, headline mixed: C1 supported / C2 not-supported (ablation Δ wrong sign — later confirmed by iteration ② as real, not operator artifact) / C3 not-supported (circuit Arm A macro 0.053 below chance)",
+    "verify": "3 claim(s): 0 PASS / 1 FAIL / 0 INCONCLUSIVE / 0 ZEV / 2 INTEGRITY_ONLY (cap=2, swap_off=0); integrity[Phase2 WARN/Phase9 PASS]; Stage 2 pick = C3 (robustness 1.00 via Qwen M4 model-swap, FAIL confirmed)",
+    "iteration": "2/6 iterations, claim-reentries=1/2, score 6/10 verdict ready, termination=positive_verdict; iter-1 ② fix confirmed C2 negative is REAL (not operator bug) + moved C3 Arm A macro 0.053→0.139 (still below prompting 0.663); iter-2 ③ narrowed C3 → C3_v2 (positive prefix modulation + explicit negative for open-generation control); iter 3-5 ⓪ narrative-only reframed manuscript as falsification-study",
+    "figures": "disabled — LEDGER_FIGURES judgment-skipped for all 4 claims (verdict evidence already summarised in per-claim key_stats prose)"
+  },
+  "open_items": [
+    "C1 [INTEGRITY_ONLY, stage2_skip_reason: max_verify_claims_cap] — swap-test deferred; upgrade via `/auto-verify C1 --resume=true --dimensions=model --gpu_id=1,2,3,5,6` (Phase 2 audits reused; only Stages 2-3 run). Two Phase-2 WARNs (flat kstar grid + head Stage-B degenerate at layer level) already documented in caveats.",
+    "C2 [INTEGRITY_ONLY, stage2_skip_reason: max_verify_claims_cap; post-fix integrity now PASS] — swap-test deferred; upgrade via `/auto-verify C2 --resume=true --dimensions=model --gpu_id=1,2,3,5,6` (Phase 2 audits reused).",
+    "C3_v2 [new claim from ③ rewrite; not stress-tested] — swap-test deferred; upgrade via `/auto-verify C3_v2 --resume=true --dimensions=model --gpu_id=1,2,3,5,6`. Needs its own Stage 1 audit + Stage 2 stress test to formally confirm the narrower scope.",
+    "Recurring unresolved patterns: (a) val-eval metric misalignment for C3-family — target-prefix logprob unreliable as proxy for judge-scored generation accuracy; (b) why 3/6 emotions have C_e Δ below random-null mean under M2 (mechanistic explanation not pursued in loop).",
+    "Beyond-loop-scope items (would move reviewer score from 6 to 7-8): stronger null-model methodology (layer/size/rank-matched perturbations, multiple ablation operators), sign-sensitive or projection-based causal interventions, multi-model transfer study, theoretical account of scoring-time vs trajectory-time intervention decoupling.",
+    "Multi-GPU device_map bug observed in iteration-1 M2/M3 re-runs (both re-runs fell back to single-GPU); should be traced in a future round."
+  ],
+  "iteration_summary": {"score": 6.0, "verdict": "ready", "rounds_consumed": 2, "max_rounds": 6},
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "The framework (paired-contrast direction extraction → per-emotion MLP-neuron + attention-head selection → global integration) produces stable, sparse, per-emotion component sets C_e on Llama-3.2-3B-Instruct across SEV: |C_e| meets sparsity floor (k_h ≤ 96, k_n ≤ 8000); per-emotion Jaccard exceeds size-matched permutation-null 95% CI on ≥ 5/6 emotions. [Narrowed at iteration 4 (⓪) to coarse-locatability scope: 'discriminative, emotion-relevant regions/layers with stable component-set structure', NOT 'precise identification of the causal subset'.]",
+      "origin": "task.md claim 1 (Localizability) — captured given; refined into Block B1 (M1 Location); scope narrowed at iteration 4 (⓪).",
+      "data": {"provenance": "existing", "source": "SEV — /data/zhenqian/data/SEV/sev.json (480 events × 6 emotion variants = 2880 pairs)", "available_n": "2880 pairs", "used_n": "2880 pairs (Stage A train 1440 fit + Stage B val 720 + 3 folds × 80% train for Jaccard)", "subset_note": ""},
+      "models": ["Llama-3.2-3B-Instruct"],
+      "method": "Stage-A per-layer per-emotion linear probe (ITI-style) + MLP-neuron cosine alignment; Stage-B per-shortlisted-component single-component-enhancement target-prefix log-prob gain — Stage-A screen → Stage-B causal-verify composition; sparsity grid k_h ∈ {24,48,96}, k_n ∈ {2000,4000,8000}, 3-fold event-subsample Jaccard vs. 200-draw permutation null, random top-k control.",
+      "main_experiment": {
+        "verdict": "supported",
+        "key_stats": "(k_h*, k_n*) = (24, 2000) (smallest grid cell); Stage-B macro gain 2.136 nats; head Jaccard 0.947-1.000 vs. null ~0.27; neuron Jaccard 0.972-0.983 vs. null ~0.046; 6/6 pass both axes.",
+        "headline": "The circuit-locator framework yields sparse, per-emotion component sets C_e that are highly stable across event-subsample folds and clearly separated from random top-k controls. Claim 1 (Localizability) is supported at full plan scale."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"},
+        "integrity": "WARN",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap"
+      },
+      "iteration": {
+        "final_reviewer_status": "supported at coarse-locatability scope (⓪ caveats only, no ①/②/③ actions used)",
+        "changed": ["iteration 4 (⓪): scope narrowed to coarse locatability", "iteration 4 (⓪): Discussion subsection added 'Coarse vs precise localization'"],
+        "falsified": [],
+        "narrowed_to": "discriminative emotion-relevant regions/layers with stable component-set structure (NOT precise causal subset identification)"
+      },
+      "final_status": "✓ supported at coarse-locatability scope (Jaccard 6/6 both axes; audit passed with 2 WARNs — flat kstar grid + head Stage-B degenerate layer-level; swap-test deferred by max_verify_claims cap)",
+      "caveats": [
+        "flat kstar grid: k* landed at smallest cell — grid may not have exercised sparsity/floor tradeoff sufficiently",
+        "head Stage-B degenerate at layer level (fewer effective heads scored than expected)",
+        "Localization here should be read as 'discriminative, emotion-relevant regions/layers with stable component-set structure', NOT as 'precise identification of the causal subset' — see Discussion subsection"
+      ],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#block-1", "refine-logs/EXPERIMENT_RESULTS.md#m1", "runs/A1_location/", "verify/C1_localizability_per_emotion_component_sets_Ce/", "review-stage/AUTO_ITERATION_FINAL_REPORT.md#4b1"],
+      "figures": []
+    },
+    {
+      "id": "C2",
+      "statement": "C_e causally carries emotion generation and is specific + scenario-stable on Llama-3.2-3B-Instruct: ablation weakens target at α2, enhancement strengthens it with monotonic dose-response (Spearman ≥ 0.7 over 3 α); specificity holds against three complementary controls (random-set null, targeted-C_{e'}, off-target scoring); scenario Jaccard(S1,S2) exceeds permutation null.",
+      "origin": "task.md claim 2 (Mechanistic evidence — traceable, stable circuits) — captured given; refined into Block B2 (M2 Causal Intervention + Stability); operator bug fix + re-run in iteration 1 (②).",
+      "data": {"provenance": "existing", "source": "SEV eval fold — /data/zhenqian/data/SEV/sev.json (120 eval stems × 6 emotions = 720 pairs from B1's scenario split)", "available_n": "720 eval pairs", "used_n": "720 eval pairs (full) — original + full re-run under fixed per-stem operator", "subset_note": ""},
+      "models": ["Llama-3.2-3B-Instruct"],
+      "method": "Ablation (mean-substitute C_e with mean over other 5 emotion variants of the SAME stem — fixed in iteration 1 from the buggy global-mean formulation) + Enhancement (additive activation injection at α ∈ {0.5,1.0,2.0}) + three specificity controls (100-draw random-set null per emotion — enlarged pool to 72 heads / 4915 neurons in iter-1 fix, targeted-C_{e'}, off-target scoring) + Scenario stability. Rubric: {full, partial, causal-only, not-supported}.",
+      "main_experiment": {
+        "verdict": "not-supported",
+        "key_stats": "Rubric: 0 full / 0 partial / 0 causal-only / 6 not-supported. Ablation Δ target = +0.510 to +0.928 (WRONG SIGN); enhancement Δ target at α=1.0 = +1.34 to +5.83 (correct sign); Spearman(α, Δ_enh) < 0.7 on 4/6.",
+        "headline": "The tested ablation operator (mean-substitute) does not weaken target emotion — it strengthens it, opposite the predicted sign. Verify Phase-2 flagged HIGH WARN on operator scope; iteration 1 fixed the operator (per-stem instead of global mean) + enlarged random-null pool — the wrong-sign persisted, confirming the negative is REAL, not artifactual."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"},
+        "integrity": "WARN",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap"
+      },
+      "iteration": {
+        "final_reviewer_status": "not-supported (real negative confirmed by iteration-1 ② operator fix + enlarged random-null pool). Post-fix integrity now PASS.",
+        "changed": [
+          "iteration 1 (②): fixed m2_causal.py mean-substitute operator from global mean to per-stem OTHER-5-emotion mean (m2_causal.py:129, 355-397; new register _HOOK_STEM_IDX)",
+          "iteration 1 (②): enlarged random-null pool from 14 heads / degenerate to 72 heads / 4915 neurons (m2_causal.py:394-419)",
+          "iteration 3 (⓪): C2 final wording adopted with two-way interpretation of positive-Δ anomaly",
+          "iteration 1 re-run: runs/iteration_round_1/A2_causal_fixed/{ablation, enhancement, random_null, targeted_ce, cross_emotion, metrics}.json"
+        ],
+        "falsified": ["operator-bug hypothesis (that positive ablation Δ was artifactual)"],
+        "narrowed_to": "Located components are stable across scenarios (S1/S2 Jaccard 6/6 pass) and show limited discriminative specificity (targeted-C_{e'} 4/6), but do not satisfy causal-necessity in the directional sense; positive Δ under ablation admits two non-exclusive interpretations (not encoding target in directionally-necessary sense; or removing suppressive/non-directional signal net-raising target probability). For 3/6 emotions random top-K sets from same layer pool produce larger positive shifts than causally ranked C_e — weakening any unique-causal-privilege claim at subset level."
+      },
+      "final_status": "✗ not-supported (real negative confirmed by ② fix; positive Δ under ablation is real, not operator artifact; the located components are emotion-relevant/discriminative but not strongly verified causal necessities under this intervention)",
+      "caveats": [
+        "Positive Δ under ablation admits two non-exclusive interpretations — not directionally causal, OR mean-substitution removes suppressive/non-directional signal that net-raises target",
+        "For 3/6 emotions random top-K sets outperform C_e in random-null (joy z=+0.79, sadness z=-1.20, anger z=-0.72) — weakens unique-causal-privilege at subset level",
+        "swap-test deferred by max_verify_claims cap (post-fix integrity now PASS)"
+      ],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#block-2", "refine-logs/EXPERIMENT_RESULTS.md#m2", "runs/A2_causal/", "runs/iteration_round_1/A2_causal_fixed/", "verify/C2_causal_stability_of_Ce/", "experiments/m2_causal.py", "review-stage/AUTO_ITERATION_FINAL_REPORT.md#4b2"],
+      "figures": []
+    },
+    {
+      "id": "C3",
+      "statement": "[SUPERSEDED at iteration 2 by C3_v2 via ③ claim-stage re-entry] Original: A circuit-based control method (activating C_e via the enhancement operator) reliably induces target emotions across arbitrary held-out event stems and outperforms both prompting (EmotionPrompt-style) and single-direction steering (RepE/CAA-style, frozen pre-eval-split) on hidden-target 6-way judged emotion-expression accuracy: Arm A > Arm B on ≥ 5/6 emotions AND Arm A > Arm C on ≥ 5/6 emotions.",
+      "origin": "task.md claim 3 (Applied control) — captured given; refined into Block B3 + B4; superseded by C3_v2 in iteration 2.",
+      "data": {"provenance": "existing", "source": "SEV eval fold — /data/zhenqian/data/SEV/sev.json (120 eval stems × 6 emotions × 3 arms = 2160 continuations) + val fold 19,440 val forwards", "available_n": "2160 eval continuations (+ 19,440 val forwards)", "used_n": "2160/2160 judged (main experiment) + 2160/2160 judged (iter-1 fix)", "subset_note": ""},
+      "models": ["Llama-3.2-3B-Instruct", "Qwen2.5-7B-Instruct (M4 verify-swap)"],
+      "method": "Three matched-budget arms. Arm A Circuit enhancement × (k_h,k_n) neighborhood; Arm B prompting; Arm C single-direction steering. Judge gpt-5.4 (gold agreement 1.000). Iteration 1 (②): reduced α from {0.5,1.0,2.0}→{0.05,0.1,0.3}, component neighborhood shifted down to {5,12,24}×{200,500,2000}.",
+      "main_experiment": {
+        "verdict": "not-supported",
+        "key_stats": "Original: Macro accuracy Arm A = 0.053 (BELOW 1/6 chance = 0.167); Arm B = 0.669; Arm C = 0.357. A>B: 0/6, A>C: 0/6. Qwen swap: A=0.076, B=0.969, C=0.125. After iter-1 fix: Arm A macro 0.139 (2.6× improvement, still catastrophically below B=0.663).",
+        "headline": "Circuit control Arm A performs FAR worse than both baselines. Additive-injection destroys meaningful generation. Same failure reproduces on Qwen. Fix via reduced α + reduced components improved macro 0.053→0.139 but still A>B: 0/6."
+      },
+      "verify": {
+        "robustness": 1.0,
+        "axes": {"method": "n/a", "dataset": "n/a", "model": "pass"},
+        "integrity": "PASS",
+        "verdict": "FAIL",
+        "stage2_skip_reason": null
+      },
+      "iteration": {
+        "final_reviewer_status": "falsified as originally stated; rewritten to C3_v2 (narrower scope)",
+        "changed": [
+          "iteration 1 (②): α range {0.5,1.0,2.0}→{0.05,0.1,0.3}; component neighborhood shifted down (m3_applied.py:75-76, 326-341; env-driven overrides)",
+          "iteration 1 re-run: runs/iteration_round_1/A3_applied_fixed/ (Arm A macro 0.053→0.139)",
+          "iteration 2 (③ lightweight in-loop): rewrote to C3_v2 with narrower defensible scope (positive prefix score modulation + explicit negative for open-generation control)"
+        ],
+        "falsified": ["Original C3 statement (Arm A > Arm B on ≥5/6 AND Arm A > Arm C on ≥5/6 emotions with 95% CIs excluding 0) — falsified by both original run and iter-1 fixed run"],
+        "narrowed_to": "C3_v2 (see next row)"
+      },
+      "final_status": "✗ falsified — Arm A > Arm B: 0/6 both original (macro 0.053) and after iter-1 fix (macro 0.139); rewritten to C3_v2 at iteration 2",
+      "caveats": [
+        "Arm A macro below random chance (original) and still below prompting after iter-1 fix — additive-injection at any tested α cannot beat prompting for open-generation control",
+        "Superseded by C3_v2 — see C3_v2 entry for the actual claim held after iteration"
+      ],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#block-3", "refine-logs/EXPERIMENT_PLAN.md#block-4", "refine-logs/EXPERIMENT_RESULTS.md#m3", "runs/A3_applied/", "runs/A4_verify_qwen/", "runs/iteration_round_1/A3_applied_fixed/", "verify/C3_applied_circuit_control_beats_prompting_steering/", "review-stage/AUTO_ITERATION_FINAL_REPORT.md#21"],
+      "figures": []
+    },
+    {
+      "id": "C3_v2",
+      "statement": "Located emotion-relevant components C_e are associated with reliable prefix-level target-emotion score increases under additive activation injection (positive enhancement Δ_target on all 6 emotions at α ∈ {0.05,0.1,0.3,0.5,1.0}), with limited/partial cross-emotion specificity (the targeted-C_{e'} predicate passes for 4/6 emotions). However, this prefix-level modulation does not translate into effective open-generation control: additive-injection steering is catastrophically worse than prompting (macro 0.139 vs 0.663) and substantially worse than CAA/RepE (0.354). We therefore treat this as a negative result for the practical generation-time control application of C_e.",
+      "origin": "Produced by iteration 2 (③ lightweight in-loop claim-stage re-entry) as the narrowed defensible scope for C3.",
+      "data": {"provenance": "existing", "source": "Reuses SEV eval-fold data from C3 + M4 Qwen swap + iteration_round_1 fixed re-run", "available_n": "2160 eval continuations + 720 M2 pairs for enhancement Δ", "used_n": "2160 (already judged from original + iter-1) + 720 (from M2)", "subset_note": "No new experiments needed for the rewrite; empirical support pre-exists in original + iteration-1 artifacts."},
+      "models": ["Llama-3.2-3B-Instruct", "Qwen2.5-7B-Instruct (M4 verify-swap)"],
+      "method": "Reuses (a) M2 enhancement Δ measurements for the positive prefix-level modulation part + (b) M3/M4 3-arm judge-scored eval accuracy for the negative open-generation-control part.",
+      "main_experiment": {
+        "verdict": "supported (at narrowed scope) — positive prefix modulation on 6/6 emotions, limited specificity (4/6), negative for open-generation control (Arm A 0.139 << Arm B 0.663)",
+        "key_stats": "Positive part: enhancement Δ_target > 0 on all 6 emotions (from M2 iter-1 fixed metrics, α=1.0 range 1.34-5.83 nats). Specificity: targeted-C_{e'} 4/6. Negative part: Arm A macro 0.139 vs Arm B 0.663 vs Arm C 0.354 after iter-1 α+component fix.",
+        "headline": "The narrowed claim is empirically supported by pre-existing data. Reviewer's iteration-5 verdict: 'READY' at score 6/10 for submission as falsification / stress-test / negative-results paper (not triumphant circuit-discovery)."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"},
+        "integrity": "",
+        "verdict": "n/a",
+        "stage2_skip_reason": "produced by ③ claim-stage re-entry — has not been through Stage 1/2 stress test"
+      },
+      "iteration": {
+        "final_reviewer_status": "supported (at narrowed scope); READY per iteration-5 reviewer",
+        "changed": [
+          "iteration 2 (③ lightweight in-loop): claim created with narrower defensible scope",
+          "iteration 3 (⓪): wording tightening ('associated with reliable prefix-level target-emotion score increases'; 'limited/partial cross-emotion specificity')",
+          "iteration 4 (⓪): manuscript-scaffold verb sweep (verification → falsification)",
+          "iteration 5 (⓪): title updated to 'A Falsification Study of Activation-Based Emotion Steering in Llama-3.2-3B: Locatability Survives, Causal Necessity Does Not, and Practical Control Fails'"
+        ],
+        "falsified": [],
+        "narrowed_to": "N/A — this IS the narrowed version"
+      },
+      "final_status": "✓ supported at narrowed scope (positive prefix modulation on all 6 emotions + limited specificity 4/6 + explicit negative for open-generation control); not stress-tested — swap-test deferred by ③ nature",
+      "caveats": [
+        "New claim from ③ re-entry — has not been through independent Stage 2 stress test; upgrade via `/auto-verify C3_v2 --resume=true --dimensions=model --gpu_id=1,2,3,5,6`",
+        "The 'positive prefix modulation' and 'negative open-generation control' parts must be reported together — the positive part alone would over-claim, the negative part alone would under-recognise the located components"
+      ],
+      "artifacts": ["review-stage/AUTO_REVIEW.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md#21", "review-stage/AUTO_ITERATION_FINAL_REPORT.md#4b3", "runs/A3_applied/", "runs/A4_verify_qwen/", "runs/iteration_round_1/A3_applied_fixed/", "runs/A2_causal/", "runs/iteration_round_1/A2_causal_fixed/"],
+      "figures": []
+    }
+  ]
+}

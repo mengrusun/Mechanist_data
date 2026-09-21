@@ -1,0 +1,26 @@
+# Variant config: C1 model-swap-h-only-helix-def
+variant_tag: model-swap-h-only-helix-def
+dimension: model
+claim_id: C1
+
+# DIFF from main experiment:
+helix_def: H_only   # was: HGI
+
+# Frozen (same as main experiment):
+frozen_feature_set: rounds/round_1/results/m0_feature_set.json
+n_features: 19
+organisms: [prokaryote, eukaryote]
+split_seeds: [42, 200, 201]
+tau_auc: 0.75
+tau_f1: 0.3
+fdr_method: bh
+fdr_q: 0.05
+margin: 0.1
+
+# Implementation:
+# Reads from pre-computed results/m0_*_H_only_s*.json files (no re-run needed)
+input_files: results/m0_{organism}_H_only_s{seed}.json
+output: verify/C1_helix_feature_set_exists/variants/model-swap-h-only-helix-def/result.json
+
+# GPU: none (analysis only)
+gpu_id: null

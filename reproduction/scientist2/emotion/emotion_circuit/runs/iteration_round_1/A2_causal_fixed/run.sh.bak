@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Iteration 1, action ② (main-experiment-script fix for C2).
+# Fixes:
+#   1. Per-stem mean-substitute ablation (m2_causal.py:_install_mean_substitute_ablation_hooks_per_stem)
+#      — replaces the prior global-mean substitution that made ablation ADD signal instead of NEUTRALIZE.
+#   2. Random-null pool enlarged (RN_TOP_LAYERS = 2*TOP_N_LAYERS, RN_HEAD_FRAC=0.5, RN_NEURON_FRAC=0.10)
+#      so k-of-pool draws have non-degenerate variance (std > 0).
+#
+# Runs M2 at full plan scale (120 eval stems x 6 emotions x N_RANDOM_NULL_DRAWS=100 x 3 α levels).
+# Outputs to runs/iteration_round_1/A2_causal_fixed/ (NOT overwriting runs/A2_causal/).
+set -euo pipefail
+export CUDA_VISIBLE_DEVICES=1,2,3,5,6
+cd /data/zhenqian/Reproduction1/mechanica/emotion/emotion_circuit
+source /data/zhenqian/miniconda3/etc/profile.d/conda.sh
+conda activate belief
+export HF_TOKEN=<Your_token>
+export MODELSCOPE_API_TOKEN=<Your_token>
+mkdir -p runs/iteration_round_1/A2_causal_fixed
+python experiments/m2_causal.py \
+  --m1_dir runs/A1_location \
+  --out_dir runs/iteration_round_1/A2_causal_fixed \
+  --skip_stability \
+  2>&1 | tee runs/iteration_round_1/A2_causal_fixed/run.log

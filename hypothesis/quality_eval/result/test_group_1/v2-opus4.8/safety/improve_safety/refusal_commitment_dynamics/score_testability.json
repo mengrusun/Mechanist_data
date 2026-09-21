@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the hypothesis by projecting “each generated token's residual activation” onto a refusal direction and comparing the predicted “elevated-then-decaying,” “rising,” and “low” trajectories across successful jailbreaks, refusals, and benign prompts. The prediction is directional and refutable: failure to observe the proposed trajectory ordering, or failure of the first “k=1..8” projections to outperform the named prompt-level baselines on AUROC and latency, would contradict the central claims. However, “best layer,” the “collapse threshold,” and the magnitude required to count as “higher AUROC and lower latency” are unspecified, while “at that single position (and subsequent)” conflicts somewhat with the description of a “one-shot repair,” leaving implementation and decision-rule questions.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is “detect the token where projection crosses a collapse threshold”; this requires a custom threshold-selection rule but is a standard time-series classification and activation-steering operation rather than an undefined magic step. The named models and benchmarks—“Llama-3-8B, Qwen2.5-7B, Gemma-2-9B,” HarmBench, AdvBench, StrongREJECT, Alpaca, XSTest, OR-Bench, MMLU, and MT-Bench—exist, and residual-stream hooks, difference-in-means directions, logistic regression/GRUs, and activation addition are supported by standard ML and interpretability tooling. The plan gives useful figures such as “first 20-30 tokens,” five jailbreak families, “k=1..8,” three model families, and “TPR@1%FPR,” but does not state prompt counts, split sizes, repeated-run counts, or a concrete threshold-selection protocol. Negative outcomes are runnable because the design includes benign and borderline controls, held-out attacks, “no defense,” always-on steering, prompt probes, output guards, and utility/over-refusal measurements.",
+      "score": 7
+    }
+  }
+}

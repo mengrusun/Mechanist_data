@@ -1,0 +1,162 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "InterPLM: discovering interpretable features in protein language models",
+    "agent":         "scientist2",
+    "review_date":         "2026-07-19"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "拟合与评估数据分离，无实质泄漏。",
+    "score": 5,
+    "evidence_files": ["scientist2/science/interplm/scripts/m5_annotation_filling.py", "scientist2/science/interplm/scripts/m2_concept_alignment.py", "scientist2/science/interplm/scripts/common.py"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签权威且非循环。",
+    "score": 5,
+    "evidence_files": ["scientist2/science/interplm/scripts/common.py", "scientist2/science/interplm/claims_ledger.json", "scientist2/science/interplm/runs/m2/coverage.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "模型与数据集均未降级。",
+    "score": 5,
+    "evidence_files": ["scientist2/science/interplm/scripts/common.py", "scientist2/science/interplm/runs/m1/layer9.json", "scientist2/science/interplm/claims_ledger.json", "scientist2/science/interplm/verify/VERIFY_REPORT.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "样本充分，结论强度与证据匹配。",
+    "score": 5,
+    "evidence_files": ["scientist2/science/interplm/runs/m2/coverage.json", "scientist2/science/interplm/runs/m1/layer9.json", "scientist2/science/interplm/claims_ledger.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "多种子并报告显著性与置信区间。",
+    "score": 5,
+    "evidence_files": ["scientist2/science/interplm/runs/m5/wilcoxon.json", "scientist2/science/interplm/runs/iteration_round_1/m5_c5a_logreg_fix/wilcoxon.json", "scientist2/science/interplm/runs/m3/superposition_ladder.json", "scientist2/science/interplm/claims_ledger.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "因果主张均有真实干预与控制。",
+    "score": 5,
+    "evidence_files": ["scientist2/science/interplm/scripts/m3_superposition_controls.py", "scientist2/science/interplm/runs/m3/superposition_ladder.json", "scientist2/science/interplm/scripts/m6_feature_clamp_steering.py", "scientist2/science/interplm/verify/VERIFY_REPORT.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字均可追溯且相符。",
+    "score": 5,
+    "evidence_files": ["scientist2/science/interplm/runs/m1/layer9.json", "scientist2/science/interplm/runs/m2/coverage.json", "scientist2/science/interplm/runs/m2/sensitivity.json", "scientist2/science/interplm/runs/m3/superposition_ladder.json", "scientist2/science/interplm/runs/m5/wilcoxon.json", "scientist2/science/interplm/runs/iteration_round_1/m5_c5a_logreg_fix/wilcoxon.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "各产物数值与判定一致自洽。",
+    "score": 5,
+    "evidence_files": ["scientist2/science/interplm/claims_ledger.json", "scientist2/science/interplm/verify/VERIFY_REPORT.md", "scientist2/science/interplm/runs/m2/coverage.json", "scientist2/science/interplm/CLAIMS_LEDGER.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "c1": {
+        "claim": "SAE trained on ESM-2-650M residual-stream activations surfaces up to ~2,548 interpretable latent features per layer, ≥10× the raw-neuron interpretable count at the same layer (task.md given claim 1).",
+        "method": {
+          "justification": "方法与论文同族。",
+          "score": 5,
+          "evidence_files": ["scientist2/science/interplm/scripts/m1_feature_count.py", "scientist2/science/interplm/runs/m1/layer9.json"]
+        },
+        "experiment": {
+          "justification": "'可解释特征数'由 LLM 自动解释门在小样本(100，迭代后 300)特征上判定通过率、再外推到全字典估得，属未经核验的代理真值而非人工确认的可解释标签；且门通过判定本身有噪声、baseline 仅 1500/10k 序列，判定 metric 可靠性有限。",
+          "score": 3,
+          "evidence_files": ["scientist2/science/interplm/runs/m1/layer9.json", "scientist2/science/interplm/claims_ledger.json", "scientist2/science/interplm/verify/c1_sae_interpretable_feature_count/ROBUSTNESS.md"]
+        },
+        "result": {
+          "justification": "比值≥10× 的比较型结论稳健复现，但论文头条的绝对量级(每层 ~2548 个可解释特征)未达到——最佳层仅约达 58%，且迭代重跑给出的置信区间排除了该目标；因此只是方向一致，绝对量级未复现(已如实披露)。",
+          "score": 4,
+          "evidence_files": ["scientist2/science/interplm/runs/m1/layer9.json", "scientist2/science/interplm/figures/c1/gen_c1_per_layer_bar.py", "scientist2/science/interplm/claims_ledger.json"]
+        }
+      },
+      "c2": {
+        "claim": "SAE features align with up to ~143 distinct Swiss-Prot concepts under per-residue F1, whereas raw ESM-2 neurons cover only ~46 (of which ~15 cleanly recovered) (task.md given claim 2).",
+        "method": {
+          "justification": "方法与论文一致。",
+          "score": 5,
+          "evidence_files": ["scientist2/science/interplm/scripts/m2_concept_alignment.py"]
+        },
+        "experiment": {
+          "justification": "设计对称，判据可靠。",
+          "score": 5,
+          "evidence_files": ["scientist2/science/interplm/runs/m2/coverage.json", "scientist2/science/interplm/runs/m2/sensitivity.json"]
+        },
+        "result": {
+          "justification": "SAE≫neurons 的比较方向稳健复现、并经 650M→8M 模型替换验证为尺度不变(verify PASS)，但论文头条的绝对概念覆盖数(~143)在主设定下远未达到，仅在放宽阈值时逼近；故只是方向/结构一致，绝对量级未复现。",
+          "score": 4,
+          "evidence_files": ["scientist2/science/interplm/verify/VERIFY_REPORT.md", "scientist2/science/interplm/runs/m2/coverage.json", "scientist2/science/interplm/runs/m2/sensitivity.json"]
+        }
+      },
+      "c3": {
+        "claim": "The SAE-vs-neuron gap is direct evidence of superposition — surviving three matched specificity controls (random-orthogonal, PCA, shuffled-SAE) (task.md given claim 3).",
+        "method": {
+          "justification": "控制充分，方法得当。",
+          "score": 5,
+          "evidence_files": ["scientist2/science/interplm/scripts/m3_superposition_controls.py", "scientist2/science/interplm/runs/m3/superposition_ladder.json"]
+        },
+        "experiment": {
+          "justification": "特异性阶梯设计完整(PCA/随机正交旋转/shuffled-SAE/神经元四个匹配控制)，但主设定下所有控制臂的概念覆盖数全部坍缩为 0，阶梯无法区分各控制之间的强弱、也难判断 SAE 优势的稳健程度；且预设的严格判据(Δ_SAE-PCA≥20)在主设定为差一点未达，仅在放宽阈值时才满足。",
+          "score": 3,
+          "evidence_files": ["scientist2/science/interplm/runs/m3/superposition_ladder.json", "scientist2/science/interplm/verify/c3_sae_superposition_specificity/ROBUSTNESS.md"]
+        },
+        "result": {
+          "justification": "与超叠加结论定性一致。",
+          "score": 5,
+          "evidence_files": ["scientist2/science/interplm/runs/m3/superposition_ladder.json", "scientist2/science/interplm/claims_ledger.json"]
+        }
+      },
+      "c4": {
+        "claim": "≥10% of Swiss-Prot-unaligned SAE features receive coherent, non-synonym LLM auto-interp labels above a random-feature control, evidencing concepts absent from the annotation dictionary (task.md given claim 4).",
+        "method": {
+          "justification": "方法与论文同族。",
+          "score": 5,
+          "evidence_files": ["scientist2/science/interplm/scripts/m4_novel_concept_llm.py"]
+        },
+        "experiment": {
+          "justification": "接受判据(LLM 同义词核查零门)把每一个产出的标签都判为'词表邻近'，导致真实臂与随机控制臂的通过率同为 0/多，测定无法区分信号与对照，因此结构上无法检验'存在词表外新概念'这一主张；属诚实暴露的判据设计失败，而非伪造或事后放宽。",
+          "score": 3,
+          "evidence_files": ["scientist2/science/interplm/runs/m4/summary.md", "scientist2/science/interplm/claims_ledger.json"]
+        },
+        "result": {
+          "justification": "因判据不可判别，最终无新概念特征通过，团队诚实地将其定性为'测定失败'而非'否定该现象的证据'；这一处理无粉饰，但结果上该 claim 既未复现、也未被可靠否证，处于悬置状态。",
+          "score": 3,
+          "evidence_files": ["scientist2/science/interplm/claims_ledger.json", "scientist2/science/interplm/verify/c4_novel_concept_discovery/ROBUSTNESS.md"]
+        }
+      },
+      "c5": {
+        "claim": "SAE-feature linear probes outperform matched-capacity raw-neuron probes on held-out Swiss-Prot annotation filling (paired-Wilcoxon p<0.05) (task.md given claim 5a).",
+        "method": {
+          "justification": "探针法得当。",
+          "score": 5,
+          "evidence_files": ["scientist2/science/interplm/scripts/m5_annotation_filling.py"]
+        },
+        "experiment": {
+          "justification": "探针协议本身严谨(训练/测试分离、类别平衡、3 seeds、配对 Wilcoxon)，但判定 metric 比论文更严——要求 SAE 探针必须显著优于同容量神经元探针，而论文只主张 SAE 特征可用于注释补全；此外 50 个概念中有 20 个因测试集无正例被剔除，只对 30 个计分，存在'可评概念'选择偏差。",
+          "score": 3,
+          "evidence_files": ["scientist2/science/interplm/scripts/m5_annotation_filling.py", "scientist2/science/interplm/runs/iteration_round_1/m5_c5a_logreg_fix/wilcoxon.json"]
+        },
+        "result": {
+          "justification": "公平检验下 SAE 探针未优于神经元探针(两臂 PR-AUC 近乎相等、配对检验不显著)，属诚实的可信负结果，无粉饰；但它与论文相悖主要源于采用了比论文更严的比较型判据——注释补全的绝对效用本身并未被否证(其他复现显示 SAE 探针可达高 F1)。",
+          "score": 3,
+          "evidence_files": ["scientist2/science/interplm/runs/iteration_round_1/m5_c5a_logreg_fix/wilcoxon.json", "scientist2/science/interplm/claims_ledger.json"]
+        }
+      },
+      "c6": {
+        "claim": "Clamping a labeled SAE feature during ESM-2 generation steers toward the target property with monotone dose-response, above no-steer/random-clamp/mean-add baselines (task.md given claim 5b).",
+        "method": {
+          "justification": "真实因果干预，方法恰当。",
+          "score": 5,
+          "evidence_files": ["scientist2/science/interplm/scripts/m6_feature_clamp_steering.py"]
+        },
+        "experiment": {
+          "justification": "clamp 干预与三个 baseline(no-steer/mean-add/random-clamp)齐备，但剂量阶梯跨度不足一个数量级(α∈{0.5,1,2,4}σ)、网格点少于 5，且 4 个目标特征只测了 3 个、每批序列减半，扫描过窄，无法区分'真的无效'与'欠探索'。",
+          "score": 3,
+          "evidence_files": ["scientist2/science/interplm/scripts/m6_feature_clamp_steering.py", "scientist2/science/interplm/verify/c5b_feature_clamp_steering/ROBUSTNESS.md", "scientist2/science/interplm/claims_ledger.json"]
+        },
+        "result": {
+          "justification": "no-steer 基线在每个特征上都压过所有 steered 臂(steering 无效而非破坏，可信带未崩)，团队诚实报告为'协议过弱、无法确证也无法否证'并给出可靠原因(剂量过窄、M4 标签仅相关非因果、规则检测器对短序列过严)，未伪装成一致，但受限于弱干预协议而未能复现。",
+          "score": 3,
+          "evidence_files": ["scientist2/science/interplm/figures/c5b/c5b_yield_matrix_table.md", "scientist2/science/interplm/claims_ledger.json"]
+        }
+      }
+    }
+  }
+}

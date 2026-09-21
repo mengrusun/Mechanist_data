@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal aligns its method with the question by comparing “within-language answer variability across multiple paraphrases” against “cross-lingual disagreement,” and it gives directional, quantitative decision rules such as “baseline accounts for >= 30%” and “residual correlates with distance (Spearman >= 0.4) while the paraphrase baseline does not (|Spearman| < 0.2). The negative outcomes are also explicit, including “baseline < 15% of total ... refutes claim (a)” and “Jaccard > 0.5 ... refutes the separability claim,” which makes the behavioral and localization hypotheses falsifiable. However, “cross-lingual disagreement ... minus the pooled within-language baseline” does not by itself specify how disagreement rates are paired, normalized, or prevented from becoming negative, and “correcting the late-layer transition (a translation-difference / language-transition vector)” remains somewhat underspecified; the hierarchical variance model and multiple controls reduce but do not eliminate these clarification needs.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is the residual-specific causal localization—especially “patch the mid-layer concept representation from the correct run into the wrong run” and determine whether “correcting the late-layer transition ... is additionally required”; activation patching, logit-lens analysis, and frozen-model inference are standard operations, but constructing and validating the transition vector and component-selection rule requires custom engineering. The named artifacts and methods—“mLAMA/BMLAMA,” “Llama-3-8B, Aya-23-8B, and Qwen2-7B,” alias-aware evaluation, logit lens, and activation patching—are implementable with existing model and interpretability tooling, although faithful reproduction of the “linear-shortcut,” “translation-difference vector,” and “SubInj” interventions may require bespoke implementations. Resources are unusually concrete: “1,000 facts,” “15+ languages,” “K=5,” “3 seeds,” and three 7–8B models are specified, and the refuting branch is runnable because the design includes canonical-prompt comparisons, multiple paraphrases, translationese-vs-native controls, prompt matching, uncertainty intervals, and explicit negative-result criteria.",
+      "score": 7
+    }
+  }
+}

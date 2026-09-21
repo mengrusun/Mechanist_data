@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The central test is logically aligned with the hypothesis: the plan will \"extract residual-stream hidden states\" and measure when a probe prediction \"matches final answer and remains stable,\" followed by accuracy-versus-token comparisons against explicit baselines. The directional expectation of \"25-45% token reduction at near-equal accuracy\" supplies a quantified efficiency target, and failure to achieve that reduction without an accuracy loss would refute the early-exit claim, although \"near-equal\" is not numerically defined. Important gaps remain: the retrospective commitment definition uses knowledge of the eventual answer, the transition from \"per-step linear probes\" to an online \"single lightweight probe\" is underspecified, and \"rare = post-hoc\" does not by itself establish post-hoc rationalization.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The named models and datasets—\"Qwen2.5-7B-Instruct, DeepSeek-R1-Distill-Qwen-7B, and Llama-3.1-8B\" with \"GSM8K, MATH, ProntoQA, ARC\"—exist, and residual-stream extraction, linear probing, logit-lens readouts, and token-level generation control are supported by standard tooling. The hardest step is converting an online probe prediction into an emitted open-ended answer: \"bucketed/token-matched answer\" and then \"force '\\nThe answer is' continuation\" does not specify how arbitrary or multi-token numeric answers are decoded, so this is custom logic bordering on an undefined step, whereas the MCQ version is standard. The design includes runnable negative-result controls through full-CoT, fixed-truncation, entropy, and self-consistency baselines plus layer/window/transfer ablations, but resources are only partly quantified—model sizes and an expected \"25-45%\" saving are given, while sample counts, selected layers, K, W, and calibration-set sizes are absent.",
+      "score": 6
+    }
+  }
+}

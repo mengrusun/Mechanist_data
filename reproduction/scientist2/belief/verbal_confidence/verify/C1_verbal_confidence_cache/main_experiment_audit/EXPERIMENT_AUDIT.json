@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-13",
+  "auditor": "gpt-5.4 (external, via dmxapi, cross-model)",
+  "claim_id": "C1",
+  "linked_milestones": ["M1", "M2", "M3", "M4", "M5", "M6"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Ground truth for answer correctness uses TriviaQA dataset normalized_aliases (real_gt). The probe target in M2 is the model-generated self-assessment score (by design for mechanistic interpretability). No circular derivation of GT from model outputs."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "All metrics reported in raw units (R2, raw 0-100 score shifts, KL). sigma_proj in M5 is for intervention scaling only. No normalization by model outputs. No suspicious near-1.0 scores."
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "All result files exist and are non-empty. Key numbers match: P1 R2=0.541 exact, P3 shift=0.187 exact, P4 lda r2=0.345/span=-0.583 exact. WARN: P2 ratio=0.243 not transparently derivable from per-seed values (seed42=0.258, seed123=0.123, simple mean=0.19). P5 pass declared despite M6c cross-seed inconsistency (seed42=3.57 vs seed123=0.10)."
+    },
+    "dead_code": {
+      "status": "warn",
+      "details": "All metric functions called and producing outputs. WARN: answer_acc_preserved=1.0 in M3 is non-informative by construction — the answer is baked into the prompt so preservation is expected by design. Creates misleading impression of specificity."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "2 of 3 planned seeds completed for M3-M6; seed2024 still running. P5 declared pass on aggregate mean (1.833) despite seed123 M6c effect being near-zero (0.10). No scope overclaiming in report language itself, but predicate verdicts are provisional pending seed2024."
+    },
+    "eval_type": "real_gt_mechanistic_probe"
+  }
+}

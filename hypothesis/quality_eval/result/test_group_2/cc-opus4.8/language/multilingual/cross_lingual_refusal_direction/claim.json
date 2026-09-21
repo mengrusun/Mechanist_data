@@ -1,0 +1,22 @@
+{
+  "Name": "cross_lingual_refusal_direction",
+  "Title": "One Refusal to Rule Them All? Cross-Lingual Structure of the Safety-Refusal Direction",
+  "Short Hypothesis": "Safety refusal is mediated by a largely shared refusal direction across languages, but its magnitude and threshold are language-specific and weaker in low-resource languages, mechanistically explaining cross-lingual jailbreak vulnerability; aligning the shared direction's threshold across languages closes the gap.",
+  "Related Work": "Refusal-direction work (Arditi et al.) is English-centric; multilingual jailbreak studies (Yong et al. low-resource jailbreaks) are behavioral. We connect the two: a shared refusal direction with language-varying threshold explains multilingual safety gaps, and we test threshold equalization as a mechanistic fix.",
+  "Abstract": "Multilingual models are more easily jailbroken in low-resource languages, a serious safety gap. We hypothesize a mechanistic cause: refusal is mediated by a mostly shared refusal direction in the residual stream, but the effective activation threshold for triggering refusal is language-specific and lower (weaker) in low-resource languages, so harmful prompts fail to cross it. We extract refusal directions per language from harmful/harmless contrast pairs, measure their cross-lingual similarity, and estimate per-language refusal-trigger thresholds. We predict high directional overlap but systematically lower refusal activation in low-resource languages on matched harmful prompts. Causally, we test whether adding the shared refusal direction (or lowering the threshold) in low-resource languages restores refusal without harming helpfulness, and whether the same jailbreak that bypasses low-resource refusal maps to sub-threshold activation. Metrics: cross-lingual refusal-direction cosine similarity, per-language refusal activation on matched harmful prompts, jailbreak success vs activation, and refusal-restoration rate under intervention. This provides a mechanistic account of multilingual safety disparities and a direction-level mitigation.",
+  "Experiments": [
+    "Extract refusal directions per language from harmful/harmless contrast pairs (matched, translated).",
+    "Measure cross-lingual cosine similarity of refusal directions.",
+    "Estimate per-language refusal activation on matched harmful prompts; relate to resource level.",
+    "Correlate jailbreak success with sub-threshold refusal activation across languages.",
+    "Causal fix: add shared refusal direction / equalize threshold in low-resource languages; measure refusal restoration and helpfulness retention.",
+    "Test whether known low-resource jailbreaks correspond to reduced activation.",
+    "Controls: over-refusal check on benign prompts; random-direction addition."
+  ],
+  "Risk Factors and Limitations": [
+    "Working with harmful prompts requires careful safety handling; use established red-team sets responsibly.",
+    "Translated harmful prompts may be lower quality in low-resource languages, confounding activation.",
+    "Refusal is multi-component; a single direction may be incomplete.",
+    "Interventions risk over-refusal; helpfulness trade-off must be measured."
+  ]
+}

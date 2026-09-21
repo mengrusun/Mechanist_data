@@ -1,0 +1,566 @@
+[
+  {
+    "index": 10,
+    "Name": "codeswitch_executive_control",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core claims: (1) deliberately induced code-switching in LLM reasoning can improve performance on inhibition/conflict tasks beyond length-matched monolingual reasoning; (2) switch type (insertion/alternation/dense) dissociates by reactive vs proactive control demands; (3) a locatable conflict-monitoring component mediates the effect and can be causally steered; (4) the novelty is mainly in the mechanism/interpretive framing and switch-type/control-mode crossover, not the general idea that mixing may help. Closest prior work already pre-empts the broad 'mixing helps reasoning' claim and even shows monolingual enforcement hurts math accuracy. The actual delta is a human bilingual executive-control mapping plus a specific, testable switch-type-by-control-mode and mediation/steering hypothesis, which is meaningfully new if it holds.",
+      "revision_notes": [
+        "State explicitly that the contribution is not 'mixing helps reasoning' but the finer-grained switch-type-by-control-mode and conflict-monitoring hypothesis.",
+        "Define insertion/alternation/dense switch regimes operationally in a way that is clearly distinct from prior language-mixing setups.",
+        "Add a sharper comparison to the 2025 language-mixing papers, explaining why your control-mode dissociation and causal steering are not implied by them.",
+        "Specify whether the novelty lies in a new benchmark, a new mechanistic finding, or a new behavioral law; avoid bundling all three as one claim."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether induced code-switching can function as a cheap inference-time knob for conflict/inhibition reasoning in multilingual LLMs, and whether that maps onto human executive-control findings. Who cares: multilingual reasoning, prompt engineering, interpretability, and cognitive-science-of-LLMs researchers. If true, practitioners might use controlled switching to improve certain reasoning tasks; if false, it still cleanly informs the limits of the human-control analogy. The strongest one-line case: switch type may become a controllable lever for reasoning under conflict, not just a nuisance to suppress. This is non-niche and has some real-world relevance, but the application value is narrower than broad reasoning improvements.",
+      "revision_notes": [
+        "Add a concrete downstream use case where switch-type control changes an actual workflow, not just benchmark accuracy.",
+        "Quantify expected practical gains and where they matter most (e.g., multilingual QA, tutoring, agentic prompting under ambiguity).",
+        "Frame the contribution as a general principle about controllable reasoning under conflict, not only a bilingual-LLM curiosity.",
+        "Include a short 'if null, what changes?' paragraph to make the so-what explicit for both positive and negative outcomes."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is reasonably testable and better scoped than many mechanistic ideas, but it still has several gaps. The core hypothesis is somewhat overloaded: behavioral improvement, switch-type dissociation, and internal mediation/steering are all packed together, and the causal chain from code-switching to inhibition is not yet tightly formalized. Related work is only summarized at a high level; it needs more precise positioning against the 2025 papers that already treat mixing as useful. Experiments are feasible, but the design needs stronger controls for token-count, translation difficulty, language-pair effects, and whether the induced switching is actually causing an executive-control-like state rather than generic diversification or verbosity. The probing/mediation claim in particular is vulnerable unless you pre-register what constitutes a valid conflict-monitoring direction and show specificity beyond accuracy gains. Overall, this could be publishable if executed carefully, but the current story is underspecified and slightly overclaimed.",
+      "revision_notes": [
+        "Split the proposal into three separate hypotheses: behavioral effect, switch-type dissociation, and mechanism/steering; pre-register each with distinct acceptance criteria.",
+        "Add a stronger control suite: same-token-count paraphrase, same-language extra-fluency control, and matched difficulty by language pair and prompt length.",
+        "Define the causal-mediational test precisely: what probe, what intervention, what null, and what evidence would rule out confounds like verbosity or translation artifacts.",
+        "Specify statistical analysis in advance, including mixed-effects structure, correction for multiple comparisons, and effect-size thresholds.",
+        "Tighten related work with explicit contrast to the two cited 2025 papers and explain what remains unknown after them.",
+        "Reduce overclaiming around 'executive control' unless the internal mechanism can be independently validated; otherwise call it an operational analogy.",
+        "Add ablations for language pair, model family, and switch density to show robustness versus a single fragile setting."
+      ]
+    },
+    "revision_notes": [
+      "State explicitly that the contribution is not 'mixing helps reasoning' but the finer-grained switch-type-by-control-mode and conflict-monitoring hypothesis.",
+      "Define insertion/alternation/dense switch regimes operationally in a way that is clearly distinct from prior language-mixing setups.",
+      "Add a sharper comparison to the 2025 language-mixing papers, explaining why your control-mode dissociation and causal steering are not implied by them.",
+      "Specify whether the novelty lies in a new benchmark, a new mechanistic finding, or a new behavioral law; avoid bundling all three as one claim.",
+      "Add a concrete downstream use case where switch-type control changes an actual workflow, not just benchmark accuracy.",
+      "Quantify expected practical gains and where they matter most (e.g., multilingual QA, tutoring, agentic prompting under ambiguity).",
+      "Frame the contribution as a general principle about controllable reasoning under conflict, not only a bilingual-LLM curiosity.",
+      "Include a short 'if null, what changes?' paragraph to make the so-what explicit for both positive and negative outcomes.",
+      "Split the proposal into three separate hypotheses: behavioral effect, switch-type dissociation, and mechanism/steering; pre-register each with distinct acceptance criteria.",
+      "Add a stronger control suite: same-token-count paraphrase, same-language extra-fluency control, and matched difficulty by language pair and prompt length.",
+      "Define the causal-mediational test precisely: what probe, what intervention, what null, and what evidence would rule out confounds like verbosity or translation artifacts.",
+      "Specify statistical analysis in advance, including mixed-effects structure, correction for multiple comparisons, and effect-size thresholds.",
+      "Tighten related work with explicit contrast to the two cited 2025 papers and explain what remains unknown after them.",
+      "Reduce overclaiming around 'executive control' unless the internal mechanism can be independently validated; otherwise call it an operational analogy.",
+      "Add ablations for language pair, model family, and switch density to show robustness versus a single fragile setting."
+    ]
+  },
+  {
+    "index": 11,
+    "Name": "answer_deferral_typology",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims: (1) answer-deferring/verb-final reasoning structure delays an LLM's commitment relative to answer-early structure; (2) this reduces premature-commitment errors on revision-requiring items; (3) the effect can be measured and causally steered via an internal answer-commitment direction; (4) the within-item content-matched structure manipulation is the main novel lever, with a cross-lingual SVO/SOV framing as a secondary setting. The mechanistic 'commitment direction is decodable/steerable' piece is substantially pre-empted by recent commitment-boundary work. The potentially novel delta is the specific intervention on reasoning structure and its interaction with revision errors. That is non-trivial, but it is closer to a smart application/setting shift than a new mechanism or theory.",
+      "revision_notes": [
+        "State explicitly that the novelty is the structure intervention on reasoning traces, not the commitment probe/steering mechanism.",
+        "Sharpen the delta vs prior commitment-boundary work by specifying what new causal claim is being tested: structure -> delayed commitment -> lower revision errors.",
+        "Clarify whether the cross-lingual typology angle is a scientific test, a robustness check, or just a motivating analogy.",
+        "Add an explicit table contrasting prior work on decodability/epiphenomenal CoT vs this proposal's within-item answer-early/answer-late manipulation."
+      ]
+    },
+    "impact": {
+      "score": 6,
+      "reasoning": "The problem under study is whether reasoning format can reduce premature-answer errors by keeping alternatives alive longer. Who cares: prompt/CoT practitioners, interpretability researchers, and people studying reasoning faithfulness and error modes. If true, it could yield a cheap prompt-structure knob for reducing revision mistakes; if false, it would still inform limits of format-based control. But the real-world reach is moderate: it is mostly about model behavior on a niche class of lure/revision tasks, not a broad capability advance. The 'so what' is credible for research practice, less so for end-user applications unless the effect is robust and generalizable.",
+      "revision_notes": [
+        "Add a concrete downstream use case showing how answer-deferring structure would be deployed in prompting or evaluation.",
+        "Quantify the expected gain in revision-error reduction needed for practical significance.",
+        "Broaden the task framing beyond toy lure batteries to at least one high-stakes or widely used reasoning benchmark.",
+        "Explain whether the result would change prompt engineering defaults or only provide a diagnostic tool."
+      ]
+    },
+    "review": {
+      "score": 5,
+      "reasoning": "The proposal is testable and reasonably scoped, but several claims are under-specified. The central hypothesis is plausible yet not fully falsifiable as written because 'commitment' is operationalized through several correlated proxies (first-crossing probability, persistence, probes), and the structure manipulation may confound deliberation time, length, and compliance. Related work is suggestive but not yet tight enough to isolate the exact causal gap relative to commitment-boundary studies and existing word-order/LLM typology work. The experiments are feasible in principle, but they need stronger controls: matched token budget, matched reasoning quality, direct controls for simple extra-deliberation effects, preregistered thresholds, and ablations separating format compliance from genuine internal delay. As written, the story is interesting but a bit over-ambitious; with cleaner operational definitions and controls it could become fundable or venue-ready.",
+      "revision_notes": [
+        "Define 'commitment' with one primary metric and one backup metric; preregister the threshold and persistence rule.",
+        "Add a deliberation-time/length-matched control that is not answer-deferring to separate deferral from extra compute.",
+        "Include an explicit baseline: free-form CoT, answer-first, answer-last, and a shuffled-order or paraphrase control.",
+        "Specify how revision-requiring items are labeled and why they should be sensitive to premature commitment.",
+        "Replace broad claims about typology with a precise causal hypothesis about structure-induced commitment timing.",
+        "Add ablations for compliance, trace length, and answer correctness to show the effect is not just verbosity.",
+        "Tighten the related work section to distinguish prior decodability/steering work from the proposed structural intervention."
+      ]
+    },
+    "revision_notes": [
+      "State explicitly that the novelty is the structure intervention on reasoning traces, not the commitment probe/steering mechanism.",
+      "Sharpen the delta vs prior commitment-boundary work by specifying what new causal claim is being tested: structure -> delayed commitment -> lower revision errors.",
+      "Clarify whether the cross-lingual typology angle is a scientific test, a robustness check, or just a motivating analogy.",
+      "Add an explicit table contrasting prior work on decodability/epiphenomenal CoT vs this proposal's within-item answer-early/answer-late manipulation.",
+      "Add a concrete downstream use case showing how answer-deferring structure would be deployed in prompting or evaluation.",
+      "Quantify the expected gain in revision-error reduction needed for practical significance.",
+      "Broaden the task framing beyond toy lure batteries to at least one high-stakes or widely used reasoning benchmark.",
+      "Explain whether the result would change prompt engineering defaults or only provide a diagnostic tool.",
+      "Define 'commitment' with one primary metric and one backup metric; preregister the threshold and persistence rule.",
+      "Add a deliberation-time/length-matched control that is not answer-deferring to separate deferral from extra compute.",
+      "Include an explicit baseline: free-form CoT, answer-first, answer-last, and a shuffled-order or paraphrase control.",
+      "Specify how revision-requiring items are labeled and why they should be sensitive to premature commitment.",
+      "Replace broad claims about typology with a precise causal hypothesis about structure-induced commitment timing.",
+      "Add ablations for compliance, trace length, and answer correctness to show the effect is not just verbosity.",
+      "Tighten the related work section to distinguish prior decodability/steering work from the proposed structural intervention."
+    ]
+  },
+  {
+    "index": 12,
+    "Name": "articulated_rule_repair",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims requiring novelty: (1) LLMs exhibit a graded say-do gap across linguistic/symbolic rule families; (2) this gap reflects representational dissociation between articulation and execution pathways, with rule information decodable even on violating trials; (3) articulation- and execution-relevant components are distinct enough to localize and compare; (4) the model's own articulated-rule representation can be read out and causally injected to repair execution without labels or fine-tuning; (5) the repair is specific to the articulated rule rather than generic compliance pressure. Per the search summary, claims (1)-(2) are already substantially established by recent work on computational split-brain and metalinguistic dissociation, so the descriptive phenomenon is not novel. The actual nontrivial delta is claim (4)-(5): converting the diagnosed dissociation into a training-free causal repair lever via activation patching/steering using the model's own articulated rule. That is meaningfully different from prior descriptive work and not entirely obvious, though it is adjacent to standard activation steering/intervention methods. The closest prior family is say-do gap / split-brain work plus generic activation steering; the delta is self-supervised extraction of internally articulated rule representations and rule-specific injection into execution.",
+      "revision_notes": [
+        "Narrow the claimed novelty explicitly: present the main contribution as a causal self-repair intervention, not discovery of the say-do gap or dissociation.",
+        "Add a sharper comparison to closest mechanistic baselines: generic activation steering, task-vector methods, activation patching, and ask-then-generate prompting.",
+        "Specify what is uniquely new about ARR relative to explicit-rule prompting: e.g., cases where the rule is internally recoverable but not externally restated in the execution prompt.",
+        "Include at least one setting where the rule is latent/implicit rather than explicitly restatable, to strengthen novelty beyond a prompt-engineering variant.",
+        "State whether the novelty lies in mechanism, finding, or setting; right now mechanism is strongest, while the rest reads partially pre-empted."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is failure of models to execute rules they can correctly articulate, and whether internal representations of the articulated rule can be used to repair instruction/rule compliance. Who cares: interpretability researchers, controllable generation and alignment/instruction-following researchers, and practitioners who want stronger compliance without fine-tuning. Strongest case: if internal rule representations can be causally reused to fix execution, this offers a self-supervised lever for improving behavior and a concrete test of whether the say-do gap is a tractable routing problem versus an architectural limit. This is a real problem rather than a niche curiosity, and even a negative result would matter because it supports the architectural-limit account. Follow-up work would likely cite it in interpretability and control circles. However, real-world reach depends heavily on effect size and whether ARR beats cheap baselines like explicit-rule prompting; if prompting matches ARR, practical impact drops. The result could shift direction modestly by reframing introspection from merely untrustworthy evidence to a manipulable internal resource, but only if the intervention is robust and specific.",
+      "revision_notes": [
+        "Strengthen the use-case story with one or two concrete application scenarios where training-free repair matters more than prompting or fine-tuning.",
+        "Define the decision threshold for the so-what test: what ARR gain over explicit-rule prompting would actually change practitioner behavior?",
+        "Include transfer/generalization claims that would matter downstream, such as cross-template, cross-rule-family, or long-context compliance.",
+        "Add analysis of whether ARR helps in safety-/policy-like instruction following, not just synthetic rule tasks, to broaden real-world relevance.",
+        "Clarify what the field learns from either outcome: successful repair implies actionable internal control; failed repair supports architectural limits."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is testable and reasonably well scoped, with concrete experiments, controls, and success criteria. The central hypothesis is falsifiable: decodable-but-not-enacted rule representations should exist, and injecting them should improve compliance. The inclusion of random-direction, incorrect-articulation, and explicit-rule-prompt baselines is good. Still, there are notable logical and methodological gaps. The proposal overinterprets articulation as evidence that 'the knowledge exists' and dissociation as the explanation, when alternative explanations include decoding artifacts, prompt-format mismatch, search failures, or weak articulation measures. Jaccard overlap of 'components' from activation patching is underspecified and may not be a stable or meaningful measure of pathway dissociation. Probe AUROC >0.70 on violating trials does not by itself establish a causally relevant representation. ARR may simply add generic steering toward shorter/safer/more constrained outputs unless stronger off-target and specificity controls are added. The experiment plan also leaves key details open: how compliance is scored across heterogeneous rule families, where/when activations are cached and injected, how layer/site selection is chosen without leakage, and how to prevent contamination between articulation and execution contexts. Feasibility is plausible on open-weight models, but the current story is mechanistically stronger than the evidence plan can cleanly support. If executed very well it could be workshop/TMLR/interpretability-paper material; for a stronger ML venue it needs tighter causal design and sharper baseline positioning.",
+      "revision_notes": [
+        "Operationalize articulation and execution scoring per rule family with explicit automatic metrics, human-validation plans, and error analysis for ambiguous cases.",
+        "Replace or supplement probe decodability with stronger causal tests: intervention at predicted rule-representation sites versus matched control sites, mediation analysis, and timing/layer specificity.",
+        "Define the ARR pipeline precisely: what prompt produces the articulated rule, how the representation is extracted, whether it is token-, span-, or layer-averaged, and how injection locations are selected.",
+        "Add a leakage-resistant protocol separating articulation collection from execution contexts, with held-out templates and counterbalanced surface forms.",
+        "Strengthen specificity controls: test ARR constructed from a different rule in the same family, same-rule from another context, and semantic-content-matched but rule-incorrect articulations.",
+        "Include a baseline using direct natural-language rule restatement and a parameter-matched hidden-state steering baseline derived without articulation, to isolate the value of 'own articulated rule'.",
+        "Clarify statistical design: number of seeds, model sizes, confidence intervals, multiple-comparisons correction across rules/families, and preregistered primary endpoints.",
+        "Tone down causal/mechanistic claims from 'pathways' unless the localization evidence is much stronger; otherwise frame as representational dissociation consistent with, not proving, separate pathways."
+      ]
+    },
+    "revision_notes": [
+      "Narrow the claimed novelty explicitly: present the main contribution as a causal self-repair intervention, not discovery of the say-do gap or dissociation.",
+      "Add a sharper comparison to closest mechanistic baselines: generic activation steering, task-vector methods, activation patching, and ask-then-generate prompting.",
+      "Specify what is uniquely new about ARR relative to explicit-rule prompting: e.g., cases where the rule is internally recoverable but not externally restated in the execution prompt.",
+      "Include at least one setting where the rule is latent/implicit rather than explicitly restatable, to strengthen novelty beyond a prompt-engineering variant.",
+      "State whether the novelty lies in mechanism, finding, or setting; right now mechanism is strongest, while the rest reads partially pre-empted.",
+      "Strengthen the use-case story with one or two concrete application scenarios where training-free repair matters more than prompting or fine-tuning.",
+      "Define the decision threshold for the so-what test: what ARR gain over explicit-rule prompting would actually change practitioner behavior?",
+      "Include transfer/generalization claims that would matter downstream, such as cross-template, cross-rule-family, or long-context compliance.",
+      "Add analysis of whether ARR helps in safety-/policy-like instruction following, not just synthetic rule tasks, to broaden real-world relevance.",
+      "Clarify what the field learns from either outcome: successful repair implies actionable internal control; failed repair supports architectural limits.",
+      "Operationalize articulation and execution scoring per rule family with explicit automatic metrics, human-validation plans, and error analysis for ambiguous cases.",
+      "Replace or supplement probe decodability with stronger causal tests: intervention at predicted rule-representation sites versus matched control sites, mediation analysis, and timing/layer specificity.",
+      "Define the ARR pipeline precisely: what prompt produces the articulated rule, how the representation is extracted, whether it is token-, span-, or layer-averaged, and how injection locations are selected.",
+      "Add a leakage-resistant protocol separating articulation collection from execution contexts, with held-out templates and counterbalanced surface forms.",
+      "Strengthen specificity controls: test ARR constructed from a different rule in the same family, same-rule from another context, and semantic-content-matched but rule-incorrect articulations.",
+      "Include a baseline using direct natural-language rule restatement and a parameter-matched hidden-state steering baseline derived without articulation, to isolate the value of 'own articulated rule'.",
+      "Clarify statistical design: number of seeds, model sizes, confidence intervals, multiple-comparisons correction across rules/families, and preregistered primary endpoints.",
+      "Tone down causal/mechanistic claims from 'pathways' unless the localization evidence is much stronger; otherwise frame as representational dissociation consistent with, not proving, separate pathways."
+    ]
+  },
+  {
+    "index": 13,
+    "Name": "iconic_naming_bootstrap",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core claims: (1) iconic vs arbitrary vs anti-iconic novel names causally affect in-context learning speed, referent binding, and reasoning in LLMs; (2) the effect is directional/graded, not just a detection of bouba-kiki preferences; (3) the benefit is mediated by an internal binding/association signal and can be causally steered; (4) the setting is novel-word learning/reasoning in LLMs rather than human infant learning or model recognition. This is meaningfully different from prior recognition-only work and from MAGNIFICo-style novel-word learning without iconicity. The delta is strong and non-obvious, though the underlying phenomenon is adjacent to existing sound-symbolism and in-context learning literature.",
+      "revision_notes": [
+        "State the exact novelty claim in one sentence: 'iconicity is an instrumentally useful scaffold for LLM in-context learning' and separate it from mere recognition of sound symbolism.",
+        "Add a tighter comparison table against the closest families: bouba-kiki recognition papers, human bootstrapping work, and MAGNIFICo, clarifying what each does not test.",
+        "Emphasize the anti-iconic condition as the key novel falsifier, not just iconic > arbitrary.",
+        "Specify whether novelty lies in the behavioral finding, the mechanistic mediation/steering test, or both."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The under-study phenomenon is whether sound-symbolic naming helps novel concept binding and in-context learning in LLMs. If true, it could affect psycholinguistics-of-LLMs, in-context learning, and interpretability, and may inform naming/variable design in prompting or model interfaces. The strongest one-line case is that a simple naming choice could measurably improve how models bind and reason about new entities. This is a real, general cognitive question, but still somewhat niche and unlikely to become a broad industry lever unless effects are large and robust. Yes, serious researchers would care either way because the result distinguishes recognitional iconicity from functional utility; practitioners only modestly so.",
+      "revision_notes": [
+        "Add an explicit downstream-use section: how naming schemes would change prompt design, synthetic data labeling, or variable naming in agentic workflows if effects replicate.",
+        "Clarify the broader phenomenon value: what the result says about whether LLMs use surface form as a cognitive scaffold at all.",
+        "Quantify expected effect size or practical threshold for relevance, so the 'so what' is legible.",
+        "Include a paragraph on who would cite it first: ICL, computational psycholinguistics, and interpretability rather than general NLP."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is testable and better scoped than many ideas, but the core hypothesis remains somewhat underspecified: 'binding signal' and 'mediation' need an operational definition, and it's unclear whether effects are due to memorability, tokenization, or superficial phonotactics rather than iconicity per se. The experimental plan is decent and includes controls, but several key controls are still missing or underdeveloped: direct memorability matching, random-but-structured phonology baselines, preregistered effect-size thresholds, and explicit null/positive decision criteria. The mechanistic steering claim is ambitious and may be hard to support causally without stronger interventions. With refinement, it could be venue-worthy; as written, it is fundable but not yet submission-ready.",
+      "revision_notes": [
+        "Operationalize 'binding signal' with a concrete probe target and causal criterion, not just AUROC and correlation.",
+        "Add explicit null/alternative hypotheses distinguishing iconicity from memorability, phonotactic familiarity, and tokenization artifacts.",
+        "Predefine the effect-size threshold that would count as meaningful and the stopping/decision rule for each experiment.",
+        "Include a stronger control for semantic leakage from the pseudoword construction process and for length/frequency beyond simple matching.",
+        "Make the steering experiment more credible by specifying the intervention mechanism, baseline perturbations, and whether it changes behavior selectively on binding tasks.",
+        "Add an ablation showing whether orthographic, IPA, and tokenizer-robust versions converge; if not, interpret the failure mode upfront."
+      ]
+    },
+    "revision_notes": [
+      "State the exact novelty claim in one sentence: 'iconicity is an instrumentally useful scaffold for LLM in-context learning' and separate it from mere recognition of sound symbolism.",
+      "Add a tighter comparison table against the closest families: bouba-kiki recognition papers, human bootstrapping work, and MAGNIFICo, clarifying what each does not test.",
+      "Emphasize the anti-iconic condition as the key novel falsifier, not just iconic > arbitrary.",
+      "Specify whether novelty lies in the behavioral finding, the mechanistic mediation/steering test, or both.",
+      "Add an explicit downstream-use section: how naming schemes would change prompt design, synthetic data labeling, or variable naming in agentic workflows if effects replicate.",
+      "Clarify the broader phenomenon value: what the result says about whether LLMs use surface form as a cognitive scaffold at all.",
+      "Quantify expected effect size or practical threshold for relevance, so the 'so what' is legible.",
+      "Include a paragraph on who would cite it first: ICL, computational psycholinguistics, and interpretability rather than general NLP.",
+      "Operationalize 'binding signal' with a concrete probe target and causal criterion, not just AUROC and correlation.",
+      "Add explicit null/alternative hypotheses distinguishing iconicity from memorability, phonotactic familiarity, and tokenization artifacts.",
+      "Predefine the effect-size threshold that would count as meaningful and the stopping/decision rule for each experiment.",
+      "Include a stronger control for semantic leakage from the pseudoword construction process and for length/frequency beyond simple matching.",
+      "Make the steering experiment more credible by specifying the intervention mechanism, baseline perturbations, and whether it changes behavior selectively on binding tasks.",
+      "Add an ablation showing whether orthographic, IPA, and tokenizer-robust versions converge; if not, interpret the failure mode upfront."
+    ]
+  },
+  {
+    "index": 14,
+    "Name": "counterfactual_marker_reasoning",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims needing novelty: (1) explicit grammatical counterfactual/irrealis marking improves LLM counterfactual reasoning on content-matched items; (2) the effect specifically reduces actual-world intrusion by helping separate actual vs hypothetical worlds; (3) an internal 'irrealis mode' representation can be identified and is more engaged by marked prompts; (4) causal steering along that direction can reproduce/remove the marker effect; (5) this serves as a confound-reduced adjudication of Bloom's marker->reasoning hypothesis. Relative to prior work, the probe/steer mechanism is standard and the general idea of grammatical-feature directions is well-trodden. The real novelty is the specific phenomenon: connecting grammatical mood marking to reasoning behavior via within-item manipulations and a causal interpretability test. That is meaningfully different from prior grammatical-concept papers and from human Bloom-style debates, but it is also an obvious member of a broader template family applying the same recipe to another grammatical feature. So novelty is moderate: new finding/setting/problem operationalization, not a new method or theory.",
+      "revision_notes": [
+        "Make the delta crisper against closest LLM baselines by explicitly naming why tense/gender/number steering does not already imply mood->reasoning effects.",
+        "Narrow the main claim from broad 'unlock reasoning' to the specific novel phenomenon: reduction of actual-world intrusion under matched counterfactual mood marking.",
+        "Add one genuinely non-template element, e.g. a formal world-state separation metric or intervention that is specific to counterfactual reasoning rather than generic probe-and-steer.",
+        "Clarify whether novelty lives in adjudicating Bloom, discovering an irrealis representation, or showing causal behavior change; prioritize one as the headline contribution.",
+        "Explicitly distinguish grammatical mood marking from lexical counterfactual cues and show how the dataset isolates the former."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The actual problem under study is whether grammatical packaging of counterfactuals changes a model's ability to keep actual and hypothetical worlds distinct. Who cares: cognitive science/linguistic relativity researchers, multilingual NLP, and interpretability researchers interested in language-conditioned reasoning. Strongest case: if true, small grammatical cues can causally alter reasoning fidelity, implying prompt formulation and multilingual evaluation may systematically bias measured reasoning. This is more than a niche curiosity because counterfactual reasoning is important, but the practical effect size and downstream consequences are uncertain, and the search context suggests a likely null. If the result is positive, it could influence prompt design, multilingual benchmarking, and theories of internal world modeling; if null, it still provides a clean negative test of a famous claim. The \"so what\" test is partially passed: serious researchers would likely update how they think about grammatical framing effects and multilingual reasoning evaluation, though everyday practitioners may not change much unless effects are sizable and robust.",
+      "revision_notes": [
+        "State explicit downstream decisions that would change under positive vs null results, e.g. benchmark construction, prompt templates, multilingual fairness claims, or interpretability of world-state representations.",
+        "Quantify what effect size would matter in practice and what deployment or evaluation settings are exposed to this issue.",
+        "Strengthen the application story beyond Bloom by tying actual-world intrusion to safety, planning, or instruction-following failures in hypothetical reasoning tasks.",
+        "Add a concrete release artifact with broad uptake potential, such as a multilingual counterfactual minimal-pair benchmark.",
+        "Explain why a null result is still impactful and what communities would cite it as decisive evidence against marker-based reasoning effects."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is reasonably precise and falsifiable, with concrete hypotheses, controls, and mixed-effects analyses. It is stronger than many early-stage proposals because it specifies primary metrics, directional predictions, steering controls, and major risks. However, several logical gaps remain. The central causal claim may be undermined if 'unmarked' prompts still lexically encode counterfactuality, making the manipulation weak or ambiguous. The cross-lingual component is underpowered conceptually because marker strength is entangled with pretraining/resource differences despite stratification. The probe evidence risks circularity: framing differences may reflect stylistic/hedging/difficulty signals rather than a clean world-separation variable, and mediation by projection is correlational. Steering success would not by itself prove the naturally used representation is specifically counterfactual rather than generic uncertainty. Related work is adequate but not fully specific about the closest probe/steer baselines. Overall, if executed very well it could be workshop/findings-worthy and possibly a solid main-venue empirical paper if effects are clean and robust, but as written it needs tighter operationalization and stronger controls to support the headline causal interpretation.",
+      "revision_notes": [
+        "Provide concrete example items showing exactly how marked and unmarked versions differ only in grammatical mood, not lexical counterfactuality, emphasis, or discourse naturalness.",
+        "Pre-register a hierarchy of claims: behavioral effect first, representation association second, causal steering third; avoid overclaiming that probe/steer proves mechanism.",
+        "Add stronger controls for alternative explanations: uncertainty/hedging prompts, generic complexity-matched paraphrases, and lexical cue ablations.",
+        "Define the 'actual-world intrusion' metric formally and include inter-annotator validation or rule-based labeling criteria for lures and answers.",
+        "Include model selection rationale and expected power analysis across 5 frozen models, with planned handling of ceiling effects and heterogeneous nulls.",
+        "Strengthen the causal test by adding layer/site specificity, dose-response steering, and transfer tests showing the same direction does not just induce generic hypothetical language.",
+        "Trim or de-emphasize the cross-lingual strong-vs-weak-marker claim unless you can better isolate grammar from resource/pretraining confounds.",
+        "Specify minimum acceptance criteria for the irrealis probe beyond AUROC>0.70, including held-out item generalization and factual-item non-effects."
+      ]
+    },
+    "revision_notes": [
+      "Make the delta crisper against closest LLM baselines by explicitly naming why tense/gender/number steering does not already imply mood->reasoning effects.",
+      "Narrow the main claim from broad 'unlock reasoning' to the specific novel phenomenon: reduction of actual-world intrusion under matched counterfactual mood marking.",
+      "Add one genuinely non-template element, e.g. a formal world-state separation metric or intervention that is specific to counterfactual reasoning rather than generic probe-and-steer.",
+      "Clarify whether novelty lives in adjudicating Bloom, discovering an irrealis representation, or showing causal behavior change; prioritize one as the headline contribution.",
+      "Explicitly distinguish grammatical mood marking from lexical counterfactual cues and show how the dataset isolates the former.",
+      "State explicit downstream decisions that would change under positive vs null results, e.g. benchmark construction, prompt templates, multilingual fairness claims, or interpretability of world-state representations.",
+      "Quantify what effect size would matter in practice and what deployment or evaluation settings are exposed to this issue.",
+      "Strengthen the application story beyond Bloom by tying actual-world intrusion to safety, planning, or instruction-following failures in hypothetical reasoning tasks.",
+      "Add a concrete release artifact with broad uptake potential, such as a multilingual counterfactual minimal-pair benchmark.",
+      "Explain why a null result is still impactful and what communities would cite it as decisive evidence against marker-based reasoning effects.",
+      "Provide concrete example items showing exactly how marked and unmarked versions differ only in grammatical mood, not lexical counterfactuality, emphasis, or discourse naturalness.",
+      "Pre-register a hierarchy of claims: behavioral effect first, representation association second, causal steering third; avoid overclaiming that probe/steer proves mechanism.",
+      "Add stronger controls for alternative explanations: uncertainty/hedging prompts, generic complexity-matched paraphrases, and lexical cue ablations.",
+      "Define the 'actual-world intrusion' metric formally and include inter-annotator validation or rule-based labeling criteria for lures and answers.",
+      "Include model selection rationale and expected power analysis across 5 frozen models, with planned handling of ceiling effects and heterogeneous nulls.",
+      "Strengthen the causal test by adding layer/site specificity, dose-response steering, and transfer tests showing the same direction does not just induce generic hypothetical language.",
+      "Trim or de-emphasize the cross-lingual strong-vs-weak-marker claim unless you can better isolate grammar from resource/pretraining confounds.",
+      "Specify minimum acceptance criteria for the irrealis probe beyond AUROC>0.70, including held-out item generalization and factual-item non-effects."
+    ]
+  },
+  {
+    "index": 15,
+    "Name": "metaphor_scaffold_reasoning",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core technical claims needing novelty are: (1) a structure-alignment law where abstract reasoning accuracy varies with source-target structural isomorphism; (2) a sharp negative prediction that structurally mismatched metaphors impair reasoning below a literal baseline and concentrate errors on a predicted mismatch-lure; (3) representational recruitment, where a probe trained only on concrete source-domain data decodes source quantity/orientation on abstract trials; (4) causal steering, where orientation-specific interventions rescue or induce the predicted errors; and (5) the claim that this scaffold is dissociable from surface phrasing. Relative to prior work in the search summary, the ingredients are individually pre-empted: CMT prompting, latent metaphor features, metaphor-based steering, and abstract grounding all exist. The actual delta is the integrated, falsifiable mechanism with graded alignment, below-literal mismatch corruption, orientation-flip signatures, and source-only probe generalization to abstract trials. That is non-trivial and more than an obvious baseline extension, but it is still an incremental synthesis over an active family rather than a wholly new paradigm or task.",
+      "revision_notes": [
+        "State the precise closest baselines by name and convert the novelty claim from 'none test' to a table of pre-empted ingredients versus the exact new predictions unique to this work.",
+        "Make the structure-alignment law mathematically explicit, including what counts as alignment, mismatch, and dose-response, so the novelty is a concrete law rather than a thematic claim.",
+        "Emphasize the strongest least-preempted signature: below-literal mismatch corruption with predicted mismatch-lure concentration and orientation-flip steering on literal prompts.",
+        "Add one setting or benchmark artifact that is itself reusable, such as a controlled metaphor-structure evaluation suite with validated graded alignments, to increase novelty beyond synthesis."
+      ]
+    },
+    "impact": {
+      "score": 8,
+      "reasoning": "The phenomenon under study is whether metaphor/source-domain structure systematically scaffolds and sometimes corrupts abstract reasoning in LLMs. The main stakeholders are interpretability researchers, reasoning and safety communities, CMT-prompting researchers, and practitioners deploying models in medical, policy, or other decision-support settings. The strongest case for importance is that if mismatched metaphors can reliably distort causal or abstract inference below a literal baseline, then prompt wording itself becomes a mechanistic safety risk and a lever for robustness. This is more than a niche curiosity: even a simple result would matter if it reveals a robust failure mode and a general mechanism for reasoning behavior. The likely uptake is good because the work speaks to several active areas and offers testable diagnostics. It could shift direction somewhat by reframing metaphor prompting from a behavioral trick to a mechanistic robustness issue, though the practical effect depends on effect sizes and breadth across models/domains. The 'so what?' test is mostly passed: if the result holds, researchers would test metaphor sensitivity and avoid mismatched framings; if it fails, that also constrains strong CMT-style mechanistic claims.",
+      "revision_notes": [
+        "Sharpen the real-world claim with 2-3 concrete deployment scenarios where metaphor mismatch could distort decisions, not just generic 'high-stakes' references.",
+        "Quantify what downstream practice would change: e.g., prompt auditing guidelines, benchmark additions, or robustness tests for policy/medical assistants.",
+        "Clarify whether the expected effect is broad across model families or likely confined to certain scales/instruction tuning regimes, since broadness determines impact.",
+        "Add a stronger cross-community deliverable, such as a public corruption benchmark and diagnostic protocol that safety and interpretability groups could adopt."
+      ]
+    },
+    "review": {
+      "score": 7,
+      "reasoning": "The proposal is unusually testable and better specified than average. The central hypothesis is falsifiable: aligned metaphors should help, mismatched metaphors should hurt below literal, errors should concentrate on a predicted lure, probes should decode source orientation on abstract trials, and orientation-specific steering should rescue/induce those errors. The experiments are concrete, feasible, and include some controls. However, there are several technical risks and logical gaps. 'Structural alignment' is not operationalized rigorously enough, and annotator-validated alignment may smuggle in plausibility/fluency confounds. The prediction ALIGNED > LITERAL > NEUTRAL ~ MISMATCHED is under-justified and may not hold uniformly. Probe evidence risks generic magnitude/orientation decoding rather than source-domain recruitment, and mediation claims can easily overreach. Steering via difference-in-means directions may be noisy and entangled with broad semantic shifts. The related work positioning is decent but too absolute in wording. Missing controls include stronger paraphrase and lexical-overlap controls, adversarial non-metaphoric rewordings, cross-domain/source-swap tests, and pre-registered criteria for what would falsify the law. If executed well, this could be serious workshop-to-conference material and possibly a strong venue submission, but only if confounds are tightly controlled and the causal claims are toned and defended carefully.",
+      "revision_notes": [
+        "Define structural alignment formally and pre-specify how each item's target relation, source relation, and mismatch-lure are constructed and validated.",
+        "Add stronger controls for plausibility, familiarity, sentiment, lexical overlap, and answer prior, including non-metaphoric paraphrases and source-swapped variants.",
+        "Pre-register the key falsification criteria: what exact pattern would count against the structure-alignment law versus merely showing generic framing effects.",
+        "Strengthen Exp2 with controls against generic magnitude decoding: cross-source probes, source-identity decoding, layerwise localization, and tests on matched literal descriptions without metaphor.",
+        "Strengthen Exp3 with causal specificity checks: multiple steering methods, layer/site sensitivity, bidirectionality, and tests that off-target tasks are unaffected.",
+        "Reduce overclaiming around mediation and causality; present probe results as evidence of recruitment unless intervention tightly links the decoded signal to behavior.",
+        "Clarify sample size and power logic at the item/model/domain level, including how many prompts per condition and how inference will aggregate across five models.",
+        "Replace absolute related-work language like 'NONE test' with narrower, defensible positioning against the closest cited families."
+      ]
+    },
+    "revision_notes": [
+      "State the precise closest baselines by name and convert the novelty claim from 'none test' to a table of pre-empted ingredients versus the exact new predictions unique to this work.",
+      "Make the structure-alignment law mathematically explicit, including what counts as alignment, mismatch, and dose-response, so the novelty is a concrete law rather than a thematic claim.",
+      "Emphasize the strongest least-preempted signature: below-literal mismatch corruption with predicted mismatch-lure concentration and orientation-flip steering on literal prompts.",
+      "Add one setting or benchmark artifact that is itself reusable, such as a controlled metaphor-structure evaluation suite with validated graded alignments, to increase novelty beyond synthesis.",
+      "Sharpen the real-world claim with 2-3 concrete deployment scenarios where metaphor mismatch could distort decisions, not just generic 'high-stakes' references.",
+      "Quantify what downstream practice would change: e.g., prompt auditing guidelines, benchmark additions, or robustness tests for policy/medical assistants.",
+      "Clarify whether the expected effect is broad across model families or likely confined to certain scales/instruction tuning regimes, since broadness determines impact.",
+      "Add a stronger cross-community deliverable, such as a public corruption benchmark and diagnostic protocol that safety and interpretability groups could adopt.",
+      "Define structural alignment formally and pre-specify how each item's target relation, source relation, and mismatch-lure are constructed and validated.",
+      "Add stronger controls for plausibility, familiarity, sentiment, lexical overlap, and answer prior, including non-metaphoric paraphrases and source-swapped variants.",
+      "Pre-register the key falsification criteria: what exact pattern would count against the structure-alignment law versus merely showing generic framing effects.",
+      "Strengthen Exp2 with controls against generic magnitude decoding: cross-source probes, source-identity decoding, layerwise localization, and tests on matched literal descriptions without metaphor.",
+      "Strengthen Exp3 with causal specificity checks: multiple steering methods, layer/site sensitivity, bidirectionality, and tests that off-target tasks are unaffected.",
+      "Reduce overclaiming around mediation and causality; present probe results as evidence of recruitment unless intervention tightly links the decoded signal to behavior.",
+      "Clarify sample size and power logic at the item/model/domain level, including how many prompts per condition and how inference will aggregate across five models.",
+      "Replace absolute related-work language like 'NONE test' with narrower, defensible positioning against the closest cited families."
+    ]
+  },
+  {
+    "index": 16,
+    "Name": "naming_as_compositional_chunking",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core claims requiring novelty: (1) compact naming of a taught sub-procedure improves novel compositional generalization over content-matched verbose formulations; (2) the gain specifically increases with composition depth, isolating compression-for-composition rather than mere instruction following or token savings; (3) arbitrary labels underperform meaningful compact names, dissociating compactness from pure binding/memorability; (4) compact names create a locatable, geometry-stable reusable internal representation; (5) that representation is causally invokable via activation patching in name-free contexts. Relative to prior work, the headline finding 'naming skills helps composition' is not new: SKiC/MAGNIFICo and related skill-reuse work already occupy that space. The actual non-trivial delta is the tighter causal isolation of compactness via NAMED vs VERBOSE-once vs ARBITRARY-LABEL, the explicit naming-by-depth interaction, and the mechanistic causal intervention story. That is meaningfully novel but narrower than the proposal's framing suggests.",
+      "revision_notes": [
+        "Rewrite the contribution statement so the main novelty is the causal isolation of compactness and the depth interaction, not the generic claim that naming helps composition.",
+        "Position explicitly against SKiC, MAGNIFICo, and skill-reuse/compression papers with a table showing which controls and mechanistic tests they lack.",
+        "Clarify whether novelty lives in the finding, mechanism, or benchmark setting; currently all are claimed at once.",
+        "Strengthen the non-obviousness of ARBITRARY-LABEL by specifying what semantic content meaningful names add and how this is controlled.",
+        "Add one result that would be surprising relative to prior work, e.g. identical content and equal length yet widening depth-dependent gains only for compact names."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether compact linguistic handles create reusable computational chunks that improve composition in LLM inference. Communities that would care include compositional generalization, in-context learning, interpretability, and agentic tool/skill systems. If true, it could change prompt/program design for tool libraries and strengthen the view that naming is an actionable abstraction mechanism, not just a presentation detail. The strongest case is that a very cheap intervention—how skills are named—could materially improve compositional reliability in agents. The 'so what?' test is partly passed: positive results would likely influence prompt interfaces, tool naming, and mechanistic studies; null results would also matter by constraining chunking claims. Still, impact is capped because the tasks are synthetic and the practical magnitude of gains in realistic systems is not yet established.",
+      "revision_notes": [
+        "Make the agentic/tool-use replication a first-class contribution with realistic APIs or tool schemas, not a brief add-on.",
+        "State concrete practitioner takeaways: e.g. naming conventions for tool libraries, prompt templates, or memory modules if the effect holds.",
+        "Quantify what effect size would be large enough to alter practice; otherwise significance may not translate to uptake.",
+        "Include at least one non-synthetic benchmark or product-relevant setting to demonstrate real-world reach.",
+        "Clarify what would change if the result is null versus positive for theory and system design."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is thoughtful and fairly testable, with good controls and falsifiable predictions, but several technical gaps remain. The central hypothesis is mostly precise, especially the depth interaction, yet terms like 'geometry-stable subroutine representation' and 'causally invoked' need sharper operational definitions. Related work positioning is directionally good but not sufficiently specific given strong prior art. Experimentally, NAMED/VERBOSE/VERBOSE-once/ARBITRARY-LABEL is a strong design, but there are unresolved confounds: semantic meaningfulness of names, distributional familiarity of concise identifiers, possible parsing advantages, and tokenization/model-specific effects. The mechanistic plan risks over-interpretation: probe decodability and cosine stability do not by themselves establish reusable subroutines, and activation patching may inject generic definition or attention signals rather than a specific primitive. The proposal would be stronger with pre-registered decision criteria, stronger negative controls, explicit statistical plans, and clearer success/failure thresholds. If executed well, this could be a solid workshop/ICLR-style paper and possibly stronger if the agentic/general-domain replication lands, but as written it is not yet airtight enough for a top venue.",
+      "revision_notes": [
+        "Define the primary estimand precisely: the naming-by-depth interaction coefficient, with planned statistical test, model aggregation scheme, and minimum effect size of interest.",
+        "Operationalize 'geometry-stable reusable subroutine' more rigorously, including layer selection, representational metric, and criteria distinguishing it from generic prompt-state similarity.",
+        "Add stronger controls for semantic meaning: opaque short labels matched in frequency/tokenization to meaningful names, and semantically suggestive verbose aliases.",
+        "Specify exact prompt templates and training/test splits to rule out accidental lexical overlap or teach-test contamination.",
+        "For mechanistic claims, include counterfactual patches between wrong names and wrong procedures, cross-procedure swaps, and patches at neighboring non-name tokens to test specificity.",
+        "Add interventions that equalize total context position and local attention burden, not just token length.",
+        "Predefine how 'indecision bands' are computed and how null or mixed outcomes will be interpreted.",
+        "Strengthen the agentic replication with concrete environments, baselines, and success metrics so the story is not wholly synthetic.",
+        "Narrow causal language in the abstract unless the activation experiments can distinguish specific primitive invocation from generic control-state transfer."
+      ]
+    },
+    "revision_notes": [
+      "Rewrite the contribution statement so the main novelty is the causal isolation of compactness and the depth interaction, not the generic claim that naming helps composition.",
+      "Position explicitly against SKiC, MAGNIFICo, and skill-reuse/compression papers with a table showing which controls and mechanistic tests they lack.",
+      "Clarify whether novelty lives in the finding, mechanism, or benchmark setting; currently all are claimed at once.",
+      "Strengthen the non-obviousness of ARBITRARY-LABEL by specifying what semantic content meaningful names add and how this is controlled.",
+      "Add one result that would be surprising relative to prior work, e.g. identical content and equal length yet widening depth-dependent gains only for compact names.",
+      "Make the agentic/tool-use replication a first-class contribution with realistic APIs or tool schemas, not a brief add-on.",
+      "State concrete practitioner takeaways: e.g. naming conventions for tool libraries, prompt templates, or memory modules if the effect holds.",
+      "Quantify what effect size would be large enough to alter practice; otherwise significance may not translate to uptake.",
+      "Include at least one non-synthetic benchmark or product-relevant setting to demonstrate real-world reach.",
+      "Clarify what would change if the result is null versus positive for theory and system design.",
+      "Define the primary estimand precisely: the naming-by-depth interaction coefficient, with planned statistical test, model aggregation scheme, and minimum effect size of interest.",
+      "Operationalize 'geometry-stable reusable subroutine' more rigorously, including layer selection, representational metric, and criteria distinguishing it from generic prompt-state similarity.",
+      "Add stronger controls for semantic meaning: opaque short labels matched in frequency/tokenization to meaningful names, and semantically suggestive verbose aliases.",
+      "Specify exact prompt templates and training/test splits to rule out accidental lexical overlap or teach-test contamination.",
+      "For mechanistic claims, include counterfactual patches between wrong names and wrong procedures, cross-procedure swaps, and patches at neighboring non-name tokens to test specificity.",
+      "Add interventions that equalize total context position and local attention burden, not just token length.",
+      "Predefine how 'indecision bands' are computed and how null or mixed outcomes will be interpreted.",
+      "Strengthen the agentic replication with concrete environments, baselines, and success metrics so the story is not wholly synthetic.",
+      "Narrow causal language in the abstract unless the activation experiments can distinguish specific primitive invocation from generic control-state transfer."
+    ]
+  },
+  {
+    "index": 17,
+    "Name": "verbal_overshadowing_llm",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core claims needing novelty: (1) a controlled describe-then-discriminate task for LLMs/VLMs where self-generated verbalization harms later fine-grained discrimination; (2) the effect is selective to fine-detail rather than gist and survives filler/copy controls and target-removed variants; (3) the effect is strongest in poorly lexicalized domains; (4) verbalization causally coarsens an internal representation, reducing decodability of fine detail; (5) patching/restoring the pre-verbalization state rescues behavior. Relative to prior work, the high-level behavioral claim that verbalization/CoT can hurt performance is already substantially pre-empted by verbal-overshadowing-inspired and overthinking/implicit-reasoning work. The real delta is the mechanistic recoding-interference test with stronger controls, lexicalization-gradient prediction, and causal rescue. That is non-trivial and potentially novel, but the proposal slightly overstates being first on the phenomenon itself.",
+      "revision_notes": [
+        "Narrow the claimed novelty: explicitly concede prior LLM work showing verbalization/CoT can hurt, and claim novelty in the controlled paradigm, lexicalization-gradient prediction, and causal representation-level test.",
+        "Specify the closest baseline family by name in the proposal and state the exact delta in one sentence: prior work shows behavioral harm; this work tests whether verbalization degrades a recoverable fine-detail latent representation.",
+        "Define more rigorously where novelty lives for each experiment: Exp1 = setting/control suite, Exp2 = mechanistic correlational evidence, Exp3 = causal intervention evidence.",
+        "Clarify whether the proposal targets text-only LLMs, VLMs, or both, since novelty differs by modality and some domains listed are purely textual."
+      ]
+    },
+    "impact": {
+      "score": 8,
+      "reasoning": "The problem under study is whether forcing explicit verbalization corrupts fine-grained internal representations and thereby harms later discrimination. This matters to researchers studying reasoning, chain-of-thought, faithfulness, overthinking, and model memory/representation dynamics, and to practitioners using models for high-stakes differential judgments. Strongest case: if explicit reasoning can systematically blur latent evidence, then current prompting and interpretability practices may be actively harming performance and misleading us about model cognition. The topic is important and likely citable, especially if the mechanistic account holds. It could shift thinking from 'more verbal reasoning is better/more faithful' toward selective suppression or timing of verbalization. Real-world reach is plausible but somewhat speculative because the tested tasks/settings are still synthetic and the application path is not fully developed.",
+      "revision_notes": [
+        "Strengthen the application story by committing to one concrete high-stakes workflow, e.g. clinical differential diagnosis or code debugging, and explain exactly what practice would change if the hypothesis is supported.",
+        "State the 'so what' more explicitly for both outcomes: if true, prompting/interp pipelines should avoid premature verbalization; if false, concerns about recoding interference in LLMs are weakened.",
+        "Quantify expected downstream relevance by naming communities likely to use or cite the work: CoT/overthinking, mechanistic interpretability, multimodal reasoning, evaluation of faithful explanations, medical AI.",
+        "Separate the broad scientific phenomenon claim from the benchmark contribution so the proposal does not read as mostly another task paper."
+      ]
+    },
+    "review": {
+      "score": 7,
+      "reasoning": "Technically promising and fairly testable, with thoughtful controls (filler, copy, fine-vs-gist, target-removed, random-direction controls) and a falsifiable core hypothesis. The strongest part is Exp3's causal rescue story. However, there are important gaps. 'Lexicalization' is underspecified and currently hand-wavy across scenes, numeric patterns, code, and clinical vignettes. Several proposed domains are text-native rather than obviously 'rich hard-to-verbalize stimuli,' which muddies the VO analogy. The mechanism claims risk probe-based overinterpretation unless the representational target, layer choice, and leakage controls are formalized. Patching a cached pre-verbalization representation back into an autoregressive model is non-trivial and needs architectural specificity. Related work positioning is good in spirit but overclaims firstness. If executed very well this could be serious-venue quality, but the current proposal needs sharper operationalization and a more disciplined empirical plan.",
+      "revision_notes": [
+        "Operationalize 'lexicalization gradient' with a measurable proxy or pre-registered index rather than intuitive domain labels; validate it independently.",
+        "Define the task and stimulus format precisely for each domain, including how near-neighbor distractors are constructed, how gist controls are matched, and how leakage from target tokens is prevented.",
+        "Specify model families, context-window handling, and whether hidden states come from the same forward pass or a re-encoding pass; detail exactly where and how representation patching is applied.",
+        "Add stronger baselines: delayed no-description, paraphrase-only, externally provided description, and short-vs-long verbalization to disentangle delay, generation, and semantic compression.",
+        "Pre-register decision thresholds/effect sizes for 'convincing,' including model-level variance, multiple-comparison handling across domains, and what counts as a successful rescue.",
+        "Tighten claims around probes by including held-out item splits, adversarial controls for surface token recovery, cross-layer localization, and mediation analysis linking decodability loss to behavior.",
+        "Reduce scope if needed: prioritize 1-2 domains plus one high-stakes case study rather than four heterogeneous domains, to make the mechanism story defensible.",
+        "Rewrite related work to explicitly position the contribution against prior LLM verbalization-hurts papers and avoid unsupported 'ALL/none' statements."
+      ]
+    },
+    "revision_notes": [
+      "Narrow the claimed novelty: explicitly concede prior LLM work showing verbalization/CoT can hurt, and claim novelty in the controlled paradigm, lexicalization-gradient prediction, and causal representation-level test.",
+      "Specify the closest baseline family by name in the proposal and state the exact delta in one sentence: prior work shows behavioral harm; this work tests whether verbalization degrades a recoverable fine-detail latent representation.",
+      "Define more rigorously where novelty lives for each experiment: Exp1 = setting/control suite, Exp2 = mechanistic correlational evidence, Exp3 = causal intervention evidence.",
+      "Clarify whether the proposal targets text-only LLMs, VLMs, or both, since novelty differs by modality and some domains listed are purely textual.",
+      "Strengthen the application story by committing to one concrete high-stakes workflow, e.g. clinical differential diagnosis or code debugging, and explain exactly what practice would change if the hypothesis is supported.",
+      "State the 'so what' more explicitly for both outcomes: if true, prompting/interp pipelines should avoid premature verbalization; if false, concerns about recoding interference in LLMs are weakened.",
+      "Quantify expected downstream relevance by naming communities likely to use or cite the work: CoT/overthinking, mechanistic interpretability, multimodal reasoning, evaluation of faithful explanations, medical AI.",
+      "Separate the broad scientific phenomenon claim from the benchmark contribution so the proposal does not read as mostly another task paper.",
+      "Operationalize 'lexicalization gradient' with a measurable proxy or pre-registered index rather than intuitive domain labels; validate it independently.",
+      "Define the task and stimulus format precisely for each domain, including how near-neighbor distractors are constructed, how gist controls are matched, and how leakage from target tokens is prevented.",
+      "Specify model families, context-window handling, and whether hidden states come from the same forward pass or a re-encoding pass; detail exactly where and how representation patching is applied.",
+      "Add stronger baselines: delayed no-description, paraphrase-only, externally provided description, and short-vs-long verbalization to disentangle delay, generation, and semantic compression.",
+      "Pre-register decision thresholds/effect sizes for 'convincing,' including model-level variance, multiple-comparison handling across domains, and what counts as a successful rescue.",
+      "Tighten claims around probes by including held-out item splits, adversarial controls for surface token recovery, cross-layer localization, and mediation analysis linking decodability loss to behavior.",
+      "Reduce scope if needed: prioritize 1-2 domains plus one high-stakes case study rather than four heterogeneous domains, to make the mechanism story defensible.",
+      "Rewrite related work to explicitly position the contribution against prior LLM verbalization-hurts papers and avoid unsupported 'ALL/none' statements."
+    ]
+  },
+  {
+    "index": 18,
+    "Name": "exact_number_word_gating",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core claims needing novelty: (1) exact quantity use in LLMs is causally gated by availability of a compact exact number word; (2) removing that availability forces a switch from exact symbolic handling to approximate magnitude with Weber-law/ratio-dependent errors; (3) this can be induced in three regimes—approximate-quantifier framing, low-numeracy pivot language, and feature ablation—on matched tasks; (4) exact and approximate numerical behavior should show a double dissociation; (5) a located number-word direction can be causally suppressed or steered to induce/rescue the fallback. Relative to prior work, the Weber-law approximate substrate itself is not novel; that is already established in LLMs. The actual delta is the causal gating claim plus exact-vs-approximate selectivity and steering-based rescue. That is non-trivial and more than an obvious benchmark extension, but some manipulations are close to known prompt-framing / multilingual / activation-ablation paradigms, and the human strong-Whorf motivation is contested. Novelty mainly lives in the causal mechanism claim and the induced setting, not in the underlying phenomenon of approximate number representation.",
+      "revision_notes": [
+        "State the closest prior LLM papers explicitly and sharpen the one-sentence delta: not 'LLMs have Weber-law number representations' but 'number-word availability causally gates regime switching between exact and approximate computation.'",
+        "Narrow the main claim to one strongest manipulation family first (e.g., within-language framing + causal feature intervention) so the novelty is not diluted by weaker multilingual variants.",
+        "Define what counts as a 'compact exact number word' and distinguish word availability from numeral-token availability, tokenization effects, and instruction compliance.",
+        "Add one experiment that rules out a simpler baseline: generic prompt difficulty or working-memory load causing errors, rather than number-word gating.",
+        "Clarify whether the contribution is a new mechanism claim, a new empirical finding, or a new task suite; right now it is a mix of all three."
+      ]
+    },
+    "impact": {
+      "score": 6,
+      "reasoning": "The core problem is whether exact numerical reasoning in LLMs depends on symbolic lexical support and can silently collapse into approximate magnitude reasoning under certain framings. Who cares: numerical cognition and interpretability researchers, multilingual NLP, and safety-sensitive application designers. If true, it could change how people evaluate numerical reliability, especially under paraphrase, language transfer, or constrained interfaces. Strongest case: models may appear numerically competent yet revert to ratio-dependent approximation in high-stakes settings like medical dosing when exact number words are unavailable or suppressed. The phenomenon value is real even if the mechanism is simple. However, the practical scope is still somewhat niche unless the proposal demonstrates that the effect occurs in realistic pipelines and common deployed models, not only contrived prompt regimes. The 'so what?' test partially passes: researchers studying numerical representations would care either way, and practitioners in safety-critical NLP might change evaluation practices if the effect is robust; but many practitioners would not change behavior unless the paper shows substantial prevalence and realistic triggers.",
+      "revision_notes": [
+        "Strengthen the practical stakes with a clearer prevalence argument: show where approximate-quantifier framing, translation, summarization, or tool-mediated settings naturally remove exact number words.",
+        "Add at least one realistic downstream benchmark beyond the medical dosing vignette, such as multilingual extraction, QA, chart summarization, or instruction following with quantities.",
+        "Specify what action would change if the hypothesis holds: e.g., mandatory numeracy stress tests under paraphrase/pivot-language conditions, or safeguards that preserve exact lexical representations.",
+        "Quantify expected effect sizes or frequency across widely used models to show this is not a corner-case curiosity.",
+        "Frame the null result as decision-relevant too: if no gating occurs, that would narrow theories of numerical competence in LLMs and redirect interpretability work away from lexical causation."
+      ]
+    },
+    "review": {
+      "score": 5,
+      "reasoning": "The proposal is interesting and fairly testable, but several technical gaps remain. The central hypothesis is falsifiable, yet key constructs are underspecified: 'availability' of a number word, 'exact-number-word feature,' and what operationally distinguishes exact symbolic failure from generic task difficulty. Related work is directionally adequate but not specific enough about which existing number-mechanism or multilingual studies are strongest baselines. The experiment suite is ambitious and mostly feasible, but the manipulations have confounds: approximate-quantifier prompts may simply be harder or non-compliant; low-numeracy pivot language is entangled with translation competence and token frequency; verbal interference in text models is not clearly analogous to human verbal interference; causal steering of a difference-in-means direction risks acting as a broad difficulty or confidence intervention rather than a number-word-specific mechanism. Exp1's matched approximate controls are a good start, but more stringent controls are needed. Exp2's Weber-fit is sensible, yet ratio dependence alone may not separate approximate magnitude fallback from noisy heuristic reasoning. Exp3 mediation through probes is weak evidence unless combined with causal tests. Exp4 is the strongest piece but needs much tighter validation. As written, this could become a serious ML paper if executed very carefully, but it is not yet submission-ready because the causal story is overclaimed relative to the measurement plan.",
+      "revision_notes": [
+        "Provide precise operational definitions for 'number-word availability,' 'exact task,' 'approximate task,' and the hypothesized fallback signature, with pre-registered pass/fail criteria.",
+        "Replace or justify the 'verbal-interference' regime for LLMs; as written it is the least grounded manipulation.",
+        "Add hard controls for generic difficulty: paraphrase-only controls without number-word removal, length-matched prompts, and non-numeric lexical ablations of equal magnitude.",
+        "For pivot-language experiments, restrict to languages/models with demonstrated high competence and include within-language baselines to separate numeracy from translation/resource effects.",
+        "Specify how exact-number features/directions are found, validated, and held out; include localization robustness across seeds, prompts, and models.",
+        "Strengthen causal claims with intervention specificity tests: random directions, neighboring semantic directions, matched norm interventions, and checks that non-numeric tasks are unaffected.",
+        "Include alternative hypotheses and discriminating predictions: working-memory degradation, instruction-following artifacts, tokenization issues, and retrieval/compliance effects.",
+        "Define statistical analysis in advance: mixed-effects model for regime × task interaction, model-level variance, multiple-comparison handling, and thresholds for Weber-law fit superiority over uniform/noise models.",
+        "Reduce scope if necessary: focus on one clean behavioral dissociation plus one causal intervention instead of four broad experiments with three regimes each.",
+        "Temper the narrative: claim evidence for regime-dependent reliance on approximate representations, not full transfer of strong Whorfian anumeric cognition, unless the controls are exceptionally strong."
+      ]
+    },
+    "revision_notes": [
+      "State the closest prior LLM papers explicitly and sharpen the one-sentence delta: not 'LLMs have Weber-law number representations' but 'number-word availability causally gates regime switching between exact and approximate computation.'",
+      "Narrow the main claim to one strongest manipulation family first (e.g., within-language framing + causal feature intervention) so the novelty is not diluted by weaker multilingual variants.",
+      "Define what counts as a 'compact exact number word' and distinguish word availability from numeral-token availability, tokenization effects, and instruction compliance.",
+      "Add one experiment that rules out a simpler baseline: generic prompt difficulty or working-memory load causing errors, rather than number-word gating.",
+      "Clarify whether the contribution is a new mechanism claim, a new empirical finding, or a new task suite; right now it is a mix of all three.",
+      "Strengthen the practical stakes with a clearer prevalence argument: show where approximate-quantifier framing, translation, summarization, or tool-mediated settings naturally remove exact number words.",
+      "Add at least one realistic downstream benchmark beyond the medical dosing vignette, such as multilingual extraction, QA, chart summarization, or instruction following with quantities.",
+      "Specify what action would change if the hypothesis holds: e.g., mandatory numeracy stress tests under paraphrase/pivot-language conditions, or safeguards that preserve exact lexical representations.",
+      "Quantify expected effect sizes or frequency across widely used models to show this is not a corner-case curiosity.",
+      "Frame the null result as decision-relevant too: if no gating occurs, that would narrow theories of numerical competence in LLMs and redirect interpretability work away from lexical causation.",
+      "Provide precise operational definitions for 'number-word availability,' 'exact task,' 'approximate task,' and the hypothesized fallback signature, with pre-registered pass/fail criteria.",
+      "Replace or justify the 'verbal-interference' regime for LLMs; as written it is the least grounded manipulation.",
+      "Add hard controls for generic difficulty: paraphrase-only controls without number-word removal, length-matched prompts, and non-numeric lexical ablations of equal magnitude.",
+      "For pivot-language experiments, restrict to languages/models with demonstrated high competence and include within-language baselines to separate numeracy from translation/resource effects.",
+      "Specify how exact-number features/directions are found, validated, and held out; include localization robustness across seeds, prompts, and models.",
+      "Strengthen causal claims with intervention specificity tests: random directions, neighboring semantic directions, matched norm interventions, and checks that non-numeric tasks are unaffected.",
+      "Include alternative hypotheses and discriminating predictions: working-memory degradation, instruction-following artifacts, tokenization issues, and retrieval/compliance effects.",
+      "Define statistical analysis in advance: mixed-effects model for regime × task interaction, model-level variance, multiple-comparison handling, and thresholds for Weber-law fit superiority over uniform/noise models.",
+      "Reduce scope if necessary: focus on one clean behavioral dissociation plus one causal intervention instead of four broad experiments with three regimes each.",
+      "Temper the narrative: claim evidence for regime-dependent reliance on approximate representations, not full transfer of strong Whorfian anumeric cognition, unless the controls are exceptionally strong."
+    ]
+  },
+  {
+    "index": 19,
+    "Name": "foreign_language_honesty_effect",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core claims: (1) non-dominant language increases LLM deception propensity; (2) non-dominant language reduces CoT-based detectability/faithfulness; (3) this is mediated by a locatable honesty/self-monitoring direction; (4) steering that direction causally restores honesty in the foreign-language regime. The human foreign-language effect and language-dependent LLM morality are already known, so the novelty is not the general idea that language matters, but the specific safety-relevant combination of deception rate, monitorability, and causal steering. That is non-trivial and plausibly novel, though partly adjacent to prior multilingual faithfulness and deception-interpretability work. Closest prior family: multilingual moral/alignment effects plus monolingual LLM deception/CoT-faithfulness and steerable deception directions; the actual delta is the foreign-language-specific causal mechanism and monitorability failure claim.",
+      "revision_notes": [
+        "Tighten the novelty claim to the exact integrated delta: deception propensity + monitorability degradation + steering-based recovery, not just 'language affects honesty'.",
+        "Add a short positioning table contrasting human foreign-language effect, multilingual moral alignment, multilingual CoT faithfulness, and this proposal's causal/mechanistic claim.",
+        "Explicitly state what would count as a new phenomenon versus a competence artifact, since that distinction is central to the novelty of the claim."
+      ]
+    },
+    "impact": {
+      "score": 8,
+      "reasoning": "The phenomenon under study is whether language choice changes an LLM's willingness to deceive and the reliability of CoT monitoring. Who cares: AI safety, interpretability, multilingual NLP, and anyone deploying models across languages. If true, it affects how we evaluate safety and monitor deception in multilingual settings; if false, it still informs whether language-specific evaluation is needed. Strong one-line case: safety monitors and honesty evaluations that work in English may fail in other languages, creating a concrete blind spot. This passes the so-what test because serious researchers would change evaluation protocols if the effect holds, and practitioners would care for multilingual deployments. Impact is somewhat bounded by the safety/interpretability niche, but that niche is high-value and cross-disciplinary.",
+      "revision_notes": [
+        "Spell out the downstream consequence for safety evaluation: multilingual models may require language-conditioned honesty audits and CoT monitors.",
+        "Add a concrete deployment example where English-only monitoring would miss deception in non-English use.",
+        "Quantify the scale of the user base or application surface for multilingual assistants to strengthen real-world reach."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is promising but currently has a few logical gaps. The main risk is confounding honesty with competence/difficulty in lower-resource languages; the plan mentions controls, but the causal identification remains underspecified. The hypothesis is directionally testable, but some terms are underspecified: 'honesty/self-monitoring direction,' 'native language,' and 'deception harder to catch in CoT' need operational definitions. Related work positioning is decent but somewhat overstated in saying no prior work exists on multilingual deception/faithfulness; the search summary suggests adjacent multilingual work already exists. Experiments are feasible and reasonably specific, but they need clearer pre-registration of metrics, language selection criteria, power expectations, and exact matched controls. Missing pieces: a direct language-vs-difficulty decomposition, stronger invariance checks across model families, and an analysis showing the effect is not just translation artifacts or reduced verbosity. If executed cleanly, this could be a solid ML venue paper; as written, it needs sharper causal framing and tighter controls.",
+      "revision_notes": [
+        "Define all core variables operationally: deception, honesty signal, foreign-language regime, and CoT faithfulness/monitorability.",
+        "Add an explicit causal identification strategy separating language effect from competence, uncertainty, verbosity, and translation artifacts.",
+        "Specify the exact model set, language set, and matching protocol; include power or minimum detectable effect estimates.",
+        "Add ablations for prompt length, translation quality, and task difficulty to rule out superficial multilingual degradation.",
+        "Pre-register whether the primary endpoint is deception rate, monitor AUROC/recall, or mediation, and make the rest secondary."
+      ]
+    },
+    "revision_notes": [
+      "Tighten the novelty claim to the exact integrated delta: deception propensity + monitorability degradation + steering-based recovery, not just 'language affects honesty'.",
+      "Add a short positioning table contrasting human foreign-language effect, multilingual moral alignment, multilingual CoT faithfulness, and this proposal's causal/mechanistic claim.",
+      "Explicitly state what would count as a new phenomenon versus a competence artifact, since that distinction is central to the novelty of the claim.",
+      "Spell out the downstream consequence for safety evaluation: multilingual models may require language-conditioned honesty audits and CoT monitors.",
+      "Add a concrete deployment example where English-only monitoring would miss deception in non-English use.",
+      "Quantify the scale of the user base or application surface for multilingual assistants to strengthen real-world reach.",
+      "Define all core variables operationally: deception, honesty signal, foreign-language regime, and CoT faithfulness/monitorability.",
+      "Add an explicit causal identification strategy separating language effect from competence, uncertainty, verbosity, and translation artifacts.",
+      "Specify the exact model set, language set, and matching protocol; include power or minimum detectable effect estimates.",
+      "Add ablations for prompt length, translation quality, and task difficulty to rule out superficial multilingual degradation.",
+      "Pre-register whether the primary endpoint is deception rate, monitor AUROC/recall, or mediation, and make the rest secondary."
+    ]
+  }
+]

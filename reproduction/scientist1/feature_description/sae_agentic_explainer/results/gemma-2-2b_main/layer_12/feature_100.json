@@ -1,0 +1,412 @@
+{
+  "feature_idx": 100,
+  "max_act_ref": 49.524879455566406,
+  "trigger_threshold": 9.904975891113281,
+  "sage": {
+    "candidates": [
+      "Feature fires at a begin-of-sequence/document-boundary token that marks the start of a new, standalone text segment after unrelated preceding content; it is especially common when the new segment opens like a title, heading, prompt, or other abrupt document start.",
+      "Feature may specialize to BOS followed by heading-like or title-case document openings, such as article titles, section headers, chapter names, or metadata-style standalone names.",
+      "Feature may also respond to BOS followed by short formatted prompt/metadata prefixes, e.g. 'Q:', 'A:', 'Title:', 'Summary:', or similar abrupt labeled starts of a new segment."
+    ],
+    "top": "Feature fires at a begin-of-sequence/document-boundary token that marks the start of a new, standalone text segment after unrelated preceding content; it is especially common when the new segment opens like a title, heading, prompt, or other abrupt document start.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "This feature activates on the beginning-of-sequence token when it is immediately followed by a title- or heading-like span, such as an article name, paper title, or section heading starting with a capitalized phrase.",
+            "positive_probes": [
+              "The Effects of Sleep on Memory",
+              "Introduction to Quantum Error Correction",
+              "Chapter One: A Winter Journey",
+              "Methods and Materials",
+              "Economic Growth in East Asia"
+            ],
+            "positive_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "distractor_probes": [
+              "I read the effects of sleep on memory yesterday.",
+              "She introduced quantum error correction during the lecture.",
+              "The economy grew rapidly in East Asia."
+            ],
+            "distractor_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "This feature activates at document boundaries where a new standalone text begins after unrelated preceding content, especially when the new text looks like scraped corpus entries concatenated together around a BOS marker.",
+            "positive_probes": [
+              "Unrelated notes end here. <BOS> Fresh encyclopedia entry begins.",
+              "Recipe fragment stops abruptly; <BOS> New standalone article starts.",
+              "Random footer text above. <BOS> Independent corpus snippet follows.",
+              "Previous document ends. <BOS> Separate scraped passage starts now.",
+              "Garbage metadata first, then <BOS> a distinct text begins."
+            ],
+            "positive_acts": [
+              49.56235122680664,
+              49.56235122680664,
+              49.56235122680664,
+              49.56235122680664,
+              49.56235122680664
+            ],
+            "distractor_probes": [
+              "The article continues smoothly into the next paragraph.",
+              "Chapter one begins after a relevant introduction.",
+              "A new sentence starts, but the topic stays connected."
+            ],
+            "distractor_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "score": -0.08872222900390625
+          },
+          {
+            "hypothesis": "This feature activates on BOS before short prompt-style openings, particularly sequences starting with 'Q:' or similar abrupt lead-ins to a new question or document segment.",
+            "positive_probes": [
+              "Q: What causes rainbows to appear?",
+              "Question: Why do leaves change color?",
+              "Q: Explain photosynthesis in one sentence.",
+              "Prompt: Summarize the paragraph below.",
+              "Q: Define entropy briefly."
+            ],
+            "positive_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "distractor_probes": [
+              "The question is why leaves change color.",
+              "He wrote Q: in the margin yesterday.",
+              "Please answer this question in detail."
+            ],
+            "distractor_acts": [
+              49.656429290771484,
+              49.656429290771484,
+              49.656429290771484
+            ],
+            "score": -0.0053558349609375
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "Feature fires at a begin-of-sequence/document-boundary marker when the next text is the start of a new standalone snippet, especially a heading/title-like opening such as an article, paper, chapter, or section title.",
+            "positive_probes": [
+              "Chapter 1: Foundations of Modern Ecology",
+              "An Introduction to Quantum Error Correction",
+              "Section 3. Methods and Materials",
+              "The Impact of Trade on Growth",
+              "Appendix A: Data Sources and Definitions"
+            ],
+            "positive_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "distractor_probes": [
+              "The chapter begins with a historical anecdote.",
+              "In Section 3, we describe the methods used.",
+              "This appendix contains additional data sources."
+            ],
+            "distractor_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "Feature fires on abrupt corpus concatenation boundaries: after unrelated preceding text, a BOS marker introduces a fresh independent document/snippet rather than a continuation.",
+            "positive_probes": [
+              "Shopping lists ended abruptly. <BOS> Quantum tunneling enables fusion in stars.",
+              "He praised the recipe. <BOS> Article 1 establishes freedom of speech.",
+              "Random forum chatter stops here. <BOS> Mitochondria generate ATP through respiration.",
+              "The weather report cut off. <BOS> Chapter One: The detective arrived at dawn.",
+              "Nonsense lyrics preceded this. <BOS> In 1492, Columbus sailed westward."
+            ],
+            "positive_acts": [
+              49.56040573120117,
+              49.56040573120117,
+              49.56040573120117,
+              49.56040573120117,
+              49.56040573120117
+            ],
+            "distractor_probes": [
+              "Shopping lists ended abruptly, then quantum tunneling was explained further.",
+              "The weather report cut off, but Chapter One continued seamlessly.",
+              "Random forum chatter stopped before a respiration discussion continued."
+            ],
+            "distractor_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "score": -0.090667724609375
+          },
+          {
+            "hypothesis": "Feature may fire on BOS before short prompt- or metadata-style openings such as 'Q:' or similarly abrupt formatted starts to a new segment.",
+            "positive_probes": [
+              "Q: Why is the sky blue?",
+              "A: The result follows immediately.",
+              "Title: Notes on coastal erosion.",
+              "Summary: Brief findings from the trial.",
+              "Question: Define photosynthesis in one sentence."
+            ],
+            "positive_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "distractor_probes": [
+              "Why is the sky blue today?",
+              "The title of the essay was unclear.",
+              "Here is a brief summary of findings."
+            ],
+            "distractor_acts": [
+              49.656429290771484,
+              49.656429290771484,
+              49.656429290771484
+            ],
+            "score": -0.0053558349609375
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Feature fires at a begin-of-sequence/document-boundary token that marks the start of a new, standalone text segment after unrelated preceding content; it is especially common when the new segment opens like a title, heading, prompt, or other abrupt document start.",
+            "positive_probes": [
+              "Chapter One: The Empty Station",
+              "Meeting Agenda for Tuesday",
+              "Question: Why do leaves change color?",
+              "Recipe Title: Lemon Garlic Soup",
+              "Breaking News: Storm Approaches Coast"
+            ],
+            "positive_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "distractor_probes": [
+              "The next chapter begins after a brief transition.",
+              "We discussed Tuesday's meeting agenda over lunch.",
+              "She asked why leaves change color every autumn."
+            ],
+            "distractor_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "Feature may specialize to BOS followed by heading-like or title-case document openings, such as article titles, section headers, chapter names, or metadata-style standalone names.",
+            "positive_probes": [
+              "Chapter One: The Silent Forest",
+              "Methods and Materials",
+              "Appendix A: Data Sources",
+              "Dr. Elena Morales",
+              "The Economics of Small Farms"
+            ],
+            "positive_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "distractor_probes": [
+              "I opened the chapter and started reading aloud.",
+              "The silent forest was darker than expected at dawn.",
+              "Dr. Elena Morales arrived late for the meeting."
+            ],
+            "distractor_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "Feature may also respond to BOS followed by short formatted prompt/metadata prefixes, e.g. 'Q:', 'A:', 'Title:', 'Summary:', or similar abrupt labeled starts of a new segment.",
+            "positive_probes": [
+              "Q: Why do leaves change color?",
+              "A: Photosynthesis slows during autumn months.",
+              "Title: Urban Gardens and Community Health",
+              "Summary: Brief overview of the merger terms.",
+              "Note: Update the figures before publishing."
+            ],
+            "positive_acts": [
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055,
+              49.65107345581055
+            ],
+            "distractor_probes": [
+              "The title of the book was misleading.",
+              "She asked a question before dinner.",
+              "Please summarize the article in two sentences."
+            ],
+            "distractor_acts": [
+              49.656429290771484,
+              49.656429290771484,
+              49.656429290771484
+            ],
+            "score": -0.0053558349609375
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "www.irs.gov/irm/part5/irm_05-019-001.html<bos>Corrasion (album)\n\nCor",
+    "to Nicks BBQ at the end of the trail! We stopped for lunch than headed back. Nice 24 miles! Loved the Lake Katherine area and the low traffic on this trail! We'll do it again in",
+    "The bakery opened at seven every morning.",
+    "The engine cooled after the long climb.",
+    "The old library sat quietly at the edge of the park.",
+    "2 as part of a Defra funded project to encourage more sustainable driving for those journeys that have to be made by car.<bos>INTRODUCTION {#s1}\n============\n\nHepatitis B virus (HBV) is still a major global health problem",
+    "The recipe called for a pinch of saffron.",
+    "SG and emodin, which provide a basis for a better understanding of the underlying mechanism for PMR-induced liver injury.<bos>Friends of the Crow Collection: Adults/ Children ($10/ $3) || General Public: Adults/ Children ($1",
+    "The train from Milan arrived twenty minutes late.",
+    "Small pebbles crunched under his boots on the path.",
+    "a system obviously produces nonconvergent but also nonexplosive fluctuations for arbitrary values of $Y$ and $Z$.\n<bos>Sevil,\n\nStop by any time.\n\nVince\n\n -----Original Message-----\nFrom: \tYaman, Se",
+    "LF was superior to the MNA-SF in predicting mortality and differentiating functional decline during 1 year of follow-up.<bos>"
+  ],
+  "heldout_true_acts": [
+    49.64599609375,
+    49.64599609375,
+    49.64599609375,
+    49.64599609375,
+    49.64599609375,
+    49.64599609375,
+    49.64599609375,
+    49.64599609375,
+    49.601356506347656,
+    49.601356506347656,
+    49.601356506347656,
+    49.601356506347656
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "structural elements and observations related to data or processes",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 49.56040573120117,
+        "sentences": [
+          "The table lists columns for date, amount, and status.",
+          "Observed latency spikes after the nightly batch process completed.",
+          "A flowchart maps each approval step in the onboarding process.",
+          "The dataset contains missing values in several key fields.",
+          "We recorded error rates before and after the software update.",
+          "Pipeline stages include ingestion, validation, transformation, and export.",
+          "Analysis showed seasonal patterns across quarterly sales data.",
+          "This diagram highlights dependencies between tasks in the workflow."
+        ],
+        "activations": [
+          49.56040573120117,
+          49.56040573120117,
+          49.56040573120117,
+          49.56040573120117,
+          49.56040573120117,
+          49.56040573120117,
+          49.56040573120117,
+          49.56040573120117
+        ]
+      },
+      "predictive": {
+        "pearson": -0.19802950859533489,
+        "spearman": -0.2354332859151151,
+        "preds": [
+          6.0,
+          2.0,
+          0.0,
+          1.0,
+          0.0,
+          8.0,
+          0.0,
+          7.0,
+          1.0,
+          0.0,
+          8.0,
+          9.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Feature fires at a begin-of-sequence/document-boundary token that marks the start of a new, standalone text segment after unrelated preceding content; it is especially common when the new segment opens like a title, heading, prompt, or other abrupt document start.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 49.562347412109375,
+        "sentences": [
+          "Chapter One: The storm arrived at dawn.",
+          "New prompt: Describe your favorite childhood memory.",
+          "BREAKING NEWS: Markets tumble after surprise announcement.",
+          "Recipe Title: Classic Tomato Soup.",
+          "Question 1: Explain photosynthesis in one paragraph.",
+          "Meeting Notes for Monday, April 3.",
+          "User request: Summarize the following article.",
+          "Poem: Winter birds circle the empty field."
+        ],
+        "activations": [
+          49.562347412109375,
+          49.562347412109375,
+          49.562347412109375,
+          49.562347412109375,
+          49.562347412109375,
+          49.562347412109375,
+          49.562347412109375,
+          49.562347412109375
+        ]
+      },
+      "predictive": {
+        "pearson": -0.050547939810632554,
+        "spearman": 0.05760715294819263,
+        "preds": [
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          9.0,
+          8.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 76.99492383003235,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "structural elements and observations related to data or processes"
+}

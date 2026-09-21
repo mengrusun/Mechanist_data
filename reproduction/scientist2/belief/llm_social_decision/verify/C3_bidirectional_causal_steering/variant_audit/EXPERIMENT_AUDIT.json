@@ -1,0 +1,64 @@
+{
+  "variant_id": "model-swap-meta-llama3-8b",
+  "claim_id": "C3",
+  "phase": 9,
+  "date": "2026-07-13",
+  "overall_verdict": "WARN",
+  "integrity_status": "warn",
+
+  "checks": {
+    "A_ground_truth_provenance": {
+      "verdict": "WARN",
+      "finding": "synthetic_proxy evaluation (tau from model greedy decoding); unavoidable for causal-steering claim; baseline_transfer.json consistent with n=10 evaluation"
+    },
+    "B_score_normalization": {
+      "verdict": "PASS",
+      "finding": "v_effect shift is absolute difference from alpha=0; sigma_proj computed from swap model's held-out activations (correctly recalibrated to swap model scale)"
+    },
+    "C_result_file_existence": {
+      "verdict": "PASS",
+      "finding": "All 41 expected files present: m2/{probe_accuracy,layer_pick,baseline_transfer}.json + 40 steer cells + summary.json. No missing cells."
+    },
+    "D_dead_code": {
+      "verdict": "PASS",
+      "finding": "wall_time_s > 0 for all cells; coherence block populated with actual format_ok_rate and sample_generations; no cached/zero-time artifacts."
+    },
+    "E_scope": {
+      "verdict": "WARN",
+      "finding": "n_baseline=10 per cell vs config n_held_baseline=200. Compact sweep; SE(v_effect)~1.9 at n=10. Admissible as compact variant but not full-scale replication. Most individual shifts are <2 SEs. Qualitative pattern coherent across all 40 cells."
+    },
+    "F_evaluation_type": {
+      "verdict": "WARN",
+      "finding": "synthetic_proxy (model-generated tau); inherits main experiment caveat"
+    }
+  },
+
+  "n_baseline_admissibility": {
+    "decision": "ADMISSIBLE",
+    "reason": "compact variant design; coherence_k=10 matches n_baseline=10; qualitative pattern coherent; no redispatch permitted; WARN not FAIL"
+  },
+
+  "hook_site_convention": {
+    "matches_main": true,
+    "site": "residual stream additive hook (h <- h + alpha * unit_dir)",
+    "layer_pick_method": "argmax probe cv_acc on swap model activations",
+    "swap_ell_star": {"G": 10, "A": 10, "I": 0, "M": 0}
+  },
+
+  "coherence_gate": {
+    "format_ok_rate_all_cells": 1.0,
+    "mean_5gram_rep_all_cells": 0.0,
+    "n_samples": 10,
+    "verdict": "PASS"
+  },
+
+  "warnings": [
+    "n_baseline=10 per cell (planned n=200); compact design limits statistical power",
+    "synthetic_proxy evaluation type",
+    "no random-direction control at L=16",
+    "swap model baseline polarity flipped for G/A vs main (raw direction orientation differs)"
+  ],
+
+  "eligible_for_phase10": true,
+  "phase10_note": "Variant admitted to Phase 10 N_eligible pool with WARN. Qualitative pattern match (bidirectionality at L=16) assessed as consistent_with_main_experiment=true in Phase 8 RESULT_TO_CLAIM.json."
+}

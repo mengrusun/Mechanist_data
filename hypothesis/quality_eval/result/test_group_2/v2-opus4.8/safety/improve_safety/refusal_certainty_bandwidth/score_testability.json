@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan aligns well with the hypothesis by defining certainty as “the projection distance to the fitted decision threshold” and “variance / sign-flip rate of the refusal projection,” then comparing successful jailbreaks against “genuine benign comply” cases using relevant detection and safety metrics. Its directional predictions—“clear-harmful and clear-benign are high-certainty; jailbreaks and borderline are low-certainty” and certainty performs “better than output log-prob confidence”—are readily refuted if those ordering and performance advantages do not appear. However, the method does not specify how margin and instability are combined, how high versus low certainty is thresholded, or quantitative success criteria, and the claim that certainty is a “distinct, low-dimensional signal” is not fully matched by an experiment that primarily derives it from the existing refusal projection.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to “combine margin + instability into a certainty score,” including selecting perturbation magnitudes and operationalizing “semantically-neutral paraphrase-induced” changes; this requires custom logic but is implementable with standard activation hooks, projection operations, paraphrasing, and classifier calibration rather than an undefined magic step. The named models—“Llama-3-8B, Qwen2.5-7B, Gemma-2-9B”—datasets, GCG attacks, refusal-direction extraction, Llama-Guard, activation perturbation, and evaluation metrics all exist and are supported by established model-evaluation and interpretability tooling. Resources receive useful partial quantification through three model scales and “K small isotropic” perturbations, but K, prompt sample sizes, perturbation scale, and concrete run totals are unstated. The negative branch is runnable because the design includes held-out calibration, benign/harmful and borderline controls, five detector baselines, “always-on steering and no defense,” cross-model testing, and leave-one-attack-out evaluation, although the intervention’s “expensive secondary check” is left unspecified.",
+      "score": 7
+    }
+  }
+}

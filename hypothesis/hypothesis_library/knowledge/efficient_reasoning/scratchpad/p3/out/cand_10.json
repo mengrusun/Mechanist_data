@@ -1,0 +1,50 @@
+{
+  "novelty": {
+    "score": 6,
+    "reasoning": "Core claims: (1) non-English prompts incur extra reasoning tokens beyond English on matched problems; (2) this excess is framed as removable 'pivot-detour' overhead rather than genuine reasoning; (3) a language-specific representational component causally drives it; (4) mid-generation ablation reduces tokens with no accuracy loss. The first two are close to existing multilingual reasoning and English-pivot literature; the specific causal decomposition and no-loss efficiency intervention are the main delta, but still adjacent to recent steering/overthinking and disentanglement work. Novelty is more in the mechanistic framing and intervention than in the phenomenon itself.",
+    "revision_notes": [
+      "Tighten the exact novelty claim to the causal decomposition + mid-generation efficiency intervention, and explicitly avoid implying the language-efficiency gap itself is newly discovered.",
+      "State clearly how 'pivot-detour' differs operationally from prior English-pivot, cross-lingual collapse, and overthinking/steering findings.",
+      "Add a minimal formal definition of the overhead metric and the criterion for 'genuine reasoning' vs 'detour' to make the claim precise.",
+      "Clarify whether the novelty is in the setting (multilingual efficiency), the mechanism (language-specific component), or the intervention (ablation at fixed accuracy)."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "The problem is real: non-English users may pay extra compute/latency for the same task, which matters for multilingual NLP, deployment cost, and fairness. If true, it could shift attention from only accuracy gaps to efficiency tax and motivate language-aware inference controls. The strongest case is that equal-accuracy non-English reasoning may still be systematically more expensive. However, uptake is likely strongest in NLP/interpretability rather than broad ML, and if the effect is small or model-specific it becomes more of a niche phenomenon paper than a field-shifter.",
+    "revision_notes": [
+      "Quantify practical relevance in latency, dollar cost, or carbon terms, not just token counts.",
+      "Emphasize who benefits: low-resource language deployment, education assistants, search, and multilingual reasoning systems.",
+      "Add a clear 'so what?' statement showing what teams would do differently if the claim holds or fails.",
+      "Include a paragraph on fairness implications: same answer quality but unequal compute burden across languages."
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The proposal is testable and has a decent experimental spine, but the central hypothesis is still squishy: 'genuine reasoning' vs 'pivot detour' is hard to identify causally, and mid-generation ablation could confound efficiency with degraded hidden state quality. The related work is fairly specific, which helps positioning, but the decomposition story needs stronger identification and controls. The experiments are feasible in principle, yet the strongest claims require careful baselines, tokenizer/script controls, and ablation-specificity checks. As written, it is plausible for an ACL/EMNLP-quality paper if executed well, but not yet airtight.",
+    "revision_notes": [
+      "Define a falsifiable operational criterion for 'pivot detour' that does not rely on post hoc trace interpretation alone.",
+      "Add stronger controls: matched tokenizers, translation-only prompts, randomized language-mixing baselines, and ablation at multiple generation timesteps.",
+      "Include an explicit test that token reduction is not simply due to accuracy loss on harder instances or premature stopping.",
+      "Add causal specificity checks: unrelated-direction ablations, multiple candidate components, and recovery tests after ablation.",
+      "Report per-language and per-script results separately to avoid conflating language, script, and tokenizer fertility.",
+      "Pre-register the primary metric and the minimum effect size needed to support the claim."
+    ]
+  },
+  "revision_notes": [
+    "Tighten the exact novelty claim to the causal decomposition + mid-generation efficiency intervention, and explicitly avoid implying the language-efficiency gap itself is newly discovered.",
+    "State clearly how 'pivot-detour' differs operationally from prior English-pivot, cross-lingual collapse, and overthinking/steering findings.",
+    "Add a minimal formal definition of the overhead metric and the criterion for 'genuine reasoning' vs 'detour' to make the claim precise.",
+    "Clarify whether the novelty is in the setting (multilingual efficiency), the mechanism (language-specific component), or the intervention (ablation at fixed accuracy).",
+    "Quantify practical relevance in latency, dollar cost, or carbon terms, not just token counts.",
+    "Emphasize who benefits: low-resource language deployment, education assistants, search, and multilingual reasoning systems.",
+    "Add a clear 'so what?' statement showing what teams would do differently if the claim holds or fails.",
+    "Include a paragraph on fairness implications: same answer quality but unequal compute burden across languages.",
+    "Define a falsifiable operational criterion for 'pivot detour' that does not rely on post hoc trace interpretation alone.",
+    "Add stronger controls: matched tokenizers, translation-only prompts, randomized language-mixing baselines, and ablation at multiple generation timesteps.",
+    "Include an explicit test that token reduction is not simply due to accuracy loss on harder instances or premature stopping.",
+    "Add causal specificity checks: unrelated-direction ablations, multiple candidate components, and recovery tests after ablation.",
+    "Report per-language and per-script results separately to avoid conflating language, script, and tokenizer fertility.",
+    "Pre-register the primary metric and the minimum effect size needed to support the claim."
+  ]
+}

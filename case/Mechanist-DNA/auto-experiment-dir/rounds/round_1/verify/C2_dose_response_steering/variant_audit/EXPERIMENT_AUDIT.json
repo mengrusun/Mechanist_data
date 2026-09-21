@@ -1,0 +1,17 @@
+{
+  "date": "2026-07-18",
+  "auditor": "llm-chat (gpt-5.4)",
+  "claim_id": "C2",
+  "scope": "variant: method-swap-ssdef-pydssp",
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {"status": "warn", "details": "ESMFold-predicted structures, not experimental GT (same as main experiment, no new issue). pydssp confirmed genuinely independent of mkdssp's output."},
+    "score_normalization": {"status": "pass", "details": "Simple means over gate-passing samples; no self-referential normalization."},
+    "result_existence": {"status": "pass", "details": "All 10 result JSONs + sequence JSONLs exist; consolidated numbers match raw files exactly."},
+    "dead_code": {"status": "warn", "details": "All computed quantities saved/aggregated (not dead code); minor asymmetry: n_resolved always from mkdssp path; retained sample set is intersection of both tools' successes (defensible but could mask per-tool failure-rate differences)."},
+    "scope": {"status": "warn", "details": "Fair as a targeted SS-assignment robustness check (5 doses x 2 seeds x n=150 = 10 cells), not a full replication of the main experiment's 8x3 grid. Steering hook/feature set/prompts/predictor substantially confirmed identical from code."},
+    "eval_type": "synthetic_proxy"
+  },
+  "reviewer_rationale": "No fabrication, no self-normalization, all cells present and consistent. WARN driven by scope framing (targeted check, not full replication) and two minor dead-code/selectivity asymmetries -- none rise to FAIL."
+}

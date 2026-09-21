@@ -1,0 +1,23 @@
+{
+  "Name": "activation_patch_induction",
+  "Title": "Transmission Without Training: Inducing Subliminal Traits by Patching Student Activations Toward the Teacher",
+  "Short Hypothesis": "The subliminal channel can be short-circuited: if the trait is carried by a specific direction/subspace, then directly patching a student's activations (or adding a teacher-derived steering vector) at the right layers reproduces the same behavioral trait that subliminal finetuning would have installed, without any finetuning on the neutral data. We hypothesize the steering vector estimated from the teacher's activations during neutral generation, when added to the student, induces the trait, and that the effective layer and magnitude match those where subliminal finetuning makes the largest weight changes, giving a training-free causal demonstration that a low-dimensional activation-space signal is the trait's carrier.",
+  "Related Work": "Cloud et al. (2025) establish subliminal transfer only through weight finetuning and do not test activation-space equivalence. Activation steering / representation engineering (Turner et al., 2023; Zou et al., 2023) show behaviors can be induced by adding directions to activations, but from explicitly trait-related contrastive data, not from a covert neutral-data channel. Activation patching (Meng et al., 2022; causal tracing) localizes computation. We combine these to ask whether the subliminal trait is reducible to an activation-space intervention derived from neutral generations, which would collapse the distinction between the covert weight channel and an explicit steering direction.",
+  "Abstract": "Subliminal learning has so far been shown only as a weight-finetuning phenomenon, leaving open whether the trait is fundamentally a low-dimensional signal that could be delivered by other means. We test a training-free route: estimate a steering vector from the teacher's internal activations while it generates trait-free data (numbers), then add that vector to a student's activations at inference and ask whether the student now expresses the trait that subliminal finetuning would have installed. We sweep layers and magnitudes and compare the induced trait strength to that of a finetuned student. We further test correspondence: the layers where activation patching is most effective should coincide with the layers where subliminal finetuning produces the largest weight deltas and where our other studies localize the payload. Contrastive controls use steering vectors from a non-trait teacher and from random directions. If patching reproduces the trait, subliminal learning is, mechanistically, covert transmission of a steering direction, unifying it with representation engineering and implying that detection can target activation geometry rather than data. If patching fails despite a clear weight-space signal, the trait depends on distributed weight changes not summarizable as a single activation direction, refining our picture of the channel's dimensionality.",
+  "Experiments": [
+    "Estimate teacher steering vector: mean activation (per layer) while the trait teacher generates neutral data minus mean activation of a matched non-trait teacher on the same prompts.",
+    "Add the vector to student activations at inference across a sweep of layers and magnitudes; measure trait strength on elicitation prompts.",
+    "Compare induced trait strength and behavioral profile to a subliminally finetuned student.",
+    "Layer correspondence: cross-reference best-patching layers with layers of largest subliminal weight delta and SAE-feature localization.",
+    "Controls: random-direction steering and non-trait-teacher steering should not induce the trait.",
+    "Reverse patching: subtract the vector from a subliminally finetuned student and test whether the trait is removed.",
+    "Dose-response and specificity: measure that non-target traits and general capability are unaffected."
+  ],
+  "Risk Factors and Limitations": [
+    "The trait may require distributed weight changes; a single activation direction might not reproduce it, yielding a null that is hard to interpret.",
+    "Steering vectors can cause off-target behavioral changes and fluency degradation.",
+    "Choosing the contrastive non-trait teacher is nontrivial and affects the estimated direction.",
+    "Effective layers/magnitudes may not transfer across traits or models.",
+    "Behavioral trait measurement is noisy, complicating dose-response estimates."
+  ]
+}

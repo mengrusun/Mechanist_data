@@ -1,0 +1,23 @@
+{
+  "picked_claims": [],
+  "picked_rationale": {},
+  "admitted_pool": ["C1", "C2"],
+  "stage2_deferred": ["C1", "C2"],
+  "rejected_pool": [],
+  "cap_source": "MAX_VERIFY_CLAIMS=1 — but Stage 2 entirely deferred due to GPU budget exhaustion: experiment stage consumed ~12 GPU-h against a 10 GPU-h HARD budget. The narrowest affordable variant (anchor-swap, ~2-3 GPU-h) still exceeds remaining headroom. Both C1 and C2 are marked INTEGRITY_ONLY with stage2_skip_reason: max_verify_claims_cap.",
+  "importance_judgment": {
+    "C1": {
+      "importance": "high",
+      "rationale": "C1 is the headline given-validation claim (M0 phenomenon gate); it is the scientific reason the pipeline exists and conditions all downstream mechanism claims. Under the cap, C1 would be the top-pick — but budget realities make even the narrowest swap (~2-3 GPU-h anchor-swap) unaffordable given ~12 GPU-h already consumed vs. 10 GPU-h HARD limit.",
+      "stage2_skip_reason": "max_verify_claims_cap",
+      "deferred_variant_plan": "anchor-swap variant: replace banana anchor with strawberry anchor in M0, keeping all other hyperparameters fixed. Tests mechanism invariance under a different bias direction. Requires ~2-3 GPU-h. Run in a follow-up round with an incremental 3-GPU-h allocation via: /auto-verify C1 — resume: true"
+    },
+    "C2": {
+      "importance": "medium",
+      "rationale": "C2 is the causal mechanism claim; important but secondary to C1 (C2 is conditional on C1 being established). Under the cap, C2 would be ranked below C1 regardless of budget. Its main experiment is already not-supported [provisional], making a model-swap variant less informative until the 8-seed × 5-intervention grid is completed first.",
+      "stage2_skip_reason": "max_verify_claims_cap",
+      "deferred_variant_plan": "Complete the planned 8-seed × 5-intervention M2 grid (remaining 28 runs) before running a model-swap verify variant. Run in a follow-up round."
+    }
+  },
+  "budget_note": "Experiment stage consumed approximately 12 GPU-h (M0: ~5.5h, M1: ~0.6h, M2 scoped: ~1.2h, plus overhead). HARD budget = 10 GPU-h. Net overage ~2 GPU-h means Stage 2 has negative headroom. Deferral is the budget-correct decision. Stage 1 main-experiment integrity audits (LLM-only, ~0 GPU-h) were completed for both claims."
+}

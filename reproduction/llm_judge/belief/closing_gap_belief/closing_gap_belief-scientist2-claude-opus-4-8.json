@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Closing the Confidence-Faithfulness Gap in LLMs",
+    "agent": "scientist2",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "Splits are explicitly materialized and honored in code, not merely asserted. artifacts/split_manifest.json defines seed=42, n_train=6000/n_dev=2000/n_test=2000 as disjoint integer index lists. code/step4_probes.py::_load_split_masks (lines 55-77) deliberately prefers idx-based masks over qid-based ones with the comment 'TriviaQA has duplicate qids -> qid-based splits leak between train/dev/test' — an actively-fixed leakage path (CLAIMS_LEDGER.md C1 notes the split was 'regenerated after qid-collision leakage fix'). Probes are fit on tr_idx, the L2 C hyperparameter is tuned on dv_idx (line 241-245), and AUROC is scored on te_idx (line 243-244). L* is selected on DEV AUCs with the explicit comment 'Use DEV-set AUCs to avoid selection-on-test leakage' (line 335). The isotonic calibrator is fit on dev probs and applied to test (lines 247-250). The shuffled-label null permutes only train labels (line 469) and scores on test. Steering slice (500) is drawn from the 2000 held-out test rows (steering_results.json n_steer=500). No fit-and-score-on-same-split path found. This is exemplary hygiene.",
+    "score": 5,
+    "evidence_files": ["code/step4_probes.py", "artifacts/split_manifest.json", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "C1's label is binary answer-correctness (turn1_gen.jsonl y_correct), a real, externally-verifiable ground truth for TriviaQA, correctly operationalizing 'accuracy'. However, the paper's 'gold calibration' target is *graded empirical accuracy* (fraction correct across 50 samples); the reproduction used single-sample binary correctness plus post-isotonic ECE (probe_metrics.json ece_c_isotonic=0.031) rather than 50-sample empirical accuracy, so the 'well-calibrated' facet is under-operationalized (the run honestly reframes C1 as a 'decodable correctness correlate', CLAIMS_LEDGER.md line 26). C2's label is the model's OWN verbalized confidence c (turn2_gen.jsonl), which the integrity audit flags as a 'proxy GT (model's own verbalization by design)' (INTEGRITY_AUDIT.md line 27). This is by design and non-circular for the claim (the claim is precisely whether the to-be-verbalized number is linearly decodable pre-emission), but it means the probe target is the very behavior under study — documented, not hidden. Labels are valid proxies with a disclosed gap, not wrong-thing measurements.",
+    "score": 4,
+    "evidence_files": ["verify/INTEGRITY_AUDIT.md", "CLAIMS_LEDGER.md", "artifacts/stage15_variance.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment uses exactly the user-specified resources. runs/M1_generation/log.txt confirms vLLM loaded '/data/zhenqian/models/Llama-3.1-8B-Instruct' (dtype float16), matching task.md's 'model: Llama-3.1-8B-Instruct'. code/utils.py line 20 sets MODEL_PATH to Llama-3.1-8B-Instruct. The dataset is TriviaQA rc.nocontext validation (task.md 'dataset: TriviaQA'), with available=17,897 post length-filter and used_n=10,000 (6000/2000/2000) — a disclosed subset of a large corpus that is more than ample for probe fitting (EXPERIMENT_RESULTS.md 'Data Actually Used' table). No silent downgrade: no smaller model, no skipped mandatory run. The Qwen2.5-7B-Instruct swap (verify/C3a variant) is a deliberate verify-stage robustness probe drawing on the task.md's listed verify candidates, exempt from this dimension.",
+    "score": 5,
+    "evidence_files": ["runs/M1_generation/log.txt", "code/utils.py", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Core claims rest on adequate scale: probes trained/evaluated on 10,000 items (6000 train / 2000 dev / 2000 test), steering on 500 held-out rows x alpha-grid (4500 forward passes), paraphrase on 500 dev (paraphrase.json n_parseable 492/499). Claim strength matches evidence for C1/C2/C3a. The one thin spot is C3c: the load-bearing (probe_low, verbal_low) cell has n=4 of 2000 (dissociation.json), which the run does NOT overclaim — it reports C3c as 'not-supported [provisional — suspected under-power]' and tags it explicitly (EXPERIMENT_RESULTS.md M4 headline, CLAIMS_LEDGER.md C3c). No conclusion is asserted without running its experiment. The honest handling of the under-powered cell (rather than spinning it as a pass) keeps claim strength aligned with evidence strength.",
+    "score": 4,
+    "evidence_files": ["artifacts/dissociation.json", "refine-logs/EXPERIMENT_RESULTS.md", "artifacts/paraphrase.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Uncertainty is reported: 200-resample retrain-on-bootstrap 95% CIs on AUROC and |cos| (probe_metrics.json L_star_metrics: auc_c_bootstrap_ci mean 0.826 [0.818,0.835], abs_cos_bootstrap_ci [0.001,0.034]), random-direction nulls (100 samples, nulls.json), and shuffled-label nulls (auc 0.497). The load-bearing C3a result is additionally replicated on a second architecture (Qwen2.5-7B-Instruct, |cos|=0.021 [0.001,0.037]). Weaknesses: generation uses a single seed (seed=42 throughout, step4_probes.py), so run-to-run generation variance is unmeasured; bootstrap n was reduced 1000->200 for CPU budget (disclosed, EXPERIMENT_RESULTS.md); and the C1 point estimate 0.840 falls just outside its own bootstrap CI upper 0.835 (a disclosed WARN artifact of full-fit vs bootstrap-mean). Claimed effects (AUROC 0.84/0.95 vs null 0.50; |cos| 0.015 vs threshold 0.30) clearly exceed noise. Solid but single-seed.",
+    "score": 4,
+    "evidence_files": ["artifacts/probe_metrics.json", "artifacts/cos_bootstrap.json", "artifacts/nulls.json", "verify/C3a_near_orthogonality/variants/model-swap-qwen25-7b-instruct/result.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The only causal/mechanistic claim is C3b (causal separability of v_c and v_v via activation steering). It rests on a genuine intervention — additive activation steering alpha*sigma*v at the residual stream (steering_results.json, code/step5_steering.py) — WITH a matched-magnitude random-direction control (delta_random per condition) and a 0.5*sigma_probe threshold. So it is not correlational-dressed-as-causal. However, controls are weakened: only a 3-point alpha grid {-1sigma,0,+1sigma} and n_random=1 control direction (INTEGRITY_AUDIT.md C3b: 'sparse alpha grid (3 values...); single random-direction control (n=1 << 30 recommended)'), and the emitted-output effect is a null at 1sigma. Crucially the run does not overclaim: it honestly downgrades C3b to a 'weak, inconclusive steering diagnostic with no output-level effect' (CLAIMS_LEDGER.md C3b) and labels the reproduced core geometric claim (C3a) as correlational 'probe-direction' near-orthogonality, not causal computational independence. Intervention present, controls weakened, wording honestly matched to evidence.",
+    "score": 4,
+    "evidence_files": ["artifacts/steering_results.json", "verify/INTEGRITY_AUDIT.md", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every key reported number traces to a concrete on-disk product and agrees with it. probe_metrics.json L_star_metrics.auc_c_test=0.8404 and auc_v_bin_test=0.9478 and ece_c_isotonic=0.0308 match the ledger's 0.840/0.948/0.031; cos_bootstrap.json mean=0.01522 [0.00066,0.03444] matches C3a's |cos|=0.015 [0.001,0.034]; dissociation.json reproduces the exact 2x2 cells (n=17/1593/4/386, z=1.348, p_one_sided=0.911) quoted in CLAIMS_LEDGER.md and EXPERIMENT_RESULTS.md; single_pass.json (abs_cos_single=0.139, cross-cond v_c cos=0.471, v_v cos=0.025) matches M6; paraphrase.json (P1 delta_auc=-0.110, P2=-0.078) matches M5; steering_results.json c3b_decision deltas match M3. Run directories (runs/M*/cost.json, log.txt) and the Qwen swap result.json corroborate. No sourceless or back-filled numbers detected.",
+    "score": 5,
+    "evidence_files": ["artifacts/probe_metrics.json", "artifacts/cos_bootstrap.json", "artifacts/dissociation.json", "artifacts/single_pass.json", "artifacts/paraphrase.json", "artifacts/steering_results.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Records are self-consistent across CLAIMS_LEDGER.md, refine-logs/EXPERIMENT_RESULTS.md, verify/VERIFY_REPORT.md, verify/INTEGRITY_AUDIT.md, refine-logs/main-experiment-verdicts.json, and the on-disk JSON. The same metrics (AUROC 0.840/0.948, |cos| 0.015, C3c z=1.35 p=0.91, Qwen swap |cos|=0.021 at L*=22) recur identically everywhere. Integrity states propagate coherently: C3a=PASS in every artifact; C1/C2/C3b/C3c carry INTEGRITY_ONLY / WARN consistently across the ledger, verify report, and audit, with the reason (max_verify_claims cap) stated the same way. The C3c not-supported verdict is uniform across all artifacts — no case of PASS-here / broken-there. The only surfaced tension (C1 point estimate 0.840 lying outside its bootstrap CI [0.818,0.835]) is itself disclosed identically in INTEGRITY_AUDIT.md, VERIFY_REPORT.md, and the ledger as a known WARN, so it is consistent bookkeeping rather than a contradiction.",
+    "score": 5,
+    "evidence_files": ["CLAIMS_LEDGER.md", "refine-logs/EXPERIMENT_RESULTS.md", "verify/VERIFY_REPORT.md", "verify/INTEGRITY_AUDIT.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Models encode well-calibrated accuracy information in a linearly accessible direction.",
+        "method": {
+          "justification": "9a: The mechanism method — an L2-logistic linear probe fit on residual-stream hidden states (outputs.hidden_states[L]) predicting answer correctness, swept across all 33 sites — correctly matches the 'linearly accessible direction' category the claim is about, and mirrors the paper's linear-probing approach (paper Sec 2.1 gold calibration probing). Minor family deviation: the paper regresses ridge on *graded empirical accuracy* (fraction correct across 50 samples), whereas the run uses binary single-sample correctness with post-hoc isotonic ECE to address the 'well-calibrated' facet. Linear probing is the right tool; the graded-calibration nuance is only partly captured.",
+          "score": 4,
+          "evidence_files": ["code/step4_probes.py", "artifacts/probe_metrics.json"]
+        },
+        "experiment": {
+          "justification": "9b: Design is strong — 33-site layer sweep, dev-tuned L2 strength, L* chosen on dev to avoid test leakage, test AUROC=0.840 with 200-resample bootstrap CI, post-isotonic ECE=0.031, and two nulls (random-direction ~0.50, shuffled-label 0.497). Metric (AUROC + ECE vs base-rate/nulls) corresponds tightly to 'linearly accessible + well-calibrated'. Shortfall: single-sample binary correctness instead of the paper's 50-sample empirical-accuracy target, so the 'calibrated' claim is tested via ECE rather than the paper's graded r=0.80 correlation; single seed. Honest, well-powered, slightly under-specified on the calibration facet.",
+          "score": 4,
+          "evidence_files": ["artifacts/probe_metrics.json", "artifacts/nulls.json", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "result": {
+          "justification": "9c: AUROC 0.840 >> shuffled-label null 0.497 and ECE_iso 0.031 (below base-rate ECE) demonstrate correctness is linearly decodable at L*=31 — qualitatively agreeing with the paper's finding that accuracy information is linearly accessible. The run honestly tempers scope to a 'TriviaQA decodable correctness correlate' rather than a task-general truth variable (CLAIMS_LEDGER.md), which is a reliable, non-inflated interpretation. Direction matches the paper.",
+          "score": 5,
+          "evidence_files": ["artifacts/probe_metrics.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C2": {
+        "claim": "Models encode verbalized confidence in a linearly accessible direction.",
+        "method": {
+          "justification": "9a: An ordinal/binarized L2-logistic linear probe on pure-confidence-prompt activations predicting the model's verbalized confidence correctly matches the 'linearly accessible direction' category and the paper's linear-probe approach (paper Sec 3.2). The deviation from the paper's continuous R^2 ridge to an ordinal path is a justified adaptation to the extreme skew of verbalized c (stage15_variance.json: mean=98.6, 96% >= 95), which would make continuous regression degenerate. Method family is appropriate.",
+          "score": 4,
+          "evidence_files": ["code/step4_probes.py", "artifacts/stage15_variance.json"]
+        },
+        "experiment": {
+          "justification": "9b: Design is thorough — binarized-AUROC=0.948 [0.913,0.940], ordinal top-1=0.994, macro-F1=0.862, plus paraphrase robustness (P1 Tian 0-1, P2 Likert) and random/shuffled nulls. Metric matches the claim (decodability pre-emission). Disclosed weaknesses: paraphrase Delta AUC (-0.08 to -0.11) slightly exceeds the pre-registered <=0.05/0.10 tolerance (still above the 0.70 floor), and the probe target is the model's own verbalization (proxy GT). All honestly reported, not tuned away.",
+          "score": 4,
+          "evidence_files": ["artifacts/probe_metrics.json", "artifacts/paraphrase.json", "verify/INTEGRITY_AUDIT.md"]
+        },
+        "result": {
+          "justification": "9c: AUROC 0.948 (vs paper's test R^2 ~0.85) shows verbalized confidence is strongly linearly decodable pre-emission — directionally consistent with the paper. The run honestly scopes it as a 'prompt-protocol-specific readout of impending verbalized confidence' rather than a general introspective-confidence variable, an accurate, non-overstated reading. Agreement with the paper.",
+          "score": 5,
+          "evidence_files": ["artifacts/probe_metrics.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C3": {
+        "claim": "But well-calibrated accuracy information and verbalized confidence occupy separate, nearly orthogonal directions. That means the model \"knows\" when it is likely wrong, but the generation process fails to surface this signal.",
+        "method": {
+          "justification": "9a: The core geometric test — absolute cosine similarity between the two probe weight vectors |cos(v_c, v_v)| per layer, with a random-unit-direction null and retrain-on-bootstrap CI — directly matches the paper's own method (paper Sec 3.3 / Fig 3c: cosine between the two ridge probe weight vectors). This is supplemented by a genuine activation-steering intervention (C3b, causal separability) and a downstream 2x2 dissociation diagnostic (C3c). The primary method for the near-orthogonality claim is exactly right for the mechanism category.",
+          "score": 5,
+          "evidence_files": ["code/step4_probes.py", "artifacts/cos_trajectory.json", "artifacts/steering_results.json"]
+        },
+        "experiment": {
+          "justification": "9b: The geometric experiment is excellent — |cos|=0.015 [0.001,0.034] at L*=31, neighborhood L*+-2 mean=0.025, random-direction null 0.011 (matches theoretical 1/sqrt(4096)), shuffled-label 0.016, a single-pass unified-prompt control (|cos|=0.139, still <<0.3) rebutting the two-context objection, and a cross-architecture replication on Qwen2.5-7B-Instruct (|cos|=0.021 at L*=22). The 'model knows when it is wrong' downstream corollary (C3c) is honestly under-powered: verbalized c is 96% >= 95, collapsing the (probe_low, verbal_low) cell to n=4/2000, so the McNemar/z test cannot fire (z=1.35, p=0.91). The C3b steering separability uses only a sparse 3-point alpha grid and n_random=1. So the load-bearing geometric design is rigorous; the behavioral corollary is under-powered but transparently flagged, not fudged.",
+          "score": 4,
+          "evidence_files": ["artifacts/cos_bootstrap.json", "artifacts/single_pass.json", "artifacts/dissociation.json", "verify/C3a_near_orthogonality/variants/model-swap-qwen25-7b-instruct/result.json"]
+        },
+        "result": {
+          "justification": "9c: The near-orthogonality core reproduces strongly and qualitatively agrees with the paper — |cos|=0.015 is far below the paper's reported <0.04, and the result is architecture-independent (Qwen swap 0.021). The second half of the claim ('the model knows when it is likely wrong but fails to surface it'), tested behaviorally via C3c, is an HONEST non-reproduction: reported 'not-supported [suspected under-power]' with a reliable, disclosed root cause (Llama-3.1-8B-Instruct's degenerate verbalized-c distribution, 96% >= 95, leaves too few low-verbal cells) rather than being spun as a pass or quietly dropped. C3b's emitted-output effect is likewise a disclosed null. No goalpost-tuning or fabrication: the iteration log shows only narrative-only scope-tempering (five circle-0 edits, zero threshold changes; refine-logs/round-2-refinement.md changes were pre-experiment plan design). The geometric claim (the paper's load-bearing contribution) reproduces cleanly; the behavioral corollary is an honest, well-justified partial non-reproduction.",
+          "score": 4,
+          "evidence_files": ["artifacts/cos_bootstrap.json", "artifacts/dissociation.json", "CLAIMS_LEDGER.md", "verify/VERIFY_REPORT.md"]
+        }
+      }
+    }
+  }
+}

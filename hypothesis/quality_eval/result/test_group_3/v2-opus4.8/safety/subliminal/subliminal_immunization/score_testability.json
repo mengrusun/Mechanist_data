@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal is well aligned with the question: it varies a defined intervention—\"Gradient-projection variant\" or \"Loss-penalty variant\"—and measures both \"trait-transfer rate reduction\" and \"benign-task retention,\" directly testing whether the covert channel can be removed without destroying distillation. The prediction is directional and therefore refutable: immunization should suppress transfer while preserving performance, and the stated \"false-positive check on clean distillation\" and adaptive-attacker test provide concrete negative cases, although no explicit numeric success threshold is given and terms such as \"bulk threshold,\" \"semantically-diverse,\" and \"LLM-judge probability\" require operational definitions. The sweeps over \"k in {1,2,4}\" and \"LoRA (rank sweep 4-64)\" improve decidability, but the proposal does not specify exactly how a failed transfer-reduction/retention result would be declared a refutation or how the leading direction is statistically distinguished from ordinary shared semantics.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is computing \"per-example activation gradients,\" forming their matrix, applying an SVD-based consistency test, and \"project[ing] these out of the aggregated update before the optimizer step\"; this is custom engineering but is a runnable composition of autograd hooks, matrix decompositions, and optimizer-update manipulation rather than a magic step. The named models and benchmarks—\"Qwen2.5-7B, Llama-3-8B, Gemma-2-9B,\" \"GSM8K,\" and \"HumanEval\"—exist, and PyTorch-style gradient hooks, SVD/random projections, LoRA, Adam, and SGD provide suitable tooling; the ground-truth steering vector is explicitly available in the steering-vector condition. The refuting branch is runnable because the design includes \"mismatched-base negative controls,\" \"false-positive check on clean distillation,\" multiple baselines, and an \"adaptive-attacker test,\" while resources are partly quantified through \"10 traits,\" three model families, \"k in {1,2,4},\" and ranks \"4-64,\" though dataset subset sizes, seeds, and the precise bulk-threshold procedure remain unspecified.",
+      "score": 7
+    }
+  }
+}

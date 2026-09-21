@@ -1,0 +1,396 @@
+{
+  "feature_idx": 1400,
+  "max_act_ref": 66.64859771728516,
+  "trigger_threshold": 13.329719543457031,
+  "sage": {
+    "candidates": [
+      "Semicolon after a generic collection-typed field declaration inside a class, e.g. `ArrayList<T> x;`, `List<T> x;`, or similar container/map fields.",
+      "Semicolon at the end of a simple class field declaration, with extra affinity for declarations immediately followed by another member declaration such as a constructor, method, or factory.",
+      "Semicolon ending a class-body field/member variable declaration, especially a bare declaration without an initializer like `private Type name;`."
+    ],
+    "top": "Semicolon after a generic collection-typed field declaration inside a class, e.g. `ArrayList<T> x;`, `List<T> x;`, or similar container/map fields.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on a semicolon that terminates a private field/member variable declaration inside a class definition.",
+            "positive_probes": [
+              "Inside class User, private int age; ends declaration.",
+              "In class Node, private String name; appears.",
+              "Within class Cache, private static Map store; terminates.",
+              "Class Person defines private final UUID id; here.",
+              "Inside the class body, private double balance; ends."
+            ],
+            "positive_acts": [
+              31.519214630126953,
+              32.72587585449219,
+              38.88228988647461,
+              28.459096908569336,
+              28.884479522705078
+            ],
+            "distractor_probes": [
+              "Inside class User, public int age; ends declaration.",
+              "Outside any class, private int age; stands alone.",
+              "In class Node, private String name = getName()"
+            ],
+            "distractor_acts": [
+              24.251136779785156,
+              29.12555694580078,
+              9.64029312133789
+            ],
+            "score": 11.088529078165688
+          },
+          {
+            "hypothesis": "The feature fires when code declares a generic collection-typed instance field (e.g., ArrayList<T> or List<String>) and the declaration ends with a semicolon.",
+            "positive_probes": [
+              "Declare private List<String> names; inside the class.",
+              "Use protected ArrayList<Integer> values; as an instance field.",
+              "Add public List<User> members; to the object.",
+              "Define a field: ArrayList<Double> scores; in class.",
+              "Create final List<Item> inventory; for each instance."
+            ],
+            "positive_acts": [
+              42.80332565307617,
+              33.19976806640625,
+              29.20736312866211,
+              30.45651626586914,
+              35.2124137878418
+            ],
+            "distractor_probes": [
+              "Declare private String name; inside the class.",
+              "Use protected ArrayList<Integer> values without a semicolon.",
+              "Add public List<User> getMembers() for the object."
+            ],
+            "distractor_acts": [
+              32.9575309753418,
+              5.751789093017578,
+              6.205588340759277
+            ],
+            "score": 19.204241243998204
+          },
+          {
+            "hypothesis": "The feature responds to class-body field declarations that are immediately followed by a blank line and then a public constructor or static method signature.",
+            "positive_probes": [
+              "private int count;\n\npublic Counter()",
+              "String name;\n\npublic Person()",
+              "static final int MAX;\n\npublic static create()",
+              "boolean ready;\n\npublic Engine()",
+              "double rate;\n\npublic static build()"
+            ],
+            "positive_acts": [
+              41.46903991699219,
+              39.746360778808594,
+              38.32722091674805,
+              39.86283874511719,
+              23.99144744873047
+            ],
+            "distractor_probes": [
+              "private int count;\npublic Counter()",
+              "private int count;\n\nprivate Counter()",
+              "public Counter()\n\nprivate int count;"
+            ],
+            "distractor_acts": [
+              41.540740966796875,
+              41.540740966796875,
+              42.013587951660156
+            ],
+            "score": -5.018975067138669
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "Semicolon ending a class-body field/member variable declaration, especially a simple declaration like `private Type name;` with no initializer.",
+            "positive_probes": [
+              "private String name;",
+              "protected int count;",
+              "public User owner;",
+              "final double rate;",
+              "static Logger logger;"
+            ],
+            "positive_acts": [
+              44.19560241699219,
+              41.86288833618164,
+              41.05834197998047,
+              40.3680419921875,
+              40.09103012084961
+            ],
+            "distractor_probes": [
+              "private String name = \"Alice\";",
+              "private void reset() {}",
+              "for (int i = 0; i < n; i++)"
+            ],
+            "distractor_acts": [
+              12.736855506896973,
+              12.08633041381836,
+              4.131285667419434
+            ],
+            "score": 31.863690439860022
+          },
+          {
+            "hypothesis": "Semicolon after a generic collection-typed field declaration such as `ArrayList<T> x;` or `List<T> x;`, often inside an object/class definition.",
+            "positive_probes": [
+              "private List<String> names; inside the class body.",
+              "protected ArrayList<Integer> values; declared among other fields.",
+              "The model has List<User> members; as a field.",
+              "class Config { ArrayList<File> paths; int retries; }",
+              "public Map<String, Integer> counts; sits in the object."
+            ],
+            "positive_acts": [
+              60.30977249145508,
+              63.379390716552734,
+              11.87645435333252,
+              47.76094055175781,
+              61.42557144165039
+            ],
+            "distractor_probes": [
+              "List<String> names = new ArrayList<>(); initializes immediately.",
+              "The method accepts List<String> names as parameter.",
+              "Use ArrayList<Integer> values without a trailing semicolon here."
+            ],
+            "distractor_acts": [
+              18.10422706604004,
+              4.295910835266113,
+              4.523824691772461
+            ],
+            "score": 39.97577171325683
+          },
+          {
+            "hypothesis": "Semicolon terminating a field declaration immediately before a following member declaration (often a constructor or static factory), with the surrounding class-member layout contributing but not being decisive.",
+            "positive_probes": [
+              "private int count; public Counter() {}",
+              "String name; static User create() { return null; }",
+              "final long id; protected Record(long id) {}",
+              "boolean ready; public boolean isReady() { return ready; }",
+              "int x; private static Point origin() { return null; }"
+            ],
+            "positive_acts": [
+              41.44160461425781,
+              39.75594711303711,
+              46.98487091064453,
+              39.80552291870117,
+              27.90647315979004
+            ],
+            "distractor_probes": [
+              "private int count, total; public Counter() {}",
+              "public Counter() {} private int count;",
+              "private int count; int total;"
+            ],
+            "distractor_acts": [
+              34.43898010253906,
+              39.57632827758789,
+              41.3564453125
+            ],
+            "score": 0.721632512410487
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Semicolon ending a class-body field/member variable declaration, especially a bare declaration without an initializer like `private Type name;`.",
+            "positive_probes": [
+              "Inside class User, declare private String name;",
+              "Class field example: protected int count;",
+              "Member variable line: public List items;",
+              "A bare class attribute declaration: static double rate;",
+              "Within the class body, write final boolean active;"
+            ],
+            "positive_acts": [
+              25.177597045898438,
+              25.24962615966797,
+              36.64973831176758,
+              19.156341552734375,
+              17.093517303466797
+            ],
+            "distractor_probes": [
+              "Inside method body, assign privateString = name;",
+              "Class field with initializer: private String name = \"\";",
+              "Method declaration ending semicolon in interface: void save();"
+            ],
+            "distractor_acts": [
+              5.5889692306518555,
+              18.141008377075195,
+              14.43442440032959
+            ],
+            "score": 11.943896738688151
+          },
+          {
+            "hypothesis": "Semicolon after a generic collection-typed field declaration inside a class, e.g. `ArrayList<T> x;`, `List<T> x;`, or similar container/map fields.",
+            "positive_probes": [
+              "Inside the class: List<String> names;",
+              "Field declaration reads ArrayList<Integer> values;",
+              "Member variable is Map<Key,Value> cache;",
+              "Class contains HashSet<User> members;",
+              "Private field: LinkedList<Node> queue;"
+            ],
+            "positive_acts": [
+              32.42844009399414,
+              25.18112564086914,
+              31.876140594482422,
+              13.682835578918457,
+              42.81251907348633
+            ],
+            "distractor_probes": [
+              "Method parameter uses List<String> names without semicolon",
+              "Local variable assignment: List<String> names = new ArrayList<>()",
+              "Class field is plain String name;"
+            ],
+            "distractor_acts": [
+              6.48105525970459,
+              7.559983253479004,
+              5.829106330871582
+            ],
+            "score": 22.572830581665038
+          },
+          {
+            "hypothesis": "Semicolon at the end of a simple class field declaration, with extra affinity for declarations immediately followed by another member declaration such as a constructor, method, or factory.",
+            "positive_probes": [
+              "int count; void reset() {}",
+              "String name; MyClass(this.name);",
+              "final double rate; factory Item.zero() => Item(0);",
+              "bool active; int status() => 1;",
+              "var token; setToken(String t) {}"
+            ],
+            "positive_acts": [
+              34.396663665771484,
+              39.7254638671875,
+              40.241580963134766,
+              37.761714935302734,
+              33.620277404785156
+            ],
+            "distractor_probes": [
+              "int count = 0; void reset() {}",
+              "String name, title; MyClass(this.name);",
+              "bool active: int status() => 1;"
+            ],
+            "distractor_acts": [
+              13.710661888122559,
+              32.396331787109375,
+              7.427252769470215
+            ],
+            "score": 19.30439135233561
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "He plotted the data on a log-log scale.",
+    "The mountain trail wound past three small lakes.",
+    "Small pebbles crunched under his boots on the path.",
+    "The engine cooled after the long climb.",
+    "where TEntity : class\n{\n    protected DbSet<TEntity> _DbSet;\n    private readonly DbContext _dbContext;\n\n    public GenericRepository()\n    {\n\n    }\n\n    public GenericRepository(DbContext dbContext)\n    {",
+    "*  The class to redefine\n     */\n    private final Class<?> mClass;\n\n    /**\n     *  The replacement class file bytes\n     */\n    private final byte[]   mClassFile",
+    "Rain drummed on the tin roof through the night.",
+    "The senator refused to comment before the hearing."
+  ],
+  "heldout_true_acts": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    53.97524642944336,
+    57.561546325683594,
+    0.0,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "code structure elements, particularly related to class and function definitions in programming",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 1.2059489488601685,
+        "sentences": [
+          "Define a class with an __init__ method.",
+          "This function returns the sum of two numbers.",
+          "Create a subclass that overrides the parent method.",
+          "The module contains helper functions and class definitions.",
+          "Write a static method inside the utility class.",
+          "Each function accepts arguments and raises exceptions clearly.",
+          "Implement a recursive function for traversing tree nodes.",
+          "Declare the interface class before defining concrete implementations."
+        ],
+        "activations": [
+          0.0,
+          4.640016555786133,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          5.007575035095215
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9952204443446044,
+        "spearman": 0.9591836734693876,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          9.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Semicolon after a generic collection-typed field declaration inside a class, e.g. `ArrayList<T> x;`, `List<T> x;`, or similar container/map fields.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 50.43713665008545,
+        "sentences": [
+          "class A { List<String> names; }",
+          "class Cache { Map<Integer,String> index; }",
+          "class Zoo { ArrayList<Animal> residents; }",
+          "class Config { HashMap<String,Object> values; }",
+          "class Team { Set<Player> roster; }",
+          "class Graph { Queue<Node> frontier; }",
+          "class Library { LinkedList<Book> arrivals; }",
+          "class Metrics { Collection<Double> samples; }"
+        ],
+        "activations": [
+          48.203216552734375,
+          54.037845611572266,
+          56.342586517333984,
+          50.27641677856445,
+          49.859901428222656,
+          48.35812759399414,
+          47.65968322753906,
+          48.759315490722656
+        ]
+      },
+      "predictive": {
+        "pearson": 0.829056561047077,
+        "spearman": 0.9591836734693876,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          3.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 60.16895151138306,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "code structure elements, particularly related to class and function definitions in programming"
+}

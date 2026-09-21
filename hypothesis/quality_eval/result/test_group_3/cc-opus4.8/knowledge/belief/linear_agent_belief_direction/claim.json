@@ -1,0 +1,22 @@
+{
+  "Name": "linear_agent_belief_direction",
+  "Title": "A Linear 'Believes-True' Direction: Reading Off Attributed Beliefs From Activations",
+  "Short Hypothesis": "LLMs encode, in a single low-dimensional linear subspace, whether a *named agent* is represented as believing a proposition to be true or false, and this direction is distinct from the model's own truth encoding.",
+  "Related Work": "Prior 'truth-probe' work (Marks & Tegmark 2023; Burns et al. CCS 2022; Azaria & Mitchell 2023) finds directions for factuality of self-asserted statements but does not isolate *third-party attributed belief*. Theory-of-mind behavioral benchmarks (KaBLE; Kim et al. FANToM 2023) show attribution failures but give no mechanism. We separate the attributed-belief axis from the factuality axis, directly operationalizing the belief/knowledge/fact tripartition of 'Language models cannot reliably distinguish belief from knowledge and fact'.",
+  "Abstract": "The claim that language models cannot reliably distinguish belief from knowledge and fact presupposes that some internal representation of belief exists to be confused in the first place. We test the most basic version of this: whether transformer activations contain a linear direction that encodes the *state* an agent is represented as holding toward a specific proposition (believes-true vs believes-false), separately from whether the proposition is factually true. Using minimal-pair prompts of the form 'Alice believes that P' with P varied across true and false factual statements, we train linear probes on residual-stream activations at the proposition tokens and at the agent token. We show a belief-attribution direction can be recovered that generalizes across propositions and agents, is causally used (activation patching along the direction flips the model's downstream report of what the agent believes), and is geometrically distinct from the classical truth direction (low subspace overlap, independent steerability). We further show that when the two directions are forced into conflict (false belief about a true fact), attribution errors coincide with the truth direction leaking into the belief readout. This provides the first mechanistic anchor for the belief-vs-fact confusion documented behaviorally, and yields a lightweight monitor for detecting when a model is about to conflate what an agent believes with what is true.",
+  "Experiments": [
+    "Build a minimal-pair dataset: 2k statements P (balanced true/false, factual claims verifiable against a KB) embedded in templates 'X believes/knows/says that P' with X a diverse set of agent names.",
+    "Extract residual-stream activations at each layer at (a) proposition tokens, (b) agent token, (c) final token, using a model with accessible internals (Llama-3-8B, Gemma-2-9B).",
+    "Train logistic-regression probes to predict the *attributed* belief label (believes-true vs believes-false) and, separately, the *factual* truth label; report per-layer accuracy for both.",
+    "Compute cosine similarity / principal-angle overlap between the belief direction and the truth direction per layer to test geometric distinctness.",
+    "Causal test: add +/- alpha * belief_direction to activations and measure whether the model's generated answer to 'What does X believe about P?' flips, while its answer to 'Is P true?' stays fixed.",
+    "Cross-generalization: train belief probe on one template/agent set, test on held-out templates, agents, and P-domains.",
+    "Conflict analysis: on false-belief-about-true-fact items, correlate probe-measured truth-leakage with behavioral attribution errors."
+  ],
+  "Risk Factors and Limitations": [
+    "A recovered probe direction may reflect surface template features ('believes' token) rather than a genuine belief state; controlled with paraphrase and template ablations.",
+    "Linear separability does not guarantee the model uses the direction; mitigated by causal patching but patching can have off-target effects.",
+    "Ground-truth 'factual truth' labels are model-dependent for borderline claims; restrict to high-agreement facts.",
+    "Findings may be model-specific and not transfer across scales/families."
+  ]
+}

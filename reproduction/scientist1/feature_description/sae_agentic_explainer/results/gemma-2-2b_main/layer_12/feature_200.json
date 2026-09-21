@@ -1,0 +1,408 @@
+{
+  "feature_idx": 200,
+  "max_act_ref": 75.56346893310547,
+  "trigger_threshold": 15.112693786621094,
+  "sage": {
+    "candidates": [
+      "The feature may detect corpus-concatenation boundaries: the transition from arbitrary prior text into an unrelated new document beginning at <<bos>>, regardless of domain, with many observed examples happening to be article abstracts, listings, news items, or patent-style openings.",
+      "A weaker alternate view is that the feature responds to BOS-prefixed document-openers that have entry/header-like surface form, such as titles, named entries, or abstract openings\u2014but only in conjunction with the sequence-start context, not those forms in ordinary prose.",
+      "The feature keys primarily on the special beginning-of-sequence token/context (<<bos>>) that marks a new document/snippet, rather than on any specific semantic topic. It often appears strongest when the new span begins with standalone-entry or title-like opening prose."
+    ],
+    "top": "The feature may detect corpus-concatenation boundaries: the transition from arbitrary prior text into an unrelated new document beginning at <<bos>>, regardless of domain, with many observed examples happening to be article abstracts, listings, news items, or patent-style openings.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on the special beginning-of-sequence marker when it is followed by a title-like opening of a new standalone document or article.",
+            "positive_probes": [
+              "The Forgotten Harbor: A Maritime History",
+              "Chapter One: The Last Ember Falls",
+              "An Introduction to Quantum Gardening",
+              "Editorial: Why Cities Need More Trees",
+              "The Silent Patient of Blackwood Manor"
+            ],
+            "positive_acts": [
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453
+            ],
+            "distractor_probes": [
+              "She opened the article titled The Forgotten Harbor yesterday.",
+              "The chapter one assignment is due tomorrow morning.",
+              "Why cities need more trees, the mayor argued."
+            ],
+            "distractor_acts": [
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "The feature detects abrupt topic resets at paragraph/document boundaries, especially where the text after <<bos>> starts with an introductory sentence or headline casing.",
+            "positive_probes": [
+              "<<bos>> Breaking News: Markets tumble after surprise rate hike.",
+              "<<bos>> Introduction: This guide explains composting for beginners.",
+              "<<bos>> New Chapter. Meanwhile, quantum sensors detect tiny vibrations.",
+              "<<bos>> Overview: We now examine medieval trade routes.",
+              "<<bos>> Fresh Start: Today we'll discuss migraine prevention strategies."
+            ],
+            "positive_acts": [
+              75.71448516845703,
+              75.71448516845703,
+              75.71448516845703,
+              75.71448516845703,
+              75.71448516845703
+            ],
+            "distractor_probes": [
+              "Markets tumbled after the hike, continuing yesterday's discussion.",
+              "Introduction to composting follows the previous section on recycling.",
+              "New chapter, same storyline, as the detective revisits the clue."
+            ],
+            "distractor_acts": [
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453
+            ],
+            "score": 0.1290283203125
+          },
+          {
+            "hypothesis": "The feature responds to corpus concatenation seams where unrelated snippets are joined and a fresh metadata-heavy entry begins after <<bos>> (e.g., place names, article titles, patent/scientific abstracts, or news leads).",
+            "positive_probes": [
+              "<<bos>> Springfield, Illinois \u2014 Population, climate, and transport overview.",
+              "<<bos>> US Patent 4,321,998: Abstract of the invention.",
+              "<<bos>> Breaking News: Finance minister resigns amid coalition talks.",
+              "<<bos>> Quantum entanglement in graphene nanoribbons: We report measurements.",
+              "<<bos>> Mount Kenya National Park \u2014 Geography, wildlife, visiting hours."
+            ],
+            "positive_acts": [
+              75.65677642822266,
+              75.65677642822266,
+              75.65677642822266,
+              75.65677642822266,
+              75.65677642822266
+            ],
+            "distractor_probes": [
+              "Springfield, Illinois has buses, museums, and cold winters.",
+              "The patent abstract describes a valve with reduced leakage.",
+              "Breaking news spread quickly through the crowded newsroom."
+            ],
+            "distractor_acts": [
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453
+            ],
+            "score": 0.071319580078125
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature fires on the beginning-of-sequence boundary itself: a fresh document/article start marked by <<bos>>, often followed by a title, headline, place-name entry, or abstract-like opening.",
+            "positive_probes": [
+              "Breaking News: City Council Approves Waterfront Plan",
+              "Paris \u2014 Population, climate, and key landmarks overview",
+              "Abstract: We investigate phase transitions in neural systems",
+              "The Silent Orchard: A Novel in Three Parts",
+              "London \u2014 History, economy, culture, and transport summary"
+            ],
+            "positive_acts": [
+              75.58546447753906,
+              75.58546447753906,
+              75.58546447753906,
+              75.58546447753906,
+              75.58546447753906
+            ],
+            "distractor_probes": [
+              "In the second paragraph, the abstract is summarized",
+              "The headline appeared midway through the newsletter",
+              "He moved to Paris after finishing the report"
+            ],
+            "distractor_acts": [
+              75.68688201904297,
+              75.68688201904297,
+              75.68688201904297
+            ],
+            "score": -0.10141754150390625
+          },
+          {
+            "hypothesis": "The feature detects corpus-concatenation seams where one snippet ends and an unrelated standalone entry begins after <<bos>>, especially encyclopedia/news/scientific/patent-style openings.",
+            "positive_probes": [
+              "<<bos>> Encyclopedia entry: Photosynthesis is the process by which plants",
+              "<<bos>> Reuters report: Officials announced the merger late Tuesday.",
+              "<<bos>> Patent abstract: A method for synchronizing distributed sensors.",
+              "<<bos>> Scientific article: Results indicate significant warming across regions.",
+              "<<bos>> Dictionary entry: Aardvark, a nocturnal burrowing mammal native"
+            ],
+            "positive_acts": [
+              75.71448516845703,
+              75.71448516845703,
+              75.71448516845703,
+              75.71448516845703,
+              75.71448516845703
+            ],
+            "distractor_probes": [
+              "The encyclopedia entry on photosynthesis was updated yesterday.",
+              "Reuters later reported officials announced the merger Tuesday.",
+              "The scientific article discusses significant warming across regions."
+            ],
+            "distractor_acts": [
+              75.68688201904297,
+              75.68688201904297,
+              75.68688201904297
+            ],
+            "score": 0.0276031494140625
+          },
+          {
+            "hypothesis": "The feature is polysemantic over BOS-prefixed 'entry header' formats: after <<bos>> it likes metadata-heavy starts such as title lines, chapter/article headers, or named-entry openings rather than ordinary continuation prose.",
+            "positive_probes": [
+              "Chapter 7: Methods and Materials",
+              "Article IV \u2014 General Provisions",
+              "Moby-Dick, by Herman Melville",
+              "Entry: Sodium chloride, crystalline compound",
+              "Title: Observations on Northern Birds"
+            ],
+            "positive_acts": [
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453
+            ],
+            "distractor_probes": [
+              "The chapter begins with a storm at sea.",
+              "She wrote about general provisions in plain prose.",
+              "Northern birds migrate south before winter arrives."
+            ],
+            "distractor_acts": [
+              75.68688201904297,
+              75.68688201904297,
+              75.68688201904297
+            ],
+            "score": -0.1014251708984375
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "The feature keys primarily on the special beginning-of-sequence token/context (<<bos>>) that marks a new document/snippet, rather than on any specific semantic topic. It often appears strongest when the new span begins with standalone-entry or title-like opening prose.",
+            "positive_probes": [
+              "Chapter One: A Quiet Beginning.",
+              "Title: Notes on Winter Birds.",
+              "Entry 1 \u2014 Morning observations.",
+              "Abstract: Preliminary findings and scope.",
+              "Prologue: Before the storm arrived."
+            ],
+            "positive_acts": [
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453
+            ],
+            "distractor_probes": [
+              "This chapter begins after several earlier sections.",
+              "The title appears centered on the cover page.",
+              "Before the storm arrived, everyone kept working."
+            ],
+            "distractor_acts": [
+              75.68688201904297,
+              75.68688201904297,
+              75.68688201904297
+            ],
+            "score": -0.1014251708984375
+          },
+          {
+            "hypothesis": "The feature may detect corpus-concatenation boundaries: the transition from arbitrary prior text into an unrelated new document beginning at <<bos>>, regardless of domain, with many observed examples happening to be article abstracts, listings, news items, or patent-style openings.",
+            "positive_probes": [
+              "Unrelated notes end here. <<bos>> Abstract: We investigate catalyst stability.",
+              "Random chatter stops. <<bos>> Breaking news: Markets opened sharply lower.",
+              "Previous document cuts off. <<bos>> 1. A method for encoding audio.",
+              "Garbage text precedes this. <<bos>> Product listing: Wireless mouse, black, USB-C.",
+              "Nonsense before boundary. <<bos>> Summary: This study examines coastal erosion rates."
+            ],
+            "positive_acts": [
+              75.65677642822266,
+              75.65677642822266,
+              75.65677642822266,
+              75.65677642822266,
+              75.65677642822266
+            ],
+            "distractor_probes": [
+              "Abstract: We investigate catalyst stability in layered oxides.",
+              "Breaking news: Markets opened sharply lower after policy changes.",
+              "1. A method for encoding audio in portable devices."
+            ],
+            "distractor_acts": [
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453
+            ],
+            "score": 0.071319580078125
+          },
+          {
+            "hypothesis": "A weaker alternate view is that the feature responds to BOS-prefixed document-openers that have entry/header-like surface form, such as titles, named entries, or abstract openings\u2014but only in conjunction with the sequence-start context, not those forms in ordinary prose.",
+            "positive_probes": [
+              "Encyclopedia entry: Blue Whale.",
+              "Abstract: We investigate phase transitions.",
+              "Chapter One: The Arrival.",
+              "Marie Curie \u2014 Biography.",
+              "Species account: Red Fox."
+            ],
+            "positive_acts": [
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453
+            ],
+            "distractor_probes": [
+              "The encyclopedia entry on blue whales was fascinating.",
+              "We investigate phase transitions in this paper's abstract.",
+              "Chapter one begins when the arrival finally occurs."
+            ],
+            "distractor_acts": [
+              75.58545684814453,
+              75.58545684814453,
+              75.58545684814453
+            ],
+            "score": 0.0
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "of each default configuration for the test suite with the test case is added to the test plan as shown in the following illustration.\n\nReference: How to: Select Different Test Configurations For a Test Plan or a Test Suite\n\nQuestion No: 54",
+    "A single cloud drifted over the harbor.",
+    "perturbed at the lack of proper paperwork, and Vicaun feared the loss of yet another potential big score to bad luck.<bos>Universal nature of collective plasmonic excitations in finite 1D carbon-based nanostructures.\nWe provide evidence of the plas",
+    "The lawyer objected on procedural grounds.",
+    "Microsoft Test Manager (MTM) to perform exploratory testing.\n\nYou need to ensure that any bugs or test cases created during an exploratory test session are associated with a specific requirement for the purposes of traceability",
+    "The train from Milan arrived twenty minutes late.",
+    "originate from auxiliary files that the compiler drivers add to the\nfinal link-edit. See Using a Compiler Driver.\n\nThe following example mapfile exports a common set of symbol definitions that\na compiler driver might establish, while demoting all other global definitions",
+    "The senator refused to comment before the hearing.",
+    "The mountain trail wound past three small lakes.",
+    "Rain drummed on the tin roof through the night.",
+    "No. 55-77384/1980. In this prior art, after the motor passes through the target position, an error extreme point is obtained in order to determine a current value to be supplied to the motor to"
+  ],
+  "heldout_true_acts": [
+    75.69921875,
+    75.69921875,
+    75.69921875,
+    75.69921875,
+    75.69921875,
+    75.69921875,
+    75.69921875,
+    75.69921875,
+    75.68218231201172,
+    75.68218231201172,
+    75.68218231201172
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "terminology related to configuration and operational performance",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 75.65677642822266,
+        "sentences": [
+          "Tune the system configuration for peak operational performance.",
+          "Latency dropped after optimizing network settings and runtime parameters.",
+          "The dashboard tracks throughput, uptime, and deployment configuration.",
+          "Adjust memory allocation to improve service performance under load.",
+          "Misconfigured replicas caused poor scalability and unstable operations.",
+          "We benchmarked CPU utilization after changing the server configuration.",
+          "Operational efficiency depends on correct settings, monitoring, and tuning.",
+          "Update the config file to maximize database performance."
+        ],
+        "activations": [
+          75.65677642822266,
+          75.65677642822266,
+          75.65677642822266,
+          75.65677642822266,
+          75.65677642822266,
+          75.65677642822266,
+          75.65677642822266,
+          75.65677642822266
+        ]
+      },
+      "predictive": {
+        "pearson": 0.1911764705882353,
+        "spearman": 0.2714808327415835,
+        "preds": [
+          10.0,
+          0.0,
+          2.0,
+          1.0,
+          8.0,
+          0.0,
+          8.0,
+          0.0,
+          0.0,
+          0.0,
+          6.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "The feature may detect corpus-concatenation boundaries: the transition from arbitrary prior text into an unrelated new document beginning at <<bos>>, regardless of domain, with many observed examples happening to be article abstracts, listings, news items, or patent-style openings.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 75.68425750732422,
+        "sentences": [
+          "Random notes ended abruptly. <<bos>> Abstract: We investigate protein folding pathways.",
+          "Yesterday's transcript cuts off here. <<bos>> Breaking news: Markets open sharply lower.",
+          "Unrelated chatter stops now. <<bos>> Patent claim: A method for encrypting images.",
+          "Some old paragraph trails away. <<bos>> Item listing: Vintage chair, oak, minor scratches.",
+          "The previous document is irrelevant. <<bos>> Introduction: This study examines urban heat islands.",
+          "Half a recipe disappears. <<bos>> Bulletin: Evacuation orders issued after the quake.",
+          "That forum post ended midthought. <<bos>> Summary: New catalyst improves ammonia synthesis.",
+          "Earlier text was miscellaneous. <<bos>> Notice: Applications are due by Friday."
+        ],
+        "activations": [
+          75.68425750732422,
+          75.68425750732422,
+          75.68425750732422,
+          75.68425750732422,
+          75.68425750732422,
+          75.68425750732422,
+          75.68425750732422,
+          75.68425750732422
+        ]
+      },
+      "predictive": {
+        "pearson": 0.2613541867446583,
+        "spearman": 0.24703861987580994,
+        "preds": [
+          3.0,
+          0.0,
+          10.0,
+          0.0,
+          1.0,
+          0.0,
+          2.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 77.95499348640442,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "terminology related to configuration and operational performance"
+}

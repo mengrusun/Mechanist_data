@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The procedure is well aligned with the topic: it specifies a recursive loop that will \"repeat for 10 generations,\" measures \"per-generation trait strength\" and steering-vector cosine drift, and includes clean, mismatched-base, and cross-family comparisons. The regime criteria \"amplification (g>1)\" and \"extinction (g<1)\" are directional and decidable, while concrete settings such as datasets of \"1k/5k/20k per generation\" and LoRA ranks \"4-64\" make the intended test unusually specific. However, the overarching prediction is disjunctive—traits may \"amplify,\" \"decay,\" or \"drift\"—so nearly any trajectory can satisfy some part of it, and neither \"vanishes\" nor \"a NEW nearby trait emerges\" has a quantitative decision threshold or a fully specified correction for testing many related traits. The claim is therefore a strong characterization study with falsifiable subhypotheses, but not a single watertight hypothesis whose overall failure condition is unambiguous.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is \"train a fresh steering vector on the current generation's dataset,\" because the plan does not define the contrast, layer, optimization target, or how an unlabeled number/code dataset identifies a trait direction; this requires custom methodological specification rather than being a completely standard operation as written. The other components—LoRA/full fine-tuning, activation extraction, cosine similarity, token-frequency evaluation, and the named Qwen2.5-7B, Llama-3-8B, Gemma-2-9B, GSM8K, and HumanEval artifacts—exist and are supported by mature transformer and interpretability tooling. Resources are usefully quantified through \"10 generations,\" three named model scales, dataset sizes of \"1k/5k/20k per generation,\" and \"LoRA rank (4-64),\" although \"multiple seeds\" and the epoch sweep remain numerically unspecified. The refuting branch is runnable because the design includes a \"CLEAN (unseeded) gen-0 model,\" \"mismatched-base negative controls,\" a \"cross-family break,\" and benign-task retention/perplexity checks, allowing null transfer and general degradation to be distinguished from the proposed dynamics.",
+      "score": 7
+    }
+  }
+}

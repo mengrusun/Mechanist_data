@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4, via llm-chat MCP)",
+  "claim_id": "C4",
+  "linked_milestones": ["M7"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "BFCL: real GT (AST function-name match, m7_agent_eval.py:345-362). Harmful tool-use: 100 authored prompts (HARMFUL_AGENT_PROMPTS dict, lines 87-196) + LLM judge only when dangerous-tool-name detected (lines 264-270). Two-stage evaluation is legitimate but authored prompt provenance is weak. WARN (not FAIL) -- negative result and floor effect make inflation unlikely."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "harmful_tool_use_rate = N_harmful/100. BFCL = N_match/50. No self-normalization. Identical prompt sets for B0 and RR comparison."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "B0_agent.json (harmful_rate=0.010, BFCL=0.980), RR_agent.json (harmful_rate=0.040, BFCL=1.000) exist and match EXPERIMENT_RESULTS.md. M7a-M7b tracker both done. Records files also present."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "eval_harmful_tools() and eval_bfcl() both called in main() (lines 393-395). No dead code detected."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "100 authored harmful prompts (not external benchmark), 50 BFCL exec_simple (substitute for full BFCL v3), single seed. Floor effect: B0 harmful_rate=0.010 leaves <1pp headroom for 20-pp target reduction. All limitations disclosed."
+    },
+    "eval_type": "hybrid: real_gt (BFCL AST match) + synthetic_proxy (authored harmful prompts + LLM judge)"
+  }
+}

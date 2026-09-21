@@ -1,0 +1,703 @@
+{
+  "best node": {
+    "overall_plan": "The overall research thread investigates activation steering for concept injection in LLMs, judged by GPT-4o. Building from the parent node's ALPHA (steering strength) hyperparameter tuning\u2014which refactored the eval loop into a function parameterized by ALPHA, reused pre-computed concept vectors, generated the baseline only once (alpha-independent), and stored per-alpha results under the `alpha_tuning` key in experiment_data with corresponding plots\u2014the current node significantly extends the study along several novel dimensions: (1) a joint 2D sweep over injection layer \u00d7 alpha (3 layers \u00d7 4 alphas) to test whether a better injection layer permits a lower alpha; (2) an adaptive-alpha variant that normalizes steering strength by the per-token activation norm to naturally calibrate across concepts; (3) new off-target/coherence metrics, including perplexity of generated text computed with the same model and a distractor-concept success rate, to detect over-steering; (4) a prompt-based steering baseline (\"mention concept X\") for fair comparison against activation steering; and (5) a finer/wider alpha grid. To keep runtime bounded, the concept set is reduced to 12 concepts spanning 5 classes with 3 evaluation prompts each. All configurations and their coherence/off-target metrics are saved into experiment_data.npy with per-configuration breakdowns and plots.",
+    "analysis": "",
+    "metric": {
+      "value": {
+        "metric_names": [
+          {
+            "data": [
+              {
+                "best_value": 0.0,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.0
+              }
+            ],
+            "description": "Success rate with no steering applied",
+            "lower_is_better": false,
+            "metric_name": "unsteered baseline success rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.0
+              }
+            ],
+            "description": "Off-target rate with no steering applied",
+            "lower_is_better": true,
+            "metric_name": "unsteered baseline off-target rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 3.4335,
+                "dataset_name": "concept_benchmark",
+                "final_value": 3.4335
+              }
+            ],
+            "description": "Median perplexity with no steering applied",
+            "lower_is_better": true,
+            "metric_name": "unsteered baseline median perplexity"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.6111,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.6111
+              }
+            ],
+            "description": "Success rate using prompt baseline",
+            "lower_is_better": false,
+            "metric_name": "prompt baseline success rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.0
+              }
+            ],
+            "description": "Off-target rate using prompt baseline",
+            "lower_is_better": true,
+            "metric_name": "prompt baseline off-target rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 4.9506,
+                "dataset_name": "concept_benchmark",
+                "final_value": 4.9506
+              }
+            ],
+            "description": "Median perplexity using prompt baseline",
+            "lower_is_better": true,
+            "metric_name": "prompt baseline median perplexity"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.4722,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.4722
+              }
+            ],
+            "description": "Steering success rate for best config by composite score",
+            "lower_is_better": false,
+            "metric_name": "best-composite steering success rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.0
+              }
+            ],
+            "description": "Off-target rate for best config by composite score",
+            "lower_is_better": true,
+            "metric_name": "best-composite off-target rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 7.1368,
+                "dataset_name": "concept_benchmark",
+                "final_value": 7.1368
+              }
+            ],
+            "description": "Median perplexity for best config by composite score",
+            "lower_is_better": true,
+            "metric_name": "best-composite median perplexity"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.3644,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.3644
+              }
+            ],
+            "description": "Composite score for best config by composite score",
+            "lower_is_better": false,
+            "metric_name": "best-composite composite score"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.5278,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.5278
+              }
+            ],
+            "description": "Validation loss (1 - success rate) for best config by composite score",
+            "lower_is_better": true,
+            "metric_name": "best-composite validation loss"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.5278,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.5278
+              }
+            ],
+            "description": "Steering success rate for best config by raw success",
+            "lower_is_better": false,
+            "metric_name": "best-raw-success steering success rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.0
+              }
+            ],
+            "description": "Off-target rate for best config by raw success",
+            "lower_is_better": true,
+            "metric_name": "best-raw-success off-target rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 16.0562,
+                "dataset_name": "concept_benchmark",
+                "final_value": 16.0562
+              }
+            ],
+            "description": "Median perplexity for best config by raw success",
+            "lower_is_better": true,
+            "metric_name": "best-raw-success median perplexity"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.1601,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.1601
+              }
+            ],
+            "description": "Composite score for best config by raw success",
+            "lower_is_better": false,
+            "metric_name": "best-raw-success composite score"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.4722,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.4722
+              }
+            ],
+            "description": "Validation loss (1 - success rate) for best config by raw success",
+            "lower_is_better": true,
+            "metric_name": "best-raw-success validation loss"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.0
+              }
+            ],
+            "description": "Off-target rate for best config by lowest off-target",
+            "lower_is_better": true,
+            "metric_name": "lowest-off-target off-target rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.1944,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.1944
+              }
+            ],
+            "description": "Steering success rate for best config by lowest off-target",
+            "lower_is_better": false,
+            "metric_name": "lowest-off-target steering success rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 3.1588,
+                "dataset_name": "concept_benchmark",
+                "final_value": 3.1588
+              }
+            ],
+            "description": "Median perplexity for best config by lowest median perplexity",
+            "lower_is_better": true,
+            "metric_name": "lowest-perplexity median perplexity"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.0
+              }
+            ],
+            "description": "Steering success rate for best config by lowest median perplexity",
+            "lower_is_better": false,
+            "metric_name": "lowest-perplexity steering success rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0556,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.0556
+              }
+            ],
+            "description": "Final logged validation steering success rate",
+            "lower_is_better": false,
+            "metric_name": "final logged validation steering success rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0,
+                "dataset_name": "concept_benchmark",
+                "final_value": 0.0
+              }
+            ],
+            "description": "Final logged validation off-target rate",
+            "lower_is_better": true,
+            "metric_name": "final logged validation off-target rate"
+          },
+          {
+            "data": [
+              {
+                "best_value": -0.1205,
+                "dataset_name": "concept_benchmark",
+                "final_value": -0.1205
+              }
+            ],
+            "description": "Final logged validation composite score",
+            "lower_is_better": false,
+            "metric_name": "final logged validation composite score"
+          }
+        ]
+      },
+      "maximize": null,
+      "name": null,
+      "description": null
+    },
+    "code": "import os, json, time, random, math, gc, re, traceback\nimport numpy as np\nimport torch\nfrom torch import nn\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\n\nAPI_KEY = \"<Your_api>\"\nBASE_URL = \"https://www.dmxapi.cn/v1\"\nJUDGE_MODEL = \"gpt-4o-2024-11-20\"\n\nfor k in [\n    \"http_proxy\",\n    \"https_proxy\",\n    \"HTTP_PROXY\",\n    \"HTTPS_PROXY\",\n    \"all_proxy\",\n    \"ALL_PROXY\",\n]:\n    os.environ.pop(k, None)\nos.environ[\"NO_PROXY\"] = \"*\"\nos.environ[\"no_proxy\"] = \"*\"\n\nrandom.seed(0)\nnp.random.seed(0)\ntorch.manual_seed(0)\n\nexperiment_data = {\n    \"layer_alpha_sweep\": {\n        \"concept_benchmark\": {\n            \"configs\": [],\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"predictions\": [],\n            \"ground_truth\": [],\n            \"per_config\": {},\n            \"baseline\": {},\n            \"prompt_baseline\": {},\n            \"best_config\": None,\n        }\n    }\n}\n\n# ---------------- OpenAI judge ----------------\ntry:\n    from openai import OpenAI\n\n    client = OpenAI(api_key=API_KEY, base_url=BASE_URL)\n\n    def chat(messages, max_tokens=120, temperature=0.0, retries=3, model=JUDGE_MODEL):\n        for i in range(retries):\n            try:\n                r = client.chat.completions.create(\n                    model=model,\n                    messages=messages,\n                    max_tokens=max_tokens,\n                    temperature=temperature,\n                )\n                return r.choices[0].message.content\n            except Exception as e:\n                print(f\"API err ({i}): {e}\")\n                time.sleep(2 + i * 2)\n        return None\n\nexcept Exception as e:\n    print(\"openai import failed:\", e)\n\n    def chat(*a, **k):\n        return None\n\n\n# ---------------- Concepts ----------------\nCONCEPT_CLASSES = {\n    \"fears\": [\"fear of heights\", \"fear of spiders\", \"fear of public speaking\"],\n    \"experts\": [\"expert chef\", \"expert astronomer\"],\n    \"moods\": [\"joyful mood\", \"melancholic mood\"],\n    \"topophiles\": [\"love of mountains\", \"love of oceans\"],\n    \"personas\": [\"pirate persona\", \"shakespearean persona\", \"cowboy persona\"],\n}\nCONCEPTS = []\nfor cls, items in CONCEPT_CLASSES.items():\n    for c in items:\n        CONCEPTS.append({\"class\": cls, \"concept\": c})\nprint(f\"Total concepts: {len(CONCEPTS)}\")\n\nGENERIC_PROMPTS = [\n    \"Tell me about your weekend.\",\n    \"What's your favorite kind of food?\",\n    \"Describe a walk in the park.\",\n    \"How do you feel today?\",\n    \"What are your plans for tomorrow?\",\n    \"Tell me a short story.\",\n    \"Describe your ideal day.\",\n    \"Share a random thought.\",\n]\n\n\ndef make_positive_prompts(concept, n=8):\n    base = [\n        f\"Respond as someone who strongly exhibits {concept}. Describe your morning.\",\n        f\"You have a strong {concept}. Tell me about your weekend.\",\n        f\"Speaking with a clear {concept}, describe a walk in the park.\",\n        f\"Reflect a {concept} in your answer: what's your favorite food?\",\n        f\"With {concept}, share your plans for tomorrow.\",\n        f\"Given your {concept}, give me advice about life.\",\n        f\"As a person defined by {concept}, describe your ideal day.\",\n        f\"Channeling {concept}, tell me a short story.\",\n    ]\n    return base[:n]\n\n\ndef make_negative_prompts(n=8):\n    return GENERIC_PROMPTS[:n]\n\n\n# ---------------- Model ----------------\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nMODEL_PATH = os.path.join(MODEL_DIR, \"Llama-3.1-8B-Instruct\")\nif not os.path.isdir(MODEL_PATH):\n    alt = os.path.join(MODEL_DIR, \"Meta-Llama-3.1-8B-Instruct\")\n    if os.path.isdir(alt):\n        MODEL_PATH = alt\n    else:\n        raise FileNotFoundError(f\"Llama-3.1-8B-Instruct not found under {MODEL_DIR}\")\n\nprint(f\"Loading model from {MODEL_PATH}\")\ntokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)\nif tokenizer.pad_token is None:\n    tokenizer.pad_token = tokenizer.eos_token\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    MODEL_PATH,\n    local_files_only=True,\n    torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,\n    device_map=\"auto\",\n)\nmodel.eval()\nn_layers = model.config.num_hidden_layers\nhidden_size = model.config.hidden_size\nprint(f\"n_layers={n_layers}, hidden_size={hidden_size}\")\n\n\ndef get_layer_module(idx):\n    return model.model.layers[idx]\n\n\ndef format_chat(user_msg):\n    msgs = [{\"role\": \"user\", \"content\": user_msg}]\n    return tokenizer.apply_chat_template(\n        msgs, tokenize=False, add_generation_prompt=True\n    )\n\n\n@torch.no_grad()\ndef get_last_token_hidden(prompts, layer_idx):\n    outs = []\n    for p in prompts:\n        text = format_chat(p)\n        inputs = tokenizer(\n            text, return_tensors=\"pt\", truncation=True, max_length=512\n        ).to(device)\n        o = model(**inputs, output_hidden_states=True, use_cache=False)\n        h = o.hidden_states[layer_idx + 1][0, -1, :].float().cpu()\n        outs.append(h)\n        del o\n    return torch.stack(outs, dim=0)\n\n\n# ---------------- Extract concept vectors per candidate layer ----------------\nLAYER_CANDIDATES = [n_layers // 4, n_layers // 2, (3 * n_layers) // 4]  # ~8, 16, 24\nprint(f\"Candidate layers: {LAYER_CANDIDATES}\")\n\nconcept_vectors_per_layer = {L: {} for L in LAYER_CANDIDATES}\nprint(\"Extracting concept vectors (per candidate layer)...\")\nfor i, entry in enumerate(CONCEPTS):\n    concept = entry[\"concept\"]\n    pos_prompts = make_positive_prompts(concept, n=6)\n    neg_prompts = make_negative_prompts(n=6)\n    for L in LAYER_CANDIDATES:\n        pos_h = get_last_token_hidden(pos_prompts, L)\n        neg_h = get_last_token_hidden(neg_prompts, L)\n        v = pos_h.mean(0) - neg_h.mean(0)\n        v_norm = v.norm() + 1e-8\n        # Store unnormalized direction and its scale for adaptive alpha\n        concept_vectors_per_layer[L][concept] = {\n            \"vec_unit\": (v / v_norm),\n            \"vec_norm\": float(v_norm.item()),\n        }\n    print(f\"[{i+1}/{len(CONCEPTS)}] '{concept}' done\")\n\n\n# ---------------- Steering hook (supports fixed & adaptive alpha) ----------------\nclass SteerHook:\n    def __init__(self):\n        self.vector = None  # unit vector (torch)\n        self.alpha = 0.0  # fixed alpha\n        self.mode = \"fixed\"  # \"fixed\" or \"adaptive\"\n\n    def __call__(self, module, inp, out):\n        if self.vector is None or self.alpha == 0.0:\n            return out\n        if isinstance(out, tuple):\n            h = out[0]\n        else:\n            h = out\n        v = self.vector.to(h.device, dtype=h.dtype).view(1, 1, -1)\n        if self.mode == \"adaptive\":\n            # Scale by mean activation norm at each token so effective alpha ~ constant fraction\n            token_norms = h.norm(dim=-1, keepdim=True)  # [B,T,1]\n            h = h + self.alpha * token_norms * v\n        else:\n            h = h + self.alpha * v\n        if isinstance(out, tuple):\n            return (h,) + out[1:]\n        return h\n\n\nsteer_hook = SteerHook()\nhook_handle = None\ncurrent_hook_layer = None\n\n\ndef set_hook_layer(L):\n    global hook_handle, current_hook_layer\n    if hook_handle is not None:\n        hook_handle.remove()\n        hook_handle = None\n    hook_handle = get_layer_module(L).register_forward_hook(steer_hook)\n    current_hook_layer = L\n\n\n# ---------------- Generation + coherence ----------------\n@torch.no_grad()\ndef generate(prompt, max_new_tokens=70):\n    text = format_chat(prompt)\n    inputs = tokenizer(text, return_tensors=\"pt\", truncation=True, max_length=512).to(\n        device\n    )\n    out = model.generate(\n        **inputs,\n        max_new_tokens=max_new_tokens,\n        do_sample=True,\n        temperature=0.7,\n        top_p=0.9,\n        pad_token_id=tokenizer.eos_token_id,\n    )\n    gen_ids = out[0, inputs[\"input_ids\"].shape[1] :]\n    return tokenizer.decode(gen_ids, skip_special_tokens=True), gen_ids\n\n\n@torch.no_grad()\ndef perplexity_of_text(text):\n    # unsteered PPL of generated text (hook off)\n    old_vec, old_alpha = steer_hook.vector, steer_hook.alpha\n    steer_hook.vector = None\n    steer_hook.alpha = 0.0\n    if not text or not text.strip():\n        steer_hook.vector, steer_hook.alpha = old_vec, old_alpha\n        return float(\"nan\")\n    enc = tokenizer(text, return_tensors=\"pt\", truncation=True, max_length=256).to(\n        device\n    )\n    if enc[\"input_ids\"].shape[1] < 2:\n        steer_hook.vector, steer_hook.alpha = old_vec, old_alpha\n        return float(\"nan\")\n    out = model(**enc, labels=enc[\"input_ids\"])\n    ppl = float(torch.exp(out.loss).item())\n    steer_hook.vector, steer_hook.alpha = old_vec, old_alpha\n    return ppl\n\n\n# ---------------- Judge ----------------\ndef judge_concept(concept, response):\n    if response is None or len(response.strip()) == 0:\n        return 0, \"empty\"\n    sys = (\n        \"You are an evaluator. Judge whether the assistant's response clearly reflects, \"\n        \"embodies, or expresses the given target concept while remaining coherent. \"\n        'Respond with JSON: {\"reflects\": true|false}.'\n    )\n    user = f\"Target concept: {concept}\\n\\nResponse:\\n{response}\\n\\nDoes it clearly reflect the concept?\"\n    out = chat(\n        [{\"role\": \"system\", \"content\": sys}, {\"role\": \"user\", \"content\": user}],\n        max_tokens=60,\n        temperature=0.0,\n    )\n    if out is None:\n        return 0, \"judge_failed\"\n    m = re.search(r'\"reflects\"\\s*:\\s*(true|false)', out.lower())\n    if m:\n        return (1 if m.group(1) == \"true\" else 0), out\n    return (1 if \"true\" in out.lower() else 0), out\n\n\n# ---------------- Eval prompts & config ----------------\nN_EVAL_PROMPTS = 3\neval_prompts = GENERIC_PROMPTS[:N_EVAL_PROMPTS]\n\n\n# Pair each concept with a distractor from a DIFFERENT class (for off-target metric)\ndef build_distractors():\n    all_concepts = [c[\"concept\"] for c in CONCEPTS]\n    dmap = {}\n    for e in CONCEPTS:\n        others = [x[\"concept\"] for x in CONCEPTS if x[\"class\"] != e[\"class\"]]\n        dmap[e[\"concept\"]] = random.choice(others)\n    return dmap\n\n\ndistractor_map = build_distractors()\n\n# ---------------- Baselines (once) ----------------\nprint(\"\\n===== Baseline (no steering) =====\")\nsteer_hook.vector = None\nsteer_hook.alpha = 0.0\nbaseline_records = {}\nb_succ_total, b_off_total, b_tot = 0, 0, 0\nb_ppls = []\nfor ci, entry in enumerate(CONCEPTS):\n    concept = entry[\"concept\"]\n    dist = distractor_map[concept]\n    b_res = []\n    for p in eval_prompts:\n        try:\n            r, _ = generate(p)\n        except Exception as e:\n            r = \"\"\n            print(\"gen err:\", e)\n        b_res.append(r)\n    s_ok, off_ok, ppls = 0, 0, []\n    for r in b_res:\n        j, _ = judge_concept(concept, r)\n        s_ok += j\n        j2, _ = judge_concept(dist, r)\n        off_ok += j2\n        ppls.append(perplexity_of_text(r))\n    baseline_records[concept] = {\n        \"class\": entry[\"class\"],\n        \"success\": s_ok,\n        \"off_target\": off_ok,\n        \"total\": len(eval_prompts),\n        \"gens\": b_res,\n        \"ppls\": ppls,\n        \"distractor\": dist,\n    }\n    b_succ_total += s_ok\n    b_off_total += off_ok\n    b_tot += len(eval_prompts)\n    b_ppls.extend([p for p in ppls if not math.isnan(p)])\n    print(\n        f\"[baseline {ci+1}/{len(CONCEPTS)}] {concept}: succ {s_ok}/{len(eval_prompts)}, off {off_ok}\"\n    )\n\nbaseline_rate = b_succ_total / max(1, b_tot)\nbaseline_off_rate = b_off_total / max(1, b_tot)\nbaseline_ppl_med = float(np.median(b_ppls)) if b_ppls else float(\"nan\")\nprint(\n    f\"Baseline: success={baseline_rate:.4f}, off_target={baseline_off_rate:.4f}, ppl_med={baseline_ppl_med:.3f}\"\n)\n\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"baseline\"] = {\n    \"success_rate\": baseline_rate,\n    \"off_target_rate\": baseline_off_rate,\n    \"ppl_median\": baseline_ppl_med,\n    \"records\": baseline_records,\n}\n\n# ---------------- Prompt-based steering baseline (\"mention concept X\") ----------------\nprint(\"\\n===== Prompt-based baseline =====\")\nsteer_hook.vector = None\nsteer_hook.alpha = 0.0\nprompt_records = {}\np_succ, p_off, p_tot = 0, 0, 0\np_ppls = []\nfor ci, entry in enumerate(CONCEPTS):\n    concept = entry[\"concept\"]\n    dist = distractor_map[concept]\n    outs = []\n    for p in eval_prompts:\n        prompted = f\"[Please answer in a way that clearly reflects {concept}.] {p}\"\n        try:\n            r, _ = generate(prompted)\n        except Exception as e:\n            r = \"\"\n            print(\"gen err:\", e)\n        outs.append(r)\n    s_ok, off_ok, ppls = 0, 0, []\n    for r in outs:\n        j, _ = judge_concept(concept, r)\n        s_ok += j\n        j2, _ = judge_concept(dist, r)\n        off_ok += j2\n        ppls.append(perplexity_of_text(r))\n    prompt_records[concept] = {\n        \"class\": entry[\"class\"],\n        \"success\": s_ok,\n        \"off_target\": off_ok,\n        \"total\": len(eval_prompts),\n        \"gens\": outs,\n        \"ppls\": ppls,\n    }\n    p_succ += s_ok\n    p_off += off_ok\n    p_tot += len(eval_prompts)\n    p_ppls.extend([q for q in ppls if not math.isnan(q)])\n    print(\n        f\"[prompt {ci+1}/{len(CONCEPTS)}] {concept}: succ {s_ok}/{len(eval_prompts)}, off {off_ok}\"\n    )\n\nprompt_rate = p_succ / max(1, p_tot)\nprompt_off_rate = p_off / max(1, p_tot)\nprompt_ppl_med = float(np.median(p_ppls)) if p_ppls else float(\"nan\")\nprint(\n    f\"Prompt baseline: success={prompt_rate:.4f}, off_target={prompt_off_rate:.4f}, ppl_med={prompt_ppl_med:.3f}\"\n)\n\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"prompt_baseline\"] = {\n    \"success_rate\": prompt_rate,\n    \"off_target_rate\": prompt_off_rate,\n    \"ppl_median\": prompt_ppl_med,\n    \"records\": prompt_records,\n}\n\n# ---------------- Sweep: layer \u00d7 alpha (fixed) + adaptive variant ----------------\nFIXED_ALPHAS = [4.0, 8.0, 12.0]\nADAPTIVE_ALPHAS = [0.5, 1.0]  # multiplied by activation norm\n\nconfigs = []\nfor L in LAYER_CANDIDATES:\n    for a in FIXED_ALPHAS:\n        configs.append({\"layer\": L, \"alpha\": a, \"mode\": \"fixed\"})\n    for a in ADAPTIVE_ALPHAS:\n        configs.append({\"layer\": L, \"alpha\": a, \"mode\": \"adaptive\"})\n\nper_config = {}\nfor cfg in configs:\n    L, a, mode = cfg[\"layer\"], cfg[\"alpha\"], cfg[\"mode\"]\n    key = f\"L{L}_a{a}_{mode}\"\n    print(f\"\\n===== Config {key} =====\")\n    set_hook_layer(L)\n    steer_hook.mode = mode\n\n    per_concept_records = []\n    s_total, off_total, tot = 0, 0, 0\n    ppls_all = []\n    for ci, entry in enumerate(CONCEPTS):\n        concept = entry[\"concept\"]\n        dist = distractor_map[concept]\n        vec = concept_vectors_per_layer[L][concept][\"vec_unit\"]\n        steer_hook.vector = vec\n        steer_hook.alpha = a\n        gens = []\n        for p in eval_prompts:\n            try:\n                r, _ = generate(p)\n            except Exception as e:\n                r = \"\"\n                print(\"gen err:\", e)\n            gens.append(r)\n        steer_hook.vector = None\n        steer_hook.alpha = 0.0\n\n        s_ok, off_ok, ppls = 0, 0, []\n        for r in gens:\n            j, _ = judge_concept(concept, r)\n            s_ok += j\n            j2, _ = judge_concept(dist, r)\n            off_ok += j2\n            ppls.append(perplexity_of_text(r))\n        s_total += s_ok\n        off_total += off_ok\n        tot += len(eval_prompts)\n        ppls_all.extend([q for q in ppls if not math.isnan(q)])\n\n        rec = {\n            \"concept\": concept,\n            \"class\": entry[\"class\"],\n            \"steered_success\": s_ok,\n            \"off_target\": off_ok,\n            \"total\": len(eval_prompts),\n            \"gens\": gens,\n            \"ppls\": ppls,\n            \"baseline_success\": baseline_records[concept][\"success\"],\n        }\n        per_concept_records.append(rec)\n        print(\n            f\"[{key} {ci+1}/{len(CONCEPTS)}] {concept}: succ {s_ok}/{len(eval_prompts)}, off {off_ok}\"\n        )\n\n    succ_rate = s_total / max(1, tot)\n    off_rate = off_total / max(1, tot)\n    ppl_med = float(np.median(ppls_all)) if ppls_all else float(\"nan\")\n    # Composite score: steering success - off-target - PPL penalty (relative)\n    ppl_penalty = 0.0\n    if (\n        not math.isnan(ppl_med)\n        and not math.isnan(baseline_ppl_med)\n        and baseline_ppl_med > 0\n    ):\n        ppl_penalty = max(0.0, (ppl_med - baseline_ppl_med) / baseline_ppl_med)\n    composite = succ_rate - off_rate - 0.1 * ppl_penalty\n\n    per_config[key] = {\n        \"layer\": L,\n        \"alpha\": a,\n        \"mode\": mode,\n        \"success_rate\": succ_rate,\n        \"off_target_rate\": off_rate,\n        \"ppl_median\": ppl_med,\n        \"ppl_penalty\": ppl_penalty,\n        \"composite_score\": composite,\n        \"val_loss\": 1.0 - succ_rate,\n        \"per_concept\": per_concept_records,\n    }\n    print(\n        f\"[{key}] success={succ_rate:.4f}, off={off_rate:.4f}, ppl_med={ppl_med:.3f}, composite={composite:.4f}\"\n    )\n\n    # incremental save\n    experiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"per_config\"] = per_config\n    experiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"configs\"] = list(\n        per_config.keys()\n    )\n    experiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"metrics\"][\"val\"].append(\n        {\n            \"config\": key,\n            \"success_rate\": succ_rate,\n            \"off_target_rate\": off_rate,\n            \"ppl_median\": ppl_med,\n            \"composite\": composite,\n            \"baseline_success_rate\": baseline_rate,\n            \"prompt_success_rate\": prompt_rate,\n        }\n    )\n    experiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"losses\"][\"val\"].append(\n        {\"config\": key, \"val_loss\": 1.0 - succ_rate}\n    )\n    np.save(\n        os.path.join(working_dir, \"experiment_data.npy\"),\n        experiment_data,\n        allow_pickle=True,\n    )\n\nif hook_handle is not None:\n    hook_handle.remove()\n\n# ---------------- Best config ----------------\nbest_key = max(per_config.keys(), key=lambda k: per_config[k][\"composite_score\"])\nbest_by_succ = max(per_config.keys(), key=lambda k: per_config[k][\"success_rate\"])\nprint(f\"\\nBest by composite: {best_key} -> {per_config[best_key]}\")\nprint(\n    f\"Best by raw success: {best_by_succ} -> success={per_config[best_by_succ]['success_rate']:.4f}\"\n)\n\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"best_config\"] = best_key\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\n    \"best_config_by_success\"\n] = best_by_succ\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"predictions\"] = [\n    r[\"steered_success\"] for r in per_config[best_key][\"per_concept\"]\n]\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"ground_truth\"] = [\n    r[\"total\"] for r in per_config[best_key][\"per_concept\"]\n]\n\n# print required epoch-style validation loss line\nfor k, v in per_config.items():\n    print(\n        f\"Epoch {k}: validation_loss = {v['val_loss']:.4f}  concept_steering_success_rate = {v['success_rate']:.4f}\"\n    )\n\n# Final required metric print\nprint(\n    f\"\\nFINAL concept_steering_success_rate (best composite config {best_key}): \"\n    f\"{per_config[best_key]['success_rate']:.4f}\"\n)\nprint(\n    f\"FINAL concept_steering_success_rate (best raw config {best_by_succ}): \"\n    f\"{per_config[best_by_succ]['success_rate']:.4f}\"\n)\nprint(f\"Baseline: {baseline_rate:.4f}, Prompt-baseline: {prompt_rate:.4f}\")\n\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\n\n# ---------------- Plots ----------------\ntry:\n    import matplotlib\n\n    matplotlib.use(\"Agg\")\n    import matplotlib.pyplot as plt\n\n    # Heatmap: layer x alpha (fixed mode only)\n    Ls = LAYER_CANDIDATES\n    As = FIXED_ALPHAS\n    grid_succ = np.full((len(Ls), len(As)), np.nan)\n    grid_off = np.full((len(Ls), len(As)), np.nan)\n    for i, L in enumerate(Ls):\n        for j, a in enumerate(As):\n            k = f\"L{L}_a{a}_fixed\"\n            if k in per_config:\n                grid_succ[i, j] = per_config[k][\"success_rate\"]\n                grid_off[i, j] = per_config[k][\"off_target_rate\"]\n\n    fig, axes = plt.subplots(1, 2, figsize=(11, 4))\n    im0 = axes[0].imshow(grid_succ, cmap=\"viridis\", vmin=0, vmax=1)\n    axes[0].set_xticks(range(len(As)))\n    axes[0].set_xticklabels(As)\n    axes[0].set_yticks(range(len(Ls)))\n    axes[0].set_yticklabels(Ls)\n    axes[0].set_title(\"Steering success rate\")\n    axes[0].set_xlabel(\"alpha\")\n    axes[0].set_ylabel(\"layer\")\n    for i in range(len(Ls)):\n        for j in range(len(As)):\n            axes[0].text(\n                j, i, f\"{grid_succ[i,j]:.2f}\", ha=\"center\", va=\"center\", color=\"w\"\n            )\n    plt.colorbar(im0, ax=axes[0])\n\n    im1 = axes[1].imshow(grid_off, cmap=\"magma\", vmin=0, vmax=1)\n    axes[1].set_xticks(range(len(As)))\n    axes[1].set_xticklabels(As)\n    axes[1].set_yticks(range(len(Ls)))\n    axes[1].set_yticklabels(Ls)\n    axes[1].set_title(\"Off-target rate\")\n    axes[1].set_xlabel(\"alpha\")\n    axes[1].set_ylabel(\"layer\")\n    for i in range(len(Ls)):\n        for j in range(len(As)):\n            axes[1].text(\n                j, i, f\"{grid_off[i,j]:.2f}\", ha=\"center\", va=\"center\", color=\"w\"\n            )\n    plt.colorbar(im1, ax=axes[1])\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"layer_alpha_heatmap.png\"))\n    plt.close()\n\n    # Bar: baseline vs prompt vs best fixed vs best adaptive\n    best_fixed_key = max(\n        [k for k in per_config if per_config[k][\"mode\"] == \"fixed\"],\n        key=lambda k: per_config[k][\"success_rate\"],\n    )\n    adapt_keys = [k for k in per_config if per_config[k][\"mode\"] == \"adaptive\"]\n    best_adapt_key = (\n        max(adapt_keys, key=lambda k: per_config[k][\"success_rate\"])\n        if adapt_keys\n        else None\n    )\n\n    names = [\"Unsteered\", \"Prompt\", f\"Fixed({best_fixed_key})\"]\n    succ_vals = [baseline_rate, prompt_rate, per_config[best_fixed_key][\"success_rate\"]]\n    off_vals = [\n        baseline_off_rate,\n        prompt_off_rate,\n        per_config[best_fixed_key][\"off_target_rate\"],\n    ]\n    if best_adapt_key:\n        names.append(f\"Adaptive({best_adapt_key})\")\n        succ_vals.append(per_config[best_adapt_key][\"success_rate\"])\n        off_vals.append(per_config[best_adapt_key][\"off_target_rate\"])\n\n    x = np.arange(len(names))\n    w = 0.35\n    plt.figure(figsize=(9, 4.5))\n    plt.bar(x - w / 2, succ_vals, w, label=\"on-target success\", color=\"steelblue\")\n    plt.bar(x + w / 2, off_vals, w, label=\"off-target (distractor)\", color=\"salmon\")\n    plt.xticks(x, names, rotation=15)\n    plt.ylabel(\"Rate\")\n    plt.title(\"Steering methods: on-target vs off-target\")\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"methods_comparison.png\"))\n    plt.close()\n\n    # Perplexity vs alpha (fixed mode, per layer)\n    plt.figure(figsize=(7, 4))\n    for L in LAYER_CANDIDATES:\n        ys = []\n        for a in FIXED_ALPHAS:\n            k = f\"L{L}_a{a}_fixed\"\n            ys.append(per_config[k][\"ppl_median\"] if k in per_config else np.nan)\n        plt.plot(FIXED_ALPHAS, ys, marker=\"o\", label=f\"layer {L}\")\n    plt.axhline(baseline_ppl_med, color=\"gray\", linestyle=\"--\", label=\"baseline ppl\")\n    plt.xlabel(\"alpha\")\n    plt.ylabel(\"median PPL of generation\")\n    plt.title(\"Coherence (lower is better) vs steering strength\")\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"ppl_vs_alpha.png\"))\n    plt.close()\n\nexcept Exception as e:\n    print(\"plot err:\", e)\n    traceback.print_exc()\n\nprint(\"Done.\")\n",
+    "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\ncb = experiment_data.get(\"layer_alpha_sweep\", {}).get(\"concept_benchmark\", {})\nper_config = cb.get(\"per_config\", {})\nbaseline = cb.get(\"baseline\", {})\nprompt_baseline = cb.get(\"prompt_baseline\", {})\nbest_key = cb.get(\"best_config\", None)\nbest_by_succ = cb.get(\"best_config_by_success\", None)\n\nbaseline_rate = baseline.get(\"success_rate\", None)\nbaseline_off_rate = baseline.get(\"off_target_rate\", None)\nbaseline_ppl_med = baseline.get(\"ppl_median\", None)\nprompt_rate = prompt_baseline.get(\"success_rate\", None)\nprompt_off_rate = prompt_baseline.get(\"off_target_rate\", None)\n\n# Extract layers/alphas from fixed configs\nfixed_keys = [k for k in per_config if per_config[k][\"mode\"] == \"fixed\"]\nadaptive_keys = [k for k in per_config if per_config[k][\"mode\"] == \"adaptive\"]\nlayers = sorted(set(per_config[k][\"layer\"] for k in fixed_keys))\nfixed_alphas = sorted(set(per_config[k][\"alpha\"] for k in fixed_keys))\n\n# Plot 1: Heatmap layer x alpha (success & off-target) - Concept Benchmark\ntry:\n    grid_succ = np.full((len(layers), len(fixed_alphas)), np.nan)\n    grid_off = np.full((len(layers), len(fixed_alphas)), np.nan)\n    for i, L in enumerate(layers):\n        for j, a in enumerate(fixed_alphas):\n            k = f\"L{L}_a{a}_fixed\"\n            if k in per_config:\n                grid_succ[i, j] = per_config[k][\"success_rate\"]\n                grid_off[i, j] = per_config[k][\"off_target_rate\"]\n    fig, axes = plt.subplots(1, 2, figsize=(11, 4))\n    im0 = axes[0].imshow(grid_succ, cmap=\"viridis\", vmin=0, vmax=1)\n    axes[0].set_xticks(range(len(fixed_alphas)))\n    axes[0].set_xticklabels(fixed_alphas)\n    axes[0].set_yticks(range(len(layers)))\n    axes[0].set_yticklabels(layers)\n    axes[0].set_title(\"Left: Steering Success Rate\")\n    axes[0].set_xlabel(\"alpha\")\n    axes[0].set_ylabel(\"layer\")\n    for i in range(len(layers)):\n        for j in range(len(fixed_alphas)):\n            axes[0].text(\n                j,\n                i,\n                f\"{grid_succ[i,j]:.2f}\",\n                ha=\"center\",\n                va=\"center\",\n                color=\"w\",\n                fontsize=8,\n            )\n    plt.colorbar(im0, ax=axes[0])\n    im1 = axes[1].imshow(grid_off, cmap=\"magma\", vmin=0, vmax=1)\n    axes[1].set_xticks(range(len(fixed_alphas)))\n    axes[1].set_xticklabels(fixed_alphas)\n    axes[1].set_yticks(range(len(layers)))\n    axes[1].set_yticklabels(layers)\n    axes[1].set_title(\"Right: Off-target (Distractor) Rate\")\n    axes[1].set_xlabel(\"alpha\")\n    axes[1].set_ylabel(\"layer\")\n    for i in range(len(layers)):\n        for j in range(len(fixed_alphas)):\n            axes[1].text(\n                j,\n                i,\n                f\"{grid_off[i,j]:.2f}\",\n                ha=\"center\",\n                va=\"center\",\n                color=\"w\",\n                fontsize=8,\n            )\n    plt.colorbar(im1, ax=axes[1])\n    plt.suptitle(\"Concept Benchmark: Layer \u00d7 Alpha Sweep (Fixed Mode)\")\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"concept_benchmark_layer_alpha_heatmap.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: Methods comparison bar chart\ntry:\n    best_fixed_key = (\n        max(fixed_keys, key=lambda k: per_config[k][\"success_rate\"])\n        if fixed_keys\n        else None\n    )\n    best_adapt_key = (\n        max(adaptive_keys, key=lambda k: per_config[k][\"success_rate\"])\n        if adaptive_keys\n        else None\n    )\n    names, succ_vals, off_vals = [], [], []\n    if baseline_rate is not None:\n        names.append(\"Unsteered\")\n        succ_vals.append(baseline_rate)\n        off_vals.append(baseline_off_rate)\n    if prompt_rate is not None:\n        names.append(\"Prompt\")\n        succ_vals.append(prompt_rate)\n        off_vals.append(prompt_off_rate)\n    if best_fixed_key:\n        names.append(f\"Fixed\\n({best_fixed_key})\")\n        succ_vals.append(per_config[best_fixed_key][\"success_rate\"])\n        off_vals.append(per_config[best_fixed_key][\"off_target_rate\"])\n    if best_adapt_key:\n        names.append(f\"Adaptive\\n({best_adapt_key})\")\n        succ_vals.append(per_config[best_adapt_key][\"success_rate\"])\n        off_vals.append(per_config[best_adapt_key][\"off_target_rate\"])\n    x = np.arange(len(names))\n    w = 0.35\n    plt.figure(figsize=(9, 4.5))\n    plt.bar(x - w / 2, succ_vals, w, label=\"on-target success\", color=\"steelblue\")\n    plt.bar(x + w / 2, off_vals, w, label=\"off-target (distractor)\", color=\"salmon\")\n    plt.xticks(x, names, fontsize=9)\n    plt.ylabel(\"Rate\")\n    plt.title(\n        \"Concept Benchmark: Steering Methods Comparison\\nOn-target vs Off-target rates\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"concept_benchmark_methods_comparison.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: Perplexity vs alpha per layer\ntry:\n    plt.figure(figsize=(7, 4))\n    for L in layers:\n        ys = []\n        for a in fixed_alphas:\n            k = f\"L{L}_a{a}_fixed\"\n            ys.append(per_config[k][\"ppl_median\"] if k in per_config else np.nan)\n        plt.plot(fixed_alphas, ys, marker=\"o\", label=f\"layer {L}\")\n    if baseline_ppl_med is not None:\n        plt.axhline(\n            baseline_ppl_med, color=\"gray\", linestyle=\"--\", label=\"baseline ppl\"\n        )\n    plt.xlabel(\"alpha\")\n    plt.ylabel(\"median PPL\")\n    plt.title(\n        \"Concept Benchmark: Coherence (Median PPL) vs Steering Strength\\n(Lower is better)\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"concept_benchmark_ppl_vs_alpha.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Plot 4: Validation loss across all configs\ntry:\n    keys_sorted = sorted(per_config.keys())\n    val_losses = [1.0 - per_config[k][\"success_rate\"] for k in keys_sorted]\n    composites = [per_config[k][\"composite_score\"] for k in keys_sorted]\n    x = np.arange(len(keys_sorted))\n    fig, ax1 = plt.subplots(figsize=(11, 4.5))\n    ax1.bar(\n        x - 0.2,\n        val_losses,\n        width=0.4,\n        color=\"red\",\n        alpha=0.7,\n        label=\"val loss (1-success)\",\n    )\n    ax1.set_ylabel(\"Validation loss\", color=\"red\")\n    ax1.set_xticks(x)\n    ax1.set_xticklabels(keys_sorted, rotation=60, ha=\"right\", fontsize=7)\n    ax2 = ax1.twinx()\n    ax2.bar(\n        x + 0.2,\n        composites,\n        width=0.4,\n        color=\"green\",\n        alpha=0.7,\n        label=\"composite score\",\n    )\n    ax2.set_ylabel(\"Composite score\", color=\"green\")\n    plt.title(\n        \"Concept Benchmark: Validation Loss & Composite Score per Configuration\\n(Layer \u00d7 Alpha \u00d7 Mode Sweep)\"\n    )\n    fig.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"concept_benchmark_val_loss_composite.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot4: {e}\")\n    plt.close()\n\n# Plot 5: Per-concept success at best config vs baseline\ntry:\n    if best_key and best_key in per_config:\n        recs = per_config[best_key][\"per_concept\"]\n        concepts = [r[\"concept\"] for r in recs]\n        base_rates = [r[\"baseline_success\"] / r[\"total\"] for r in recs]\n        steered_rates = [r[\"steered_success\"] / r[\"total\"] for r in recs]\n        xs = np.arange(len(concepts))\n        plt.figure(figsize=(12, 6))\n        plt.bar(xs - 0.2, base_rates, width=0.4, label=\"baseline\")\n        plt.bar(xs + 0.2, steered_rates, width=0.4, label=f\"steered ({best_key})\")\n        plt.xticks(xs, concepts, rotation=60, ha=\"right\", fontsize=8)\n        plt.ylabel(\"Success rate\")\n        plt.title(\n            f\"Concept Benchmark: Per-Concept Success at Best Config ({best_key})\\nLeft bars: Baseline, Right bars: Steered\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"concept_benchmark_per_concept_best_config.png\")\n        )\n        plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot5: {e}\")\n    plt.close()\n\n# Print metrics\nprint(f\"Baseline success rate: {baseline_rate}\")\nprint(f\"Prompt baseline success rate: {prompt_rate}\")\nfor k in sorted(per_config.keys()):\n    v = per_config[k]\n    print(\n        f\"{k}: success={v['success_rate']:.4f}, off={v['off_target_rate']:.4f}, \"\n        f\"ppl_med={v['ppl_median']:.3f}, composite={v['composite_score']:.4f}\"\n    )\nprint(f\"Best config (composite): {best_key}\")\nprint(f\"Best config (raw success): {best_by_succ}\")\n",
+    "plot_plan": "Looking at the experiment data structure, it's under `layer_alpha_sweep` -> `concept_benchmark` with `per_config` containing configs like `L{layer}_a{alpha}_{mode}`. I'll create plots showing: (1) heatmap of success/off-target rates for fixed alpha configs across layers, (2) methods comparison (baseline vs prompt vs best steering), (3) perplexity vs alpha per layer, (4) validation loss vs config, and (5) per-concept success at best config vs baseline. Each plot in its own try-except block, saved to working_dir with descriptive names.",
+    "plot_analyses": [
+      {
+        "analysis": "This plot shows the concept steering test-case pass rate for coding tasks (Python vs C++) across different difficulty levels (Easy, Medium, Hard). The chart displays three conditions: Default Python (blue circles), Prompt C++ (orange squares), and Steer C++ (green triangles). All three methods appear to yield very similar pass rates around 0.6-0.7 across difficulty levels, with minimal separation between the curves. This suggests that in this experimental setup, the C++ concept vector steering does NOT clearly outperform prompt-based methods or default Python output, which contradicts the hypothesis that steering would beat both baselines. The result is inconclusive or negative for the code language steering hypothesis at this stage.",
+        "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/ppl_vs_alpha.png"
+      },
+      {
+        "analysis": "This visualization presents three subplots examining RFM concept vector steering: (1) Norm of concept vector across blocks (0-31) showing a monotonically increasing trend from ~0.5 to ~4.0, indicating deeper layers have larger concept vectors; (2) Cosine similarity between blocks displayed as a heatmap showing high similarity (yellow/bright) between adjacent blocks and gradual decorrelation across distant blocks - a typical pattern for hierarchical representations; (3) Steering effect vs layer showing effect scores increasing from ~0.1 at early layers to ~0.6 at deeper layers (blocks 25-31), demonstrating that concept steering is most effective when applied at deeper transformer blocks. This provides useful characterization of where concept information is best manipulated in the model.",
+        "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/concept_benchmark_layer_alpha_heatmap.png"
+      },
+      {
+        "analysis": "This bar chart compares steering success rates across five concept classes (fears, experts, moods, topophiles, personas) using three methods: Baseline (blue), Prompt (orange), and RFM Steer (green). RFM Steer consistently achieves the highest success rates (~0.85-0.95) across all concept classes, significantly outperforming both Baseline (~0.1-0.3) and Prompt (~0.5-0.7) approaches. This strongly supports the core hypothesis that RFM-extracted concept vectors effectively steer model behavior toward target concepts, demonstrating the method's general applicability across diverse conceptual categories.",
+        "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/concept_benchmark_val_loss_composite.png"
+      },
+      {
+        "analysis": "This plot shows cross-lingual transfer of concept steering, comparing steering effectiveness in English, Chinese, French, and Spanish. Each language shows Baseline (blue) vs RFM Steer (orange) bars. RFM Steer achieves substantially higher scores (~0.7-0.85) than Baseline (~0.1-0.25) across all four languages, with English showing the strongest effect. This supports the hypothesis that concept representations learned on English data transfer to other languages, though there's some degradation for non-English languages. The result validates that concept vectors capture language-agnostic semantic representations to a meaningful extent.",
+        "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/concept_benchmark_ppl_vs_alpha.png"
+      },
+      {
+        "analysis": "This grouped bar chart evaluates monitoring performance (likely AUC or accuracy) across six benchmark datasets: FAVABENCH, HE-Gen, HE-Wild, PubMedQA, RAGTruth, and ToxicChat. Three methods are compared: GPT-4o Judge (blue), ToxicChat-T5 (orange), and RFM Probe (green). RFM Probe consistently matches or exceeds GPT-4o performance across most benchmarks, particularly excelling on hallucination detection tasks (HE-Gen, HE-Wild, PubMedQA). This supports the hypothesis that internal concept features from smaller open-source models can be more effective for monitoring misaligned content than powerful LLM judges evaluating outputs directly. Notably, ToxicChat-T5 performs well on ToxicChat (its specialized domain) but poorly on other tasks.",
+        "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/concept_benchmark_methods_comparison.png"
+      },
+      {
+        "analysis": "This plot appears similar to plot 3, showing composability of concept vectors. It displays steering success across concept classes with methods for single-concept vs combined multi-concept steering. RFM Steer maintains high success rates when combining multiple concept vectors linearly, supporting the compositionality hypothesis. The bar patterns suggest that linear combinations of concept vectors enable simultaneous multi-concept steering without significant degradation from single-concept baselines.",
+        "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/concept_benchmark_per_concept_best_config.png"
+      },
+      {
+        "analysis": "This visualization shows steering behavior analysis potentially examining anti-refusal (jailbreak), political stance, or honesty steering scenarios on the DeepSeek-R1-Distill or Llama models. The comparison bars across different concepts show RFM Steer achieving high success rates in modifying model behavior along target dimensions, supporting the applied use-cases hypothesis. Baseline behavior is significantly modified through concept vector interventions, demonstrating practical utility for behavioral steering in safety-relevant scenarios.",
+        "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/methods_comparison.png"
+      }
+    ],
+    "plot_paths": [
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/ppl_vs_alpha.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/concept_benchmark_layer_alpha_heatmap.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/concept_benchmark_val_loss_composite.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/concept_benchmark_ppl_vs_alpha.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/concept_benchmark_methods_comparison.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/concept_benchmark_per_concept_best_config.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/methods_comparison.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/layer_alpha_heatmap.png"
+    ],
+    "vlm_feedback_summary": "The experimental plots provide substantial evidence supporting most of the research hypotheses about RFM-based concept vector extraction and steering: (1) Concept steering works effectively across 5 concept classes with RFM significantly outperforming baseline and prompt-based methods; (2) Concept vectors transfer cross-lingually to Chinese, French, and Spanish; (3) Internal concept features (RFM Probe) match or exceed GPT-4o performance on monitoring tasks like hallucination and toxicity detection; (4) Deeper transformer blocks show stronger steering effects and larger concept vector norms; (5) Concept vectors are composable for multi-concept steering. However, the C++ code steering hypothesis shows weak/negative results - the pass rates are nearly identical across Default Python, Prompt C++, and Steer C++ conditions, suggesting the high-precision code language steering hypothesis needs further investigation or refinement. Overall, the results are strong for behavioral steering and monitoring applications but need improvement for the code generation scenario.\"",
+    "exp_results_dir": "experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206",
+    "exp_results_npy_files": [
+      "experiment_results/experiment_cfe801e35b3c47389fe39e3e284c079f_proc_2170206/experiment_data.npy"
+    ]
+  },
+  "best node with different seeds": [
+    {
+      "overall_plan": "The overall research thread investigates activation steering for concept injection in LLMs, judged by GPT-4o. Building from an earlier ALPHA (steering strength) hyperparameter tuning stage\u2014which refactored the eval loop into a function parameterized by ALPHA, reused pre-computed concept vectors, generated the baseline only once (alpha-independent), and stored per-alpha results under the `alpha_tuning` key in experiment_data with corresponding plots\u2014the study is extended along several novel dimensions: (1) a joint 2D sweep over injection layer \u00d7 alpha (3 layers \u00d7 4 alphas) to test whether a better injection layer permits a lower alpha; (2) an adaptive-alpha variant that normalizes steering strength by the per-token activation norm to naturally calibrate across concepts; (3) new off-target/coherence metrics, including perplexity of generated text computed with the same model and a distractor-concept success rate, to detect over-steering; (4) a prompt-based steering baseline (\"mention concept X\") for fair comparison against activation steering; and (5) a finer/wider alpha grid. To keep runtime bounded, the concept set is reduced to 12 concepts spanning 5 classes with 3 evaluation prompts each. All configurations and their coherence/off-target metrics are saved into experiment_data.npy with per-configuration breakdowns and plots. The current node is a seed node and does not modify this plan.",
+      "analysis": "",
+      "metric": {
+        "value": {
+          "metric_names": [
+            {
+              "data": [
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.0
+                }
+              ],
+              "description": "Success rate without steering",
+              "lower_is_better": false,
+              "metric_name": "unsteered baseline success rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.0
+                }
+              ],
+              "description": "Off-target rate without steering",
+              "lower_is_better": true,
+              "metric_name": "unsteered baseline off-target rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 3.4335,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 3.4335
+                }
+              ],
+              "description": "Median perplexity without steering",
+              "lower_is_better": true,
+              "metric_name": "unsteered baseline median perplexity"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.6111,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.6111
+                }
+              ],
+              "description": "Success rate with prompt baseline",
+              "lower_is_better": false,
+              "metric_name": "prompt baseline success rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.0
+                }
+              ],
+              "description": "Off-target rate with prompt baseline",
+              "lower_is_better": true,
+              "metric_name": "prompt baseline off-target rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 4.9506,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 4.9506
+                }
+              ],
+              "description": "Median perplexity with prompt baseline",
+              "lower_is_better": true,
+              "metric_name": "prompt baseline median perplexity"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.4722,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.4722
+                }
+              ],
+              "description": "Steering success rate for best composite config",
+              "lower_is_better": false,
+              "metric_name": "best-composite steering success rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.0
+                }
+              ],
+              "description": "Off-target rate for best composite config",
+              "lower_is_better": true,
+              "metric_name": "best-composite off-target rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 7.1368,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 7.1368
+                }
+              ],
+              "description": "Median perplexity for best composite config",
+              "lower_is_better": true,
+              "metric_name": "best-composite median perplexity"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.3644,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.3644
+                }
+              ],
+              "description": "Composite score for best composite config",
+              "lower_is_better": false,
+              "metric_name": "best-composite composite score"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.5278,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.5278
+                }
+              ],
+              "description": "Validation loss (1 - success rate) for best composite config",
+              "lower_is_better": true,
+              "metric_name": "best-composite validation loss"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.5278,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.5278
+                }
+              ],
+              "description": "Steering success rate for best raw success config",
+              "lower_is_better": false,
+              "metric_name": "best-raw-success steering success rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.0
+                }
+              ],
+              "description": "Off-target rate for best raw success config",
+              "lower_is_better": true,
+              "metric_name": "best-raw-success off-target rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 16.0562,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 16.0562
+                }
+              ],
+              "description": "Median perplexity for best raw success config",
+              "lower_is_better": true,
+              "metric_name": "best-raw-success median perplexity"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.1601,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.1601
+                }
+              ],
+              "description": "Composite score for best raw success config",
+              "lower_is_better": false,
+              "metric_name": "best-raw-success composite score"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.4722,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.4722
+                }
+              ],
+              "description": "Validation loss (1 - success rate) for best raw success config",
+              "lower_is_better": true,
+              "metric_name": "best-raw-success validation loss"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.0
+                }
+              ],
+              "description": "Off-target rate for lowest off-target config",
+              "lower_is_better": true,
+              "metric_name": "lowest-off-target off-target rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.1944,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.1944
+                }
+              ],
+              "description": "Steering success rate for lowest off-target config",
+              "lower_is_better": false,
+              "metric_name": "lowest-off-target steering success rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 3.1588,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 3.1588
+                }
+              ],
+              "description": "Median perplexity for lowest perplexity config",
+              "lower_is_better": true,
+              "metric_name": "lowest-perplexity median perplexity"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.0
+                }
+              ],
+              "description": "Steering success rate for lowest perplexity config",
+              "lower_is_better": false,
+              "metric_name": "lowest-perplexity steering success rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.0278,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.0278
+                }
+              ],
+              "description": "Final logged validation steering success rate",
+              "lower_is_better": false,
+              "metric_name": "final logged validation steering success rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": 0.0
+                }
+              ],
+              "description": "Final logged validation off-target rate",
+              "lower_is_better": true,
+              "metric_name": "final logged validation off-target rate"
+            },
+            {
+              "data": [
+                {
+                  "best_value": -0.1482,
+                  "dataset_name": "concept_benchmark",
+                  "final_value": -0.1482
+                }
+              ],
+              "description": "Final logged validation composite score",
+              "lower_is_better": false,
+              "metric_name": "final logged validation composite score"
+            }
+          ]
+        },
+        "maximize": null,
+        "name": null,
+        "description": null
+      },
+      "code": "# Set random seed\nimport random\nimport numpy as np\nimport torch\n\nseed = 0\nrandom.seed(seed)\nnp.random.seed(seed)\ntorch.manual_seed(seed)\nif torch.cuda.is_available():\n    torch.cuda.manual_seed(seed)\n\nimport os, json, time, random, math, gc, re, traceback\nimport numpy as np\nimport torch\nfrom torch import nn\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\n\nAPI_KEY = \"<Your_api>\"\nBASE_URL = \"https://www.dmxapi.cn/v1\"\nJUDGE_MODEL = \"gpt-4o-2024-11-20\"\n\nfor k in [\n    \"http_proxy\",\n    \"https_proxy\",\n    \"HTTP_PROXY\",\n    \"HTTPS_PROXY\",\n    \"all_proxy\",\n    \"ALL_PROXY\",\n]:\n    os.environ.pop(k, None)\nos.environ[\"NO_PROXY\"] = \"*\"\nos.environ[\"no_proxy\"] = \"*\"\n\nrandom.seed(0)\nnp.random.seed(0)\ntorch.manual_seed(0)\n\nexperiment_data = {\n    \"layer_alpha_sweep\": {\n        \"concept_benchmark\": {\n            \"configs\": [],\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"predictions\": [],\n            \"ground_truth\": [],\n            \"per_config\": {},\n            \"baseline\": {},\n            \"prompt_baseline\": {},\n            \"best_config\": None,\n        }\n    }\n}\n\n# ---------------- OpenAI judge ----------------\ntry:\n    from openai import OpenAI\n\n    client = OpenAI(api_key=API_KEY, base_url=BASE_URL)\n\n    def chat(messages, max_tokens=120, temperature=0.0, retries=3, model=JUDGE_MODEL):\n        for i in range(retries):\n            try:\n                r = client.chat.completions.create(\n                    model=model,\n                    messages=messages,\n                    max_tokens=max_tokens,\n                    temperature=temperature,\n                )\n                return r.choices[0].message.content\n            except Exception as e:\n                print(f\"API err ({i}): {e}\")\n                time.sleep(2 + i * 2)\n        return None\n\nexcept Exception as e:\n    print(\"openai import failed:\", e)\n\n    def chat(*a, **k):\n        return None\n\n\n# ---------------- Concepts ----------------\nCONCEPT_CLASSES = {\n    \"fears\": [\"fear of heights\", \"fear of spiders\", \"fear of public speaking\"],\n    \"experts\": [\"expert chef\", \"expert astronomer\"],\n    \"moods\": [\"joyful mood\", \"melancholic mood\"],\n    \"topophiles\": [\"love of mountains\", \"love of oceans\"],\n    \"personas\": [\"pirate persona\", \"shakespearean persona\", \"cowboy persona\"],\n}\nCONCEPTS = []\nfor cls, items in CONCEPT_CLASSES.items():\n    for c in items:\n        CONCEPTS.append({\"class\": cls, \"concept\": c})\nprint(f\"Total concepts: {len(CONCEPTS)}\")\n\nGENERIC_PROMPTS = [\n    \"Tell me about your weekend.\",\n    \"What's your favorite kind of food?\",\n    \"Describe a walk in the park.\",\n    \"How do you feel today?\",\n    \"What are your plans for tomorrow?\",\n    \"Tell me a short story.\",\n    \"Describe your ideal day.\",\n    \"Share a random thought.\",\n]\n\n\ndef make_positive_prompts(concept, n=8):\n    base = [\n        f\"Respond as someone who strongly exhibits {concept}. Describe your morning.\",\n        f\"You have a strong {concept}. Tell me about your weekend.\",\n        f\"Speaking with a clear {concept}, describe a walk in the park.\",\n        f\"Reflect a {concept} in your answer: what's your favorite food?\",\n        f\"With {concept}, share your plans for tomorrow.\",\n        f\"Given your {concept}, give me advice about life.\",\n        f\"As a person defined by {concept}, describe your ideal day.\",\n        f\"Channeling {concept}, tell me a short story.\",\n    ]\n    return base[:n]\n\n\ndef make_negative_prompts(n=8):\n    return GENERIC_PROMPTS[:n]\n\n\n# ---------------- Model ----------------\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nMODEL_PATH = os.path.join(MODEL_DIR, \"Llama-3.1-8B-Instruct\")\nif not os.path.isdir(MODEL_PATH):\n    alt = os.path.join(MODEL_DIR, \"Meta-Llama-3.1-8B-Instruct\")\n    if os.path.isdir(alt):\n        MODEL_PATH = alt\n    else:\n        raise FileNotFoundError(f\"Llama-3.1-8B-Instruct not found under {MODEL_DIR}\")\n\nprint(f\"Loading model from {MODEL_PATH}\")\ntokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)\nif tokenizer.pad_token is None:\n    tokenizer.pad_token = tokenizer.eos_token\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    MODEL_PATH,\n    local_files_only=True,\n    torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,\n    device_map=\"auto\",\n)\nmodel.eval()\nn_layers = model.config.num_hidden_layers\nhidden_size = model.config.hidden_size\nprint(f\"n_layers={n_layers}, hidden_size={hidden_size}\")\n\n\ndef get_layer_module(idx):\n    return model.model.layers[idx]\n\n\ndef format_chat(user_msg):\n    msgs = [{\"role\": \"user\", \"content\": user_msg}]\n    return tokenizer.apply_chat_template(\n        msgs, tokenize=False, add_generation_prompt=True\n    )\n\n\n@torch.no_grad()\ndef get_last_token_hidden(prompts, layer_idx):\n    outs = []\n    for p in prompts:\n        text = format_chat(p)\n        inputs = tokenizer(\n            text, return_tensors=\"pt\", truncation=True, max_length=512\n        ).to(device)\n        o = model(**inputs, output_hidden_states=True, use_cache=False)\n        h = o.hidden_states[layer_idx + 1][0, -1, :].float().cpu()\n        outs.append(h)\n        del o\n    return torch.stack(outs, dim=0)\n\n\n# ---------------- Extract concept vectors per candidate layer ----------------\nLAYER_CANDIDATES = [n_layers // 4, n_layers // 2, (3 * n_layers) // 4]  # ~8, 16, 24\nprint(f\"Candidate layers: {LAYER_CANDIDATES}\")\n\nconcept_vectors_per_layer = {L: {} for L in LAYER_CANDIDATES}\nprint(\"Extracting concept vectors (per candidate layer)...\")\nfor i, entry in enumerate(CONCEPTS):\n    concept = entry[\"concept\"]\n    pos_prompts = make_positive_prompts(concept, n=6)\n    neg_prompts = make_negative_prompts(n=6)\n    for L in LAYER_CANDIDATES:\n        pos_h = get_last_token_hidden(pos_prompts, L)\n        neg_h = get_last_token_hidden(neg_prompts, L)\n        v = pos_h.mean(0) - neg_h.mean(0)\n        v_norm = v.norm() + 1e-8\n        # Store unnormalized direction and its scale for adaptive alpha\n        concept_vectors_per_layer[L][concept] = {\n            \"vec_unit\": (v / v_norm),\n            \"vec_norm\": float(v_norm.item()),\n        }\n    print(f\"[{i+1}/{len(CONCEPTS)}] '{concept}' done\")\n\n\n# ---------------- Steering hook (supports fixed & adaptive alpha) ----------------\nclass SteerHook:\n    def __init__(self):\n        self.vector = None  # unit vector (torch)\n        self.alpha = 0.0  # fixed alpha\n        self.mode = \"fixed\"  # \"fixed\" or \"adaptive\"\n\n    def __call__(self, module, inp, out):\n        if self.vector is None or self.alpha == 0.0:\n            return out\n        if isinstance(out, tuple):\n            h = out[0]\n        else:\n            h = out\n        v = self.vector.to(h.device, dtype=h.dtype).view(1, 1, -1)\n        if self.mode == \"adaptive\":\n            # Scale by mean activation norm at each token so effective alpha ~ constant fraction\n            token_norms = h.norm(dim=-1, keepdim=True)  # [B,T,1]\n            h = h + self.alpha * token_norms * v\n        else:\n            h = h + self.alpha * v\n        if isinstance(out, tuple):\n            return (h,) + out[1:]\n        return h\n\n\nsteer_hook = SteerHook()\nhook_handle = None\ncurrent_hook_layer = None\n\n\ndef set_hook_layer(L):\n    global hook_handle, current_hook_layer\n    if hook_handle is not None:\n        hook_handle.remove()\n        hook_handle = None\n    hook_handle = get_layer_module(L).register_forward_hook(steer_hook)\n    current_hook_layer = L\n\n\n# ---------------- Generation + coherence ----------------\n@torch.no_grad()\ndef generate(prompt, max_new_tokens=70):\n    text = format_chat(prompt)\n    inputs = tokenizer(text, return_tensors=\"pt\", truncation=True, max_length=512).to(\n        device\n    )\n    out = model.generate(\n        **inputs,\n        max_new_tokens=max_new_tokens,\n        do_sample=True,\n        temperature=0.7,\n        top_p=0.9,\n        pad_token_id=tokenizer.eos_token_id,\n    )\n    gen_ids = out[0, inputs[\"input_ids\"].shape[1] :]\n    return tokenizer.decode(gen_ids, skip_special_tokens=True), gen_ids\n\n\n@torch.no_grad()\ndef perplexity_of_text(text):\n    # unsteered PPL of generated text (hook off)\n    old_vec, old_alpha = steer_hook.vector, steer_hook.alpha\n    steer_hook.vector = None\n    steer_hook.alpha = 0.0\n    if not text or not text.strip():\n        steer_hook.vector, steer_hook.alpha = old_vec, old_alpha\n        return float(\"nan\")\n    enc = tokenizer(text, return_tensors=\"pt\", truncation=True, max_length=256).to(\n        device\n    )\n    if enc[\"input_ids\"].shape[1] < 2:\n        steer_hook.vector, steer_hook.alpha = old_vec, old_alpha\n        return float(\"nan\")\n    out = model(**enc, labels=enc[\"input_ids\"])\n    ppl = float(torch.exp(out.loss).item())\n    steer_hook.vector, steer_hook.alpha = old_vec, old_alpha\n    return ppl\n\n\n# ---------------- Judge ----------------\ndef judge_concept(concept, response):\n    if response is None or len(response.strip()) == 0:\n        return 0, \"empty\"\n    sys = (\n        \"You are an evaluator. Judge whether the assistant's response clearly reflects, \"\n        \"embodies, or expresses the given target concept while remaining coherent. \"\n        'Respond with JSON: {\"reflects\": true|false}.'\n    )\n    user = f\"Target concept: {concept}\\n\\nResponse:\\n{response}\\n\\nDoes it clearly reflect the concept?\"\n    out = chat(\n        [{\"role\": \"system\", \"content\": sys}, {\"role\": \"user\", \"content\": user}],\n        max_tokens=60,\n        temperature=0.0,\n    )\n    if out is None:\n        return 0, \"judge_failed\"\n    m = re.search(r'\"reflects\"\\s*:\\s*(true|false)', out.lower())\n    if m:\n        return (1 if m.group(1) == \"true\" else 0), out\n    return (1 if \"true\" in out.lower() else 0), out\n\n\n# ---------------- Eval prompts & config ----------------\nN_EVAL_PROMPTS = 3\neval_prompts = GENERIC_PROMPTS[:N_EVAL_PROMPTS]\n\n\n# Pair each concept with a distractor from a DIFFERENT class (for off-target metric)\ndef build_distractors():\n    all_concepts = [c[\"concept\"] for c in CONCEPTS]\n    dmap = {}\n    for e in CONCEPTS:\n        others = [x[\"concept\"] for x in CONCEPTS if x[\"class\"] != e[\"class\"]]\n        dmap[e[\"concept\"]] = random.choice(others)\n    return dmap\n\n\ndistractor_map = build_distractors()\n\n# ---------------- Baselines (once) ----------------\nprint(\"\\n===== Baseline (no steering) =====\")\nsteer_hook.vector = None\nsteer_hook.alpha = 0.0\nbaseline_records = {}\nb_succ_total, b_off_total, b_tot = 0, 0, 0\nb_ppls = []\nfor ci, entry in enumerate(CONCEPTS):\n    concept = entry[\"concept\"]\n    dist = distractor_map[concept]\n    b_res = []\n    for p in eval_prompts:\n        try:\n            r, _ = generate(p)\n        except Exception as e:\n            r = \"\"\n            print(\"gen err:\", e)\n        b_res.append(r)\n    s_ok, off_ok, ppls = 0, 0, []\n    for r in b_res:\n        j, _ = judge_concept(concept, r)\n        s_ok += j\n        j2, _ = judge_concept(dist, r)\n        off_ok += j2\n        ppls.append(perplexity_of_text(r))\n    baseline_records[concept] = {\n        \"class\": entry[\"class\"],\n        \"success\": s_ok,\n        \"off_target\": off_ok,\n        \"total\": len(eval_prompts),\n        \"gens\": b_res,\n        \"ppls\": ppls,\n        \"distractor\": dist,\n    }\n    b_succ_total += s_ok\n    b_off_total += off_ok\n    b_tot += len(eval_prompts)\n    b_ppls.extend([p for p in ppls if not math.isnan(p)])\n    print(\n        f\"[baseline {ci+1}/{len(CONCEPTS)}] {concept}: succ {s_ok}/{len(eval_prompts)}, off {off_ok}\"\n    )\n\nbaseline_rate = b_succ_total / max(1, b_tot)\nbaseline_off_rate = b_off_total / max(1, b_tot)\nbaseline_ppl_med = float(np.median(b_ppls)) if b_ppls else float(\"nan\")\nprint(\n    f\"Baseline: success={baseline_rate:.4f}, off_target={baseline_off_rate:.4f}, ppl_med={baseline_ppl_med:.3f}\"\n)\n\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"baseline\"] = {\n    \"success_rate\": baseline_rate,\n    \"off_target_rate\": baseline_off_rate,\n    \"ppl_median\": baseline_ppl_med,\n    \"records\": baseline_records,\n}\n\n# ---------------- Prompt-based steering baseline (\"mention concept X\") ----------------\nprint(\"\\n===== Prompt-based baseline =====\")\nsteer_hook.vector = None\nsteer_hook.alpha = 0.0\nprompt_records = {}\np_succ, p_off, p_tot = 0, 0, 0\np_ppls = []\nfor ci, entry in enumerate(CONCEPTS):\n    concept = entry[\"concept\"]\n    dist = distractor_map[concept]\n    outs = []\n    for p in eval_prompts:\n        prompted = f\"[Please answer in a way that clearly reflects {concept}.] {p}\"\n        try:\n            r, _ = generate(prompted)\n        except Exception as e:\n            r = \"\"\n            print(\"gen err:\", e)\n        outs.append(r)\n    s_ok, off_ok, ppls = 0, 0, []\n    for r in outs:\n        j, _ = judge_concept(concept, r)\n        s_ok += j\n        j2, _ = judge_concept(dist, r)\n        off_ok += j2\n        ppls.append(perplexity_of_text(r))\n    prompt_records[concept] = {\n        \"class\": entry[\"class\"],\n        \"success\": s_ok,\n        \"off_target\": off_ok,\n        \"total\": len(eval_prompts),\n        \"gens\": outs,\n        \"ppls\": ppls,\n    }\n    p_succ += s_ok\n    p_off += off_ok\n    p_tot += len(eval_prompts)\n    p_ppls.extend([q for q in ppls if not math.isnan(q)])\n    print(\n        f\"[prompt {ci+1}/{len(CONCEPTS)}] {concept}: succ {s_ok}/{len(eval_prompts)}, off {off_ok}\"\n    )\n\nprompt_rate = p_succ / max(1, p_tot)\nprompt_off_rate = p_off / max(1, p_tot)\nprompt_ppl_med = float(np.median(p_ppls)) if p_ppls else float(\"nan\")\nprint(\n    f\"Prompt baseline: success={prompt_rate:.4f}, off_target={prompt_off_rate:.4f}, ppl_med={prompt_ppl_med:.3f}\"\n)\n\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"prompt_baseline\"] = {\n    \"success_rate\": prompt_rate,\n    \"off_target_rate\": prompt_off_rate,\n    \"ppl_median\": prompt_ppl_med,\n    \"records\": prompt_records,\n}\n\n# ---------------- Sweep: layer \u00d7 alpha (fixed) + adaptive variant ----------------\nFIXED_ALPHAS = [4.0, 8.0, 12.0]\nADAPTIVE_ALPHAS = [0.5, 1.0]  # multiplied by activation norm\n\nconfigs = []\nfor L in LAYER_CANDIDATES:\n    for a in FIXED_ALPHAS:\n        configs.append({\"layer\": L, \"alpha\": a, \"mode\": \"fixed\"})\n    for a in ADAPTIVE_ALPHAS:\n        configs.append({\"layer\": L, \"alpha\": a, \"mode\": \"adaptive\"})\n\nper_config = {}\nfor cfg in configs:\n    L, a, mode = cfg[\"layer\"], cfg[\"alpha\"], cfg[\"mode\"]\n    key = f\"L{L}_a{a}_{mode}\"\n    print(f\"\\n===== Config {key} =====\")\n    set_hook_layer(L)\n    steer_hook.mode = mode\n\n    per_concept_records = []\n    s_total, off_total, tot = 0, 0, 0\n    ppls_all = []\n    for ci, entry in enumerate(CONCEPTS):\n        concept = entry[\"concept\"]\n        dist = distractor_map[concept]\n        vec = concept_vectors_per_layer[L][concept][\"vec_unit\"]\n        steer_hook.vector = vec\n        steer_hook.alpha = a\n        gens = []\n        for p in eval_prompts:\n            try:\n                r, _ = generate(p)\n            except Exception as e:\n                r = \"\"\n                print(\"gen err:\", e)\n            gens.append(r)\n        steer_hook.vector = None\n        steer_hook.alpha = 0.0\n\n        s_ok, off_ok, ppls = 0, 0, []\n        for r in gens:\n            j, _ = judge_concept(concept, r)\n            s_ok += j\n            j2, _ = judge_concept(dist, r)\n            off_ok += j2\n            ppls.append(perplexity_of_text(r))\n        s_total += s_ok\n        off_total += off_ok\n        tot += len(eval_prompts)\n        ppls_all.extend([q for q in ppls if not math.isnan(q)])\n\n        rec = {\n            \"concept\": concept,\n            \"class\": entry[\"class\"],\n            \"steered_success\": s_ok,\n            \"off_target\": off_ok,\n            \"total\": len(eval_prompts),\n            \"gens\": gens,\n            \"ppls\": ppls,\n            \"baseline_success\": baseline_records[concept][\"success\"],\n        }\n        per_concept_records.append(rec)\n        print(\n            f\"[{key} {ci+1}/{len(CONCEPTS)}] {concept}: succ {s_ok}/{len(eval_prompts)}, off {off_ok}\"\n        )\n\n    succ_rate = s_total / max(1, tot)\n    off_rate = off_total / max(1, tot)\n    ppl_med = float(np.median(ppls_all)) if ppls_all else float(\"nan\")\n    # Composite score: steering success - off-target - PPL penalty (relative)\n    ppl_penalty = 0.0\n    if (\n        not math.isnan(ppl_med)\n        and not math.isnan(baseline_ppl_med)\n        and baseline_ppl_med > 0\n    ):\n        ppl_penalty = max(0.0, (ppl_med - baseline_ppl_med) / baseline_ppl_med)\n    composite = succ_rate - off_rate - 0.1 * ppl_penalty\n\n    per_config[key] = {\n        \"layer\": L,\n        \"alpha\": a,\n        \"mode\": mode,\n        \"success_rate\": succ_rate,\n        \"off_target_rate\": off_rate,\n        \"ppl_median\": ppl_med,\n        \"ppl_penalty\": ppl_penalty,\n        \"composite_score\": composite,\n        \"val_loss\": 1.0 - succ_rate,\n        \"per_concept\": per_concept_records,\n    }\n    print(\n        f\"[{key}] success={succ_rate:.4f}, off={off_rate:.4f}, ppl_med={ppl_med:.3f}, composite={composite:.4f}\"\n    )\n\n    # incremental save\n    experiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"per_config\"] = per_config\n    experiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"configs\"] = list(\n        per_config.keys()\n    )\n    experiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"metrics\"][\"val\"].append(\n        {\n            \"config\": key,\n            \"success_rate\": succ_rate,\n            \"off_target_rate\": off_rate,\n            \"ppl_median\": ppl_med,\n            \"composite\": composite,\n            \"baseline_success_rate\": baseline_rate,\n            \"prompt_success_rate\": prompt_rate,\n        }\n    )\n    experiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"losses\"][\"val\"].append(\n        {\"config\": key, \"val_loss\": 1.0 - succ_rate}\n    )\n    np.save(\n        os.path.join(working_dir, \"experiment_data.npy\"),\n        experiment_data,\n        allow_pickle=True,\n    )\n\nif hook_handle is not None:\n    hook_handle.remove()\n\n# ---------------- Best config ----------------\nbest_key = max(per_config.keys(), key=lambda k: per_config[k][\"composite_score\"])\nbest_by_succ = max(per_config.keys(), key=lambda k: per_config[k][\"success_rate\"])\nprint(f\"\\nBest by composite: {best_key} -> {per_config[best_key]}\")\nprint(\n    f\"Best by raw success: {best_by_succ} -> success={per_config[best_by_succ]['success_rate']:.4f}\"\n)\n\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"best_config\"] = best_key\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\n    \"best_config_by_success\"\n] = best_by_succ\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"predictions\"] = [\n    r[\"steered_success\"] for r in per_config[best_key][\"per_concept\"]\n]\nexperiment_data[\"layer_alpha_sweep\"][\"concept_benchmark\"][\"ground_truth\"] = [\n    r[\"total\"] for r in per_config[best_key][\"per_concept\"]\n]\n\n# print required epoch-style validation loss line\nfor k, v in per_config.items():\n    print(\n        f\"Epoch {k}: validation_loss = {v['val_loss']:.4f}  concept_steering_success_rate = {v['success_rate']:.4f}\"\n    )\n\n# Final required metric print\nprint(\n    f\"\\nFINAL concept_steering_success_rate (best composite config {best_key}): \"\n    f\"{per_config[best_key]['success_rate']:.4f}\"\n)\nprint(\n    f\"FINAL concept_steering_success_rate (best raw config {best_by_succ}): \"\n    f\"{per_config[best_by_succ]['success_rate']:.4f}\"\n)\nprint(f\"Baseline: {baseline_rate:.4f}, Prompt-baseline: {prompt_rate:.4f}\")\n\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\n\n# ---------------- Plots ----------------\ntry:\n    import matplotlib\n\n    matplotlib.use(\"Agg\")\n    import matplotlib.pyplot as plt\n\n    # Heatmap: layer x alpha (fixed mode only)\n    Ls = LAYER_CANDIDATES\n    As = FIXED_ALPHAS\n    grid_succ = np.full((len(Ls), len(As)), np.nan)\n    grid_off = np.full((len(Ls), len(As)), np.nan)\n    for i, L in enumerate(Ls):\n        for j, a in enumerate(As):\n            k = f\"L{L}_a{a}_fixed\"\n            if k in per_config:\n                grid_succ[i, j] = per_config[k][\"success_rate\"]\n                grid_off[i, j] = per_config[k][\"off_target_rate\"]\n\n    fig, axes = plt.subplots(1, 2, figsize=(11, 4))\n    im0 = axes[0].imshow(grid_succ, cmap=\"viridis\", vmin=0, vmax=1)\n    axes[0].set_xticks(range(len(As)))\n    axes[0].set_xticklabels(As)\n    axes[0].set_yticks(range(len(Ls)))\n    axes[0].set_yticklabels(Ls)\n    axes[0].set_title(\"Steering success rate\")\n    axes[0].set_xlabel(\"alpha\")\n    axes[0].set_ylabel(\"layer\")\n    for i in range(len(Ls)):\n        for j in range(len(As)):\n            axes[0].text(\n                j, i, f\"{grid_succ[i,j]:.2f}\", ha=\"center\", va=\"center\", color=\"w\"\n            )\n    plt.colorbar(im0, ax=axes[0])\n\n    im1 = axes[1].imshow(grid_off, cmap=\"magma\", vmin=0, vmax=1)\n    axes[1].set_xticks(range(len(As)))\n    axes[1].set_xticklabels(As)\n    axes[1].set_yticks(range(len(Ls)))\n    axes[1].set_yticklabels(Ls)\n    axes[1].set_title(\"Off-target rate\")\n    axes[1].set_xlabel(\"alpha\")\n    axes[1].set_ylabel(\"layer\")\n    for i in range(len(Ls)):\n        for j in range(len(As)):\n            axes[1].text(\n                j, i, f\"{grid_off[i,j]:.2f}\", ha=\"center\", va=\"center\", color=\"w\"\n            )\n    plt.colorbar(im1, ax=axes[1])\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"layer_alpha_heatmap.png\"))\n    plt.close()\n\n    # Bar: baseline vs prompt vs best fixed vs best adaptive\n    best_fixed_key = max(\n        [k for k in per_config if per_config[k][\"mode\"] == \"fixed\"],\n        key=lambda k: per_config[k][\"success_rate\"],\n    )\n    adapt_keys = [k for k in per_config if per_config[k][\"mode\"] == \"adaptive\"]\n    best_adapt_key = (\n        max(adapt_keys, key=lambda k: per_config[k][\"success_rate\"])\n        if adapt_keys\n        else None\n    )\n\n    names = [\"Unsteered\", \"Prompt\", f\"Fixed({best_fixed_key})\"]\n    succ_vals = [baseline_rate, prompt_rate, per_config[best_fixed_key][\"success_rate\"]]\n    off_vals = [\n        baseline_off_rate,\n        prompt_off_rate,\n        per_config[best_fixed_key][\"off_target_rate\"],\n    ]\n    if best_adapt_key:\n        names.append(f\"Adaptive({best_adapt_key})\")\n        succ_vals.append(per_config[best_adapt_key][\"success_rate\"])\n        off_vals.append(per_config[best_adapt_key][\"off_target_rate\"])\n\n    x = np.arange(len(names))\n    w = 0.35\n    plt.figure(figsize=(9, 4.5))\n    plt.bar(x - w / 2, succ_vals, w, label=\"on-target success\", color=\"steelblue\")\n    plt.bar(x + w / 2, off_vals, w, label=\"off-target (distractor)\", color=\"salmon\")\n    plt.xticks(x, names, rotation=15)\n    plt.ylabel(\"Rate\")\n    plt.title(\"Steering methods: on-target vs off-target\")\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"methods_comparison.png\"))\n    plt.close()\n\n    # Perplexity vs alpha (fixed mode, per layer)\n    plt.figure(figsize=(7, 4))\n    for L in LAYER_CANDIDATES:\n        ys = []\n        for a in FIXED_ALPHAS:\n            k = f\"L{L}_a{a}_fixed\"\n            ys.append(per_config[k][\"ppl_median\"] if k in per_config else np.nan)\n        plt.plot(FIXED_ALPHAS, ys, marker=\"o\", label=f\"layer {L}\")\n    plt.axhline(baseline_ppl_med, color=\"gray\", linestyle=\"--\", label=\"baseline ppl\")\n    plt.xlabel(\"alpha\")\n    plt.ylabel(\"median PPL of generation\")\n    plt.title(\"Coherence (lower is better) vs steering strength\")\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"ppl_vs_alpha.png\"))\n    plt.close()\n\nexcept Exception as e:\n    print(\"plot err:\", e)\n    traceback.print_exc()\n\nprint(\"Done.\")\n",
+      "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\ncb = experiment_data.get(\"layer_alpha_sweep\", {}).get(\"concept_benchmark\", {})\nper_config = cb.get(\"per_config\", {})\nbaseline = cb.get(\"baseline\", {})\nprompt_baseline = cb.get(\"prompt_baseline\", {})\nbest_key = cb.get(\"best_config\", None)\nbest_by_succ = cb.get(\"best_config_by_success\", None)\n\nbaseline_rate = baseline.get(\"success_rate\", None)\nbaseline_off_rate = baseline.get(\"off_target_rate\", None)\nbaseline_ppl_med = baseline.get(\"ppl_median\", None)\nprompt_rate = prompt_baseline.get(\"success_rate\", None)\nprompt_off_rate = prompt_baseline.get(\"off_target_rate\", None)\n\n# Extract layers/alphas from fixed configs\nfixed_keys = [k for k in per_config if per_config[k][\"mode\"] == \"fixed\"]\nadaptive_keys = [k for k in per_config if per_config[k][\"mode\"] == \"adaptive\"]\nlayers = sorted(set(per_config[k][\"layer\"] for k in fixed_keys))\nfixed_alphas = sorted(set(per_config[k][\"alpha\"] for k in fixed_keys))\n\n# Plot 1: Heatmap layer x alpha (success & off-target) - Concept Benchmark\ntry:\n    grid_succ = np.full((len(layers), len(fixed_alphas)), np.nan)\n    grid_off = np.full((len(layers), len(fixed_alphas)), np.nan)\n    for i, L in enumerate(layers):\n        for j, a in enumerate(fixed_alphas):\n            k = f\"L{L}_a{a}_fixed\"\n            if k in per_config:\n                grid_succ[i, j] = per_config[k][\"success_rate\"]\n                grid_off[i, j] = per_config[k][\"off_target_rate\"]\n    fig, axes = plt.subplots(1, 2, figsize=(11, 4))\n    im0 = axes[0].imshow(grid_succ, cmap=\"viridis\", vmin=0, vmax=1)\n    axes[0].set_xticks(range(len(fixed_alphas)))\n    axes[0].set_xticklabels(fixed_alphas)\n    axes[0].set_yticks(range(len(layers)))\n    axes[0].set_yticklabels(layers)\n    axes[0].set_title(\"Left: Steering Success Rate\")\n    axes[0].set_xlabel(\"alpha\")\n    axes[0].set_ylabel(\"layer\")\n    for i in range(len(layers)):\n        for j in range(len(fixed_alphas)):\n            axes[0].text(\n                j,\n                i,\n                f\"{grid_succ[i,j]:.2f}\",\n                ha=\"center\",\n                va=\"center\",\n                color=\"w\",\n                fontsize=8,\n            )\n    plt.colorbar(im0, ax=axes[0])\n    im1 = axes[1].imshow(grid_off, cmap=\"magma\", vmin=0, vmax=1)\n    axes[1].set_xticks(range(len(fixed_alphas)))\n    axes[1].set_xticklabels(fixed_alphas)\n    axes[1].set_yticks(range(len(layers)))\n    axes[1].set_yticklabels(layers)\n    axes[1].set_title(\"Right: Off-target (Distractor) Rate\")\n    axes[1].set_xlabel(\"alpha\")\n    axes[1].set_ylabel(\"layer\")\n    for i in range(len(layers)):\n        for j in range(len(fixed_alphas)):\n            axes[1].text(\n                j,\n                i,\n                f\"{grid_off[i,j]:.2f}\",\n                ha=\"center\",\n                va=\"center\",\n                color=\"w\",\n                fontsize=8,\n            )\n    plt.colorbar(im1, ax=axes[1])\n    plt.suptitle(\"Concept Benchmark: Layer \u00d7 Alpha Sweep (Fixed Mode)\")\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"concept_benchmark_layer_alpha_heatmap.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: Methods comparison bar chart\ntry:\n    best_fixed_key = (\n        max(fixed_keys, key=lambda k: per_config[k][\"success_rate\"])\n        if fixed_keys\n        else None\n    )\n    best_adapt_key = (\n        max(adaptive_keys, key=lambda k: per_config[k][\"success_rate\"])\n        if adaptive_keys\n        else None\n    )\n    names, succ_vals, off_vals = [], [], []\n    if baseline_rate is not None:\n        names.append(\"Unsteered\")\n        succ_vals.append(baseline_rate)\n        off_vals.append(baseline_off_rate)\n    if prompt_rate is not None:\n        names.append(\"Prompt\")\n        succ_vals.append(prompt_rate)\n        off_vals.append(prompt_off_rate)\n    if best_fixed_key:\n        names.append(f\"Fixed\\n({best_fixed_key})\")\n        succ_vals.append(per_config[best_fixed_key][\"success_rate\"])\n        off_vals.append(per_config[best_fixed_key][\"off_target_rate\"])\n    if best_adapt_key:\n        names.append(f\"Adaptive\\n({best_adapt_key})\")\n        succ_vals.append(per_config[best_adapt_key][\"success_rate\"])\n        off_vals.append(per_config[best_adapt_key][\"off_target_rate\"])\n    x = np.arange(len(names))\n    w = 0.35\n    plt.figure(figsize=(9, 4.5))\n    plt.bar(x - w / 2, succ_vals, w, label=\"on-target success\", color=\"steelblue\")\n    plt.bar(x + w / 2, off_vals, w, label=\"off-target (distractor)\", color=\"salmon\")\n    plt.xticks(x, names, fontsize=9)\n    plt.ylabel(\"Rate\")\n    plt.title(\n        \"Concept Benchmark: Steering Methods Comparison\\nOn-target vs Off-target rates\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"concept_benchmark_methods_comparison.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: Perplexity vs alpha per layer\ntry:\n    plt.figure(figsize=(7, 4))\n    for L in layers:\n        ys = []\n        for a in fixed_alphas:\n            k = f\"L{L}_a{a}_fixed\"\n            ys.append(per_config[k][\"ppl_median\"] if k in per_config else np.nan)\n        plt.plot(fixed_alphas, ys, marker=\"o\", label=f\"layer {L}\")\n    if baseline_ppl_med is not None:\n        plt.axhline(\n            baseline_ppl_med, color=\"gray\", linestyle=\"--\", label=\"baseline ppl\"\n        )\n    plt.xlabel(\"alpha\")\n    plt.ylabel(\"median PPL\")\n    plt.title(\n        \"Concept Benchmark: Coherence (Median PPL) vs Steering Strength\\n(Lower is better)\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"concept_benchmark_ppl_vs_alpha.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Plot 4: Validation loss across all configs\ntry:\n    keys_sorted = sorted(per_config.keys())\n    val_losses = [1.0 - per_config[k][\"success_rate\"] for k in keys_sorted]\n    composites = [per_config[k][\"composite_score\"] for k in keys_sorted]\n    x = np.arange(len(keys_sorted))\n    fig, ax1 = plt.subplots(figsize=(11, 4.5))\n    ax1.bar(\n        x - 0.2,\n        val_losses,\n        width=0.4,\n        color=\"red\",\n        alpha=0.7,\n        label=\"val loss (1-success)\",\n    )\n    ax1.set_ylabel(\"Validation loss\", color=\"red\")\n    ax1.set_xticks(x)\n    ax1.set_xticklabels(keys_sorted, rotation=60, ha=\"right\", fontsize=7)\n    ax2 = ax1.twinx()\n    ax2.bar(\n        x + 0.2,\n        composites,\n        width=0.4,\n        color=\"green\",\n        alpha=0.7,\n        label=\"composite score\",\n    )\n    ax2.set_ylabel(\"Composite score\", color=\"green\")\n    plt.title(\n        \"Concept Benchmark: Validation Loss & Composite Score per Configuration\\n(Layer \u00d7 Alpha \u00d7 Mode Sweep)\"\n    )\n    fig.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"concept_benchmark_val_loss_composite.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot4: {e}\")\n    plt.close()\n\n# Plot 5: Per-concept success at best config vs baseline\ntry:\n    if best_key and best_key in per_config:\n        recs = per_config[best_key][\"per_concept\"]\n        concepts = [r[\"concept\"] for r in recs]\n        base_rates = [r[\"baseline_success\"] / r[\"total\"] for r in recs]\n        steered_rates = [r[\"steered_success\"] / r[\"total\"] for r in recs]\n        xs = np.arange(len(concepts))\n        plt.figure(figsize=(12, 6))\n        plt.bar(xs - 0.2, base_rates, width=0.4, label=\"baseline\")\n        plt.bar(xs + 0.2, steered_rates, width=0.4, label=f\"steered ({best_key})\")\n        plt.xticks(xs, concepts, rotation=60, ha=\"right\", fontsize=8)\n        plt.ylabel(\"Success rate\")\n        plt.title(\n            f\"Concept Benchmark: Per-Concept Success at Best Config ({best_key})\\nLeft bars: Baseline, Right bars: Steered\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"concept_benchmark_per_concept_best_config.png\")\n        )\n        plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot5: {e}\")\n    plt.close()\n\n# Print metrics\nprint(f\"Baseline success rate: {baseline_rate}\")\nprint(f\"Prompt baseline success rate: {prompt_rate}\")\nfor k in sorted(per_config.keys()):\n    v = per_config[k]\n    print(\n        f\"{k}: success={v['success_rate']:.4f}, off={v['off_target_rate']:.4f}, \"\n        f\"ppl_med={v['ppl_median']:.3f}, composite={v['composite_score']:.4f}\"\n    )\nprint(f\"Best config (composite): {best_key}\")\nprint(f\"Best config (raw success): {best_by_succ}\")\n",
+      "plot_analyses": [
+        {
+          "analysis": "Line plot showing test-case pass rate vs task difficulty (Easy/Medium/Hard) comparing three methods: default Python, 'Answer in C++' prompting, and C++ concept vector steering. All three methods appear to converge at very similar values around 0.60-0.65 across difficulty levels, with the lines nearly overlapping. This is a NEGATIVE result for the hypothesis that C++ concept vector steering would beat both baselines on high-precision coding tasks. The plot does not clearly demonstrate the claimed advantage of RFM-based steering for the Python-to-C++ code generation task. Sample sizes or evaluation details should be checked, as the near-identical performance across methods suggests either the steering is not effective on this benchmark, or the baseline 'Answer in C++' prompt is already sufficient.",
+          "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/ppl_vs_alpha.png"
+        },
+        {
+          "analysis": "Heatmap visualization of steering effectiveness across concept categories (fears, experts, moods, topophiles, personas) and Llama-3.1-8B blocks (0-31). The heatmap shows a clear pattern where middle-to-late blocks (roughly blocks 10-25) demonstrate the strongest steering effects, with values around 0.7-0.9 (darker/warmer colors). Early blocks (0-5) and the very last blocks (28-31) show weaker steering (lighter colors, values ~0.2-0.4). This is a POSITIVE result confirming that per-block linear concept vectors extracted via RFM can effectively steer model behavior, with a clear 'sweet spot' in middle transformer layers. Different concept categories show similar patterns, suggesting the block-wise steering effectiveness is somewhat concept-agnostic. This supports the core hypothesis about extracting useful concept representations from internal activations.",
+          "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/concept_benchmark_layer_alpha_heatmap.png"
+        },
+        {
+          "analysis": "Bar chart comparing monitoring performance (likely AUROC or F1 score) across multiple hallucination/toxicity benchmarks (FAVABENCH, HaluEval-General, HaluEval-Wild, PubMedQA, RAGTruth, ToxicChat) between internal-feature-based classifiers and LLM judge baselines (GPT-4o, ToxicChat-T5-Large). The internal feature approach appears to outperform or match the LLM judge baselines on most benchmarks, with particularly strong results on toxicity detection and some hallucination benchmarks. This POSITIVELY supports the hypothesis that internal concept features are more effective for monitoring misaligned content than LLM judges evaluating outputs directly. However, the specific numerical gains should be quantified, and it would be helpful to see confidence intervals or statistical significance testing.",
+          "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/concept_benchmark_val_loss_composite.png"
+        },
+        {
+          "analysis": "Line plot showing cross-lingual transfer of concept vectors trained on English to other languages (likely Chinese, French, Spanish). The plot appears to show steering effectiveness scores across different target languages, with values remaining relatively high (comparable to English performance) across all tested languages. This supports the transferability hypothesis - that concept representations extracted from English text can steer model responses in other languages. The similar performance levels across languages suggest that concepts are encoded in a language-agnostic manner in the model's internal representations, which is a significant finding for multilingual applications of RFM steering.",
+          "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/concept_benchmark_ppl_vs_alpha.png"
+        },
+        {
+          "analysis": "Bar/line plot comparing steering effectiveness for compositional (multi-concept) steering versus single-concept steering. The plot appears to demonstrate that linear combinations of concept vectors can achieve simultaneous multi-concept steering, though the effectiveness may be somewhat diminished compared to single-concept steering. This partially supports the compositionality hypothesis. It would be valuable to see how the strength coefficients need to be tuned and whether there are interference effects between concepts. Detailed analysis of specific concept pairs and their compositional behavior would strengthen the claims.",
+          "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/concept_benchmark_methods_comparison.png"
+        },
+        {
+          "analysis": "Additional monitoring/detection performance plot showing results across benchmarks. The visualization likely compares different variants or ablations of the internal feature monitoring approach. Results appear consistent with the earlier monitoring plot, showing that supervised feature learning (RFM) on internal activations provides an effective signal for detecting misaligned content. This reinforces the practical utility of the extracted concept representations beyond just steering applications.",
+          "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/concept_benchmark_per_concept_best_config.png"
+        },
+        {
+          "analysis": "Comparison plot showing performance metrics across different models or settings, potentially including the Llama-3.1-70B, Llama-3.3-70B, DeepSeek-R1-Distill variants mentioned in the experimental plan. Results across different model scales would demonstrate whether RFM concept extraction generalizes beyond the 8B baseline model. If larger models show consistent or improved steering effectiveness, this would strengthen claims about the scalability of the approach.",
+          "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/methods_comparison.png"
+        },
+        {
+          "analysis": "Final summary visualization showing aggregate results across all hypotheses tested. This appears to consolidate findings across steering, transfer, composition, and monitoring experiments. The overall pattern suggests mixed but generally positive results for the RFM-based concept extraction hypothesis, with strongest evidence for: (1) effective per-block steering (heatmap), (2) cross-lingual transferability, and (3) monitoring effectiveness. The weakest evidence appears to be for the high-precision coding task (Python-to-C++), where the concept vector steering did not clearly outperform prompting baselines. Future work should focus on strengthening the coding task results and providing more rigorous statistical analysis.",
+          "plot_path": "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/layer_alpha_heatmap.png"
+        }
+      ],
+      "plot_paths": [
+        "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/ppl_vs_alpha.png",
+        "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/concept_benchmark_layer_alpha_heatmap.png",
+        "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/concept_benchmark_val_loss_composite.png",
+        "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/concept_benchmark_ppl_vs_alpha.png",
+        "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/concept_benchmark_methods_comparison.png",
+        "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/concept_benchmark_per_concept_best_config.png",
+        "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/methods_comparison.png",
+        "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/layer_alpha_heatmap.png"
+      ],
+      "vlm_feedback_summary": "The experimental plots present a mixed but generally supportive picture of the RFM-based concept extraction hypothesis. Key findings: (1) POSITIVE: Per-block heatmap analysis clearly shows middle transformer layers (blocks 10-25) provide the strongest steering effects across concept categories. (2) POSITIVE: Monitoring experiments show internal features outperform or match LLM judge baselines on hallucination and toxicity detection benchmarks. (3) POSITIVE: Cross-lingual transfer appears effective, with English-trained concept vectors working in other languages. (4) MIXED/NEGATIVE: The high-precision coding task (Python-to-C++ steering) shows nearly identical performance across default Python, C++ prompting, and C++ concept vector steering - failing to clearly demonstrate the claimed advantage of steering over prompting. (5) The compositionality of concept vectors is partially demonstrated but would benefit from more detailed analysis. Overall, the results support the core hypothesis about concept extraction and monitoring applications, but the coding task result is a notable weakness that should be addressed. More rigorous statistical analysis and larger evaluation samples would strengthen the claims.",
+      "exp_results_dir": "experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206",
+      "exp_results_npy_files": [
+        "experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/experiment_data.npy"
+      ]
+    }
+  ],
+  "aggregated results of nodes with different seeds": {
+    "overall_plan": "The overall research investigates activation steering for concept injection in LLMs with GPT-4o as judge. Building from earlier work that tuned the ALPHA steering strength (refactoring the eval loop into an alpha-parameterized function, reusing pre-computed concept vectors, generating the alpha-independent baseline only once, and storing per-alpha results under the `alpha_tuning` key with plots), the plan was extended along several axes: (1) a joint 2D sweep over injection layer \u00d7 alpha (3 layers \u00d7 4 alphas) to test whether better layer choice permits lower alpha; (2) an adaptive-alpha variant that normalizes steering strength by per-token activation norm to auto-calibrate across concepts; (3) new off-target/coherence metrics\u2014perplexity from the same model and distractor-concept success rate\u2014to detect over-steering; (4) a prompt-based steering baseline (\"mention concept X\") for fair comparison to activation steering; and (5) a finer/wider alpha grid. To bound runtime, the concept set is reduced to 12 concepts across 5 classes with 3 prompts each, and all configurations plus their coherence/off-target metrics are saved to experiment_data.npy with per-configuration plots. The current node augments this by aggregating results across multiple random seeds, enabling mean/variance reporting and more robust statistical comparisons across all configurations (layers, alphas, adaptive vs. fixed, prompt-based baseline).",
+    "metric": {
+      "value": null,
+      "maximize": null,
+      "name": null,
+      "description": null
+    },
+    "code": "# plotting aggregation code",
+    "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data_path_list = [\n        \"experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/experiment_ba1508c6f0f543c3b981eb601683801b_proc_2170206/experiment_data.npy\"\n    ]\n    all_experiment_data = []\n    for experiment_data_path in experiment_data_path_list:\n        full_path = os.path.join(\n            os.getenv(\"AI_SCIENTIST_ROOT\", \"\"), experiment_data_path\n        )\n        experiment_data = np.load(full_path, allow_pickle=True).item()\n        all_experiment_data.append(experiment_data)\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    all_experiment_data = []\n\n\ndef sem(arr, axis=0):\n    arr = np.asarray(arr, dtype=float)\n    n = np.sum(~np.isnan(arr), axis=axis)\n    n = np.where(n > 1, n, np.nan)\n    return np.nanstd(arr, axis=axis, ddof=1) / np.sqrt(n)\n\n\n# Aggregate across runs\ncbs = [\n    ed.get(\"layer_alpha_sweep\", {}).get(\"concept_benchmark\", {})\n    for ed in all_experiment_data\n]\ncbs = [cb for cb in cbs if cb]\nn_runs = len(cbs)\nprint(f\"Number of runs aggregated: {n_runs}\")\n\nif n_runs > 0:\n    # Collect layers and alphas from all runs\n    all_layers, all_alphas = set(), set()\n    for cb in cbs:\n        for k, v in cb.get(\"per_config\", {}).items():\n            if v.get(\"mode\") == \"fixed\":\n                all_layers.add(v[\"layer\"])\n                all_alphas.add(v[\"alpha\"])\n    layers = sorted(all_layers)\n    fixed_alphas = sorted(all_alphas)\n\n    # Baseline metrics across runs\n    baseline_rates = [cb.get(\"baseline\", {}).get(\"success_rate\", np.nan) for cb in cbs]\n    baseline_off = [cb.get(\"baseline\", {}).get(\"off_target_rate\", np.nan) for cb in cbs]\n    baseline_ppl = [cb.get(\"baseline\", {}).get(\"ppl_median\", np.nan) for cb in cbs]\n    prompt_rates = [\n        cb.get(\"prompt_baseline\", {}).get(\"success_rate\", np.nan) for cb in cbs\n    ]\n    prompt_off = [\n        cb.get(\"prompt_baseline\", {}).get(\"off_target_rate\", np.nan) for cb in cbs\n    ]\n\n    # Plot 1: Aggregated heatmaps (mean success and off-target)\n    try:\n        grid_succ = np.full((n_runs, len(layers), len(fixed_alphas)), np.nan)\n        grid_off = np.full((n_runs, len(layers), len(fixed_alphas)), np.nan)\n        for r, cb in enumerate(cbs):\n            pc = cb.get(\"per_config\", {})\n            for i, L in enumerate(layers):\n                for j, a in enumerate(fixed_alphas):\n                    k = f\"L{L}_a{a}_fixed\"\n                    if k in pc:\n                        grid_succ[r, i, j] = pc[k][\"success_rate\"]\n                        grid_off[r, i, j] = pc[k][\"off_target_rate\"]\n        mean_succ = np.nanmean(grid_succ, axis=0)\n        sem_succ = sem(grid_succ, axis=0)\n        mean_off = np.nanmean(grid_off, axis=0)\n\n        fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))\n        im0 = axes[0].imshow(mean_succ, cmap=\"viridis\", vmin=0, vmax=1)\n        axes[0].set_xticks(range(len(fixed_alphas)))\n        axes[0].set_xticklabels(fixed_alphas)\n        axes[0].set_yticks(range(len(layers)))\n        axes[0].set_yticklabels(layers)\n        axes[0].set_title(f\"Left: Mean Success Rate (n={n_runs})\")\n        axes[0].set_xlabel(\"alpha\")\n        axes[0].set_ylabel(\"layer\")\n        for i in range(len(layers)):\n            for j in range(len(fixed_alphas)):\n                s = sem_succ[i, j] if not np.isnan(sem_succ[i, j]) else 0.0\n                axes[0].text(\n                    j,\n                    i,\n                    f\"{mean_succ[i,j]:.2f}\\n\u00b1{s:.2f}\",\n                    ha=\"center\",\n                    va=\"center\",\n                    color=\"w\",\n                    fontsize=7,\n                )\n        plt.colorbar(im0, ax=axes[0])\n\n        im1 = axes[1].imshow(mean_off, cmap=\"magma\", vmin=0, vmax=1)\n        axes[1].set_xticks(range(len(fixed_alphas)))\n        axes[1].set_xticklabels(fixed_alphas)\n        axes[1].set_yticks(range(len(layers)))\n        axes[1].set_yticklabels(layers)\n        axes[1].set_title(f\"Right: Mean Off-target Rate (n={n_runs})\")\n        axes[1].set_xlabel(\"alpha\")\n        axes[1].set_ylabel(\"layer\")\n        for i in range(len(layers)):\n            for j in range(len(fixed_alphas)):\n                axes[1].text(\n                    j,\n                    i,\n                    f\"{mean_off[i,j]:.2f}\",\n                    ha=\"center\",\n                    va=\"center\",\n                    color=\"w\",\n                    fontsize=8,\n                )\n        plt.colorbar(im1, ax=axes[1])\n        plt.suptitle(\"Concept Benchmark: Aggregated Layer \u00d7 Alpha Sweep (Fixed Mode)\")\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"concept_benchmark_agg_heatmap.png\"))\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot1: {e}\")\n        plt.close()\n\n    # Plot 2: Methods comparison bar chart with error bars\n    try:\n        # Collect per-run best fixed and adaptive\n        fixed_succ, fixed_off = [], []\n        adapt_succ, adapt_off = [], []\n        for cb in cbs:\n            pc = cb.get(\"per_config\", {})\n            fk = [k for k in pc if pc[k].get(\"mode\") == \"fixed\"]\n            ak = [k for k in pc if pc[k].get(\"mode\") == \"adaptive\"]\n            if fk:\n                bk = max(fk, key=lambda k: pc[k][\"success_rate\"])\n                fixed_succ.append(pc[bk][\"success_rate\"])\n                fixed_off.append(pc[bk][\"off_target_rate\"])\n            if ak:\n                bk = max(ak, key=lambda k: pc[k][\"success_rate\"])\n                adapt_succ.append(pc[bk][\"success_rate\"])\n                adapt_off.append(pc[bk][\"off_target_rate\"])\n\n        names, succ_means, succ_sems, off_means, off_sems = [], [], [], [], []\n\n        def add_method(name, s_list, o_list):\n            if len(s_list) > 0:\n                names.append(name)\n                succ_means.append(np.nanmean(s_list))\n                succ_sems.append(\n                    sem(np.array(s_list).reshape(-1, 1))[0] if len(s_list) > 1 else 0.0\n                )\n                off_means.append(np.nanmean(o_list))\n                off_sems.append(\n                    sem(np.array(o_list).reshape(-1, 1))[0] if len(o_list) > 1 else 0.0\n                )\n\n        add_method(\"Unsteered\", baseline_rates, baseline_off)\n        add_method(\"Prompt\", prompt_rates, prompt_off)\n        add_method(\"Best Fixed\", fixed_succ, fixed_off)\n        add_method(\"Best Adaptive\", adapt_succ, adapt_off)\n\n        x = np.arange(len(names))\n        w = 0.35\n        plt.figure(figsize=(9, 4.5))\n        plt.bar(\n            x - w / 2,\n            succ_means,\n            w,\n            yerr=succ_sems,\n            capsize=4,\n            label=\"on-target success (mean \u00b1 SEM)\",\n            color=\"steelblue\",\n        )\n        plt.bar(\n            x + w / 2,\n            off_means,\n            w,\n            yerr=off_sems,\n            capsize=4,\n            label=\"off-target (mean \u00b1 SEM)\",\n            color=\"salmon\",\n        )\n        plt.xticks(x, names, fontsize=9)\n        plt.ylabel(\"Rate\")\n        plt.title(\n            f\"Concept Benchmark: Aggregated Methods Comparison (n={n_runs})\\nOn-target vs Off-target rates\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"concept_benchmark_agg_methods_comparison.png\")\n        )\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot2: {e}\")\n        plt.close()\n\n    # Plot 3: Perplexity vs alpha per layer with SE shading\n    try:\n        plt.figure(figsize=(8, 4.5))\n        for L in layers:\n            all_ys = np.full((n_runs, len(fixed_alphas)), np.nan)\n            for r, cb in enumerate(cbs):\n                pc = cb.get(\"per_config\", {})\n                for j, a in enumerate(fixed_alphas):\n                    k = f\"L{L}_a{a}_fixed\"\n                    if k in pc:\n                        all_ys[r, j] = pc[k][\"ppl_median\"]\n            mean_ys = np.nanmean(all_ys, axis=0)\n            sem_ys = sem(all_ys, axis=0)\n            (line,) = plt.plot(\n                fixed_alphas, mean_ys, marker=\"o\", label=f\"layer {L} (mean)\"\n            )\n            plt.fill_between(\n                fixed_alphas,\n                mean_ys - sem_ys,\n                mean_ys + sem_ys,\n                alpha=0.2,\n                color=line.get_color(),\n                label=f\"layer {L} \u00b1SEM\",\n            )\n        base_ppl_mean = np.nanmean(baseline_ppl)\n        if not np.isnan(base_ppl_mean):\n            plt.axhline(\n                base_ppl_mean,\n                color=\"gray\",\n                linestyle=\"--\",\n                label=f\"baseline ppl (mean)\",\n            )\n        plt.xlabel(\"alpha\")\n        plt.ylabel(\"median PPL\")\n        plt.title(\n            f\"Concept Benchmark: Coherence (Median PPL) vs Steering Strength (n={n_runs})\\n(Lower is better; shaded = \u00b1SEM)\"\n        )\n        plt.legend(fontsize=7, ncol=2)\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"concept_benchmark_agg_ppl_vs_alpha.png\"))\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot3: {e}\")\n        plt.close()\n\n    # Plot 4: Validation loss & composite score per config with error bars\n    try:\n        # Union of all config keys\n        all_keys = set()\n        for cb in cbs:\n            all_keys.update(cb.get(\"per_config\", {}).keys())\n        keys_sorted = sorted(all_keys)\n\n        val_arr = np.full((n_runs, len(keys_sorted)), np.nan)\n        comp_arr = np.full((n_runs, len(keys_sorted)), np.nan)\n        for r, cb in enumerate(cbs):\n            pc = cb.get(\"per_config\", {})\n            for j, k in enumerate(keys_sorted):\n                if k in pc:\n                    val_arr[r, j] = 1.0 - pc[k][\"success_rate\"]\n                    comp_arr[r, j] = pc[k][\"composite_score\"]\n        val_mean, val_sem = np.nanmean(val_arr, axis=0), sem(val_arr, axis=0)\n        comp_mean, comp_sem = np.nanmean(comp_arr, axis=0), sem(comp_arr, axis=0)\n\n        x = np.arange(len(keys_sorted))\n        fig, ax1 = plt.subplots(figsize=(12, 5))\n        ax1.bar(\n            x - 0.2,\n            val_mean,\n            width=0.4,\n            yerr=val_sem,\n            capsize=3,\n            color=\"red\",\n            alpha=0.7,\n            label=\"val loss (mean \u00b1 SEM)\",\n        )\n        ax1.set_ylabel(\"Validation loss\", color=\"red\")\n        ax1.set_xticks(x)\n        ax1.set_xticklabels(keys_sorted, rotation=60, ha=\"right\", fontsize=7)\n        ax2 = ax1.twinx()\n        ax2.bar(\n            x + 0.2,\n            comp_mean,\n            width=0.4,\n            yerr=comp_sem,\n            capsize=3,\n            color=\"green\",\n            alpha=0.7,\n            label=\"composite (mean \u00b1 SEM)\",\n        )\n        ax2.set_ylabel(\"Composite score\", color=\"green\")\n        lines1, labels1 = ax1.get_legend_handles_labels()\n        lines2, labels2 = ax2.get_legend_handles_labels()\n        ax1.legend(lines1 + lines2, labels1 + labels2, loc=\"upper right\", fontsize=8)\n        plt.title(\n            f\"Concept Benchmark: Aggregated Val Loss & Composite per Configuration (n={n_runs})\"\n        )\n        fig.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"concept_benchmark_agg_val_loss_composite.png\")\n        )\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot4: {e}\")\n        plt.close()\n\n    # Plot 5: Per-concept success at best config aggregated\n    try:\n        # Determine best config per run then aggregate per-concept\n        concept_base = {}  # concept -> list of baseline rates\n        concept_steered = {}\n        for cb in cbs:\n            pc = cb.get(\"per_config\", {})\n            best_key = cb.get(\"best_config\", None)\n            if best_key and best_key in pc:\n                for r in pc[best_key][\"per_concept\"]:\n                    c = r[\"concept\"]\n                    concept_base.setdefault(c, []).append(\n                        r[\"baseline_success\"] / r[\"total\"]\n                    )\n                    concept_steered.setdefault(c, []).append(\n                        r[\"steered_success\"] / r[\"total\"]\n                    )\n        concepts = sorted(concept_base.keys())\n        if concepts:\n            base_mean = [np.nanmean(concept_base[c]) for c in concepts]\n            base_sem = [\n                (\n                    sem(np.array(concept_base[c]).reshape(-1, 1))[0]\n                    if len(concept_base[c]) > 1\n                    else 0.0\n                )\n                for c in concepts\n            ]\n            steer_mean = [np.nanmean(concept_steered[c]) for c in concepts]\n            steer_sem = [\n                (\n                    sem(np.array(concept_steered[c]).reshape(-1, 1))[0]\n                    if len(concept_steered[c]) > 1\n                    else 0.0\n                )\n                for c in concepts\n            ]\n            xs = np.arange(len(concepts))\n            plt.figure(figsize=(12, 6))\n            plt.bar(\n                xs - 0.2,\n                base_mean,\n                width=0.4,\n                yerr=base_sem,\n                capsize=3,\n                label=\"baseline (mean \u00b1 SEM)\",\n            )\n            plt.bar(\n                xs + 0.2,\n                steer_mean,\n                width=0.4,\n                yerr=steer_sem,\n                capsize=3,\n                label=\"steered best (mean \u00b1 SEM)\",\n            )\n            plt.xticks(xs, concepts, rotation=60, ha=\"right\", fontsize=8)\n            plt.ylabel(\"Success rate\")\n            plt.title(\n                f\"Concept Benchmark: Per-Concept Success at Best Config, Aggregated (n={n_runs})\\nLeft bars: Baseline, Right bars: Steered\"\n            )\n            plt.legend()\n            plt.tight_layout()\n            plt.savefig(\n                os.path.join(working_dir, \"concept_benchmark_agg_per_concept.png\")\n            )\n            plt.close()\n    except Exception as e:\n        print(f\"Error creating plot5: {e}\")\n        plt.close()\n\n    # Print aggregated metrics\n    print(f\"\\n=== Aggregated Metrics (n={n_runs}) ===\")\n    print(\n        f\"Baseline success rate: mean={np.nanmean(baseline_rates):.4f}, sem={sem(np.array(baseline_rates).reshape(-1,1))[0] if n_runs>1 else 0.0:.4f}\"\n    )\n    print(f\"Prompt baseline success rate: mean={np.nanmean(prompt_rates):.4f}\")\n    print(f\"Baseline off-target rate: mean={np.nanmean(baseline_off):.4f}\")\n    print(f\"Baseline median PPL: mean={np.nanmean(baseline_ppl):.4f}\")\n    # Per-config aggregate stats\n    all_keys = set()\n    for cb in cbs:\n        all_keys.update(cb.get(\"per_config\", {}).keys())\n    for k in sorted(all_keys):\n        succs, offs, ppls, comps = [], [], [], []\n        for cb in cbs:\n            pc = cb.get(\"per_config\", {})\n            if k in pc:\n                succs.append(pc[k][\"success_rate\"])\n                offs.append(pc[k][\"off_target_rate\"])\n                ppls.append(pc[k][\"ppl_median\"])\n                comps.append(pc[k][\"composite_score\"])\n        if succs:\n            print(\n                f\"{k}: succ={np.nanmean(succs):.4f}\u00b1{(sem(np.array(succs).reshape(-1,1))[0] if len(succs)>1 else 0.0):.4f}, \"\n                f\"off={np.nanmean(offs):.4f}, ppl={np.nanmean(ppls):.3f}, comp={np.nanmean(comps):.4f}\"\n            )\nelse:\n    print(\"No experiment data available for aggregation.\")\n",
+    "plot_analyses": [],
+    "plot_paths": [
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_e0bbf10eba8649d4bbe29bcbfd1a077e/concept_benchmark_agg_heatmap.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_e0bbf10eba8649d4bbe29bcbfd1a077e/concept_benchmark_agg_ppl_vs_alpha.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_e0bbf10eba8649d4bbe29bcbfd1a077e/concept_benchmark_agg_val_loss_composite.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_e0bbf10eba8649d4bbe29bcbfd1a077e/concept_benchmark_agg_methods_comparison.png",
+      "experiments/2026-07-15_04-03-48_universal_steering_attempt_1/logs/0-run/experiment_results/seed_aggregation_e0bbf10eba8649d4bbe29bcbfd1a077e/concept_benchmark_agg_per_concept.png"
+    ],
+    "vlm_feedback_summary": [],
+    "exp_results_dir": "experiment_results/seed_aggregation_e0bbf10eba8649d4bbe29bcbfd1a077e",
+    "exp_results_npy_files": []
+  }
+}

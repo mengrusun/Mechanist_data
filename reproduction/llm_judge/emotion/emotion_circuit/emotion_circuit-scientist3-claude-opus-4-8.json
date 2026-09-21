@@ -1,0 +1,152 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Do LLMs Feel? Emotion Circuits Discovery and Control",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "There IS a fitting/selection process (emotion directions are extracted, and a best steering strength is selected), so this dimension applies. In logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py the indices are shuffled with random.seed(0) (line 291-296): extract_idx = first 80%, eval_idx = remainder; emotion directions are computed only from extract_sample (48 items, lines 298,312-330) and generations are evaluated only on eval_events_final (30 held-out events, line 440). So direction extraction and evaluation use disjoint splits — no direction-fitting leakage. However, the headline number best_accuracy=0.7222 is selected as the MAX over the strength sweep [4,6,8,10,12] on the SAME 30-event eval set that is then reported (lines 521-526); there is no separate validation split for model/threshold (strength) selection, so the reported 'best' figure is optimistically selected on the test set. This is a minor but real hygiene gap that does not create direction-level train/test contamination.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The ground truth is the target emotion the direction is steering toward, and the metric is 'emotion-expression accuracy' = whether an independent LLM judge (JUDGE_MODEL='gpt-5.4' via dmxapi, judge_emotion(), lines 401-435) classifies the generated text as the target emotion. This mirrors the paper's own emotion-expression-accuracy metric and is a reasonable operationalization of the claimed behavior; it is non-circular in the dangerous sense (the judge model is separate from the steered Llama-3.2-3B). Gaps: single-judge annotation with no human validation or inter-rater check, a 7-way single-word classification, and the underlying SEV inputs are trivially templated ('Everything goes remarkably well and exceeds your expectations', lines 227-231) rather than the paper's semantically rich outcome events, so the label captures surface emotion of the output but rests on a weak stimulus set. Adequate proxy with a documented gap.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "Model fidelity is honored: MODEL_PATH points to /data/zhenqian/models/Llama-3.2-3B-Instruct (best_solution lines 14-24; experiment_data.npy config.model = '/data/zhenqian/models/Llama-3.2-3B-Instruct'), matching task.md's required base model. Dataset fidelity is NOT honored: task.md requires the SEV dataset (480 events = 8 domains x 20 scenarios x 3 outcomes with six emotion variants per event, GPT-4o-mini generated). Instead the run SILENTLY FABRICATES its own SEV via build_sev() (lines 32-244): 480 template strings assembled from hard-coded scenario lists and three canned outcome sentences, written to /data/zhenqian/data/SEV/sev_events.json — it does not load the provided/required SEV and the structure (no six pre-generated emotion variants; emotions injected via prompting instead) differs from the paper. Furthermore only 48 events are used for extraction and 30 for evaluation, a heavy subset of the 480. The specified dataset was effectively swapped for a self-built proxy. (Qwen2.5-7B robustness is verify-stage and optional, so exempt.) This is a substantive resource substitution of a mandatory resource.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py",
+      "logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/experiment_data.npy"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The three claims are about circuit identification (C1), mechanistic circuit evidence (C2), and circuit-based control outperforming prompting/steering (C3). NONE of the experiments needed for these were run: the entire realized pipeline is a single-layer (layer 14 of 28) difference-of-means steering sweep evaluated on used_n = 30 events x 6 emotions = 180 generations (lines 440,469-499), extracted from only 48 samples. There is no component identification, no ablation/enhancement, no circuit assembly, no circuit-vs-steering comparison, and no prompting baseline. So the core claims rest on zero directly supporting evidence, and even the steering result (best overall accuracy ~0.72) is thin (30 events, per-emotion n=30, some under the 40-item concern line). The one mitigating factor is that report.md is honest — it labels the run 'incomplete', 'Not assessable via automation' (lines 12-13,33) and does not assert the claims hold — so this is under-evidenced rather than an overclaim/fabrication.",
+    "score": 2,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Randomness control is essentially single-seed: the split and extraction sampling are fixed with random.seed(0) (best_solution line 291), and the two nominal replicate runs (hashes 46dfd/035dd for the sweep, 06a7/7e3b for the baseline) all use the same seed, differing only by LLM-judge nondeterminism (e.g. best_accuracy 0.7222 vs 0.7167). The 'seed_aggregation' node (logs/0-run/experiment_results/seed_aggregation_78841cfc.../aggregation_plotting_code.py) computes mean +/- SEM but its input list contains a SINGLE experiment_data.npy path (lines 8-11), so n_runs=1 and the plotted error bars are effectively zero. No cross-seed variance, confidence intervals, or significance tests genuinely support the numbers; the strength sweep gives some robustness sense but claimed differences (e.g. disgust 0.03-0.20 vs sadness ~0.97) are reported as point estimates without uncertainty. Single-seed point estimates with no real variance reporting.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py",
+      "logs/0-run/experiment_results/seed_aggregation_78841cfc72ab404ba200bd352a056370/aggregation_plotting_code.py"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The claims are explicitly causal/mechanistic — C1 'component identification', C2 'mechanistic evidence ... traceable circuits', and the paper validates these with ablation, attention-head zeroing (delta-s), enhancement, and random-unit control experiments averaged over 10 seeds. The reproduction performs only residual-stream steering (adding a difference-of-means vector at one layer via a forward hook, lines 333-380). While steering is a form of intervention that shows a direction affects output emotion, it does NOT localize or causally validate any circuit/component: there is no ablation, no neuron/head identification, no coefficient-vs-random-direction control (the plots only draw a 1/7 chance line, not a random-direction steering baseline). A grep of all case .py files for ablat/circuit/neuron/attention-head/patch returns nothing but aggregation-plot text. So the mechanistic/causal content of C1 and C2 is asserted-by-inheritance-from-the-paper and not demonstrated by any controlled intervention in this run.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py",
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_06a7c722635f4bccbb1ac4500e36bd66.py"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "The numbers that exist are traceable and agree with on-disk products. journal.json for stage 2 records node 46dfd best_value 0.7222 / final 0.6889 and node 035dd best 0.7167, which match exactly the best_accuracy fields in the corresponding experiment_data.npy files (0.7222 in experiment_46dfd.../experiment_data.npy, 0.7167 in experiment_035dd.../experiment_data.npy), and the per-emotion values (sadness 0.9667, disgust 0.1667/0.20, etc.) match between journal and npy. The baseline nodes' 0.6778 also matches. No fabricated or sourceless headline numbers were found. Minor deduction: report.md points to several summary artifacts (draft_summary.json, research_summary.json, baseline_summary.json, token_tracker.json) that do not exist — but it honestly marks them absent ('—') rather than quoting numbers from them, and report.md itself quotes no metric values. Traceability of realized numbers is essentially complete.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json",
+      "logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/experiment_data.npy",
+      "logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/experiment_data.npy"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Cross-artifact records are self-consistent. The stage journal metrics, the experiment_data.npy per_strength_results, and the per-emotion accuracies agree (e.g. baseline 0.6778 across journal node 06a7/7e3b and npy; sweep best 0.7222/0.7167 across journal and npy). report.md's verdict — pipeline 'incomplete (stages [1,2], no finalization; likely killed mid-run)', per-claim 'See overall verdict', overall 'Not assessable' — is consistent with the killed state and does not contradict the numeric artifacts. No case of a claim marked PASS in one artifact but broken elsewhere. Minor looseness: the two replicate runs report slightly different bests (0.7222 vs 0.7167) with no reconciliation, and report.md references non-existent summary files; neither changes a verdict.",
+    "score": 4,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/journal.json",
+      "logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/experiment_data.npy"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "We can identify emotion-specific global circuits in LLMs by constructing a systematic framework that integrates emotion direction extraction, component identification, and global circuit integration.",
+        "method": {
+          "justification": "9a: The claim's method category is a three-part framework — direction extraction + component (neuron/head) identification + global circuit integration. The run implements ONLY step one, and only a degenerate version of it: a single-layer (layer 14) difference-of-means residual vector per emotion (best_solution lines 312-341). There is no analytical neuron decomposition (beta = W_d^T v_e), no attention-head causal scoring, and no sublayer-importance/circuit-assembly stage anywhere in the case (confirmed by grep). The chosen method is structurally incapable of identifying circuits, so it is misaligned with the claim's mechanism category.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment tests C1. The realized design is a steering-strength sweep evaluated by emotion-expression accuracy — a metric about output emotion, not about whether circuits were identified. There is no component-ranking, no ablation/enhancement sweep over k, no circuit-overlap analysis, no random-component control. The BFTS run reached only stage_2_baseline_tuning and was killed before any component/circuit stage (report.md lines 12-17). The design cannot distinguish 'circuit identified' from 'not', so it is unsuited to validating C1.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"
+          ]
+        },
+        "result": {
+          "justification": "9c: There is no result bearing on circuit identification. report.md reports the claim as 'Not assessable' / 'See overall verdict' with the run flagged incomplete. This is honest (not disguised as agreement), but it is an incomplete killed run rather than a reliable NOT-REPRODUCED with a sound justification, and the preceding dimensions are not clean (wrong method, substituted dataset). The paper's C1 conclusion (traceable emotion circuits exist) is neither reproduced nor reliably refuted — the claim is left dangling.",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "We provide the mechanistic evidence that emotion generation in LLMs is supported by traceable circuits, which is stable across different scenarios and emotions.",
+        "method": {
+          "justification": "9a: Mechanistic evidence for traceable circuits requires causal localization (ablation / head zeroing / enhancement with random-direction controls), as the paper does. The run offers only single-layer steering with no ablation, no component tracing, and no random control (only a 1/7 chance line in plots). A correlational-to-behavioral steering intervention at one layer cannot supply mechanistic circuit evidence, so the method is misaligned with C2's causal-mechanistic category.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment probes circuit traceability or cross-emotion/scenario stability rigorously. The only data is per-emotion steering accuracy at best strength, which in fact shows strong INSTABILITY across emotions (disgust 0.167-0.20 vs sadness 0.967 vs anger 0.90; experiment_data.npy per_emotion_accuracy) — the opposite of C2's 'stable across emotions' — yet no analysis, controls, or ablations address this. The design lacks the interventions and controls needed and was killed before any mechanistic stage.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "9c: No mechanistic result exists to compare with the paper. The available per-emotion numbers actually contradict the 'stable across emotions' portion of C2 (disgust collapses to ~0.03-0.20), but this is neither surfaced nor analyzed. The report gives no reliable justification for non-reproduction — it is simply incomplete. C2's paper conclusion is not validated, and the one signal in the data points against the stability sub-claim without being addressed.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/experiment_data.npy"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "a circuit-based control method can reliably induce target emotions across arbitrary inputs without relying on explicit instructions. It outperforms both prompting and direction-level steering on emotion-expression accuracy.",
+        "method": {
+          "justification": "9a: C3 is specifically about a CIRCUIT-based control method and a three-way comparison (circuit vs prompting vs direction-level steering). The run implements only direction-level steering — i.e., precisely the baseline C3 claims to beat — with no circuit-modulation method and no prompting arm. The method therefore cannot address C3 (you cannot show circuits beat steering when no circuit method exists). Misaligned.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: The comparison experiment C3 requires (circuit vs prompting vs steering) was not run; only one arm — direction-level steering — was measured (best overall accuracy ~0.72 at strength 10 on 180 generations). A strength sweep [4-12] was explored, which is a reasonable hyperparameter effort for the steering arm, so the steering baseline itself is competently executed; but with the circuit and prompting arms entirely absent, the design cannot evaluate the comparative claim. Partial credit only for establishing one baseline arm.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/experiment_data.npy",
+            "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_46dfd44a98914778955d2ec21b406cfe.py"
+          ]
+        },
+        "result": {
+          "justification": "9c: The run's steering achieves ~0.72 overall (paper reports steering 91.22% and circuit 99.65%), and no circuit or prompting comparison was produced, so the comparative superiority claim is untested. Directionally, steering does induce emotions well above the 1/7 chance line, which weakly echoes the paper's finding that emotion directions steer output — but that supports the steering baseline, not C3's circuit-outperforms-steering claim. The claim is neither reproduced nor honestly refuted with justification; report.md marks it 'Not assessable'. Surface conclusion left dangling.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/experiment_data.npy"
+          ]
+        }
+      }
+    }
+  }
+}

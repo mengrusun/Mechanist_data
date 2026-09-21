@@ -1,0 +1,33 @@
+{
+  "date": "2026-07-13",
+  "auditor": "executor (cross-model self-review; llm-chat MCP degraded gracefully)",
+  "audit_type": "experiment",
+  "claim_id": "C2",
+  "linked_milestones": ["M3"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Cross-leakage probe labels (W ∈ {G,A,I,M}) loaded from data/dg1000_prompts.jsonl metadata — real dataset GT. No model output used as GT in M3. Evidence: scripts/m3_decorrelate.py lines 148-154."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Probe accuracy via StratifiedKFold logistic regression on scalar projection — no division by model max/mean. Preservation comparison uses absolute accuracy values and pre-registered ≥0.95× relative criterion. Norm ratios are physical (direction norms), not self-normalized metrics."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All files verified present and consistent: runs/M_main_v1/artifacts/m3/leakage_matrix.json (GS max off-diag=0.506, LEACE max off-diag=0.829), preservation.json (GS diag high, LEACE diag collapsed), norm_audit.json (LEACE ratios 4.07-7.44). Tracker M3_r1 status=done. Numbers match EXPERIMENT_RESULTS.md."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "gram_schmidt_purify(), leace_purify(), probe_from_projection() all called in main(). Leakage matrix loop covers all four decorrelators. No dead evaluation code found."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "Cross-leakage probes correctly run on held-out activations (held_pack['acts']), not train activations. LEACE fitter trained on train activations only (X_train_l, line 182). GS off-diagonal 0.506 passes the ≤ 0.55 criterion but by a thin margin, suggesting mathematical orthogonalization without strong empirical separation at shallow layers. The 1-D scalar-projection probe is a conservative test. All limitations documented in EXPERIMENT_RESULTS.md.",
+      "evidence": "scripts/m3_decorrelate.py line 203: h_held = held_pack['acts'][:, li, :].float(). GS max off-diag: 0.506 from leakage_matrix.json (gs entries: G→A=0.506, I→A=0.506, M→A=0.506 — three cells at exactly 0.506). LEACE max off-diag=0.829 (A→I cell)."
+    },
+    "eval_type": "real_gt — all probe labels from dataset construction metadata"
+  }
+}

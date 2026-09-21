@@ -1,0 +1,187 @@
+{
+  "_note_readme": "Human expert review for closing_gap_belief.",
+  "meta": {
+    "expert_name": "Haoming_Xu",
+    "paper_title": "Closing the Confidence-Faithfulness Gap in LLMs",
+    "agent": "scientist2",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "Scores follow human_reliablity_judge_zh.md.",
+  "_note_evidence": "Evidence files are relative to scientist2/belief/closing_gap_belief/.",
+  "dimension_1_data_split_hygiene": {
+    "justification": "The run clearly defines separate splits: 6000 train, 2000 dev, and 2000 test in artifacts/split_manifest.json. refine-logs/EXPERIMENT_RESULTS.md reports the same split and uses the test slice for final analyses.",
+    "score": 5,
+    "evidence_files": [
+      "artifacts/split_manifest.json",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "artifacts/probe_metrics.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The labels match the claims. Correctness is based on TriviaQA answer matching, and verbalized confidence is the parsed confidence number from the model output. The confidence labels are skewed toward high values, but that is disclosed and still measures the intended verbalized-confidence behavior.",
+    "score": 5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "verify/INTEGRITY_AUDIT.md",
+      "artifacts/stage15_variance.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment uses the required Llama-3.1-8B-Instruct model on TriviaQA. It reports 17,897 available examples after filtering and 10,000 used in the main split. Qwen2.5-7B-Instruct is used only as an extra model-swap check for C3a.",
+    "score": 5,
+    "evidence_files": [
+      "task.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "verify/C3a_near_orthogonality/ROBUSTNESS.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The main claims have enough evidence: C1/C2 use 10,000 examples, C3a uses all 33 layer sites, and C3b uses 500 steering examples. C3c is only an extra diagnostic; it is not reliable because its key group has only 4 examples, but this does not undermine the main C3a result.",
+    "score": 4,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "artifacts/dissociation.json",
+      "artifacts/steering_results.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The run includes uncertainty and controls: CIs, null baselines, shuffled-label controls, and 200 bootstrap resamples. The main C3a result is strong: |cos|=0.0152 with CI [0.00066, 0.03444]. It is not a 5 because bootstrap was reduced from 1000 to 200, C1/C2 CIs are not cleanly centered on the point estimates, and C3b steering has only three alpha values and one random control.",
+    "score": 4,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "artifacts/cos_bootstrap.json",
+      "verify/INTEGRITY_AUDIT.md",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The run does include activation steering for C3b, but the causal evidence is weak. It only tests alpha values {-1,0,+1}, uses one random control, and finds no emitted-output effect. The geometric C3a result is strong, but causal separability is not strongly proven.",
+    "score": 3,
+    "evidence_files": [
+      "artifacts/steering_results.json",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "verify/INTEGRITY_AUDIT.md",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "The key numbers can be traced to saved files: C1 AUROC=0.840438 and ECE=0.030814 in artifacts/probe_metrics.json; C3a |cos|=0.015219 with CI [0.000660,0.034444] in artifacts/cos_bootstrap.json; C3c p=0.911218 in artifacts/dissociation.json; steering n=500 in artifacts/steering_results.json.",
+    "score": 5,
+    "evidence_files": [
+      "artifacts/probe_metrics.json",
+      "artifacts/cos_bootstrap.json",
+      "artifacts/dissociation.json",
+      "artifacts/steering_results.json",
+      "CLAIMS_LEDGER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The main files agree with each other. CLAIMS_LEDGER.md and refine-logs/EXPERIMENT_RESULTS.md both say C1/C2/C3a are supported, C3b has primary internal support but null emitted output, and C3c failed or was underpowered.",
+    "score": 5,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "verify/INTEGRITY_AUDIT.md",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "Scientist2 decomposes original C3 into C3a/C3b/C3c; here they are mapped back to task.md C3.",
+    "_note_subscore": "method / experiment / result scored independently.",
+    "per_claim": {
+      "C1": {
+        "claim": "Models encode well-calibrated accuracy information in a linearly accessible direction.",
+        "method": {
+          "justification": "The method fits the claim: a layer-swept logistic regression probe on residual-stream states directly tests whether correctness is linearly decodable.",
+          "score": 5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_PLAN.md",
+            "artifacts/probe_metrics.json"
+          ]
+        },
+        "experiment": {
+          "justification": "The experiment is strong: 10,000 TriviaQA examples, a 6000/2000/2000 train/dev/test split, all 33 sites, AUROC/ECE metrics, null controls, and bootstrap CIs. The only caveat is that bootstrap was reduced to 200 resamples.",
+          "score": 5,
+          "evidence_files": [
+            "artifacts/split_manifest.json",
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "artifacts/probe_metrics.json"
+          ]
+        },
+        "result": {
+          "justification": "The result supports C1: at L*=31, correctness AUROC=0.840438 and ECE=0.030814. The report appropriately treats this as a TriviaQA correctness correlate, not a universal truth variable.",
+          "score": 5,
+          "evidence_files": [
+            "artifacts/probe_metrics.json",
+            "CLAIMS_LEDGER.md",
+            "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Models encode verbalized confidence in a linearly accessible direction.",
+        "method": {
+          "justification": "The method fits the claim: ordinal and binary linear probes directly test whether the model's verbalized confidence can be decoded from activations.",
+          "score": 5,
+          "evidence_files": [
+            "artifacts/probe_metrics.json",
+            "artifacts/stage15_variance.json",
+            "verify/INTEGRITY_AUDIT.md"
+          ]
+        },
+        "experiment": {
+          "justification": "The experiment is reasonable: it runs the main confidence probes and also checks two paraphrased prompts. The main caveat is that the prompt/template setup is limited, so almost all verbalized confidence values are very high (96% >=95), and the probe AUC drops by about 0.08-0.11 under paraphrases.",
+          "score": 4,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "artifacts/paraphrase.json",
+            "verify/INTEGRITY_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "The narrow result supports C2: verbal-confidence binary AUROC=0.954122 and ordinal top-1 accuracy=0.994. The report correctly limits the claim to this prompt protocol.",
+          "score": 5,
+          "evidence_files": [
+            "artifacts/probe_metrics.json",
+            "CLAIMS_LEDGER.md",
+            "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Well-calibrated accuracy information and verbalized confidence occupy separate, nearly orthogonal directions; the model knows when it is likely wrong but generation fails to surface this signal.",
+        "method": {
+          "justification": "The method fits the near-orthogonality part of C3: it compares the cosine between correctness and verbalized-confidence probe directions. The steering analysis also adds a causal check.",
+          "score": 5,
+          "evidence_files": [
+            "artifacts/cos_bootstrap.json",
+            "artifacts/steering_results.json",
+            "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+          ]
+        },
+        "experiment": {
+          "justification": "C3a is well tested: |cos|=0.015219 with CI upper 0.034444, plus Qwen model-swap replication. C3b steering is weaker because the alpha grid is sparse and there is only one random control. C3c is an extra diagnostic and is uninformative because its key group has only 4 examples.",
+          "score": 4,
+          "evidence_files": [
+            "artifacts/cos_bootstrap.json",
+            "verify/C3a_near_orthogonality/ROBUSTNESS.md",
+            "artifacts/steering_results.json",
+            "artifacts/dissociation.json",
+            "verify/INTEGRITY_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "The main geometric result supports C3: Llama |cos|=0.015 and Qwen swap |cos|=0.021. The report is also honest about limits: emitted-output steering is null and C3c fails or is underpowered.",
+          "score": 5,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "verify/C3a_near_orthogonality/ROBUSTNESS.md",
+            "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+          ]
+        }
+      }
+    }
+  }
+}

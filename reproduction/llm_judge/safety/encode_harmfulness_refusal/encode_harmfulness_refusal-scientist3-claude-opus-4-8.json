@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "LLMs Encode Harmfulness and Refusal Separately",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "Fitting/selection uses honest held-out splits. In stage_3 best_solution_81674ebba51942a08800d4270c901383.py:262-287 build_probe() calls train_test_split(test_size=0.3, random_state=seed, stratify=y); the diff-of-means direction and the 1D logistic probe are fit on X_tr only and scored on the disjoint X_te (val_acc). The steering directions are extracted from harm_pool=harmful[:200]/ben_pool=benign[:200] (lines 249-255) while the steering/jailbreak eval sets are harmful[200:220] and benign[200:220] (lines 462-463), i.e. disjoint from the extraction pool. The one hygiene gap: the best layer is selected by val_acc (line 318 max over LAYERS_TO_PROBE) and that SAME val split's accuracy (0.9833) is then reported as the headline probe accuracy with no separate test split, a mild selection-on-eval reuse that does not change the near-uniform ~0.97-0.99 accuracies. No test labels leak into fitting. Overall splits are honored in code with one minor selection-reporting overlap.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py",
+      "logs/0-run/experiment_results/experiment_81674ebba51942a08800d4270c901383_proc_722033/experiment_data.npy"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The 'harmfulness' label is operationalized as AdvBench (harmful) vs Alpaca (benign) at the instruction token, and the 'refusal' label as the SAME harmful-vs-benign contrast at the post-instruction token (stage_3 code lines 262-330: probes_B is built on harmB/benB, and the comment at 323-325 admits it assumes 'the model refuses AdvBench and complies with Alpaca'). This makes the refusal direction a proxy for harmfulness at a different token rather than a genuine refused-vs-accepted label, unlike the paper which clusters actual misbehaving cases (accepted-harmful, refused-harmless). More seriously, the negative controls FAIL: the random-direction baseline reaches 0.80 (draft_summary.json Key_numerical_results) and the shuffled-label control reaches 0.90-0.98 across layers (experiment_data.npy metrics.val 'shuffled': 0.90 at posA-L10, up to 0.975-0.983 at posB), where a valid control should be ~0.50. The run itself notes this is 'likely due to distributional differences between AdvBench and Alpaca beyond harmfulness (e.g., style, length); highlights need for more rigorous contrast sets' but never remedies it. The label therefore substantially confounds harmfulness with dataset/style, so the extracted 'harmfulness direction' is an under-validated proxy.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/experiment_results/experiment_81674ebba51942a08800d4270c901383_proc_722033/experiment_data.npy",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment honors the specified Experiment-stage resources exactly: real Llama-3-8B-Instruct weights are loaded locally (stage_3 code lines 118-188, MODEL_PATH resolved to Meta-Llama-3-8B-Instruct with .safetensors, float16 on CUDA), AdvBench is the harmful set (load_advbench, line 46-69) and Alpaca the benign contrast (load_alpaca, line 72-107), with used_n=200/class for extraction. No model or dataset was silently downgraded or subsetted in the main experiment. The gap is that the task's 'Fixed resources (always used)' Llama Guard 3 8B is never loaded anywhere (grep across all logs/*.py finds no llama-guard reference), and no verify-stage cross-model (Qwen2, Llama-2) or benchmarks (XSTest, Sorry-Bench, JBB, CATQA) were run. Those absences bear mainly on claim coverage (C4/C5), but Llama Guard 3 8B being a mandatory fixed resource that was skipped is a real fidelity shortfall for the baseline comparison the task requires.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Probing evidence is adequate (200/class = 400 samples, train_test_split 0.3). But the causal/behavioral evidence is thin: the steering evaluation uses only EVAL_N=20 harmful + 20 benign prompts (stage_3 code line 461-463), and the jailbreak-signature claim rests on just 6 non-refused prompts (experiment_data.npy jailbreak_signature: num_non_refused_under_negR=6, total_eval=20). Two of the five claims are essentially unsupported by experiment: C5 (Latent Guard vs Llama Guard 3 8B) was never run at all, and C4 uses activation steering as a synthetic stand-in rather than the specified real jailbreaks (GCG/persuasion/templates). Despite this, report.md 'Verdict' marks all five claims 'Partially or fully supported' and draft_summary.json 'Significance' asserts 'strong initial evidence' and 'supports the feasibility of a Latent Guard' with no Latent-Guard experiment. Claim strength materially exceeds evidence strength for C2/C4/C5.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_81674ebba51942a08800d4270c901383_proc_722033/experiment_data.npy",
+      "logs/0-run/draft_summary.json",
+      "report.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The core causal result is single-seed with no uncertainty. research_summary.json 'best node with different seeds' has length 1, so the headline dissociation metrics carry no variance/error bars or significance. The probing stage does have some seed aggregation (seed_aggregation_* directories exist for stage 1/2 probes), but the steering/dissociation and jailbreak-signature numbers (n=20 and n=6) are point estimates from a single run. No significance testing is reported. The instability is stark: the direction_dissociation_score swings from 0.0875 (inject layer 10) to 0.632 (inject layer 4) in the stage-4 ablation (experiment_4f2b5f...npy summary_dds_by_layer), a within-experiment sensitivity that is never bounded with variance. Single-seed point estimates on very small eval sets treated as effects.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/experiment_4f2b5f55168344ee99ec33a3b60e8506_proc_821931/experiment_data.npy"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The run does perform a genuine causal intervention (additive activation steering, +/- direction added to the residual stream via forward hooks, stage_3 code lines 369-382), not merely correlational probing, which is the correct evidence type for the paper's causal claim. It also includes a partial control in stage 4 by sweeping the injection layer (steering_layer_transfer, inject layers [4,8,10,12,26,30]), which correctly reveals that injecting at the probe-read layer (10) yields a null (harm probe frozen at 0.9417) while injecting upstream (layer 4) genuinely flips the internal harm judgment (benign posH harm_prob 0.09->0.82; harmful negH 0.94->0.039). However rigor elements are missing: no random-direction steering baseline, only a single steering coefficient (alpha = diff-norm, no coefficient sweep in the main stage), and the headline stage-3 result is a measurement artifact (the harm probe reads hidden_states[best_H_layer] which is upstream of the layer-best_H_layer output hook, so delta_H_h=0.0 is a bug not a finding). Intervention exists with partial controls but incomplete rigor.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py",
+      "logs/0-run/experiment_results/experiment_4f2b5f55168344ee99ec33a3b60e8506_proc_821931/experiment_data.npy"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Headline numbers trace cleanly to on-disk products and agree exactly. research_summary.json metrics (cosine 0.2473, harm probe val 0.9833, refusal probe val 0.9917, delta_H_h 0.0, delta_R_h 0.375, delta_R_r 0.55, delta_H_r 0.0, dds 0.0875, jailbreak mean_harm_prob 0.8556 on 6/20) all match the stage-3 experiment_data.npy verbatim, and the stage-4 per_injection_layer values and summary_dds_by_layer are on disk. No fabricated or back-filled numbers were found. Minor deductions: the draft_summary.json plot descriptions and cosine values (e.g. 'peak cosine ~0.7', ASR 0.68) come from an earlier stage and diverge from the final research node's 0.2473, and the VLM plot_analyses in research_summary.json describe non-existent plots ('test error vs epochs comparing Method A/B'), which is loose/hallucinated narration layered over otherwise-grounded metrics. The quantitative results themselves remain traceable.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/experiment_results/experiment_81674ebba51942a08800d4270c901383_proc_722033/experiment_data.npy",
+      "logs/0-run/experiment_results/experiment_4f2b5f55168344ee99ec33a3b60e8506_proc_821931/experiment_data.npy",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "There are material inconsistencies. The headline research_summary.json reports direction_dissociation_score=0.0875 with delta_H_h=0.0 (harm steering did NOT move the internal harm probe), i.e. essentially NO dissociation on the internal-harm axis, yet draft_summary.json 'Significance' claims 'strong initial evidence ... Demonstrating causal dissociation via steering (each direction can be manipulated independently)' and report.md marks all claims 'Partially or fully supported' — prose that contradicts the headline number. The stage-4 ablation contains the actually-supporting evidence (dds 0.632/0.524 at inject layers 4/8, with harm steering flipping internal harm judgment), but ablation_summary.json is EMPTY ('[]') and the stage-4 node's analysis field is blank, so the correcting result is never surfaced or reconciled with the null headline. The VLM plot analyses (research_summary.json) further describe plots that do not exist. These are not mere stale numbers; the run's summary conclusion and its own headline metric point in opposite directions.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/ablation_summary.json",
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/journal.json",
+      "report.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Instruction-tuned LLMs represent harmfulness perception and refusal execution as two distinct, approximately linear directions in the residual stream, and each can be recovered without disturbing the other.",
+        "method": {
+          "justification": "9a: Difference-of-means directions plus 1D logistic probes at two token positions (stage_3 build_probe, lines 262-295) is exactly the paper's diff-in-means methodology (Marks & Tegmark; Arditi et al.) and is the correct method family for a linear-direction claim. Two directions are extracted and their cosine similarity computed. Method choice matches the claim.",
+          "score": 5,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"]
+        },
+        "experiment": {
+          "justification": "9b: Layer sweep [10,14,16,18,20,24], held-out val, and a cosine of 0.2473 between the two directions are reasonable. But the negative controls fail (random-direction 0.80, shuffled-label 0.90-0.98 in experiment_data.npy), so 'distinctness' and even the probe's harmfulness meaning are confounded by AdvBench-vs-Alpaca style differences; and the 'refusal' direction is really a harmful-vs-benign contrast at posB, not refused-vs-accepted. Design is standard but the broken controls leave linear-separability-of-harmfulness under-validated.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_81674ebba51942a08800d4270c901383_proc_722033/experiment_data.npy"]
+        },
+        "result": {
+          "justification": "9c: The low cosine (0.2473) qualitatively agrees with the paper's finding of low similarity (~0.1 on Llama2) between the harmfulness and refusal directions, and each probe is ~0.98 accurate so each direction is individually recoverable. Direction is consistent with the paper. Deduction for the confounded controls that inflate any-direction accuracy (random 0.80), which weakens 'without disturbing the other'.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_81674ebba51942a08800d4270c901383_proc_722033/experiment_data.npy", "logs/0-run/research_summary.json"]
+        }
+      },
+      "C2": {
+        "claim": "The two signals live at different token positions: the harmfulness judgment is written at the final instruction-token position, while the decision to refuse is committed just after the instruction, immediately before the response begins.",
+        "method": {
+          "justification": "9a: The run reads Position A (final instruction token = t_inst) and Position B (last post-instruction token = t_post-inst), the correct positions (stage_3 get_positions, lines 208-218). But to test which SIGNAL lives where, the paper contrasts misbehaving cases (accepted-harmful vs refused-harmless) at each position; this run instead fits the same harmful-vs-benign probe at both positions, which cannot separate a harmfulness signal from a refusal signal. The method as instantiated does not operationalize the token-position dissociation.",
+          "score": 2,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"]
+        },
+        "experiment": {
+          "justification": "9b: No experiment distinguishes what each position encodes: there is no refused-vs-accepted labelling and no misbehaving-case clustering. Both positions yield near-identical harmful-vs-benign accuracy (posA 0.9833, posB 0.9917 at layer 10 in experiment_data.npy), which is uninformative about the claim. The judgment metric does not correspond to the claim.",
+          "score": 2,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_81674ebba51942a08800d4270c901383_proc_722033/experiment_data.npy"]
+        },
+        "result": {
+          "justification": "9c: The result cannot and does not establish that harmfulness is written at t_inst while refusal is committed at t_post-inst; both positions separate harmful/benign equally. The paper's Table-1/Figure-2 evidence (refusal drops without post-instruction tokens; clustering flips between positions) is not reproduced, and the run does not honestly flag that C2 is untested. Surface conclusion left dangling.",
+          "score": 2,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_81674ebba51942a08800d4270c901383_proc_722033/experiment_data.npy", "report.md"]
+        }
+      },
+      "C3": {
+        "claim": "Additive steering along either direction yields dissociated effects — moving along the harmfulness axis flips the model's internal judgment of whether an input is harmful, independent of whether it refuses; moving along the refusal axis flips refusal behaviour without changing that internal judgment.",
+        "method": {
+          "justification": "9a: Additive activation steering (+/- direction to the residual stream) with an internal harm probe read-out is a genuine causal intervention and the correct method for this dissociation claim, matching the paper's activation-addition approach (Section 3.4-3.5).",
+          "score": 5,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"]
+        },
+        "experiment": {
+          "justification": "9b: The headline stage-3 design has a layer-indexing bug: the harm probe reads hidden_states[best_H_layer] (input to layer 10) while the steering hook adds to layer-10 OUTPUT, so under steering the harm probe is frozen at 0.9417/0.0947 across ALL conditions and delta_H_h=0.0 — a measurement artifact, not a dissociation. The stage-4 ablation (steering_layer_transfer) partly rescues this by sweeping the injection layer and correctly finding a strong effect only when steering upstream. Still, only a single steering coefficient (alpha=diff-norm), no random-direction steering control, and n=20 eval. Design is honest but under-powered and initially broken.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_4f2b5f55168344ee99ec33a3b60e8506_proc_821931/experiment_data.npy", "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"]
+        },
+        "result": {
+          "justification": "9c: The on-disk stage-4 data at inject layer 4 qualitatively reproduces the paper: steering the harmfulness direction flips internal harm judgment (benign harm_prob 0.09->0.82; harmful negH 0.94->0.039) while steering the refusal direction changes refusal rate (benign posR refusal 0.0->0.95) with harm_prob nearly unchanged (0.09->0.17) — i.e. dissociated effects, dds=0.632. So the underlying evidence agrees with the paper directionally. However, the run reports the buggy null (dds 0.0875, delta_H_h 0.0) as its headline, leaves the ablation uninterpreted (empty ablation_summary.json), and its prose overclaims 'strong evidence' without reconciling the null — so the reported conclusion is inconsistent even though the data supports the claim.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_4f2b5f55168344ee99ec33a3b60e8506_proc_821931/experiment_data.npy", "logs/0-run/ablation_summary.json", "logs/0-run/research_summary.json"]
+        }
+      },
+      "C4": {
+        "claim": "A notable class of successful jailbreaks operates by suppressing the refusal signal while the harmfulness signal remains active — the model still internally recognises the input as harmful yet answers — a signature that a hidden-state probe can pick up.",
+        "method": {
+          "justification": "9a: The run proxies 'jailbreak' by steering the negative refusal direction (-R) and then reads the internal harm probe on prompts that were no longer refused (stage_3 lines 612-641). Measuring harm belief on refusal-suppressed prompts is a defensible mechanistic proxy, but it substitutes steering for the paper's actual jailbreak families (GCG suffixes, persuasion, adversarial templates) that the task lists as fixed resources — a method mismatch to the specific claim, which is about real jailbreaks.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"]
+        },
+        "experiment": {
+          "justification": "9b: Evidence is very thin and partly artifactual: n=6 non-refused prompts (experiment_data.npy jailbreak_signature), and in the headline stage the reported mean harm_prob (0.8556) is the frozen un-steered probe value (same layer-read bug), so 'harm remains active' is trivially true there. The stage-4 inject-4 run gives a genuine reading (negR harmful: harm_prob 0.76, refusal 0.15) but still on ~20 prompts with no real jailbreak set and no baseline that DOES reverse harm belief.",
+          "score": 2,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_81674ebba51942a08800d4270c901383_proc_722033/experiment_data.npy", "logs/0-run/experiment_results/experiment_4f2b5f55168344ee99ec33a3b60e8506_proc_821931/experiment_data.npy"]
+        },
+        "result": {
+          "justification": "9c: Directionally consistent with the paper: when refusal is suppressed, the internal harmfulness belief stays high (0.76-0.86), matching the paper's finding that some jailbreaks suppress refusal without reversing harm belief. But the paper's nuance (persuasion CAN reduce internal harm belief) is uncovered because no real jailbreak methods were run, and the n=6 basis is very small. Broadly agrees, thinly supported.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_4f2b5f55168344ee99ec33a3b60e8506_proc_821931/experiment_data.npy"]
+        }
+      },
+      "C5": {
+        "claim": "A lightweight \"Latent Guard\" classifier trained on the harmfulness direction matches or beats a dedicated safety judge (Llama Guard 3 8B) at flagging jailbreak attempts, at a fraction of the compute.",
+        "method": {
+          "justification": "9a: No Latent-Guard-vs-Llama-Guard method was implemented. A grep across all logs/*.py finds no reference to Llama Guard, XSTest, or Sorry-Bench. The harm probe exists as the building block a Latent Guard would use, but the classifier-vs-judge comparison method the claim requires was never set up.",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_81674ebba51942a08800d4270c901383.py"]
+        },
+        "experiment": {
+          "justification": "9b: There is no experiment for C5 at all — no Llama Guard 3 8B baseline, no held-out jailbreak/over-refusal benchmarks, no accuracy comparison table (the paper's Table 3 is not reproduced in any form). Complete absence of the required evidence.",
+          "score": 1,
+          "evidence_files": ["logs/0-run/research_summary.json", "logs/0-run/ablation_summary.json"]
+        },
+        "result": {
+          "justification": "9c: With no experiment, there is no result to compare against the paper, yet report.md lists C5 as 'See overall verdict (claim 5/5)' under a 'Partially or fully supported' banner and draft_summary.json asserts the work 'supports the feasibility of a Latent Guard' — an unsupported surface conclusion attached to a claim that was never tested.",
+          "score": 1,
+          "evidence_files": ["report.md", "logs/0-run/draft_summary.json"]
+        }
+      }
+    }
+  }
+}

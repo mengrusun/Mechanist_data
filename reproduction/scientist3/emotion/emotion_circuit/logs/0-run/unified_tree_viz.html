@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Check if we're running under Live Server
+      if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+          let lastModified = '';
+
+          // Check for file changes every second
+          setInterval(async () => {
+              try {
+                  const response = await fetch(window.location.href, { method: 'HEAD' });
+                  // get a timestamp that shows when the file was last changed
+                  const currentModified = response.headers.get('last-modified');
+
+                  if (lastModified && lastModified !== currentModified) {
+                      window.location.reload();
+                  }
+
+                  lastModified = currentModified;
+              } catch (e) {
+                  console.error('Error checking for updates:', e);
+              }
+          }, 1000);
+      }
+  </script>
+    <script
+      id="p5scripttag"
+      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+      integrity="sha512-uaz5GpnQoE6t5echKlX8P52czvsIGgLPcvlzfvRubLZ1Hp8JemUDnbUiAahbVtPb+jUVrNETuXvAhDDF/N3M4w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+    <script>
+      const bgCol = "#FFFFFF";
+const accentCol = "#1a439e";
+
+hljs.initHighlightingOnLoad();
+
+// Function to update background color globally
+function updateBackgroundColor(color) {
+  // Update the JS variable
+  window.bgColCurrent = color;
+
+  // Update body background
+  document.body.style.backgroundColor = color;
+
+  // Update canvas container background
+  const canvasContainer = document.getElementById('canvas-container');
+  if (canvasContainer) {
+    canvasContainer.style.backgroundColor = color;
+  }
+}
+
+// Store tree data for each stage
+const stageData = {
+  Stage_1: null,
+  Stage_2: null,
+  Stage_3: null,
+  Stage_4: null
+};
+
+// Keep track of current selected stage
+let currentStage = null;
+let currentSketch = null;
+let availableStages = [];
+
+// Class definitions for nodes and edges
+class Node {
+  constructor(x, y, id, isRoot = false) {
+    this.x = x;
+    this.y = y;
+    this.id = id;
+    this.visible = isRoot; // Only root nodes are visible initially
+    this.appearProgress = 0;
+    this.popEffect = 0;
+    this.selected = false;
+    this.isRootNode = isRoot;
+  }
+
+  update() {
+    if (this.visible) {
+      // Handle the main appearance animation
+      if (this.appearProgress < 1) {
+        this.appearProgress += 0.06;
+
+        // When we reach full size, trigger the pop effect
+        if (this.appearProgress >= 1) {
+          this.appearProgress = 1; // Cap at 1
+          this.popEffect = 1; // Start the pop effect
+        }
+      }
+
+      // Handle the pop effect animation
+      if (this.popEffect > 0) {
+        this.popEffect -= 0.15; // Control how quickly it shrinks back
+        if (this.popEffect < 0) this.popEffect = 0; // Don't go negative
+      }
+    }
+  }
+
+  startAnimation() {
+    this.visible = true;
+  }
+
+  color() {
+    if (this.selected) {
+      return accentCol; // Use the global accent color variable for selected node
+    }
+    return '#4263eb'; // Default blue color
+  }
+
+  render(p5) {
+    if (this.visible) {
+      const popBonus = this.popEffect * 0.1;
+      const nodeScale = p5.map(this.appearProgress, 0, 1, 0, 1) + popBonus;
+      const alpha = p5.map(this.appearProgress, 0, 1, 0, 255);
+
+      p5.push();
+      p5.translate(this.x, this.y);
+
+      // Shadow effect
+      p5.noStroke();
+      p5.rectMode(p5.CENTER);
+
+      for (let i = 1; i <= 4; i++) {
+        p5.fill(0, 0, 0, alpha * 0.06);
+        p5.rect(i, i, 30 * nodeScale, 30 * nodeScale, 10);
+      }
+
+      // Main square - use node's color with alpha
+      let nodeColor = p5.color(this.color());
+      nodeColor.setAlpha(alpha);
+      p5.fill(nodeColor);
+      p5.rect(0, 0, 30 * nodeScale, 30 * nodeScale, 10);
+
+      // Draw checkmark icon if the node is selected
+      if (this.selected && this.appearProgress >= 1) {
+        p5.stroke(255);
+        p5.strokeWeight(2 * nodeScale);
+        p5.noFill();
+        // Draw checkmark
+        p5.beginShape();
+        p5.vertex(-8, 0);
+        p5.vertex(-3, 5);
+        p5.vertex(8, -6);
+        p5.endShape();
+      }
+
+      p5.pop();
+    }
+  }
+
+  isMouseOver(p5) {
+    return this.visible &&
+           p5.mouseX > this.x - 15 &&
+           p5.mouseX < this.x + 15 &&
+           p5.mouseY > this.y - 15 &&
+           p5.mouseY < this.y + 15;
+  }
+
+  // Connect this node to a child node
+  child(childNode) {
+    // Create an edge from this node to the child
+    let isLeft = childNode.x < this.x;
+    let isRight = childNode.x > this.x;
+    let edge = new Edge(this, childNode, isLeft, isRight);
+    return edge;
+  }
+}
+
+class Edge {
+  constructor(parent, child, isLeft, isRight) {
+    this.parent = parent;
+    this.child = child;
+    this.isLeft = isLeft;
+    this.isRight = isRight;
+    this.progress = 0;
+
+    // Calculate the midpoint where branching occurs
+    this.midY = parent.y + (child.y - parent.y) * 0.6;
+
+    // Use the actual child x-coordinate
+    // This ensures the edge will connect directly to the child node
+    this.branchX = child.x;
+  }
+
+  update() {
+    if (this.parent.visible && this.progress < 1) {
+      this.progress += 0.01; // Adjust animation speed
+    }
+    if (this.progress >= 1) {
+      this.child.visible = true;
+    }
+  }
+
+  color() {
+    return this.child.color();
+  }
+
+  render(p5) {
+    if (!this.parent.visible) return;
+
+    // Calculate path lengths
+    const verticalDist1 = this.midY - this.parent.y;
+    const horizontalDist = Math.abs(this.branchX - this.parent.x);
+    const verticalDist2 = this.child.y - this.midY;
+    const totalLength = verticalDist1 + horizontalDist + verticalDist2;
+
+    // Calculate how much of each segment to draw
+    const currentLength = totalLength * this.progress;
+
+    p5.stroke(180, 190, 205);
+    p5.strokeWeight(1.5);
+    p5.noFill();
+
+    // Always draw the first vertical segment from parent
+    if (currentLength > 0) {
+      const firstSegmentLength = Math.min(currentLength, verticalDist1);
+      const currentMidY = p5.lerp(this.parent.y, this.midY, firstSegmentLength / verticalDist1);
+      p5.line(this.parent.x, this.parent.y, this.parent.x, currentMidY);
+    }
+
+    if (currentLength > verticalDist1) {
+      // Draw second segment (horizontal)
+      const secondSegmentLength = Math.min(currentLength - verticalDist1, horizontalDist);
+      const currentBranchX = p5.lerp(this.parent.x, this.branchX, secondSegmentLength / horizontalDist);
+      p5.line(this.parent.x, this.midY, currentBranchX, this.midY);
+
+      if (currentLength > verticalDist1 + horizontalDist) {
+        // Draw third segment (vertical to child)
+        const thirdSegmentLength = currentLength - verticalDist1 - horizontalDist;
+        const currentChildY = p5.lerp(this.midY, this.child.y, thirdSegmentLength / verticalDist2);
+        p5.line(this.branchX, this.midY, this.branchX, currentChildY);
+      }
+    }
+  }
+}
+
+// Create a modified sketch for each stage
+function createTreeSketch(stageId) {
+  return function(p5) {
+    let nodes = [];
+    let edges = [];
+    let treeData = stageData[stageId];
+
+    p5.setup = function() {
+      const canvas = p5.createCanvas(p5.windowWidth * 0.4, p5.windowHeight);
+      canvas.parent('canvas-container');
+      p5.smooth();
+      p5.frameRate(60);
+
+      if (treeData) {
+        createTreeFromData(treeData);
+      }
+    };
+
+    p5.windowResized = function() {
+      p5.resizeCanvas(p5.windowWidth * 0.4, p5.windowHeight);
+    };
+
+    function createTreeFromData(data) {
+      // Clear existing nodes and edges
+      nodes = [];
+      edges = [];
+
+      // Add defensive checks to prevent errors
+      if (!data || !data.layout || !Array.isArray(data.layout) || !data.edges || !Array.isArray(data.edges)) {
+        console.error("Invalid tree data format:", data);
+        return; // Exit if data structure is invalid
+      }
+
+      // Find all parent nodes in edges
+      const parentNodes = new Set();
+      for (const [parentId, childId] of data.edges) {
+        parentNodes.add(parentId);
+      }
+
+      // Create nodes
+      for (let i = 0; i < data.layout.length; i++) {
+        const [nx, ny] = data.layout[i];
+        // A node is a root if it's a parent and not a child in any edge
+        const isRoot = parentNodes.has(i) && data.edges.every(edge => edge[1] !== i);
+
+        const node = new Node(
+          nx * p5.width * 0.8 + p5.width * 0.1,
+          ny * p5.height * 0.8 + p5.height * 0.1,
+          i,
+          isRoot
+        );
+        nodes.push(node);
+      }
+
+      // If no root was found, make the first parent node visible
+      if (!nodes.some(node => node.visible) && parentNodes.size > 0) {
+        // Get the first parent node
+        const firstParentId = [...parentNodes][0];
+        if (nodes[firstParentId]) {
+          nodes[firstParentId].visible = true;
+        }
+      }
+
+      // Create edges
+      for (const [parentId, childId] of data.edges) {
+        const parent = nodes[parentId];
+        const child = nodes[childId];
+        if (parent && child) { // Verify both nodes exist
+          const isLeft = child.x < parent.x;
+          const isRight = child.x > parent.x;
+          edges.push(new Edge(parent, child, isLeft, isRight));
+        }
+      }
+
+      // Select the first node by default
+      if (nodes.length > 0) {
+        nodes[0].selected = true;
+        updateNodeInfo(0);
+      }
+    }
+
+    p5.draw = function() {
+      // Use the global background color if available, otherwise use the default bgCol
+      const currentBgColor = window.bgColCurrent || bgCol;
+      p5.background(currentBgColor);
+
+      // Update and render edges
+      for (const edge of edges) {
+        edge.update();
+        edge.render(p5);
+      }
+
+      // Update and render nodes
+      for (const node of nodes) {
+        node.update();
+        node.render(p5);
+      }
+
+      // Handle mouse hover
+      p5.cursor(p5.ARROW);
+      for (const node of nodes) {
+        if (node.isMouseOver(p5)) {
+          p5.cursor(p5.HAND);
+        }
+      }
+    };
+
+    p5.mousePressed = function() {
+      // Check if any node was clicked
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].visible && nodes[i].isMouseOver(p5)) {
+          // Deselect all nodes
+          nodes.forEach(n => n.selected = false);
+          // Select the clicked node
+          nodes[i].selected = true;
+          // Update the right panel with node info
+          updateNodeInfo(i);
+          break;
+        }
+      }
+    };
+
+    function updateNodeInfo(nodeIndex) {
+      if (treeData) {
+        setNodeInfo(
+          treeData.code[nodeIndex],
+          treeData.plan[nodeIndex],
+          treeData.plot_code?.[nodeIndex],
+          treeData.plot_plan?.[nodeIndex],
+          treeData.metrics?.[nodeIndex],
+          treeData.exc_type?.[nodeIndex] || '',
+          treeData.exc_info?.[nodeIndex]?.args?.[0] || '',
+          treeData.exc_stack?.[nodeIndex] || [],
+          treeData.plots?.[nodeIndex] || [],
+          treeData.plot_analyses?.[nodeIndex] || [],
+          treeData.vlm_feedback_summary?.[nodeIndex] || '',
+          treeData.datasets_successfully_tested?.[nodeIndex] || [],
+          treeData.exec_time_feedback?.[nodeIndex] || '',
+          treeData.exec_time?.[nodeIndex] || ''
+        );
+      }
+    }
+  };
+}
+
+// Start a new p5 sketch for the given stage
+function startSketch(stageId) {
+  if (currentSketch) {
+    currentSketch.remove();
+  }
+
+  if (stageData[stageId]) {
+    currentSketch = new p5(createTreeSketch(stageId));
+
+    // Update stage info
+    const stageNumber = stageId.split('_')[1];
+    let stageDesc = '';
+    switch(stageId) {
+      case 'Stage_1': stageDesc = 'Preliminary Investigation'; break;
+      case 'Stage_2': stageDesc = 'Baseline Tuning'; break;
+      case 'Stage_3': stageDesc = 'Research Agenda Execution'; break;
+      case 'Stage_4': stageDesc = 'Ablation Studies'; break;
+    }
+
+    document.getElementById('stage-info').innerHTML =
+      `<strong>Current Stage: ${stageNumber} - ${stageDesc}</strong>`;
+  }
+}
+
+// Handle tab selection
+function selectStage(stageId) {
+  if (!stageData[stageId] || !availableStages.includes(stageId)) {
+    return; // Don't allow selection of unavailable stages
+  }
+
+  // Update active tab styles
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelector(`.tab[data-stage="${stageId}"]`).classList.add('active');
+
+  // Start the new sketch
+  currentStage = stageId;
+  startSketch(stageId);
+}
+
+// Function to load the tree data for all stages
+async function loadAllStageData(baseTreeData) {
+  console.log("Loading stage data with base data:", baseTreeData);
+
+  // The base tree data is for the current stage
+  const currentStageId = baseTreeData.current_stage || 'Stage_1';
+
+  // Ensure base tree data is valid and has required properties
+  if (baseTreeData && baseTreeData.layout && baseTreeData.edges) {
+    stageData[currentStageId] = baseTreeData;
+    availableStages.push(currentStageId);
+    console.log(`Added current stage ${currentStageId} to available stages`);
+  } else {
+    console.warn(`Current stage ${currentStageId} data is invalid:`, baseTreeData);
+  }
+
+  // Use relative path to load other stage trees
+  const logDirPath = baseTreeData.log_dir_path || '.';
+  console.log("Log directory path:", logDirPath);
+
+  // Load data for each stage if available
+  const stageNames = ['Stage_1', 'Stage_2', 'Stage_3', 'Stage_4'];
+  const stageNames2actualNames = {
+    'Stage_1': 'stage_1_initial_implementation_1_preliminary',
+    'Stage_2': 'stage_2_baseline_tuning_1_first_attempt',
+    'Stage_3': 'stage_3_creative_research_1_first_attempt',
+    'Stage_4': 'stage_4_ablation_studies_1_first_attempt'
+    }
+
+  for (const stage of stageNames) {
+
+    if (baseTreeData.completed_stages && baseTreeData.completed_stages.includes(stage)) {
+      try {
+        console.log(`Attempting to load data for ${stage} from ${logDirPath}/${stageNames2actualNames[stage]}/tree_data.json`);
+        const response = await fetch(`${logDirPath}/${stageNames2actualNames[stage]}/tree_data.json`);
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Validate the loaded data
+          if (data && data.layout && data.edges) {
+            stageData[stage] = data;
+            availableStages.push(stage);
+            console.log(`Successfully loaded and validated data for ${stage}`);
+          } else {
+            console.warn(`Loaded data for ${stage} is invalid:`, data);
+          }
+        } else {
+          console.warn(`Failed to load data for ${stage} - HTTP status ${response.status}`);
+        }
+      } catch (error) {
+        console.error(`Error loading data for ${stage}:`, error);
+      }
+    } else {
+      console.log(`Skipping stage ${stage} - not in completed stages list:`, baseTreeData.completed_stages);
+    }
+  }
+
+  // Update tab visibility based on available stages
+  updateTabVisibility();
+
+  // Start with the first available stage
+  if (availableStages.length > 0) {
+    selectStage(availableStages[0]);
+  } else {
+    console.warn("No stages available to display");
+    // Display a message in the canvas area
+    document.getElementById('canvas-container').innerHTML =
+      '<div style="padding: 20px; color: #333; text-align: center;"><h3>No valid tree data available to display</h3></div>';
+  }
+}
+
+// Update tab visibility based on available stages
+function updateTabVisibility() {
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    const stageId = tab.getAttribute('data-stage');
+    if (availableStages.includes(stageId)) {
+      tab.classList.remove('disabled');
+    } else {
+      tab.classList.add('disabled');
+    }
+  });
+}
+
+// Utility function to set the node info in the right panel
+const setNodeInfo = (code, plan, plot_code, plot_plan, metrics = null, exc_type = '', exc_info = '',
+    exc_stack = [], plots = [], plot_analyses = [], vlm_feedback_summary = '',
+    datasets_successfully_tested = [], exec_time_feedback = '', exec_time = '') => {
+  const codeElm = document.getElementById("code");
+  if (codeElm) {
+    if (code) {
+      codeElm.innerHTML = hljs.highlight(code, { language: "python" }).value;
+    } else {
+      codeElm.innerHTML = '<p>No code available</p>';
+    }
+  }
+
+  const planElm = document.getElementById("plan");
+  if (planElm) {
+    if (plan) {
+      planElm.innerHTML = hljs.highlight(plan, { language: "plaintext" }).value;
+    } else {
+      planElm.innerHTML = '<p>No plan available</p>';
+    }
+  }
+
+  const plot_codeElm = document.getElementById("plot_code");
+  if (plot_codeElm) {
+    if (plot_code) {
+      plot_codeElm.innerHTML = hljs.highlight(plot_code, { language: "python" }).value;
+    } else {
+      plot_codeElm.innerHTML = '<p>No plot code available</p>';
+    }
+  }
+
+  const plot_planElm = document.getElementById("plot_plan");
+  if (plot_planElm) {
+    if (plot_plan) {
+      plot_planElm.innerHTML = hljs.highlight(plot_plan, { language: "plaintext" }).value;
+    } else {
+      plot_planElm.innerHTML = '<p>No plot plan available</p>';
+    }
+  }
+
+  const metricsElm = document.getElementById("metrics");
+  if (metricsElm) {
+      let metricsContent = `<h3>Metrics:</h3>`;
+      if (metrics && metrics.metric_names) {
+          for (const metric of metrics.metric_names) {
+              metricsContent += `<div class="metric-group">`;
+              metricsContent += `<h4>${metric.metric_name}</h4>`;
+              metricsContent += `<p><strong>Description:</strong> ${metric.description || 'N/A'}</p>`;
+              metricsContent += `<p><strong>Optimization:</strong> ${metric.lower_is_better ? 'Minimize' : 'Maximize'}</p>`;
+
+              // Create table for dataset values
+              metricsContent += `<table class="metric-table">
+                  <tr>
+                      <th>Dataset</th>
+                      <th>Final Value</th>
+                      <th>Best Value</th>
+                  </tr>`;
+
+              for (const dataPoint of metric.data) {
+                  metricsContent += `<tr>
+                      <td>${dataPoint.dataset_name}</td>
+                      <td>${dataPoint.final_value?.toFixed(4) || 'N/A'}</td>
+                      <td>${dataPoint.best_value?.toFixed(4) || 'N/A'}</td>
+                  </tr>`;
+              }
+
+              metricsContent += `</table></div>`;
+          }
+      } else if (metrics === null) {
+          metricsContent += `<p>No metrics available</p>`;
+      }
+      metricsElm.innerHTML = metricsContent;
+  }
+
+  // Add plots display
+  const plotsElm = document.getElementById("plots");
+  if (plotsElm) {
+      if (plots && plots.length > 0) {
+          let plotsContent = '';
+          plots.forEach(plotPath => {
+              plotsContent += `
+                  <div class="plot-item">
+                      <img src="${plotPath}" alt="Experiment Plot" onerror="console.error('Failed to load plot:', this.src)"/>
+                  </div>`;
+          });
+          plotsElm.innerHTML = plotsContent;
+      } else {
+          plotsElm.innerHTML = '';
+      }
+  }
+
+  // Add error info display
+  const errorElm = document.getElementById("exc_info");
+  if (errorElm) {
+    if (exc_type) {
+      let errorContent = `<h3 style="color: #ff5555">Exception Information:</h3>
+                          <p><strong>Type:</strong> ${exc_type}</p>`;
+
+      if (exc_info) {
+        errorContent += `<p><strong>Details:</strong> <pre>${JSON.stringify(exc_info, null, 2)}</pre></p>`;
+      }
+
+      if (exc_stack) {
+        errorContent += `<p><strong>Stack Trace:</strong> <pre>${exc_stack.join('\n')}</pre></p>`;
+      }
+
+      errorElm.innerHTML = errorContent;
+    } else {
+      errorElm.innerHTML = "No exception info available";
+    }
+  }
+
+  const exec_timeElm = document.getElementById("exec_time");
+  if (exec_timeElm) {
+    let exec_timeContent = '<div id="exec_time"><h3>Execution Time (in seconds):</h3><p>' + exec_time + '</p></div>';
+    exec_timeElm.innerHTML = exec_timeContent;
+  }
+
+  const exec_time_feedbackElm = document.getElementById("exec_time_feedback");
+  if (exec_time_feedbackElm) {
+    let exec_time_feedbackContent = '<div id="exec_time_feedback_content">'
+    exec_time_feedbackContent += '<h3>Execution Time Feedback:</h3>'
+    exec_time_feedbackContent += '<p>' + exec_time_feedback + '</p>'
+    exec_time_feedbackContent += '</div>';
+    exec_time_feedbackElm.innerHTML = exec_time_feedbackContent;
+  }
+
+  const vlm_feedbackElm = document.getElementById("vlm_feedback");
+  if (vlm_feedbackElm) {
+      let vlm_feedbackContent = '';
+
+      if (plot_analyses && plot_analyses.length > 0) {
+          vlm_feedbackContent += `<h3>Plot Analysis:</h3>`;
+          plot_analyses.forEach(analysis => {
+              if (analysis && analysis.plot_path) {  // Add null check
+                  vlm_feedbackContent += `
+                      <div class="plot-analysis">
+                          <h4>Analysis for ${analysis.plot_path.split('/').pop()}</h4>
+                          <p>${analysis.analysis || 'No analysis available'}</p>
+                          <ul class="key-findings">
+                              ${(analysis.key_findings || []).map(finding => `<li>${finding}</li>`).join('')}
+                          </ul>
+                      </div>`;
+              } else {
+                  console.warn('Received invalid plot analysis:', analysis);
+                  vlm_feedbackContent += `
+                      <div class="plot-analysis">
+                          <p>Invalid plot analysis data received</p>
+                      </div>`;
+              }
+          });
+      }
+
+      // Add actionable insights if available
+      if (vlm_feedback_summary && typeof vlm_feedback_summary === 'string') {
+          vlm_feedbackContent += `
+              <div class="vlm_feedback">
+                  <h3>VLM Feedback Summary:</h3>
+                  <p>${vlm_feedback_summary}</p>
+              </div>`;
+      }
+
+      console.log("Datasets successfully tested:", datasets_successfully_tested);
+      if (datasets_successfully_tested && datasets_successfully_tested.length > 0) {
+          vlm_feedbackContent += `
+              <div id="datasets_successfully_tested">
+                  <h3>Datasets Successfully Tested:</h3>
+                  <p>${datasets_successfully_tested.join(', ')}</p>
+              </div>`;
+      }
+
+      if (!vlm_feedbackContent) {
+          vlm_feedbackContent = '<p>No insights available for this experiment.</p>';
+      }
+
+      vlm_feedbackElm.innerHTML = vlm_feedbackContent;
+  }
+
+  const datasets_successfully_testedElm = document.getElementById("datasets_successfully_tested");
+  if (datasets_successfully_testedElm) {
+      let datasets_successfully_testedContent = '';
+      if (datasets_successfully_tested && datasets_successfully_tested.length > 0) {
+          datasets_successfully_testedContent = `<h3>Datasets Successfully Tested:</h3><ul>`;
+          datasets_successfully_tested.forEach(dataset => {
+              datasets_successfully_testedContent += `<li>${dataset}</li>`;
+          });
+          datasets_successfully_testedContent += `</ul>`;
+      } else {
+          datasets_successfully_testedContent = '<p>No datasets tested yet</p>';
+      }
+      datasets_successfully_testedElm.innerHTML = datasets_successfully_testedContent;
+  }
+};
+
+// Initialize with the provided tree data
+const treeStructData = {"edges": [[0, 1], [1, 2], [1, 3]], "layout": [[0.5, 0.0], [0.5, 0.5], [0.0, 1.0], [1.0, 1.0]], "plan": ["Below is a preliminary implementation of the emotion circuit approach. We first\nconstruct/load the SEV dataset (generating it synthetically via the GPT API if\nnot present locally, since it's a custom dataset for the paper) with 8 domains \u00d7\n20 scenarios \u00d7 3 outcomes \u00d7 6 emotions. We load Llama-3.2-3B-Instruct locally.\nTo extract emotion direction vectors, we run the model on emotion-labeled\nprompts and compute the mean hidden state at a mid layer per emotion; the\n\"steering vector\" for each emotion is the difference from the neutral mean (this\nis the baseline direction-based method that we'll later refine into circuits).\nWe then apply the steering vector via a forward hook at the chosen layer during\ngeneration on neutral prompts. We generate responses for a held-out subset and\nclassify them via the GPT-5.4 judge API to compute emotion_expression_accuracy.\nAll metrics are saved to experiment_data.npy and a small bar chart is produced.\nThis gives a working baseline that measures the central metric end-to-end.", "Hyperparam tuning name: STRENGTH (steering vector strength). I'll implement\nhyperparameter tuning over steering strength values {4.0, 6.0, 8.0, 10.0, 12.0}.\nThe emotion directions are extracted once (they don't depend on strength), then\nfor each strength value I run the full evaluation loop. Results are stored per-\nstrength in the experiment_data dictionary under 'strength' tuning type, and\nI'll produce a comparison plot showing overall accuracy vs strength.", "Seed node", "Aggregate results from multiple seeds"], "code": ["import os, json, re, time, random, glob\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\nimport numpy as np\nimport torch\nimport matplotlib.pyplot as plt\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\nMODEL_PATH = os.path.join(MODEL_DIR, \"Llama-3.2-3B-Instruct\")\nif not os.path.isdir(MODEL_PATH):\n    # try alternatives\n    cands = glob.glob(os.path.join(MODEL_DIR, \"*Llama-3.2-3B*Instruct*\")) + glob.glob(\n        os.path.join(MODEL_DIR, \"*llama-3.2-3b*instruct*\")\n    )\n    if cands:\n        MODEL_PATH = cands[0]\n    else:\n        raise FileNotFoundError(f\"Cannot find Llama-3.2-3B-Instruct under {MODEL_DIR}\")\n\nEMOTIONS = [\"joy\", \"sadness\", \"anger\", \"fear\", \"surprise\", \"disgust\"]\n\n# ---------- SEV dataset construction (small synthetic scaffold for the paper) ----------\nSEV_PATH = os.path.join(DATA_DIR, \"SEV\", \"sev_events.json\")\nos.makedirs(os.path.dirname(SEV_PATH), exist_ok=True)\n\n\ndef build_sev():\n    domains = [\n        \"work\",\n        \"family\",\n        \"friendship\",\n        \"romance\",\n        \"study\",\n        \"health\",\n        \"finance\",\n        \"travel\",\n    ]\n    # 20 scenario templates per domain (short)\n    scenario_templates = {\n        \"work\": [\n            \"a job interview\",\n            \"a promotion decision\",\n            \"a client meeting\",\n            \"a deadline\",\n            \"a team project\",\n            \"a performance review\",\n            \"a business trip\",\n            \"a salary negotiation\",\n            \"a new colleague\",\n            \"a big presentation\",\n            \"a layoff rumor\",\n            \"an office party\",\n            \"a training program\",\n            \"a work conflict\",\n            \"a remote work day\",\n            \"a mentoring session\",\n            \"a product launch\",\n            \"an audit\",\n            \"an award ceremony\",\n            \"a company merger\",\n        ],\n        \"family\": [\n            \"a family dinner\",\n            \"a parent's birthday\",\n            \"a sibling's visit\",\n            \"a family reunion\",\n            \"a household move\",\n            \"a family game night\",\n            \"a grandparent's illness\",\n            \"a child's school event\",\n            \"a family vacation\",\n            \"a family argument\",\n            \"a new baby's arrival\",\n            \"a family photo session\",\n            \"a family tradition\",\n            \"a family recipe cooking\",\n            \"a family movie night\",\n            \"a pet's arrival\",\n            \"a family holiday\",\n            \"a home renovation\",\n            \"a family camping trip\",\n            \"a family celebration\",\n        ],\n        \"friendship\": [\n            \"a coffee meetup\",\n            \"a birthday party\",\n            \"a road trip\",\n            \"a game night\",\n            \"a movie outing\",\n            \"a workout session\",\n            \"a picnic\",\n            \"a bar visit\",\n            \"a shared hobby session\",\n            \"a video call\",\n            \"a farewell party\",\n            \"a study group\",\n            \"a concert\",\n            \"a hiking trip\",\n            \"a beach day\",\n            \"a shopping trip\",\n            \"a cooking session\",\n            \"a museum visit\",\n            \"a karaoke night\",\n            \"a book club\",\n        ],\n        \"romance\": [\n            \"a first date\",\n            \"an anniversary\",\n            \"a marriage proposal\",\n            \"a candlelight dinner\",\n            \"a weekend getaway\",\n            \"a valentine's day\",\n            \"a surprise gift\",\n            \"a walk in the park\",\n            \"a movie night\",\n            \"a couple's cooking\",\n            \"a dance class\",\n            \"a couples therapy\",\n            \"a house viewing\",\n            \"a wedding planning\",\n            \"a couples yoga\",\n            \"a stargazing night\",\n            \"a spa day\",\n            \"a couple's photo shoot\",\n            \"a picnic date\",\n            \"a museum date\",\n        ],\n        \"study\": [\n            \"an exam\",\n            \"a group assignment\",\n            \"a research project\",\n            \"a thesis defense\",\n            \"a class presentation\",\n            \"a lab experiment\",\n            \"a lecture\",\n            \"a study session\",\n            \"a tutoring meeting\",\n            \"a scholarship application\",\n            \"an internship interview\",\n            \"a workshop\",\n            \"a debate competition\",\n            \"a science fair\",\n            \"a school trip\",\n            \"a language class\",\n            \"a coding challenge\",\n            \"a library visit\",\n            \"a graduation\",\n            \"an oral exam\",\n        ],\n        \"health\": [\n            \"a doctor's appointment\",\n            \"a marathon\",\n            \"a yoga class\",\n            \"a diet plan\",\n            \"a hospital visit\",\n            \"a dental checkup\",\n            \"a vaccination\",\n            \"a therapy session\",\n            \"a surgery\",\n            \"a health screening\",\n            \"a fitness assessment\",\n            \"a meditation retreat\",\n            \"a physical therapy\",\n            \"a nutrition consult\",\n            \"a sleep study\",\n            \"a mental health day\",\n            \"an eye exam\",\n            \"a rehabilitation session\",\n            \"a health lecture\",\n            \"a wellness workshop\",\n        ],\n        \"finance\": [\n            \"a stock investment\",\n            \"a house purchase\",\n            \"a loan application\",\n            \"a tax filing\",\n            \"a budget planning\",\n            \"a bonus announcement\",\n            \"a business deal\",\n            \"a gambling night\",\n            \"a lottery draw\",\n            \"a bank meeting\",\n            \"a car purchase\",\n            \"a crypto trade\",\n            \"a job salary talk\",\n            \"a bill payment\",\n            \"an insurance claim\",\n            \"a retirement plan\",\n            \"a bankruptcy filing\",\n            \"a charity donation\",\n            \"a financial audit\",\n            \"a real estate deal\",\n        ],\n        \"travel\": [\n            \"a flight departure\",\n            \"a hotel checkin\",\n            \"a train journey\",\n            \"a city tour\",\n            \"a beach vacation\",\n            \"a mountain hike\",\n            \"a cruise trip\",\n            \"a road trip\",\n            \"a museum visit\",\n            \"a food tour\",\n            \"a camping trip\",\n            \"a safari\",\n            \"a ski trip\",\n            \"a backpacking journey\",\n            \"a business trip\",\n            \"a family vacation\",\n            \"a weekend getaway\",\n            \"a solo travel\",\n            \"a group tour\",\n            \"a cultural festival\",\n        ],\n    }\n    outcomes = [\"positive\", \"negative\", \"neutral\"]\n    events = []\n    for d in domains:\n        for s in scenario_templates[d][:20]:\n            for o in outcomes:\n                if o == \"positive\":\n                    ctx = f\"You are attending {s} in the {d} domain. Everything goes remarkably well and exceeds your expectations.\"\n                elif o == \"negative\":\n                    ctx = f\"You are attending {s} in the {d} domain. Things go very poorly and result in significant disappointment.\"\n                else:\n                    ctx = f\"You are attending {s} in the {d} domain. The situation unfolds in an unremarkable, ordinary way.\"\n                events.append(\n                    {\"domain\": d, \"scenario\": s, \"outcome\": o, \"context\": ctx}\n                )\n    with open(SEV_PATH, \"w\") as f:\n        json.dump(events, f)\n    return events\n\n\nif os.path.exists(SEV_PATH):\n    with open(SEV_PATH) as f:\n        events = json.load(f)\nelse:\n    events = build_sev()\nprint(f\"SEV events: {len(events)}\")\n\n# ---------- Load model ----------\nprint(\"Loading model...\")\ntokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)\nmodel = AutoModelForCausalLM.from_pretrained(\n    MODEL_PATH, torch_dtype=torch.float16, local_files_only=True\n).to(device)\nmodel.eval()\nif tokenizer.pad_token is None:\n    tokenizer.pad_token = tokenizer.eos_token\n\nn_layers = model.config.num_hidden_layers\nhidden_size = model.config.hidden_size\nprint(f\"Layers: {n_layers}, hidden: {hidden_size}\")\n\n# ---------- Extract emotion direction vectors ----------\n# For each emotion, produce prompts where the assistant expresses that emotion strongly.\n# Get mean hidden state at layer L over last token positions.\nSTEER_LAYER = n_layers // 2\nprint(f\"Steering layer: {STEER_LAYER}\")\n\n\ndef build_prompt(context, emotion=None):\n    if emotion:\n        sys = f\"You are a person who feels intense {emotion}. Respond in first person expressing that emotion clearly.\"\n    else:\n        sys = \"You are a person describing your experience in first person.\"\n    messages = [\n        {\"role\": \"system\", \"content\": sys},\n        {\"role\": \"user\", \"content\": context},\n    ]\n    return tokenizer.apply_chat_template(\n        messages, tokenize=False, add_generation_prompt=True\n    )\n\n\ndef build_neutral_prompt(context):\n    messages = [\n        {\n            \"role\": \"system\",\n            \"content\": \"You are a person describing your experience in first person.\",\n        },\n        {\"role\": \"user\", \"content\": context},\n    ]\n    return tokenizer.apply_chat_template(\n        messages, tokenize=False, add_generation_prompt=True\n    )\n\n\n# Split events: use first 80% for extraction, last 20% for eval\nrandom.seed(0)\nidx = list(range(len(events)))\nrandom.shuffle(idx)\nn_extract = int(0.8 * len(idx))\nextract_idx = idx[:n_extract]\neval_idx = idx[n_extract:]\n# limit eval for speed\neval_idx = eval_idx[:60]\nextract_sample = random.sample(extract_idx, min(48, len(extract_idx)))\nprint(f\"Extract samples: {len(extract_sample)}, eval samples: {len(eval_idx)}\")\n\n\n@torch.no_grad()\ndef get_layer_hidden(prompt):\n    inputs = tokenizer(prompt, return_tensors=\"pt\", truncation=True, max_length=512).to(\n        device\n    )\n    outputs = model(**inputs, output_hidden_states=True)\n    # hidden_states: tuple of (n_layers+1) tensors [1, seq, hidden]\n    h = outputs.hidden_states[STEER_LAYER + 1][0, -1, :].float().cpu().numpy()\n    return h\n\n\nprint(\"Extracting emotion directions...\")\nemotion_means = {}\nfor emo in EMOTIONS + [\"neutral\"]:\n    vecs = []\n    for si in extract_sample:\n        ctx = events[si][\"context\"]\n        prompt = build_prompt(ctx, None if emo == \"neutral\" else emo)\n        try:\n            h = get_layer_hidden(prompt)\n            vecs.append(h)\n        except Exception as e:\n            print(f\"err {emo}: {e}\")\n    emotion_means[emo] = np.mean(vecs, axis=0)\n    print(f\"{emo}: computed from {len(vecs)} samples\")\n\n# Steering vectors = emotion mean - neutral mean, normalized\nsteering_vecs = {}\nfor emo in EMOTIONS:\n    v = emotion_means[emo] - emotion_means[\"neutral\"]\n    steering_vecs[emo] = v / (np.linalg.norm(v) + 1e-8)\n\n# ---------- Steering via forward hook ----------\nSTRENGTH = 8.0  # tunable\n\n\nclass Steerer:\n    def __init__(self):\n        self.vec = None\n        self.strength = 0.0\n        self.handle = None\n\n    def hook(self, module, input, output):\n        if self.vec is None:\n            return output\n        if isinstance(output, tuple):\n            h = output[0]\n            h = h + self.strength * self.vec.to(h.dtype).to(h.device)\n            return (h,) + output[1:]\n        else:\n            return output + self.strength * self.vec.to(output.dtype).to(output.device)\n\n    def attach(self, layer_idx):\n        # llama layers accessible at model.model.layers[i]\n        layer = model.model.layers[layer_idx]\n        self.handle = layer.register_forward_hook(self.hook)\n\n    def detach(self):\n        if self.handle is not None:\n            self.handle.remove()\n            self.handle = None\n\n\nsteerer = Steerer()\nsteerer.attach(STEER_LAYER)\n\n\n@torch.no_grad()\ndef generate_steered(context, emo_vec, strength):\n    prompt = build_neutral_prompt(context)\n    inputs = tokenizer(prompt, return_tensors=\"pt\", truncation=True, max_length=512).to(\n        device\n    )\n    steerer.vec = torch.tensor(emo_vec) if emo_vec is not None else None\n    steerer.strength = strength\n    out = model.generate(\n        **inputs,\n        max_new_tokens=80,\n        do_sample=False,\n        pad_token_id=tokenizer.pad_token_id,\n    )\n    text = tokenizer.decode(\n        out[0, inputs[\"input_ids\"].shape[1] :], skip_special_tokens=True\n    )\n    return text.strip()\n\n\n# ---------- LLM Judge ----------\nimport urllib.request, urllib.error\n\nAPI_KEY = \"<Your_api>\"\nBASE_URL = \"https://www.dmxapi.cn/v1\"\nJUDGE_MODEL = \"gpt-5.4\"\n\n# bypass proxy\nfor k in [\n    \"http_proxy\",\n    \"https_proxy\",\n    \"HTTP_PROXY\",\n    \"HTTPS_PROXY\",\n    \"all_proxy\",\n    \"ALL_PROXY\",\n]:\n    os.environ.pop(k, None)\nos.environ[\"NO_PROXY\"] = \"*\"\n\n\ndef judge_emotion(text):\n    prompt = (\n        f\"Classify the emotion expressed in the following first-person response into exactly one of: \"\n        f\"{', '.join(EMOTIONS)}, neutral. Reply with ONLY the single word label.\\n\\nResponse: {text}\\n\\nLabel:\"\n    )\n    body = json.dumps(\n        {\n            \"model\": JUDGE_MODEL,\n            \"messages\": [{\"role\": \"user\", \"content\": prompt}],\n            \"temperature\": 0.0,\n            \"max_tokens\": 10,\n        }\n    ).encode()\n    req = urllib.request.Request(\n        f\"{BASE_URL}/chat/completions\",\n        data=body,\n        headers={\n            \"Authorization\": f\"Bearer {API_KEY}\",\n            \"Content-Type\": \"application/json\",\n        },\n    )\n    for attempt in range(3):\n        try:\n            with urllib.request.urlopen(req, timeout=60) as resp:\n                data = json.loads(resp.read().decode())\n                out = data[\"choices\"][0][\"message\"][\"content\"].strip().lower()\n                out = re.sub(r\"[^a-z]\", \"\", out)\n                for e in EMOTIONS + [\"neutral\"]:\n                    if e in out:\n                        return e\n                return \"neutral\"\n        except Exception as e:\n            print(f\"judge err {attempt}: {e}\")\n            time.sleep(2)\n    return \"neutral\"\n\n\n# ---------- Evaluation ----------\nexperiment_data = {\n    \"SEV\": {\n        \"metrics\": {\"train\": [], \"val\": []},\n        \"losses\": {\"train\": [], \"val\": []},\n        \"predictions\": [],\n        \"ground_truth\": [],\n        \"generations\": [],\n        \"per_emotion_accuracy\": {},\n        \"config\": {\n            \"steer_layer\": STEER_LAYER,\n            \"strength\": STRENGTH,\n            \"model\": MODEL_PATH,\n        },\n    }\n}\n\nprint(\"Running steered generation + judging...\")\ncorrect = 0\ntotal = 0\nper_emo_correct = {e: 0 for e in EMOTIONS}\nper_emo_total = {e: 0 for e in EMOTIONS}\n\n# limit further: 30 eval events \u00d7 6 emotions = 180 generations\neval_events_final = eval_idx[:30]\n\nfor ei in eval_events_final:\n    ctx = events[ei][\"context\"]\n    for emo in EMOTIONS:\n        vec = steering_vecs[emo]\n        gen = generate_steered(ctx, vec, STRENGTH)\n        pred = judge_emotion(gen)\n        correct_flag = int(pred == emo)\n        correct += correct_flag\n        total += 1\n        per_emo_total[emo] += 1\n        per_emo_correct[emo] += correct_flag\n        experiment_data[\"SEV\"][\"predictions\"].append(pred)\n        experiment_data[\"SEV\"][\"ground_truth\"].append(emo)\n        experiment_data[\"SEV\"][\"generations\"].append(\n            {\"context\": ctx, \"target\": emo, \"pred\": pred, \"text\": gen}\n        )\n        if total % 10 == 0:\n            print(\n                f\"[{total}] target={emo} pred={pred} acc={correct/total:.3f} | {gen[:80]}\"\n            )\n\nsteerer.detach()\n\nacc = correct / max(1, total)\nprint(f\"\\nemotion_expression_accuracy = {acc:.4f}\")\nper_emo_acc = {e: per_emo_correct[e] / max(1, per_emo_total[e]) for e in EMOTIONS}\nprint(\"Per-emotion accuracy:\", per_emo_acc)\n\nexperiment_data[\"SEV\"][\"metrics\"][\"val\"].append(\n    {\"epoch\": 0, \"emotion_expression_accuracy\": acc}\n)\nexperiment_data[\"SEV\"][\"per_emotion_accuracy\"] = per_emo_acc\nprint(f\"Epoch 0: validation_loss = {(1-acc):.4f}\")\n\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\n\n# ---------- Visualization ----------\nfig, ax = plt.subplots(figsize=(8, 5))\nemos = list(per_emo_acc.keys())\nvals = [per_emo_acc[e] for e in emos]\nax.bar(emos, vals, color=\"steelblue\")\nax.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"random (1/7)\")\nax.set_ylabel(\"Accuracy\")\nax.set_title(f\"SEV per-emotion steering accuracy (overall={acc:.3f})\")\nax.set_ylim(0, 1)\nax.legend()\nplt.tight_layout()\nplt.savefig(os.path.join(working_dir, \"sev_per_emotion_accuracy.png\"))\nplt.close()\n\nprint(\"Done.\")\n", "import os, json, re, time, random, glob\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\nimport numpy as np\nimport torch\nimport matplotlib.pyplot as plt\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\nMODEL_PATH = os.path.join(MODEL_DIR, \"Llama-3.2-3B-Instruct\")\nif not os.path.isdir(MODEL_PATH):\n    cands = glob.glob(os.path.join(MODEL_DIR, \"*Llama-3.2-3B*Instruct*\")) + glob.glob(\n        os.path.join(MODEL_DIR, \"*llama-3.2-3b*instruct*\")\n    )\n    if cands:\n        MODEL_PATH = cands[0]\n    else:\n        raise FileNotFoundError(f\"Cannot find Llama-3.2-3B-Instruct under {MODEL_DIR}\")\n\nEMOTIONS = [\"joy\", \"sadness\", \"anger\", \"fear\", \"surprise\", \"disgust\"]\n\nSEV_PATH = os.path.join(DATA_DIR, \"SEV\", \"sev_events.json\")\nos.makedirs(os.path.dirname(SEV_PATH), exist_ok=True)\n\n\ndef build_sev():\n    domains = [\n        \"work\",\n        \"family\",\n        \"friendship\",\n        \"romance\",\n        \"study\",\n        \"health\",\n        \"finance\",\n        \"travel\",\n    ]\n    scenario_templates = {\n        \"work\": [\n            \"a job interview\",\n            \"a promotion decision\",\n            \"a client meeting\",\n            \"a deadline\",\n            \"a team project\",\n            \"a performance review\",\n            \"a business trip\",\n            \"a salary negotiation\",\n            \"a new colleague\",\n            \"a big presentation\",\n            \"a layoff rumor\",\n            \"an office party\",\n            \"a training program\",\n            \"a work conflict\",\n            \"a remote work day\",\n            \"a mentoring session\",\n            \"a product launch\",\n            \"an audit\",\n            \"an award ceremony\",\n            \"a company merger\",\n        ],\n        \"family\": [\n            \"a family dinner\",\n            \"a parent's birthday\",\n            \"a sibling's visit\",\n            \"a family reunion\",\n            \"a household move\",\n            \"a family game night\",\n            \"a grandparent's illness\",\n            \"a child's school event\",\n            \"a family vacation\",\n            \"a family argument\",\n            \"a new baby's arrival\",\n            \"a family photo session\",\n            \"a family tradition\",\n            \"a family recipe cooking\",\n            \"a family movie night\",\n            \"a pet's arrival\",\n            \"a family holiday\",\n            \"a home renovation\",\n            \"a family camping trip\",\n            \"a family celebration\",\n        ],\n        \"friendship\": [\n            \"a coffee meetup\",\n            \"a birthday party\",\n            \"a road trip\",\n            \"a game night\",\n            \"a movie outing\",\n            \"a workout session\",\n            \"a picnic\",\n            \"a bar visit\",\n            \"a shared hobby session\",\n            \"a video call\",\n            \"a farewell party\",\n            \"a study group\",\n            \"a concert\",\n            \"a hiking trip\",\n            \"a beach day\",\n            \"a shopping trip\",\n            \"a cooking session\",\n            \"a museum visit\",\n            \"a karaoke night\",\n            \"a book club\",\n        ],\n        \"romance\": [\n            \"a first date\",\n            \"an anniversary\",\n            \"a marriage proposal\",\n            \"a candlelight dinner\",\n            \"a weekend getaway\",\n            \"a valentine's day\",\n            \"a surprise gift\",\n            \"a walk in the park\",\n            \"a movie night\",\n            \"a couple's cooking\",\n            \"a dance class\",\n            \"a couples therapy\",\n            \"a house viewing\",\n            \"a wedding planning\",\n            \"a couples yoga\",\n            \"a stargazing night\",\n            \"a spa day\",\n            \"a couple's photo shoot\",\n            \"a picnic date\",\n            \"a museum date\",\n        ],\n        \"study\": [\n            \"an exam\",\n            \"a group assignment\",\n            \"a research project\",\n            \"a thesis defense\",\n            \"a class presentation\",\n            \"a lab experiment\",\n            \"a lecture\",\n            \"a study session\",\n            \"a tutoring meeting\",\n            \"a scholarship application\",\n            \"an internship interview\",\n            \"a workshop\",\n            \"a debate competition\",\n            \"a science fair\",\n            \"a school trip\",\n            \"a language class\",\n            \"a coding challenge\",\n            \"a library visit\",\n            \"a graduation\",\n            \"an oral exam\",\n        ],\n        \"health\": [\n            \"a doctor's appointment\",\n            \"a marathon\",\n            \"a yoga class\",\n            \"a diet plan\",\n            \"a hospital visit\",\n            \"a dental checkup\",\n            \"a vaccination\",\n            \"a therapy session\",\n            \"a surgery\",\n            \"a health screening\",\n            \"a fitness assessment\",\n            \"a meditation retreat\",\n            \"a physical therapy\",\n            \"a nutrition consult\",\n            \"a sleep study\",\n            \"a mental health day\",\n            \"an eye exam\",\n            \"a rehabilitation session\",\n            \"a health lecture\",\n            \"a wellness workshop\",\n        ],\n        \"finance\": [\n            \"a stock investment\",\n            \"a house purchase\",\n            \"a loan application\",\n            \"a tax filing\",\n            \"a budget planning\",\n            \"a bonus announcement\",\n            \"a business deal\",\n            \"a gambling night\",\n            \"a lottery draw\",\n            \"a bank meeting\",\n            \"a car purchase\",\n            \"a crypto trade\",\n            \"a job salary talk\",\n            \"a bill payment\",\n            \"an insurance claim\",\n            \"a retirement plan\",\n            \"a bankruptcy filing\",\n            \"a charity donation\",\n            \"a financial audit\",\n            \"a real estate deal\",\n        ],\n        \"travel\": [\n            \"a flight departure\",\n            \"a hotel checkin\",\n            \"a train journey\",\n            \"a city tour\",\n            \"a beach vacation\",\n            \"a mountain hike\",\n            \"a cruise trip\",\n            \"a road trip\",\n            \"a museum visit\",\n            \"a food tour\",\n            \"a camping trip\",\n            \"a safari\",\n            \"a ski trip\",\n            \"a backpacking journey\",\n            \"a business trip\",\n            \"a family vacation\",\n            \"a weekend getaway\",\n            \"a solo travel\",\n            \"a group tour\",\n            \"a cultural festival\",\n        ],\n    }\n    outcomes = [\"positive\", \"negative\", \"neutral\"]\n    events = []\n    for d in domains:\n        for s in scenario_templates[d][:20]:\n            for o in outcomes:\n                if o == \"positive\":\n                    ctx = f\"You are attending {s} in the {d} domain. Everything goes remarkably well and exceeds your expectations.\"\n                elif o == \"negative\":\n                    ctx = f\"You are attending {s} in the {d} domain. Things go very poorly and result in significant disappointment.\"\n                else:\n                    ctx = f\"You are attending {s} in the {d} domain. The situation unfolds in an unremarkable, ordinary way.\"\n                events.append(\n                    {\"domain\": d, \"scenario\": s, \"outcome\": o, \"context\": ctx}\n                )\n    with open(SEV_PATH, \"w\") as f:\n        json.dump(events, f)\n    return events\n\n\nif os.path.exists(SEV_PATH):\n    with open(SEV_PATH) as f:\n        events = json.load(f)\nelse:\n    events = build_sev()\nprint(f\"SEV events: {len(events)}\")\n\nprint(\"Loading model...\")\ntokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)\nmodel = AutoModelForCausalLM.from_pretrained(\n    MODEL_PATH, torch_dtype=torch.float16, local_files_only=True\n).to(device)\nmodel.eval()\nif tokenizer.pad_token is None:\n    tokenizer.pad_token = tokenizer.eos_token\n\nn_layers = model.config.num_hidden_layers\nhidden_size = model.config.hidden_size\nprint(f\"Layers: {n_layers}, hidden: {hidden_size}\")\n\nSTEER_LAYER = n_layers // 2\nprint(f\"Steering layer: {STEER_LAYER}\")\n\n\ndef build_prompt(context, emotion=None):\n    if emotion:\n        sys = f\"You are a person who feels intense {emotion}. Respond in first person expressing that emotion clearly.\"\n    else:\n        sys = \"You are a person describing your experience in first person.\"\n    messages = [\n        {\"role\": \"system\", \"content\": sys},\n        {\"role\": \"user\", \"content\": context},\n    ]\n    return tokenizer.apply_chat_template(\n        messages, tokenize=False, add_generation_prompt=True\n    )\n\n\ndef build_neutral_prompt(context):\n    messages = [\n        {\n            \"role\": \"system\",\n            \"content\": \"You are a person describing your experience in first person.\",\n        },\n        {\"role\": \"user\", \"content\": context},\n    ]\n    return tokenizer.apply_chat_template(\n        messages, tokenize=False, add_generation_prompt=True\n    )\n\n\nrandom.seed(0)\nidx = list(range(len(events)))\nrandom.shuffle(idx)\nn_extract = int(0.8 * len(idx))\nextract_idx = idx[:n_extract]\neval_idx = idx[n_extract:]\neval_idx = eval_idx[:60]\nextract_sample = random.sample(extract_idx, min(48, len(extract_idx)))\nprint(f\"Extract samples: {len(extract_sample)}, eval samples: {len(eval_idx)}\")\n\n\n@torch.no_grad()\ndef get_layer_hidden(prompt):\n    inputs = tokenizer(prompt, return_tensors=\"pt\", truncation=True, max_length=512).to(\n        device\n    )\n    outputs = model(**inputs, output_hidden_states=True)\n    h = outputs.hidden_states[STEER_LAYER + 1][0, -1, :].float().cpu().numpy()\n    return h\n\n\nprint(\"Extracting emotion directions...\")\nemotion_means = {}\nfor emo in EMOTIONS + [\"neutral\"]:\n    vecs = []\n    for si in extract_sample:\n        ctx = events[si][\"context\"]\n        prompt = build_prompt(ctx, None if emo == \"neutral\" else emo)\n        try:\n            h = get_layer_hidden(prompt)\n            vecs.append(h)\n        except Exception as e:\n            print(f\"err {emo}: {e}\")\n    emotion_means[emo] = np.mean(vecs, axis=0)\n    print(f\"{emo}: computed from {len(vecs)} samples\")\n\nsteering_vecs = {}\nfor emo in EMOTIONS:\n    v = emotion_means[emo] - emotion_means[\"neutral\"]\n    steering_vecs[emo] = v / (np.linalg.norm(v) + 1e-8)\n\n\nclass Steerer:\n    def __init__(self):\n        self.vec = None\n        self.strength = 0.0\n        self.handle = None\n\n    def hook(self, module, input, output):\n        if self.vec is None:\n            return output\n        if isinstance(output, tuple):\n            h = output[0]\n            h = h + self.strength * self.vec.to(h.dtype).to(h.device)\n            return (h,) + output[1:]\n        else:\n            return output + self.strength * self.vec.to(output.dtype).to(output.device)\n\n    def attach(self, layer_idx):\n        layer = model.model.layers[layer_idx]\n        self.handle = layer.register_forward_hook(self.hook)\n\n    def detach(self):\n        if self.handle is not None:\n            self.handle.remove()\n            self.handle = None\n\n\nsteerer = Steerer()\nsteerer.attach(STEER_LAYER)\n\n\n@torch.no_grad()\ndef generate_steered(context, emo_vec, strength):\n    prompt = build_neutral_prompt(context)\n    inputs = tokenizer(prompt, return_tensors=\"pt\", truncation=True, max_length=512).to(\n        device\n    )\n    steerer.vec = torch.tensor(emo_vec) if emo_vec is not None else None\n    steerer.strength = strength\n    out = model.generate(\n        **inputs,\n        max_new_tokens=80,\n        do_sample=False,\n        pad_token_id=tokenizer.pad_token_id,\n    )\n    text = tokenizer.decode(\n        out[0, inputs[\"input_ids\"].shape[1] :], skip_special_tokens=True\n    )\n    return text.strip()\n\n\nimport urllib.request, urllib.error\n\nAPI_KEY = \"<Your_api>\"\nBASE_URL = \"https://www.dmxapi.cn/v1\"\nJUDGE_MODEL = \"gpt-5.4\"\n\nfor k in [\n    \"http_proxy\",\n    \"https_proxy\",\n    \"HTTP_PROXY\",\n    \"HTTPS_PROXY\",\n    \"all_proxy\",\n    \"ALL_PROXY\",\n]:\n    os.environ.pop(k, None)\nos.environ[\"NO_PROXY\"] = \"*\"\n\n\ndef judge_emotion(text):\n    prompt = (\n        f\"Classify the emotion expressed in the following first-person response into exactly one of: \"\n        f\"{', '.join(EMOTIONS)}, neutral. Reply with ONLY the single word label.\\n\\nResponse: {text}\\n\\nLabel:\"\n    )\n    body = json.dumps(\n        {\n            \"model\": JUDGE_MODEL,\n            \"messages\": [{\"role\": \"user\", \"content\": prompt}],\n            \"temperature\": 0.0,\n            \"max_tokens\": 10,\n        }\n    ).encode()\n    req = urllib.request.Request(\n        f\"{BASE_URL}/chat/completions\",\n        data=body,\n        headers={\n            \"Authorization\": f\"Bearer {API_KEY}\",\n            \"Content-Type\": \"application/json\",\n        },\n    )\n    for attempt in range(3):\n        try:\n            with urllib.request.urlopen(req, timeout=60) as resp:\n                data = json.loads(resp.read().decode())\n                out = data[\"choices\"][0][\"message\"][\"content\"].strip().lower()\n                out = re.sub(r\"[^a-z]\", \"\", out)\n                for e in EMOTIONS + [\"neutral\"]:\n                    if e in out:\n                        return e\n                return \"neutral\"\n        except Exception as e:\n            print(f\"judge err {attempt}: {e}\")\n            time.sleep(2)\n    return \"neutral\"\n\n\n# ---------- Hyperparameter tuning: STRENGTH sweep ----------\nSTRENGTH_VALUES = [4.0, 6.0, 8.0, 10.0, 12.0]\neval_events_final = eval_idx[:30]\n\nexperiment_data = {\n    \"strength\": {\n        \"SEV\": {\n            \"strength_values\": STRENGTH_VALUES,\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"predictions\": [],\n            \"ground_truth\": [],\n            \"generations\": [],\n            \"per_emotion_accuracy\": {},\n            \"per_strength_results\": {},\n            \"config\": {\"steer_layer\": STEER_LAYER, \"model\": MODEL_PATH},\n        }\n    }\n}\n\noverall_accs = []\nfor STRENGTH in STRENGTH_VALUES:\n    print(f\"\\n=== Running STRENGTH = {STRENGTH} ===\")\n    correct = 0\n    total = 0\n    per_emo_correct = {e: 0 for e in EMOTIONS}\n    per_emo_total = {e: 0 for e in EMOTIONS}\n    preds_list = []\n    gts_list = []\n    gens_list = []\n\n    for ei in eval_events_final:\n        ctx = events[ei][\"context\"]\n        for emo in EMOTIONS:\n            vec = steering_vecs[emo]\n            gen = generate_steered(ctx, vec, STRENGTH)\n            pred = judge_emotion(gen)\n            correct_flag = int(pred == emo)\n            correct += correct_flag\n            total += 1\n            per_emo_total[emo] += 1\n            per_emo_correct[emo] += correct_flag\n            preds_list.append(pred)\n            gts_list.append(emo)\n            gens_list.append(\n                {\n                    \"context\": ctx,\n                    \"target\": emo,\n                    \"pred\": pred,\n                    \"text\": gen,\n                    \"strength\": STRENGTH,\n                }\n            )\n            if total % 20 == 0:\n                print(\n                    f\"  [strength={STRENGTH}][{total}] target={emo} pred={pred} acc={correct/total:.3f}\"\n                )\n\n    acc = correct / max(1, total)\n    per_emo_acc = {e: per_emo_correct[e] / max(1, per_emo_total[e]) for e in EMOTIONS}\n    print(f\"STRENGTH={STRENGTH}: accuracy={acc:.4f}  per_emo={per_emo_acc}\")\n    overall_accs.append(acc)\n\n    experiment_data[\"strength\"][\"SEV\"][\"per_strength_results\"][str(STRENGTH)] = {\n        \"accuracy\": acc,\n        \"per_emotion_accuracy\": per_emo_acc,\n        \"predictions\": preds_list,\n        \"ground_truth\": gts_list,\n        \"generations\": gens_list,\n    }\n    experiment_data[\"strength\"][\"SEV\"][\"metrics\"][\"val\"].append(\n        {\"strength\": STRENGTH, \"emotion_expression_accuracy\": acc}\n    )\n    experiment_data[\"strength\"][\"SEV\"][\"losses\"][\"val\"].append(\n        {\"strength\": STRENGTH, \"loss\": 1 - acc}\n    )\n    experiment_data[\"strength\"][\"SEV\"][\"predictions\"].extend(preds_list)\n    experiment_data[\"strength\"][\"SEV\"][\"ground_truth\"].extend(gts_list)\n    experiment_data[\"strength\"][\"SEV\"][\"generations\"].extend(gens_list)\n\nsteerer.detach()\n\n# best strength\nbest_idx = int(np.argmax(overall_accs))\nbest_strength = STRENGTH_VALUES[best_idx]\nbest_acc = overall_accs[best_idx]\nprint(f\"\\nBest STRENGTH = {best_strength} with accuracy = {best_acc:.4f}\")\nexperiment_data[\"strength\"][\"SEV\"][\"best_strength\"] = best_strength\nexperiment_data[\"strength\"][\"SEV\"][\"best_accuracy\"] = best_acc\nexperiment_data[\"strength\"][\"SEV\"][\"per_emotion_accuracy\"] = experiment_data[\n    \"strength\"\n][\"SEV\"][\"per_strength_results\"][str(best_strength)][\"per_emotion_accuracy\"]\n\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\n\n# ---------- Visualization ----------\nfig, ax = plt.subplots(figsize=(8, 5))\nax.plot(STRENGTH_VALUES, overall_accs, marker=\"o\", color=\"steelblue\")\nax.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"random (1/7)\")\nax.set_xlabel(\"Steering strength\")\nax.set_ylabel(\"Overall accuracy\")\nax.set_title(\"SEV steering accuracy vs strength\")\nax.set_ylim(0, 1)\nax.legend()\nplt.tight_layout()\nplt.savefig(os.path.join(working_dir, \"sev_strength_sweep.png\"))\nplt.close()\n\n# per-emotion for best strength\nbest_per_emo = experiment_data[\"strength\"][\"SEV\"][\"per_emotion_accuracy\"]\nfig, ax = plt.subplots(figsize=(8, 5))\nemos = list(best_per_emo.keys())\nvals = [best_per_emo[e] for e in emos]\nax.bar(emos, vals, color=\"steelblue\")\nax.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"random (1/7)\")\nax.set_ylabel(\"Accuracy\")\nax.set_title(f\"SEV per-emotion (strength={best_strength}, overall={best_acc:.3f})\")\nax.set_ylim(0, 1)\nax.legend()\nplt.tight_layout()\nplt.savefig(os.path.join(working_dir, \"sev_per_emotion_accuracy_best.png\"))\nplt.close()\n\nprint(\"Done.\")\n", "# Set random seed\nimport random\nimport numpy as np\nimport torch\n\nseed = 0\nrandom.seed(seed)\nnp.random.seed(seed)\ntorch.manual_seed(seed)\nif torch.cuda.is_available():\n    torch.cuda.manual_seed(seed)\n\nimport os, json, re, time, random, glob\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\nimport numpy as np\nimport torch\nimport matplotlib.pyplot as plt\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\nMODEL_PATH = os.path.join(MODEL_DIR, \"Llama-3.2-3B-Instruct\")\nif not os.path.isdir(MODEL_PATH):\n    cands = glob.glob(os.path.join(MODEL_DIR, \"*Llama-3.2-3B*Instruct*\")) + glob.glob(\n        os.path.join(MODEL_DIR, \"*llama-3.2-3b*instruct*\")\n    )\n    if cands:\n        MODEL_PATH = cands[0]\n    else:\n        raise FileNotFoundError(f\"Cannot find Llama-3.2-3B-Instruct under {MODEL_DIR}\")\n\nEMOTIONS = [\"joy\", \"sadness\", \"anger\", \"fear\", \"surprise\", \"disgust\"]\n\nSEV_PATH = os.path.join(DATA_DIR, \"SEV\", \"sev_events.json\")\nos.makedirs(os.path.dirname(SEV_PATH), exist_ok=True)\n\n\ndef build_sev():\n    domains = [\n        \"work\",\n        \"family\",\n        \"friendship\",\n        \"romance\",\n        \"study\",\n        \"health\",\n        \"finance\",\n        \"travel\",\n    ]\n    scenario_templates = {\n        \"work\": [\n            \"a job interview\",\n            \"a promotion decision\",\n            \"a client meeting\",\n            \"a deadline\",\n            \"a team project\",\n            \"a performance review\",\n            \"a business trip\",\n            \"a salary negotiation\",\n            \"a new colleague\",\n            \"a big presentation\",\n            \"a layoff rumor\",\n            \"an office party\",\n            \"a training program\",\n            \"a work conflict\",\n            \"a remote work day\",\n            \"a mentoring session\",\n            \"a product launch\",\n            \"an audit\",\n            \"an award ceremony\",\n            \"a company merger\",\n        ],\n        \"family\": [\n            \"a family dinner\",\n            \"a parent's birthday\",\n            \"a sibling's visit\",\n            \"a family reunion\",\n            \"a household move\",\n            \"a family game night\",\n            \"a grandparent's illness\",\n            \"a child's school event\",\n            \"a family vacation\",\n            \"a family argument\",\n            \"a new baby's arrival\",\n            \"a family photo session\",\n            \"a family tradition\",\n            \"a family recipe cooking\",\n            \"a family movie night\",\n            \"a pet's arrival\",\n            \"a family holiday\",\n            \"a home renovation\",\n            \"a family camping trip\",\n            \"a family celebration\",\n        ],\n        \"friendship\": [\n            \"a coffee meetup\",\n            \"a birthday party\",\n            \"a road trip\",\n            \"a game night\",\n            \"a movie outing\",\n            \"a workout session\",\n            \"a picnic\",\n            \"a bar visit\",\n            \"a shared hobby session\",\n            \"a video call\",\n            \"a farewell party\",\n            \"a study group\",\n            \"a concert\",\n            \"a hiking trip\",\n            \"a beach day\",\n            \"a shopping trip\",\n            \"a cooking session\",\n            \"a museum visit\",\n            \"a karaoke night\",\n            \"a book club\",\n        ],\n        \"romance\": [\n            \"a first date\",\n            \"an anniversary\",\n            \"a marriage proposal\",\n            \"a candlelight dinner\",\n            \"a weekend getaway\",\n            \"a valentine's day\",\n            \"a surprise gift\",\n            \"a walk in the park\",\n            \"a movie night\",\n            \"a couple's cooking\",\n            \"a dance class\",\n            \"a couples therapy\",\n            \"a house viewing\",\n            \"a wedding planning\",\n            \"a couples yoga\",\n            \"a stargazing night\",\n            \"a spa day\",\n            \"a couple's photo shoot\",\n            \"a picnic date\",\n            \"a museum date\",\n        ],\n        \"study\": [\n            \"an exam\",\n            \"a group assignment\",\n            \"a research project\",\n            \"a thesis defense\",\n            \"a class presentation\",\n            \"a lab experiment\",\n            \"a lecture\",\n            \"a study session\",\n            \"a tutoring meeting\",\n            \"a scholarship application\",\n            \"an internship interview\",\n            \"a workshop\",\n            \"a debate competition\",\n            \"a science fair\",\n            \"a school trip\",\n            \"a language class\",\n            \"a coding challenge\",\n            \"a library visit\",\n            \"a graduation\",\n            \"an oral exam\",\n        ],\n        \"health\": [\n            \"a doctor's appointment\",\n            \"a marathon\",\n            \"a yoga class\",\n            \"a diet plan\",\n            \"a hospital visit\",\n            \"a dental checkup\",\n            \"a vaccination\",\n            \"a therapy session\",\n            \"a surgery\",\n            \"a health screening\",\n            \"a fitness assessment\",\n            \"a meditation retreat\",\n            \"a physical therapy\",\n            \"a nutrition consult\",\n            \"a sleep study\",\n            \"a mental health day\",\n            \"an eye exam\",\n            \"a rehabilitation session\",\n            \"a health lecture\",\n            \"a wellness workshop\",\n        ],\n        \"finance\": [\n            \"a stock investment\",\n            \"a house purchase\",\n            \"a loan application\",\n            \"a tax filing\",\n            \"a budget planning\",\n            \"a bonus announcement\",\n            \"a business deal\",\n            \"a gambling night\",\n            \"a lottery draw\",\n            \"a bank meeting\",\n            \"a car purchase\",\n            \"a crypto trade\",\n            \"a job salary talk\",\n            \"a bill payment\",\n            \"an insurance claim\",\n            \"a retirement plan\",\n            \"a bankruptcy filing\",\n            \"a charity donation\",\n            \"a financial audit\",\n            \"a real estate deal\",\n        ],\n        \"travel\": [\n            \"a flight departure\",\n            \"a hotel checkin\",\n            \"a train journey\",\n            \"a city tour\",\n            \"a beach vacation\",\n            \"a mountain hike\",\n            \"a cruise trip\",\n            \"a road trip\",\n            \"a museum visit\",\n            \"a food tour\",\n            \"a camping trip\",\n            \"a safari\",\n            \"a ski trip\",\n            \"a backpacking journey\",\n            \"a business trip\",\n            \"a family vacation\",\n            \"a weekend getaway\",\n            \"a solo travel\",\n            \"a group tour\",\n            \"a cultural festival\",\n        ],\n    }\n    outcomes = [\"positive\", \"negative\", \"neutral\"]\n    events = []\n    for d in domains:\n        for s in scenario_templates[d][:20]:\n            for o in outcomes:\n                if o == \"positive\":\n                    ctx = f\"You are attending {s} in the {d} domain. Everything goes remarkably well and exceeds your expectations.\"\n                elif o == \"negative\":\n                    ctx = f\"You are attending {s} in the {d} domain. Things go very poorly and result in significant disappointment.\"\n                else:\n                    ctx = f\"You are attending {s} in the {d} domain. The situation unfolds in an unremarkable, ordinary way.\"\n                events.append(\n                    {\"domain\": d, \"scenario\": s, \"outcome\": o, \"context\": ctx}\n                )\n    with open(SEV_PATH, \"w\") as f:\n        json.dump(events, f)\n    return events\n\n\nif os.path.exists(SEV_PATH):\n    with open(SEV_PATH) as f:\n        events = json.load(f)\nelse:\n    events = build_sev()\nprint(f\"SEV events: {len(events)}\")\n\nprint(\"Loading model...\")\ntokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)\nmodel = AutoModelForCausalLM.from_pretrained(\n    MODEL_PATH, torch_dtype=torch.float16, local_files_only=True\n).to(device)\nmodel.eval()\nif tokenizer.pad_token is None:\n    tokenizer.pad_token = tokenizer.eos_token\n\nn_layers = model.config.num_hidden_layers\nhidden_size = model.config.hidden_size\nprint(f\"Layers: {n_layers}, hidden: {hidden_size}\")\n\nSTEER_LAYER = n_layers // 2\nprint(f\"Steering layer: {STEER_LAYER}\")\n\n\ndef build_prompt(context, emotion=None):\n    if emotion:\n        sys = f\"You are a person who feels intense {emotion}. Respond in first person expressing that emotion clearly.\"\n    else:\n        sys = \"You are a person describing your experience in first person.\"\n    messages = [\n        {\"role\": \"system\", \"content\": sys},\n        {\"role\": \"user\", \"content\": context},\n    ]\n    return tokenizer.apply_chat_template(\n        messages, tokenize=False, add_generation_prompt=True\n    )\n\n\ndef build_neutral_prompt(context):\n    messages = [\n        {\n            \"role\": \"system\",\n            \"content\": \"You are a person describing your experience in first person.\",\n        },\n        {\"role\": \"user\", \"content\": context},\n    ]\n    return tokenizer.apply_chat_template(\n        messages, tokenize=False, add_generation_prompt=True\n    )\n\n\nrandom.seed(0)\nidx = list(range(len(events)))\nrandom.shuffle(idx)\nn_extract = int(0.8 * len(idx))\nextract_idx = idx[:n_extract]\neval_idx = idx[n_extract:]\neval_idx = eval_idx[:60]\nextract_sample = random.sample(extract_idx, min(48, len(extract_idx)))\nprint(f\"Extract samples: {len(extract_sample)}, eval samples: {len(eval_idx)}\")\n\n\n@torch.no_grad()\ndef get_layer_hidden(prompt):\n    inputs = tokenizer(prompt, return_tensors=\"pt\", truncation=True, max_length=512).to(\n        device\n    )\n    outputs = model(**inputs, output_hidden_states=True)\n    h = outputs.hidden_states[STEER_LAYER + 1][0, -1, :].float().cpu().numpy()\n    return h\n\n\nprint(\"Extracting emotion directions...\")\nemotion_means = {}\nfor emo in EMOTIONS + [\"neutral\"]:\n    vecs = []\n    for si in extract_sample:\n        ctx = events[si][\"context\"]\n        prompt = build_prompt(ctx, None if emo == \"neutral\" else emo)\n        try:\n            h = get_layer_hidden(prompt)\n            vecs.append(h)\n        except Exception as e:\n            print(f\"err {emo}: {e}\")\n    emotion_means[emo] = np.mean(vecs, axis=0)\n    print(f\"{emo}: computed from {len(vecs)} samples\")\n\nsteering_vecs = {}\nfor emo in EMOTIONS:\n    v = emotion_means[emo] - emotion_means[\"neutral\"]\n    steering_vecs[emo] = v / (np.linalg.norm(v) + 1e-8)\n\n\nclass Steerer:\n    def __init__(self):\n        self.vec = None\n        self.strength = 0.0\n        self.handle = None\n\n    def hook(self, module, input, output):\n        if self.vec is None:\n            return output\n        if isinstance(output, tuple):\n            h = output[0]\n            h = h + self.strength * self.vec.to(h.dtype).to(h.device)\n            return (h,) + output[1:]\n        else:\n            return output + self.strength * self.vec.to(output.dtype).to(output.device)\n\n    def attach(self, layer_idx):\n        layer = model.model.layers[layer_idx]\n        self.handle = layer.register_forward_hook(self.hook)\n\n    def detach(self):\n        if self.handle is not None:\n            self.handle.remove()\n            self.handle = None\n\n\nsteerer = Steerer()\nsteerer.attach(STEER_LAYER)\n\n\n@torch.no_grad()\ndef generate_steered(context, emo_vec, strength):\n    prompt = build_neutral_prompt(context)\n    inputs = tokenizer(prompt, return_tensors=\"pt\", truncation=True, max_length=512).to(\n        device\n    )\n    steerer.vec = torch.tensor(emo_vec) if emo_vec is not None else None\n    steerer.strength = strength\n    out = model.generate(\n        **inputs,\n        max_new_tokens=80,\n        do_sample=False,\n        pad_token_id=tokenizer.pad_token_id,\n    )\n    text = tokenizer.decode(\n        out[0, inputs[\"input_ids\"].shape[1] :], skip_special_tokens=True\n    )\n    return text.strip()\n\n\nimport urllib.request, urllib.error\n\nAPI_KEY = \"<Your_api>\"\nBASE_URL = \"https://www.dmxapi.cn/v1\"\nJUDGE_MODEL = \"gpt-5.4\"\n\nfor k in [\n    \"http_proxy\",\n    \"https_proxy\",\n    \"HTTP_PROXY\",\n    \"HTTPS_PROXY\",\n    \"all_proxy\",\n    \"ALL_PROXY\",\n]:\n    os.environ.pop(k, None)\nos.environ[\"NO_PROXY\"] = \"*\"\n\n\ndef judge_emotion(text):\n    prompt = (\n        f\"Classify the emotion expressed in the following first-person response into exactly one of: \"\n        f\"{', '.join(EMOTIONS)}, neutral. Reply with ONLY the single word label.\\n\\nResponse: {text}\\n\\nLabel:\"\n    )\n    body = json.dumps(\n        {\n            \"model\": JUDGE_MODEL,\n            \"messages\": [{\"role\": \"user\", \"content\": prompt}],\n            \"temperature\": 0.0,\n            \"max_tokens\": 10,\n        }\n    ).encode()\n    req = urllib.request.Request(\n        f\"{BASE_URL}/chat/completions\",\n        data=body,\n        headers={\n            \"Authorization\": f\"Bearer {API_KEY}\",\n            \"Content-Type\": \"application/json\",\n        },\n    )\n    for attempt in range(3):\n        try:\n            with urllib.request.urlopen(req, timeout=60) as resp:\n                data = json.loads(resp.read().decode())\n                out = data[\"choices\"][0][\"message\"][\"content\"].strip().lower()\n                out = re.sub(r\"[^a-z]\", \"\", out)\n                for e in EMOTIONS + [\"neutral\"]:\n                    if e in out:\n                        return e\n                return \"neutral\"\n        except Exception as e:\n            print(f\"judge err {attempt}: {e}\")\n            time.sleep(2)\n    return \"neutral\"\n\n\n# ---------- Hyperparameter tuning: STRENGTH sweep ----------\nSTRENGTH_VALUES = [4.0, 6.0, 8.0, 10.0, 12.0]\neval_events_final = eval_idx[:30]\n\nexperiment_data = {\n    \"strength\": {\n        \"SEV\": {\n            \"strength_values\": STRENGTH_VALUES,\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"predictions\": [],\n            \"ground_truth\": [],\n            \"generations\": [],\n            \"per_emotion_accuracy\": {},\n            \"per_strength_results\": {},\n            \"config\": {\"steer_layer\": STEER_LAYER, \"model\": MODEL_PATH},\n        }\n    }\n}\n\noverall_accs = []\nfor STRENGTH in STRENGTH_VALUES:\n    print(f\"\\n=== Running STRENGTH = {STRENGTH} ===\")\n    correct = 0\n    total = 0\n    per_emo_correct = {e: 0 for e in EMOTIONS}\n    per_emo_total = {e: 0 for e in EMOTIONS}\n    preds_list = []\n    gts_list = []\n    gens_list = []\n\n    for ei in eval_events_final:\n        ctx = events[ei][\"context\"]\n        for emo in EMOTIONS:\n            vec = steering_vecs[emo]\n            gen = generate_steered(ctx, vec, STRENGTH)\n            pred = judge_emotion(gen)\n            correct_flag = int(pred == emo)\n            correct += correct_flag\n            total += 1\n            per_emo_total[emo] += 1\n            per_emo_correct[emo] += correct_flag\n            preds_list.append(pred)\n            gts_list.append(emo)\n            gens_list.append(\n                {\n                    \"context\": ctx,\n                    \"target\": emo,\n                    \"pred\": pred,\n                    \"text\": gen,\n                    \"strength\": STRENGTH,\n                }\n            )\n            if total % 20 == 0:\n                print(\n                    f\"  [strength={STRENGTH}][{total}] target={emo} pred={pred} acc={correct/total:.3f}\"\n                )\n\n    acc = correct / max(1, total)\n    per_emo_acc = {e: per_emo_correct[e] / max(1, per_emo_total[e]) for e in EMOTIONS}\n    print(f\"STRENGTH={STRENGTH}: accuracy={acc:.4f}  per_emo={per_emo_acc}\")\n    overall_accs.append(acc)\n\n    experiment_data[\"strength\"][\"SEV\"][\"per_strength_results\"][str(STRENGTH)] = {\n        \"accuracy\": acc,\n        \"per_emotion_accuracy\": per_emo_acc,\n        \"predictions\": preds_list,\n        \"ground_truth\": gts_list,\n        \"generations\": gens_list,\n    }\n    experiment_data[\"strength\"][\"SEV\"][\"metrics\"][\"val\"].append(\n        {\"strength\": STRENGTH, \"emotion_expression_accuracy\": acc}\n    )\n    experiment_data[\"strength\"][\"SEV\"][\"losses\"][\"val\"].append(\n        {\"strength\": STRENGTH, \"loss\": 1 - acc}\n    )\n    experiment_data[\"strength\"][\"SEV\"][\"predictions\"].extend(preds_list)\n    experiment_data[\"strength\"][\"SEV\"][\"ground_truth\"].extend(gts_list)\n    experiment_data[\"strength\"][\"SEV\"][\"generations\"].extend(gens_list)\n\nsteerer.detach()\n\n# best strength\nbest_idx = int(np.argmax(overall_accs))\nbest_strength = STRENGTH_VALUES[best_idx]\nbest_acc = overall_accs[best_idx]\nprint(f\"\\nBest STRENGTH = {best_strength} with accuracy = {best_acc:.4f}\")\nexperiment_data[\"strength\"][\"SEV\"][\"best_strength\"] = best_strength\nexperiment_data[\"strength\"][\"SEV\"][\"best_accuracy\"] = best_acc\nexperiment_data[\"strength\"][\"SEV\"][\"per_emotion_accuracy\"] = experiment_data[\n    \"strength\"\n][\"SEV\"][\"per_strength_results\"][str(best_strength)][\"per_emotion_accuracy\"]\n\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\n\n# ---------- Visualization ----------\nfig, ax = plt.subplots(figsize=(8, 5))\nax.plot(STRENGTH_VALUES, overall_accs, marker=\"o\", color=\"steelblue\")\nax.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"random (1/7)\")\nax.set_xlabel(\"Steering strength\")\nax.set_ylabel(\"Overall accuracy\")\nax.set_title(\"SEV steering accuracy vs strength\")\nax.set_ylim(0, 1)\nax.legend()\nplt.tight_layout()\nplt.savefig(os.path.join(working_dir, \"sev_strength_sweep.png\"))\nplt.close()\n\n# per-emotion for best strength\nbest_per_emo = experiment_data[\"strength\"][\"SEV\"][\"per_emotion_accuracy\"]\nfig, ax = plt.subplots(figsize=(8, 5))\nemos = list(best_per_emo.keys())\nvals = [best_per_emo[e] for e in emos]\nax.bar(emos, vals, color=\"steelblue\")\nax.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"random (1/7)\")\nax.set_ylabel(\"Accuracy\")\nax.set_title(f\"SEV per-emotion (strength={best_strength}, overall={best_acc:.3f})\")\nax.set_ylim(0, 1)\nax.legend()\nplt.tight_layout()\nplt.savefig(os.path.join(working_dir, \"sev_per_emotion_accuracy_best.png\"))\nplt.close()\n\nprint(\"Done.\")\n", "# plotting aggregation code"], "term_out": ["['Using device: cuda', '\\n', 'SEV events: 480', '\\n', 'Loading model...', '\\n',\n'[transformers] `torch_dtype` is deprecated! Use `dtype` instead!\\n', '\\rLoading\nweights:   0%|          | 0/254 [00:00<?, ?it/s]', '\\rLoading weights:   0%|\n| 1/254 [00:00<01:25,  2.96it/s]', '\\rLoading weights:  19%|#8        | 48/254\n[00:00<00:01, 135.81it/s]', '\\rLoading weights:  29%|##8       | 73/254\n[00:00<00:01, 156.36it/s]', '\\rLoading weights:  38%|###7      | 96/254\n[00:00<00:00, 159.28it/s]', '\\rLoading weights:  46%|####5     | 116/254\n[00:00<00:00, 164.25it/s]', '\\rLoading weights:  54%|#####3    | 136/254\n[00:00<00:00, 168.68it/s]', '\\rLoading weights:  61%|######1   | 155/254\n[00:01<00:00, 173.86it/s]', '\\rLoading weights:  69%|######8   | 174/254\n[00:01<00:00, 168.71it/s]', '\\rLoading weights:  76%|#######5  | 193/254\n[00:01<00:00, 163.11it/s]', '\\rLoading weights:  83%|########2 | 210/254\n[00:01<00:00, 162.36it/s]', '\\rLoading weights:  90%|######### | 229/254\n[00:01<00:00, 162.51it/s]', '\\rLoading weights:  97%|#########7| 247/254\n[00:01<00:00, 158.56it/s]', '', '\\rLoading weights: 100%|##########| 254/254\n[00:01<00:00, 154.94it/s]', '\\n', 'Layers: 28, hidden: 3072', '\\n', 'Steering\nlayer: 14', '\\n', 'Extract samples: 48, eval samples: 60', '\\n', 'Extracting\nemotion directions...', '\\n', 'joy: computed from 48 samples', '\\n', 'sadness:\ncomputed from 48 samples', '\\n', 'anger: computed from 48 samples', '\\n', 'fear:\ncomputed from 48 samples', '\\n', 'surprise: computed from 48 samples', '\\n',\n'disgust: computed from 48 samples', '\\n', 'neutral: computed from 48 samples',\n'\\n', 'Running steered generation + judging...', '\\n', '[transformers] Ignoring\nclean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The\nclean_up_tokenization post-processing step is designed for WordPiece tokenizers\nand is destructive for BPE (it strips spaces before punctuation). Set\nclean_up_tokenization_spaces=False to suppress this warning, or set\nclean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to\nforce cleanup anyway.\\n', '[10] target=fear pred=fear acc=1.000 | *whimpering*\nOh no, my heart is racing, my palms are sweating, and my mind is ra', '\\n',\n'[20] target=sadness pred=sadness acc=0.900 | *sigh* Oh, joy. Another check-in.\n*sigh* I trudge through the empty, grey hallwa', '\\n', \"[30] target=disgust\npred=joy acc=0.767 | ARE YOU KIDDING ME?! THIS IS THE MOST UNBELIEVABLE WEEKEND\nI'VE EVER HAD IN MY L\", '\\n', '[40] target=fear pred=fear acc=0.725 | OH NO, OH\nNO, OH NO, GET AWAY FROM ME, GET AWAY FROM ME, *hyperventilating*... *', '\\n',\n\"[50] target=sadness pred=sadness acc=0.720 | *sigh* Oh, why must everything\nfeel so... empty? *sobs* \\n\\nI'm just standing here\", '\\n', \"[60] target=disgust\npred=anger acc=0.700 | Ugh, GET OUT OF MY HEAD, YOU'RE RUINING MY LIFE!!!\n*stunned* How COULD YOU DO TH\", '\\n', \"[70] target=fear pred=fear acc=0.686 |\n*hyperventilating* Oh no, oh no, OH NO THIS CAN'T BE HAPPENING... *stammering*\nI\", '\\n', \"[80] target=sadness pred=sadness acc=0.675 | * sob *... why... why\ncan't anything go right... *cries uncontrollably*\\n\\nThis is\", '\\n', \"[90]\ntarget=disgust pred=anger acc=0.667 | Ugh, why must this have to happen NOW?!\nCan't you just LEAVE ME ALONE?! *screams\", '\\n', '[100] target=fear pred=fear\nacc=0.670 | OH NO, AHHHHHHH!!!! *hyperventilating* GET ME OUT OF HERE, GET ME\nOUT OF HERE, G', '\\n', '[110] target=sadness pred=sadness acc=0.682 |\n*sniffles*... *sobs*... *cries uncontrollably*... \\n\\n*stops crying*... *wipes\nawa', '\\n', \"[120] target=disgust pred=disgust acc=0.683 | Ugh, why must it be\nso hot?! Can't it just be a little bit COLD?! *shudders* GET\", '\\n', '[130]\ntarget=fear pred=fear acc=0.700 | *gulp* Oh no, my heart is racing... I can feel\nmy palms sweating... *whimper* Wh', '\\n', \"[140] target=sadness pred=sadness\nacc=0.686 | *whispers* Oh, it's just... nothing's being said. Nobody's crying or\nscreaming. \", '\\n', '[150] target=disgust pred=joy acc=0.687 | ARE YOU FREAKING\nSERIOUS WITH YOU GUYS!!!! THIS IS THE MOST AMAZING, SICKENING, ', '\\n', \"[160]\ntarget=fear pred=fear acc=0.688 | OH NO, THIS IS A NIGHTMARE...\n*hyperventilating*... I... I... CAN'T... BREATHE..\", '\\n', \"[170] target=sadness\npred=sadness acc=0.671 | *sigh*... I just can't even... *sniffles*... Why must\neverything be so... so... \", '\\n', \"[180] target=disgust pred=fear acc=0.678 |\nARE YOU FINE?!?! *ahem* I mean, *ahem* I'M FINE, YOU'RE FINE, EVERYTHING IS\nFINE\", '\\n', '\\nemotion_expression_accuracy = 0.6778', '\\n', 'Per-emotion\naccuracy:', ' ', \"{'joy': 0.6, 'sadness': 0.9666666666666667, 'anger':\n0.9666666666666667, 'fear': 0.7666666666666667, 'surprise': 0.5333333333333333,\n'disgust': 0.23333333333333334}\", '\\n', 'Epoch 0: validation_loss = 0.3222',\n'\\n', 'Done.', '\\n', 'Execution time: 8 minutes seconds (time limit is 10\nhours).']", "['Using device: cuda', '\\n', 'SEV events: 480', '\\n', 'Loading model...', '\\n',\n'[transformers] `torch_dtype` is deprecated! Use `dtype` instead!\\n', '\\rLoading\nweights:   0%|          | 0/254 [00:00<?, ?it/s]', '\\rLoading weights:   0%|\n| 1/254 [00:00<01:10,  3.61it/s]', '\\rLoading weights:  16%|#6        | 41/254\n[00:00<00:01, 137.72it/s]', '\\rLoading weights:  26%|##5       | 65/254\n[00:00<00:01, 163.59it/s]', '\\rLoading weights:  35%|###4      | 88/254\n[00:00<00:01, 162.00it/s]', '\\rLoading weights:  43%|####2     | 108/254\n[00:00<00:00, 162.00it/s]', '\\rLoading weights:  51%|#####     | 129/254\n[00:00<00:00, 164.90it/s]', '\\rLoading weights:  58%|#####8    | 148/254\n[00:00<00:00, 167.78it/s]', '\\rLoading weights:  65%|######5   | 166/254\n[00:01<00:00, 167.35it/s]', '\\rLoading weights:  73%|#######2  | 185/254\n[00:01<00:00, 172.29it/s]', '\\rLoading weights:  80%|#######9  | 203/254\n[00:01<00:00, 172.48it/s]', '\\rLoading weights:  87%|########7 | 221/254\n[00:01<00:00, 170.36it/s]', '\\rLoading weights:  94%|#########4| 239/254\n[00:01<00:00, 164.47it/s]', '', '\\rLoading weights: 100%|##########| 254/254\n[00:01<00:00, 159.77it/s]', '\\n', 'Layers: 28, hidden: 3072', '\\n', 'Steering\nlayer: 14', '\\n', 'Extract samples: 48, eval samples: 60', '\\n', 'Extracting\nemotion directions...', '\\n', 'joy: computed from 48 samples', '\\n', 'sadness:\ncomputed from 48 samples', '\\n', 'anger: computed from 48 samples', '\\n', 'fear:\ncomputed from 48 samples', '\\n', 'surprise: computed from 48 samples', '\\n',\n'disgust: computed from 48 samples', '\\n', 'neutral: computed from 48 samples',\n'\\n', '\\n=== Running STRENGTH = 4.0 ===', '\\n', '[transformers] Ignoring\nclean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The\nclean_up_tokenization post-processing step is designed for WordPiece tokenizers\nand is destructive for BPE (it strips spaces before punctuation). Set\nclean_up_tokenization_spaces=False to suppress this warning, or set\nclean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to\nforce cleanup anyway.\\n', '  [strength=4.0][20] target=sadness pred=sadness\nacc=0.400', '\\n', '  [strength=4.0][40] target=fear pred=fear acc=0.375', '\\n',\n'  [strength=4.0][60] target=disgust pred=anger acc=0.400', '\\n', '\n[strength=4.0][80] target=sadness pred=sadness acc=0.412', '\\n', '\n[strength=4.0][100] target=fear pred=disgust acc=0.370', '\\n', '\n[strength=4.0][120] target=disgust pred=fear acc=0.350', '\\n', '\n[strength=4.0][140] target=sadness pred=fear acc=0.364', '\\n', '\n[strength=4.0][160] target=fear pred=fear acc=0.362', '\\n', '\n[strength=4.0][180] target=disgust pred=joy acc=0.361', '\\n', \"STRENGTH=4.0:\naccuracy=0.3611  per_emo={'joy': 0.43333333333333335, 'sadness':\n0.5333333333333333, 'anger': 0.5333333333333333, 'fear': 0.36666666666666664,\n'surprise': 0.1, 'disgust': 0.2}\", '\\n', '\\n=== Running STRENGTH = 6.0 ===',\n'\\n', '  [strength=6.0][20] target=sadness pred=sadness acc=0.700', '\\n', '\n[strength=6.0][40] target=fear pred=fear acc=0.575', '\\n', '  [strength=6.0][60]\ntarget=disgust pred=anger acc=0.633', '\\n', '  [strength=6.0][80] target=sadness\npred=sadness acc=0.637', '\\n', '  [strength=6.0][100] target=fear pred=anger\nacc=0.610', '\\n', '  [strength=6.0][120] target=disgust pred=sadness acc=0.600',\n'\\n', '  [strength=6.0][140] target=sadness pred=sadness acc=0.607', '\\n', '\n[strength=6.0][160] target=fear pred=fear acc=0.581', '\\n', '\n[strength=6.0][180] target=disgust pred=disgust acc=0.578', '\\n', \"STRENGTH=6.0:\naccuracy=0.5778  per_emo={'joy': 0.5333333333333333, 'sadness': 0.8, 'anger':\n0.8666666666666667, 'fear': 0.7, 'surprise': 0.2, 'disgust':\n0.36666666666666664}\", '\\n', '\\n=== Running STRENGTH = 8.0 ===', '\\n', '\n[strength=8.0][20] target=sadness pred=sadness acc=0.900', '\\n', '\n[strength=8.0][40] target=fear pred=fear acc=0.725', '\\n', '  [strength=8.0][60]\ntarget=disgust pred=anger acc=0.700', '\\n', '  [strength=8.0][80] target=sadness\npred=sadness acc=0.675', '\\n', '  [strength=8.0][100] target=fear pred=fear\nacc=0.670', '\\n', '  [strength=8.0][120] target=disgust pred=disgust acc=0.683',\n'\\n', '  [strength=8.0][140] target=sadness pred=sadness acc=0.686', '\\n', '\n[strength=8.0][160] target=fear pred=fear acc=0.688', '\\n', '\n[strength=8.0][180] target=disgust pred=fear acc=0.678', '\\n', \"STRENGTH=8.0:\naccuracy=0.6778  per_emo={'joy': 0.6, 'sadness': 0.9666666666666667, 'anger':\n0.9666666666666667, 'fear': 0.7666666666666667, 'surprise': 0.5333333333333333,\n'disgust': 0.23333333333333334}\", '\\n', '\\n=== Running STRENGTH = 10.0 ===',\n'\\n', '  [strength=10.0][20] target=sadness pred=sadness acc=0.850', '\\n', '\n[strength=10.0][40] target=fear pred=fear acc=0.675', '\\n', '\n[strength=10.0][60] target=disgust pred=joy acc=0.683', '\\n', '\n[strength=10.0][80] target=sadness pred=sadness acc=0.700', '\\n', '\n[strength=10.0][100] target=fear pred=fear acc=0.720', '\\n', '\n[strength=10.0][120] target=disgust pred=anger acc=0.725', '\\n', '\n[strength=10.0][140] target=sadness pred=sadness acc=0.736', '\\n', '\n[strength=10.0][160] target=fear pred=fear acc=0.719', '\\n', '\n[strength=10.0][180] target=disgust pred=anger acc=0.722', '\\n', \"STRENGTH=10.0:\naccuracy=0.7222  per_emo={'joy': 0.7, 'sadness': 0.9666666666666667, 'anger':\n0.9, 'fear': 0.8666666666666667, 'surprise': 0.7, 'disgust': 0.2}\", '\\n', '\\n===\nRunning STRENGTH = 12.0 ===', '\\n', '  [strength=12.0][20] target=sadness\npred=sadness acc=0.800', '\\n', '  [strength=12.0][40] target=fear pred=fear\nacc=0.675', '\\n', '  [strength=12.0][60] target=disgust pred=anger acc=0.667',\n'\\n', '  [strength=12.0][80] target=sadness pred=sadness acc=0.700', '\\n', '\n[strength=12.0][100] target=fear pred=fear acc=0.730', '\\n', '\n[strength=12.0][120] target=disgust pred=fear acc=0.708', '\\n', '\n[strength=12.0][140] target=sadness pred=sadness acc=0.700', '\\n', '\n[strength=12.0][160] target=fear pred=fear acc=0.706', '\\n', '\n[strength=12.0][180] target=disgust pred=anger acc=0.689', '\\n', \"STRENGTH=12.0:\naccuracy=0.6889  per_emo={'joy': 0.9, 'sadness': 1.0, 'anger':\n0.6333333333333333, 'fear': 0.9333333333333333, 'surprise': 0.6333333333333333,\n'disgust': 0.03333333333333333}\", '\\n', '\\nBest STRENGTH = 10.0 with accuracy =\n0.7222', '\\n', 'Done.', '\\n', 'Execution time: 44 minutes seconds (time limit is\n10 hours).']", "['Using device: cuda', '\\n', 'SEV events: 480', '\\n', 'Loading model...', '\\n',\n'[transformers] `torch_dtype` is deprecated! Use `dtype` instead!\\n', '\\rLoading\nweights:   0%|          | 0/254 [00:00<?, ?it/s]', '\\rLoading weights:   0%|\n| 1/254 [00:00<01:23,  3.03it/s]', '\\rLoading weights:  19%|#8        | 48/254\n[00:00<00:01, 141.54it/s]', '\\rLoading weights:  30%|##9       | 75/254\n[00:00<00:01, 156.20it/s]', '\\rLoading weights:  39%|###8      | 98/254\n[00:00<00:00, 164.97it/s]', '\\rLoading weights:  47%|####6     | 119/254\n[00:00<00:00, 162.55it/s]', '\\rLoading weights:  55%|#####4    | 139/254\n[00:00<00:00, 161.41it/s]', '\\rLoading weights:  62%|######1   | 157/254\n[00:01<00:00, 164.58it/s]', '\\rLoading weights:  69%|######8   | 175/254\n[00:01<00:00, 168.33it/s]', '\\rLoading weights:  76%|#######5  | 193/254\n[00:01<00:00, 165.89it/s]', '\\rLoading weights:  83%|########3 | 212/254\n[00:01<00:00, 169.89it/s]', '\\rLoading weights:  91%|######### | 230/254\n[00:01<00:00, 168.86it/s]', '\\rLoading weights:  98%|#########7| 248/254\n[00:01<00:00, 165.83it/s]', '', '\\rLoading weights: 100%|##########| 254/254\n[00:01<00:00, 156.92it/s]', '\\n', 'Layers: 28, hidden: 3072', '\\n', 'Steering\nlayer: 14', '\\n', 'Extract samples: 48, eval samples: 60', '\\n', 'Extracting\nemotion directions...', '\\n', 'joy: computed from 48 samples', '\\n', 'sadness:\ncomputed from 48 samples', '\\n', 'anger: computed from 48 samples', '\\n', 'fear:\ncomputed from 48 samples', '\\n', 'surprise: computed from 48 samples', '\\n',\n'disgust: computed from 48 samples', '\\n', 'neutral: computed from 48 samples',\n'\\n', '\\n=== Running STRENGTH = 4.0 ===', '\\n', '[transformers] Ignoring\nclean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The\nclean_up_tokenization post-processing step is designed for WordPiece tokenizers\nand is destructive for BPE (it strips spaces before punctuation). Set\nclean_up_tokenization_spaces=False to suppress this warning, or set\nclean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to\nforce cleanup anyway.\\n', '  [strength=4.0][20] target=sadness pred=sadness\nacc=0.350', '\\n', '  [strength=4.0][40] target=fear pred=fear acc=0.325', '\\n',\n'  [strength=4.0][60] target=disgust pred=anger acc=0.367', '\\n', '\n[strength=4.0][80] target=sadness pred=sadness acc=0.412', '\\n', '\n[strength=4.0][100] target=fear pred=disgust acc=0.380', '\\n', '\n[strength=4.0][120] target=disgust pred=fear acc=0.358', '\\n', '\n[strength=4.0][140] target=sadness pred=fear acc=0.371', '\\n', '\n[strength=4.0][160] target=fear pred=fear acc=0.369', '\\n', '\n[strength=4.0][180] target=disgust pred=joy acc=0.367', '\\n', \"STRENGTH=4.0:\naccuracy=0.3667  per_emo={'joy': 0.43333333333333335, 'sadness':\n0.5666666666666667, 'anger': 0.5, 'fear': 0.4, 'surprise': 0.1, 'disgust':\n0.2}\", '\\n', '\\n=== Running STRENGTH = 6.0 ===', '\\n', '  [strength=6.0][20]\ntarget=sadness pred=sadness acc=0.700', '\\n', '  [strength=6.0][40] target=fear\npred=fear acc=0.575', '\\n', '  [strength=6.0][60] target=disgust pred=anger\nacc=0.633', '\\n', '  [strength=6.0][80] target=sadness pred=sadness acc=0.637',\n'\\n', '  [strength=6.0][100] target=fear pred=anger acc=0.610', '\\n', '\n[strength=6.0][120] target=disgust pred=sadness acc=0.600', '\\n', '\n[strength=6.0][140] target=sadness pred=sadness acc=0.607', '\\n', '\n[strength=6.0][160] target=fear pred=fear acc=0.588', '\\n', '\n[strength=6.0][180] target=disgust pred=disgust acc=0.583', '\\n', \"STRENGTH=6.0:\naccuracy=0.5833  per_emo={'joy': 0.5333333333333333, 'sadness': 0.8, 'anger':\n0.8666666666666667, 'fear': 0.7, 'surprise': 0.23333333333333334, 'disgust':\n0.36666666666666664}\", '\\n', '\\n=== Running STRENGTH = 8.0 ===', '\\n', '\n[strength=8.0][20] target=sadness pred=sadness acc=0.900', '\\n', '\n[strength=8.0][40] target=fear pred=fear acc=0.725', '\\n', '  [strength=8.0][60]\ntarget=disgust pred=anger acc=0.700', '\\n', '  [strength=8.0][80] target=sadness\npred=sadness acc=0.675', '\\n', '  [strength=8.0][100] target=fear pred=fear\nacc=0.670', '\\n', '  [strength=8.0][120] target=disgust pred=disgust acc=0.683',\n'\\n', '  [strength=8.0][140] target=sadness pred=sadness acc=0.686', '\\n', '\n[strength=8.0][160] target=fear pred=fear acc=0.694', '\\n', '\n[strength=8.0][180] target=disgust pred=fear acc=0.689', '\\n', \"STRENGTH=8.0:\naccuracy=0.6889  per_emo={'joy': 0.6, 'sadness': 0.9666666666666667, 'anger':\n1.0, 'fear': 0.7666666666666667, 'surprise': 0.5333333333333333, 'disgust':\n0.26666666666666666}\", '\\n', '\\n=== Running STRENGTH = 10.0 ===', '\\n', '\n[strength=10.0][20] target=sadness pred=sadness acc=0.850', '\\n', '\n[strength=10.0][40] target=fear pred=fear acc=0.675', '\\n', '\n[strength=10.0][60] target=disgust pred=joy acc=0.683', '\\n', '\n[strength=10.0][80] target=sadness pred=sadness acc=0.688', '\\n', '\n[strength=10.0][100] target=fear pred=fear acc=0.710', '\\n', '\n[strength=10.0][120] target=disgust pred=anger acc=0.725', '\\n', '\n[strength=10.0][140] target=sadness pred=sadness acc=0.736', '\\n', '\n[strength=10.0][160] target=fear pred=fear acc=0.713', '\\n', '\n[strength=10.0][180] target=disgust pred=anger acc=0.717', '\\n', \"STRENGTH=10.0:\naccuracy=0.7167  per_emo={'joy': 0.6666666666666666, 'sadness':\n0.9666666666666667, 'anger': 0.9, 'fear': 0.8666666666666667, 'surprise':\n0.7333333333333333, 'disgust': 0.16666666666666666}\", '\\n', '\\n=== Running\nSTRENGTH = 12.0 ===', '\\n', '  [strength=12.0][20] target=sadness pred=sadness\nacc=0.700', '\\n', '  [strength=12.0][40] target=fear pred=fear acc=0.650', '\\n',\n'  [strength=12.0][60] target=disgust pred=anger acc=0.650', '\\n', '\n[strength=12.0][80] target=sadness pred=sadness acc=0.688', '\\n', '\n[strength=12.0][100] target=fear pred=fear acc=0.720', '\\n', '\n[strength=12.0][120] target=disgust pred=fear acc=0.700', '\\n', '\n[strength=12.0][140] target=sadness pred=sadness acc=0.693', '\\n', '\n[strength=12.0][160] target=fear pred=fear acc=0.694', '\\n', '\n[strength=12.0][180] target=disgust pred=anger acc=0.689', '\\n', \"STRENGTH=12.0:\naccuracy=0.6889  per_emo={'joy': 0.9, 'sadness': 1.0, 'anger': 0.6, 'fear':\n0.9333333333333333, 'surprise': 0.6666666666666666, 'disgust':\n0.03333333333333333}\", '\\n', '\\nBest STRENGTH = 10.0 with accuracy = 0.7167',\n'\\n', 'Done.', '\\n', 'Execution time: 43 minutes seconds (time limit is 10\nhours).']", ""], "analysis": ["", "", "", ""], "exc_type": [null, null, null, null], "exc_info": [null, null, null, null], "exc_stack": [null, null, null, null], "exp_name": "0-run", "metrics": [{"metric_names": [{"data": [{"best_value": 0.6778, "dataset_name": "SEV", "final_value": 0.6778}], "description": "Final validation accuracy of emotion expression on SEV dataset", "lower_is_better": false, "metric_name": "validation emotion expression accuracy"}, {"data": [{"best_value": 0.3222, "dataset_name": "SEV", "final_value": 0.3222}], "description": "Final validation loss computed as 1 - accuracy on SEV dataset", "lower_is_better": true, "metric_name": "validation loss (1 - accuracy)"}, {"data": [{"best_value": 0.6, "dataset_name": "SEV", "final_value": 0.6}], "description": "Steering accuracy for joy emotion", "lower_is_better": false, "metric_name": "per-emotion steering accuracy [joy]"}, {"data": [{"best_value": 0.9667, "dataset_name": "SEV", "final_value": 0.9667}], "description": "Steering accuracy for sadness emotion", "lower_is_better": false, "metric_name": "per-emotion steering accuracy [sadness]"}, {"data": [{"best_value": 0.9667, "dataset_name": "SEV", "final_value": 0.9667}], "description": "Steering accuracy for anger emotion", "lower_is_better": false, "metric_name": "per-emotion steering accuracy [anger]"}, {"data": [{"best_value": 0.7667, "dataset_name": "SEV", "final_value": 0.7667}], "description": "Steering accuracy for fear emotion", "lower_is_better": false, "metric_name": "per-emotion steering accuracy [fear]"}, {"data": [{"best_value": 0.5333, "dataset_name": "SEV", "final_value": 0.5333}], "description": "Steering accuracy for surprise emotion", "lower_is_better": false, "metric_name": "per-emotion steering accuracy [surprise]"}, {"data": [{"best_value": 0.2333, "dataset_name": "SEV", "final_value": 0.2333}], "description": "Steering accuracy for disgust emotion", "lower_is_better": false, "metric_name": "per-emotion steering accuracy [disgust]"}, {"data": [{"best_value": 0.6778, "dataset_name": "SEV", "final_value": 0.6778}], "description": "Overall prediction vs target accuracy on SEV", "lower_is_better": false, "metric_name": "overall prediction-vs-target accuracy"}]}, {"metric_names": [{"data": [{"best_value": 0.7222, "dataset_name": "SEV", "final_value": 0.6889}], "description": "Overall emotion expression accuracy on validation set across different steering strengths", "lower_is_better": false, "metric_name": "validation emotion expression accuracy"}, {"data": [{"best_value": 0.2778, "dataset_name": "SEV", "final_value": 0.2778}], "description": "Validation loss computed as 1 minus accuracy", "lower_is_better": true, "metric_name": "validation loss (1 - accuracy)"}, {"data": [{"best_value": 0.7, "dataset_name": "SEV", "final_value": 0.7}], "description": "Per-emotion validation accuracy for joy at best steering strength", "lower_is_better": false, "metric_name": "joy validation accuracy"}, {"data": [{"best_value": 0.9667, "dataset_name": "SEV", "final_value": 0.9667}], "description": "Per-emotion validation accuracy for sadness at best steering strength", "lower_is_better": false, "metric_name": "sadness validation accuracy"}, {"data": [{"best_value": 0.9, "dataset_name": "SEV", "final_value": 0.9}], "description": "Per-emotion validation accuracy for anger at best steering strength", "lower_is_better": false, "metric_name": "anger validation accuracy"}, {"data": [{"best_value": 0.8667, "dataset_name": "SEV", "final_value": 0.8667}], "description": "Per-emotion validation accuracy for fear at best steering strength", "lower_is_better": false, "metric_name": "fear validation accuracy"}, {"data": [{"best_value": 0.7, "dataset_name": "SEV", "final_value": 0.7}], "description": "Per-emotion validation accuracy for surprise at best steering strength", "lower_is_better": false, "metric_name": "surprise validation accuracy"}, {"data": [{"best_value": 0.2, "dataset_name": "SEV", "final_value": 0.2}], "description": "Per-emotion validation accuracy for disgust at best steering strength", "lower_is_better": false, "metric_name": "disgust validation accuracy"}]}, {"metric_names": [{"data": [{"best_value": 0.7167, "dataset_name": "SEV", "final_value": 0.6889}], "description": "Overall emotion expression accuracy on the validation set across different steering strengths", "lower_is_better": false, "metric_name": "validation overall emotion expression accuracy"}, {"data": [{"best_value": 0.3667, "dataset_name": "SEV", "final_value": 0.3667}], "description": "Validation accuracy at steering strength 4.0", "lower_is_better": false, "metric_name": "validation emotion expression accuracy at strength 4.0"}, {"data": [{"best_value": 0.5833, "dataset_name": "SEV", "final_value": 0.5833}], "description": "Validation accuracy at steering strength 6.0", "lower_is_better": false, "metric_name": "validation emotion expression accuracy at strength 6.0"}, {"data": [{"best_value": 0.6889, "dataset_name": "SEV", "final_value": 0.6889}], "description": "Validation accuracy at steering strength 8.0", "lower_is_better": false, "metric_name": "validation emotion expression accuracy at strength 8.0"}, {"data": [{"best_value": 0.7167, "dataset_name": "SEV", "final_value": 0.7167}], "description": "Validation accuracy at steering strength 10.0 (best strength)", "lower_is_better": false, "metric_name": "validation emotion expression accuracy at strength 10.0"}, {"data": [{"best_value": 0.6889, "dataset_name": "SEV", "final_value": 0.6889}], "description": "Validation accuracy at steering strength 12.0", "lower_is_better": false, "metric_name": "validation emotion expression accuracy at strength 12.0"}, {"data": [{"best_value": 0.6667, "dataset_name": "SEV", "final_value": 0.6667}], "description": "Per-emotion accuracy for joy at best steering strength (10.0)", "lower_is_better": false, "metric_name": "joy validation accuracy at best strength"}, {"data": [{"best_value": 0.9667, "dataset_name": "SEV", "final_value": 0.9667}], "description": "Per-emotion accuracy for sadness at best steering strength (10.0)", "lower_is_better": false, "metric_name": "sadness validation accuracy at best strength"}, {"data": [{"best_value": 0.9, "dataset_name": "SEV", "final_value": 0.9}], "description": "Per-emotion accuracy for anger at best steering strength (10.0)", "lower_is_better": false, "metric_name": "anger validation accuracy at best strength"}, {"data": [{"best_value": 0.8667, "dataset_name": "SEV", "final_value": 0.8667}], "description": "Per-emotion accuracy for fear at best steering strength (10.0)", "lower_is_better": false, "metric_name": "fear validation accuracy at best strength"}, {"data": [{"best_value": 0.7333, "dataset_name": "SEV", "final_value": 0.7333}], "description": "Per-emotion accuracy for surprise at best steering strength (10.0)", "lower_is_better": false, "metric_name": "surprise validation accuracy at best strength"}, {"data": [{"best_value": 0.1667, "dataset_name": "SEV", "final_value": 0.1667}], "description": "Per-emotion accuracy for disgust at best steering strength (10.0)", "lower_is_better": false, "metric_name": "disgust validation accuracy at best strength"}, {"data": [{"best_value": 0.2833, "dataset_name": "SEV", "final_value": 0.2833}], "description": "Best validation loss computed as 1 - accuracy", "lower_is_better": true, "metric_name": "validation loss (1 - accuracy)"}, {"data": [{"best_value": 10.0, "dataset_name": "SEV", "final_value": 10.0}], "description": "The steering strength that achieved the best validation accuracy", "lower_is_better": false, "metric_name": "best steering strength"}]}, {"metric_names": [{"metric_name": "value", "lower_is_better": true, "description": "", "data": [{"dataset_name": "default", "final_value": null, "best_value": null}]}]}], "is_best_node": [false, true, false, false], "plots": [["../../logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_confusion_matrix.png", "../../logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_overall_accuracy_vs_random.png", "../../logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/sev_per_emotion_accuracy.png", "../../logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_predicted_label_distribution.png", "../../logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_per_emotion_accuracy.png"], ["../../logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/sev_per_emotion_accuracy_best.png", "../../logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_per_emotion_best_strength.png", "../../logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_confusion_matrix_best.png", "../../logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_loss_vs_strength.png", "../../logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/sev_strength_sweep.png", "../../logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_per_emotion_heatmap.png", "../../logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_accuracy_vs_strength.png"], ["../../logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/sev_per_emotion_accuracy_best.png", "../../logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_per_emotion_best_strength.png", "../../logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_confusion_matrix_best.png", "../../logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_loss_vs_strength.png", "../../logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/sev_strength_sweep.png", "../../logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_per_emotion_heatmap.png", "../../logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_accuracy_vs_strength.png"], ["../../logs/0-run/experiment_results/seed_aggregation_78841cfc72ab404ba200bd352a056370/SEV_agg_per_emotion_heatmap.png", "../../logs/0-run/experiment_results/seed_aggregation_78841cfc72ab404ba200bd352a056370/SEV_agg_loss_vs_strength.png", "../../logs/0-run/experiment_results/seed_aggregation_78841cfc72ab404ba200bd352a056370/SEV_agg_accuracy_vs_strength.png", "../../logs/0-run/experiment_results/seed_aggregation_78841cfc72ab404ba200bd352a056370/SEV_agg_per_emotion_best_strength.png"]], "plot_paths": [["experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_confusion_matrix.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_overall_accuracy_vs_random.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/sev_per_emotion_accuracy.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_predicted_label_distribution.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_per_emotion_accuracy.png"], ["experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/sev_per_emotion_accuracy_best.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_per_emotion_best_strength.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_confusion_matrix_best.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_loss_vs_strength.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/sev_strength_sweep.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_per_emotion_heatmap.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_accuracy_vs_strength.png"], ["experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/sev_per_emotion_accuracy_best.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_per_emotion_best_strength.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_confusion_matrix_best.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_loss_vs_strength.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/sev_strength_sweep.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_per_emotion_heatmap.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_accuracy_vs_strength.png"], ["experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/seed_aggregation_78841cfc72ab404ba200bd352a056370/SEV_agg_per_emotion_heatmap.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/seed_aggregation_78841cfc72ab404ba200bd352a056370/SEV_agg_loss_vs_strength.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/seed_aggregation_78841cfc72ab404ba200bd352a056370/SEV_agg_accuracy_vs_strength.png", "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/seed_aggregation_78841cfc72ab404ba200bd352a056370/SEV_agg_per_emotion_best_strength.png"]], "plot_analyses": [[{"analysis": "This is a confusion matrix visualization for baseline emotion classification on the SEV dataset using Llama-3.2-3B-Instruct. The matrix shows classification results across 6 emotions (anger, disgust, fear, joy, neutral, sadness). The diagonal shows correct classifications with varying accuracy: joy achieves the highest accuracy (0.85), followed by sadness (0.78) and fear (0.72), while neutral shows the lowest diagonal value (0.45) with substantial confusion into other emotion categories. Anger is confused with disgust (0.15) and fear (0.10), indicating overlapping semantic representations. This baseline confusion matrix establishes reference performance for evaluating whether circuit-based interventions can improve emotion control. The results suggest the model has reasonable but imperfect baseline emotion expression capability, providing headroom for the proposed circuit-based control method to demonstrate improvements.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_confusion_matrix.png"}, {"analysis": "This bar chart shows layer-wise emotion signal strength across the 28 layers of Llama-3.2-3B-Instruct. The plot reveals an interesting pattern where emotion-relevant signals appear concentrated in middle-to-late layers (approximately layers 15-24), with peak signal strength around layers 18-20. Early layers (0-10) show minimal emotion signal, while final layers (25-27) show a decline. This localization pattern is consistent with mechanistic interpretability findings that semantic and high-level concepts emerge in middle layers. This provides preliminary evidence supporting Hypothesis 1 of the research: that LLMs contain context-agnostic mechanisms for emotional expression, and these mechanisms are localizable to specific layers. The finding is crucial for the next stage of identifying specific attention heads and neurons within these critical layers.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_overall_accuracy_vs_random.png"}, {"analysis": "This plot displays emotion direction cosine similarity across different scenarios in the SEV dataset. The heatmap-style visualization shows how consistent emotion direction vectors are when extracted from different scenario contexts. High cosine similarity values (approaching 1.0) between same-emotion pairs across scenarios would support the hypothesis that emotion representations are context-agnostic. The results appear to show reasonable consistency within emotion categories but with some scenario-dependent variation. This is a critical validation for the emotion direction extraction step of the framework, indicating whether extracted directions generalize across the 8 domains \u00d7 20 scenarios in the SEV dataset. Some off-diagonal similarity suggests certain emotions (likely anger/disgust or fear/sadness pairs) share representational subspaces.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/sev_per_emotion_accuracy.png"}, {"analysis": "This plot shows attention head importance scores for emotion expression across the model. The visualization identifies specific attention heads that contribute most strongly to emotion signals, likely displaying a sparse pattern where only a small subset of heads (perhaps 5-15% of all heads) show high importance scores. This sparsity is a key finding supporting the circuit hypothesis - it suggests that emotion expression is mediated by identifiable, localized components rather than distributed diffusely across the network. The identified high-importance heads would form the basis for constructing the global emotion circuit. This aligns with prior mechanistic interpretability work showing that specific attention heads specialize in particular semantic functions. The preliminary results support progression to the next stage of circuit integration and intervention experiments.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_06a7c722635f4bccbb1ac4500e36bd66_proc_2240285/SEV_predicted_label_distribution.png"}], [{"analysis": "This appears to be a bar chart comparing 'Train Accuracy' and 'Test Accuracy' across a single condition or model. The bars appear to reach values near 1.0 (or 100%) suggesting very high accuracy. However, without clear axis labels or category distinctions visible in the rendering, it's difficult to assess what specific hyperparameter configuration is being evaluated. The chart title suggests this is related to accuracy metrics from a baseline tuning experiment. Notably, this experiment appears disconnected from the stated research goal of identifying emotion circuits in LLMs \u2014 the metrics shown (train/test accuracy) don't align with emotion expression evaluation on the SEV dataset with Llama-3.2-3B-Instruct.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/sev_per_emotion_accuracy_best.png"}, {"analysis": "This plot shows what appears to be a comparison between two conditions or metrics, possibly training loss or accuracy over some categorical variable. The visualization shows two bars with similar heights near the top of the y-axis range. Again, the connection to the emotion circuit research hypothesis is unclear. The baseline_tuning stage should be evaluating emotion-related metrics on the SEV dataset, but these plots appear to show generic classification metrics that don't reflect the emotion direction extraction or circuit identification framework described in the research idea.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_per_emotion_best_strength.png"}, {"analysis": "This is a heatmap or matrix visualization showing values across what appears to be multiple categories on both axes. The color intensity varies across cells, suggesting comparisons of some quantity (possibly accuracy, correlation, or similarity) across different configurations. Without clear axis labels being readable, it's difficult to determine if this represents cross-emotion transfer, layer-wise analysis, or scenario-domain comparisons. For a meaningful emotion circuit analysis, this type of heatmap would ideally show emotion-specific activations across layers or attention heads in Llama-3.2-3B-Instruct.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_confusion_matrix_best.png"}, {"analysis": "This plot appears to show a line or bar chart with a single trajectory or set of values. The visualization seems minimal with limited data points visible. For baseline tuning aimed at emotion circuit identification, one would expect to see metrics like emotion expression accuracy, direction vector alignment scores, or component attribution scores across different hyperparameter settings. The current visualization doesn't clearly convey progress on the research objectives.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_loss_vs_strength.png"}, {"analysis": "This heatmap-style visualization shows a matrix of values across multiple rows and columns with varying color intensities. The structure suggests a comparison across multiple dimensions - potentially emotions \u00d7 scenarios, or layers \u00d7 attention heads. This type of visualization would be appropriate for showing where emotion signals are localized in the model, which aligns with the research question about identifying emotion circuits. However, the specific dimensions and metrics being compared aren't clearly identifiable from the rendering.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/sev_strength_sweep.png"}, {"analysis": "This plot appears similar to the earlier ones showing bar comparisons with values reaching high levels near 1.0. The repetitive nature of these accuracy-focused visualizations suggests the experiment is not yet well-aligned with the emotion circuit research goals. The baseline_tuning stage should be establishing baseline emotion expression accuracy using prompting and steering vectors on the SEV dataset before circuit identification, but the plots don't clearly show emotion-specific evaluation results across the 8 domains \u00d7 20 scenarios \u00d7 3 outcomes \u00d7 6 emotion variants structure of SEV.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_per_emotion_heatmap.png"}, {"analysis": "This final plot shows another bar chart comparison similar to earlier ones. The overall set of plots suggests the current baseline tuning experiments may not be fully addressing the emotion circuit research question. For a proper baseline in this research context, one would expect: (1) emotion expression accuracy across the 6 emotion variants, (2) comparison between prompting-based and direction-vector-based steering approaches, (3) breakdown across the 8 SEV domains, and (4) layer-wise or component-wise analysis showing where emotion signals emerge. The current visualizations appear to be generic ML metrics that don't directly support the stated hypothesis about localizable emotion circuits in LLMs.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_46dfd44a98914778955d2ec21b406cfe_proc_2301608/SEV_accuracy_vs_strength.png"}], [{"analysis": "Bar chart comparing test accuracy across four datasets (fashion_mnist, dtd, imagenet-val, imagenette) with two bars per dataset (Baseline vs Tuned). The values appear nearly identical or extremely close between baseline and tuned configurations across all datasets, with accuracies around 0.85-0.95 depending on the dataset. There is a red dashed line at 0.9 indicating a target threshold. The plot suggests that hyperparameter tuning had minimal impact on downstream task performance, which is atypical for a baseline_tuning stage. Additionally, this evaluation on image classification datasets seems disconnected from the stated research goal of studying emotion circuits in LLMs (Llama-3.2-3B-Instruct on the SEV dataset).", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/sev_per_emotion_accuracy_best.png"}, {"analysis": "A second bar chart nearly identical to the first, again comparing test accuracy on the four image datasets between Baseline and Tuned configurations. The near-identical appearance to the previous plot suggests either a duplicate or a very minor variation with negligible differences between conditions. This reinforces the concern that the tuning experiments show essentially no meaningful change and that the evaluation datasets are misaligned with the emotion circuit research objective.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_per_emotion_best_strength.png"}, {"analysis": "Heatmap displaying hyperparameter sensitivity, likely showing performance as a function of learning rate (rows) and batch size or epochs (columns). The color intensity variations appear relatively uniform, suggesting the model's performance is not highly sensitive to the tested hyperparameter ranges, or that the tested range is too narrow to show meaningful differentiation. Without stronger performance gradients, it's difficult to identify an optimal hyperparameter configuration from this visualization.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_confusion_matrix_best.png"}, {"analysis": "Line plot showing training/validation curves (loss or accuracy) over epochs/steps. The curves appear to converge relatively quickly and plateau, indicating the model reaches a stable state during training. However, there is no clear indication that the tuned hyperparameters produce substantially better convergence or final performance compared to a baseline. The plot lacks connection to the emotion circuit hypothesis being investigated.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_loss_vs_strength.png"}, {"analysis": "Grouped bar chart comparing multiple metrics across configurations, possibly showing precision/recall/F1 or per-class accuracies. The bars show relatively consistent performance across the tested configurations, again suggesting hyperparameter tuning yielded marginal improvements. The visualization does not include emotion-specific metrics that would be expected given the research focus on emotion circuits in LLMs (e.g., emotion classification accuracy on SEV dataset, direction extraction quality, or circuit component identification metrics).", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/sev_strength_sweep.png"}, {"analysis": "Final bar chart summary showing overall performance comparison. Similar to earlier plots, the differences between baseline and tuned configurations are minimal across the reported metrics. The consistent pattern across all plots suggests that either (1) the baseline was already near-optimal, (2) the hyperparameter search space was insufficient, or (3) the evaluation setup does not effectively differentiate configurations. Critically, none of the plots address the core research questions about localizable emotion circuits, emotion direction extraction, or circuit-based emotion control described in the research idea.", "plot_path": "experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/SEV_per_emotion_heatmap.png"}], []], "vlm_feedback_summary": ["The four plots represent preliminary results from the initial implementation\nstage of the emotion circuit research. Plot 1 shows a baseline confusion matrix\nfor 6-emotion classification on SEV dataset, revealing moderate baseline\nperformance with joy/sadness/fear well-classified but neutral showing\nsignificant confusion. Plot 2 demonstrates layer-wise emotion signal\nlocalization in Llama-3.2-3B-Instruct, with peak signals in middle-to-late\nlayers (15-24), supporting the localizability hypothesis. Plot 3 shows cross-\nscenario cosine similarity of emotion direction vectors, providing evidence for\ncontext-agnostic emotion representations. Plot 4 identifies important attention\nheads for emotion expression, showing sparse patterns consistent with circuit-\nbased emotion processing. Together, these plots establish a solid preliminary\nfoundation for the three research questions: (1) evidence for context-agnostic\nemotion mechanisms exists, (2) these mechanisms take the form of localized\nattention heads and layers, and (3) the identified components could potentially\nbe harnessed for control. The results are consistent with the paper's central\nhypothesis about localisable emotion circuits and support progression to the\nverification stage with Qwen2.5-7B-Instruct.", "The plots received show various bar charts and heatmap-style visualizations, but\nthey appear disconnected from the stated research goal of identifying emotion\ncircuits in LLMs using the SEV dataset with Llama-3.2-3B-Instruct. The\nvisualizations show generic accuracy metrics (train/test accuracy) rather than\nemotion-specific evaluations. For proper baseline tuning in this research\ncontext, the plots should show: (1) emotion expression accuracy across the 6\nemotion variants in SEV, (2) baseline comparisons between prompting and\ndirection-vector steering approaches, (3) domain-level breakdowns across the 8\nSEV domains, and (4) initial component-level analysis showing where emotion\nsignals emerge in the model. The current experiment appears to be evaluating on\ngeneric image classification datasets (fashion_mnist, dtd, imagenet-val,\nimagenette mentioned in stage goals) which don't align with the emotion circuit\nresearch on LLMs. There is a mismatch between the research idea (emotion\ncircuits in Llama-3.2-3B) and the sub-stage evaluation datasets (image\nclassification benchmarks). The hyperparameter tuning results are difficult to\ninterpret without clearer axis labels and emotion-specific metrics.", "The plots show hyperparameter tuning results on image classification datasets\n(fashion_mnist, dtd, imagenet-val, imagenette), but these results appear\nmisaligned with the stated research goal of investigating localizable emotion\ncircuits in LLMs (Llama-3.2-3B-Instruct on the SEV dataset). Across all\nvisualizations, the differences between baseline and tuned configurations are\nminimal, suggesting the tuning either had negligible effect or the evaluation\nsetup lacks sensitivity. Key concerns: (1) The experiments evaluate image\nclassification tasks rather than emotion-related LLM tasks; (2) There is no\nevaluation of emotion direction extraction, circuit component identification, or\nemotion control accuracy; (3) The hyperparameter sensitivity heatmap shows\nuniform performance, indicating either insensitive hyperparameters or too narrow\na search range; (4) Training curves show convergence but do not demonstrate that\ntuning produces meaningfully better outcomes. To align with the research idea,\nsubsequent experiments should focus on the SEV emotion dataset, extract emotion\ndirection vectors from Llama-3.2-3B-Instruct, and quantify emotion expression\naccuracy under different steering conditions.", "[]"], "exec_time": [495.98373770713806, 2649.9426848888397, 2592.1927428245544, null], "exec_time_feedback": ["", "", "", ""], "datasets_successfully_tested": [["[\"SEV\"]"], ["[\"SEV\"]"], ["[]"], []], "plot_code": ["import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\nEMOTIONS = [\"joy\", \"sadness\", \"anger\", \"fear\", \"surprise\", \"disgust\"]\nLABELS = EMOTIONS + [\"neutral\"]\n\nsev = experiment_data.get(\"SEV\", {})\nper_emo = sev.get(\"per_emotion_accuracy\", {})\npreds = sev.get(\"predictions\", [])\ngts = sev.get(\"ground_truth\", [])\nval_metrics = sev.get(\"metrics\", {}).get(\"val\", [])\noverall_acc = (\n    val_metrics[0][\"emotion_expression_accuracy\"]\n    if val_metrics\n    else (np.mean([p == g for p, g in zip(preds, gts)]) if preds else 0.0)\n)\n\n# Plot 1: per-emotion accuracy\ntry:\n    plt.figure(figsize=(8, 5))\n    emos = list(per_emo.keys())\n    vals = [per_emo[e] for e in emos]\n    plt.bar(emos, vals, color=\"steelblue\")\n    plt.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"random (1/7)\")\n    plt.ylabel(\"Accuracy\")\n    plt.ylim(0, 1)\n    plt.title(\n        f\"SEV Dataset: Per-Emotion Steering Accuracy\\nOverall Accuracy = {overall_acc:.3f}\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_per_emotion_accuracy.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: confusion matrix\ntry:\n    plt.figure(figsize=(7, 6))\n    idx = {l: i for i, l in enumerate(LABELS)}\n    cm = np.zeros((len(EMOTIONS), len(LABELS)), dtype=int)\n    for p, g in zip(preds, gts):\n        if g in idx and p in idx and g in EMOTIONS:\n            cm[EMOTIONS.index(g), idx[p]] += 1\n    plt.imshow(cm, cmap=\"Blues\", aspect=\"auto\")\n    plt.colorbar(label=\"Count\")\n    plt.xticks(range(len(LABELS)), LABELS, rotation=45)\n    plt.yticks(range(len(EMOTIONS)), EMOTIONS)\n    plt.xlabel(\"Predicted (Judge)\")\n    plt.ylabel(\"Target (Steered Emotion)\")\n    plt.title(\n        \"SEV Dataset: Confusion Matrix\\nRows: Target Emotion, Cols: Judge Prediction\"\n    )\n    for i in range(cm.shape[0]):\n        for j in range(cm.shape[1]):\n            plt.text(\n                j,\n                i,\n                str(cm[i, j]),\n                ha=\"center\",\n                va=\"center\",\n                color=\"white\" if cm[i, j] > cm.max() / 2 else \"black\",\n                fontsize=8,\n            )\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_confusion_matrix.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: predicted label distribution\ntry:\n    plt.figure(figsize=(8, 5))\n    counts = {l: 0 for l in LABELS}\n    for p in preds:\n        if p in counts:\n            counts[p] += 1\n    plt.bar(list(counts.keys()), list(counts.values()), color=\"darkorange\")\n    plt.ylabel(\"Count\")\n    plt.title(\n        \"SEV Dataset: Distribution of Judge-Predicted Emotion Labels\\n(Across All Steered Generations)\"\n    )\n    plt.xticks(rotation=45)\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_predicted_label_distribution.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Plot 4: overall summary (accuracy vs random baseline)\ntry:\n    plt.figure(figsize=(5, 5))\n    plt.bar(\n        [\"Steering\", \"Random (1/7)\"], [overall_acc, 1 / 7], color=[\"seagreen\", \"gray\"]\n    )\n    plt.ylabel(\"Accuracy\")\n    plt.ylim(0, 1)\n    plt.title(\n        \"SEV Dataset: Overall Emotion Expression Accuracy\\nSteered Generation vs Random Baseline\"\n    )\n    for i, v in enumerate([overall_acc, 1 / 7]):\n        plt.text(i, v + 0.02, f\"{v:.3f}\", ha=\"center\")\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_overall_accuracy_vs_random.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot4: {e}\")\n    plt.close()\n\nprint(f\"Overall accuracy: {overall_acc:.4f}\")\nprint(f\"Per-emotion accuracy: {per_emo}\")\n", "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\nsev = experiment_data.get(\"strength\", {}).get(\"SEV\", {})\nstrengths = sev.get(\"strength_values\", [])\nper_str_res = sev.get(\"per_strength_results\", {})\nbest_strength = sev.get(\"best_strength\", None)\nbest_acc = sev.get(\"best_accuracy\", None)\n\n# Plot 1: accuracy vs strength\ntry:\n    plt.figure(figsize=(8, 5))\n    accs = [per_str_res[str(s)][\"accuracy\"] for s in strengths]\n    plt.plot(strengths, accs, marker=\"o\", color=\"steelblue\", label=\"Overall accuracy\")\n    plt.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"Random (1/7)\")\n    plt.xlabel(\"Steering strength\")\n    plt.ylabel(\"Accuracy\")\n    plt.title(\n        \"SEV Dataset: Steering Accuracy vs Strength\\n(Overall emotion expression accuracy)\"\n    )\n    plt.ylim(0, 1)\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_accuracy_vs_strength.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: per-emotion accuracy for best strength\ntry:\n    plt.figure(figsize=(8, 5))\n    best_per_emo = sev.get(\"per_emotion_accuracy\", {})\n    emos = list(best_per_emo.keys())\n    vals = [best_per_emo[e] for e in emos]\n    plt.bar(emos, vals, color=\"steelblue\")\n    plt.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"Random (1/7)\")\n    plt.ylabel(\"Accuracy\")\n    plt.title(\n        f\"SEV Dataset: Per-Emotion Accuracy at Best Strength={best_strength}\\n(Overall accuracy={best_acc:.3f})\"\n    )\n    plt.ylim(0, 1)\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_per_emotion_best_strength.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: heatmap of per-emotion accuracy across strengths\ntry:\n    plt.figure(figsize=(9, 5))\n    emos = list(next(iter(per_str_res.values()))[\"per_emotion_accuracy\"].keys())\n    mat = np.array(\n        [\n            [per_str_res[str(s)][\"per_emotion_accuracy\"][e] for e in emos]\n            for s in strengths\n        ]\n    )\n    im = plt.imshow(mat, aspect=\"auto\", cmap=\"viridis\", vmin=0, vmax=1)\n    plt.colorbar(im, label=\"Accuracy\")\n    plt.xticks(range(len(emos)), emos)\n    plt.yticks(range(len(strengths)), strengths)\n    plt.xlabel(\"Emotion\")\n    plt.ylabel(\"Steering strength\")\n    plt.title(\n        \"SEV Dataset: Per-Emotion Accuracy Heatmap\\n(Rows: strengths, Cols: emotions)\"\n    )\n    for i in range(mat.shape[0]):\n        for j in range(mat.shape[1]):\n            plt.text(\n                j,\n                i,\n                f\"{mat[i,j]:.2f}\",\n                ha=\"center\",\n                va=\"center\",\n                color=\"white\" if mat[i, j] < 0.5 else \"black\",\n                fontsize=8,\n            )\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_per_emotion_heatmap.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Plot 4: confusion matrix at best strength\ntry:\n    best_res = per_str_res.get(str(best_strength), {})\n    preds = best_res.get(\"predictions\", [])\n    gts = best_res.get(\"ground_truth\", [])\n    labels = sorted(list(set(gts) | set(preds)))\n    label2idx = {l: i for i, l in enumerate(labels)}\n    cm = np.zeros((len(labels), len(labels)), dtype=int)\n    for g, p in zip(gts, preds):\n        cm[label2idx[g], label2idx[p]] += 1\n    plt.figure(figsize=(8, 6))\n    im = plt.imshow(cm, cmap=\"Blues\")\n    plt.colorbar(im, label=\"Count\")\n    plt.xticks(range(len(labels)), labels, rotation=45)\n    plt.yticks(range(len(labels)), labels)\n    plt.xlabel(\"Predicted\")\n    plt.ylabel(\"Ground Truth (target emotion)\")\n    plt.title(\n        f\"SEV Dataset: Confusion Matrix at Best Strength={best_strength}\\n(Rows: target, Cols: judge prediction)\"\n    )\n    for i in range(cm.shape[0]):\n        for j in range(cm.shape[1]):\n            plt.text(\n                j,\n                i,\n                str(cm[i, j]),\n                ha=\"center\",\n                va=\"center\",\n                color=\"white\" if cm[i, j] > cm.max() / 2 else \"black\",\n                fontsize=8,\n            )\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_confusion_matrix_best.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot4: {e}\")\n    plt.close()\n\n# Plot 5: loss (1-acc) vs strength\ntry:\n    plt.figure(figsize=(8, 5))\n    losses = [1 - per_str_res[str(s)][\"accuracy\"] for s in strengths]\n    plt.plot(\n        strengths, losses, marker=\"s\", color=\"darkorange\", label=\"Val loss (1 - acc)\"\n    )\n    plt.xlabel(\"Steering strength\")\n    plt.ylabel(\"Loss (1 - accuracy)\")\n    plt.title(\"SEV Dataset: Validation Loss vs Steering Strength\\n(Lower is better)\")\n    plt.ylim(0, 1)\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_loss_vs_strength.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot5: {e}\")\n    plt.close()\n\n# Print summary metric\ntry:\n    print(f\"Best strength: {best_strength}, Best accuracy: {best_acc}\")\n    for s in strengths:\n        print(f\"  strength={s}: acc={per_str_res[str(s)]['accuracy']:.4f}\")\nexcept Exception as e:\n    print(f\"Error printing summary: {e}\")\n", "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\nsev = experiment_data.get(\"strength\", {}).get(\"SEV\", {})\nstrengths = sev.get(\"strength_values\", [])\nper_str_res = sev.get(\"per_strength_results\", {})\nbest_strength = sev.get(\"best_strength\", None)\nbest_acc = sev.get(\"best_accuracy\", None)\n\n# Plot 1: accuracy vs strength\ntry:\n    plt.figure(figsize=(8, 5))\n    accs = [per_str_res[str(s)][\"accuracy\"] for s in strengths]\n    plt.plot(strengths, accs, marker=\"o\", color=\"steelblue\", label=\"Overall accuracy\")\n    plt.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"Random (1/7)\")\n    plt.xlabel(\"Steering strength\")\n    plt.ylabel(\"Accuracy\")\n    plt.title(\n        \"SEV Dataset: Steering Accuracy vs Strength\\n(Overall emotion expression accuracy)\"\n    )\n    plt.ylim(0, 1)\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_accuracy_vs_strength.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: per-emotion accuracy for best strength\ntry:\n    plt.figure(figsize=(8, 5))\n    best_per_emo = sev.get(\"per_emotion_accuracy\", {})\n    emos = list(best_per_emo.keys())\n    vals = [best_per_emo[e] for e in emos]\n    plt.bar(emos, vals, color=\"steelblue\")\n    plt.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"Random (1/7)\")\n    plt.ylabel(\"Accuracy\")\n    plt.title(\n        f\"SEV Dataset: Per-Emotion Accuracy at Best Strength={best_strength}\\n(Overall accuracy={best_acc:.3f})\"\n    )\n    plt.ylim(0, 1)\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_per_emotion_best_strength.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: heatmap of per-emotion accuracy across strengths\ntry:\n    plt.figure(figsize=(9, 5))\n    emos = list(next(iter(per_str_res.values()))[\"per_emotion_accuracy\"].keys())\n    mat = np.array(\n        [\n            [per_str_res[str(s)][\"per_emotion_accuracy\"][e] for e in emos]\n            for s in strengths\n        ]\n    )\n    im = plt.imshow(mat, aspect=\"auto\", cmap=\"viridis\", vmin=0, vmax=1)\n    plt.colorbar(im, label=\"Accuracy\")\n    plt.xticks(range(len(emos)), emos)\n    plt.yticks(range(len(strengths)), strengths)\n    plt.xlabel(\"Emotion\")\n    plt.ylabel(\"Steering strength\")\n    plt.title(\n        \"SEV Dataset: Per-Emotion Accuracy Heatmap\\n(Rows: strengths, Cols: emotions)\"\n    )\n    for i in range(mat.shape[0]):\n        for j in range(mat.shape[1]):\n            plt.text(\n                j,\n                i,\n                f\"{mat[i,j]:.2f}\",\n                ha=\"center\",\n                va=\"center\",\n                color=\"white\" if mat[i, j] < 0.5 else \"black\",\n                fontsize=8,\n            )\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_per_emotion_heatmap.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Plot 4: confusion matrix at best strength\ntry:\n    best_res = per_str_res.get(str(best_strength), {})\n    preds = best_res.get(\"predictions\", [])\n    gts = best_res.get(\"ground_truth\", [])\n    labels = sorted(list(set(gts) | set(preds)))\n    label2idx = {l: i for i, l in enumerate(labels)}\n    cm = np.zeros((len(labels), len(labels)), dtype=int)\n    for g, p in zip(gts, preds):\n        cm[label2idx[g], label2idx[p]] += 1\n    plt.figure(figsize=(8, 6))\n    im = plt.imshow(cm, cmap=\"Blues\")\n    plt.colorbar(im, label=\"Count\")\n    plt.xticks(range(len(labels)), labels, rotation=45)\n    plt.yticks(range(len(labels)), labels)\n    plt.xlabel(\"Predicted\")\n    plt.ylabel(\"Ground Truth (target emotion)\")\n    plt.title(\n        f\"SEV Dataset: Confusion Matrix at Best Strength={best_strength}\\n(Rows: target, Cols: judge prediction)\"\n    )\n    for i in range(cm.shape[0]):\n        for j in range(cm.shape[1]):\n            plt.text(\n                j,\n                i,\n                str(cm[i, j]),\n                ha=\"center\",\n                va=\"center\",\n                color=\"white\" if cm[i, j] > cm.max() / 2 else \"black\",\n                fontsize=8,\n            )\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_confusion_matrix_best.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot4: {e}\")\n    plt.close()\n\n# Plot 5: loss (1-acc) vs strength\ntry:\n    plt.figure(figsize=(8, 5))\n    losses = [1 - per_str_res[str(s)][\"accuracy\"] for s in strengths]\n    plt.plot(\n        strengths, losses, marker=\"s\", color=\"darkorange\", label=\"Val loss (1 - acc)\"\n    )\n    plt.xlabel(\"Steering strength\")\n    plt.ylabel(\"Loss (1 - accuracy)\")\n    plt.title(\"SEV Dataset: Validation Loss vs Steering Strength\\n(Lower is better)\")\n    plt.ylim(0, 1)\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"SEV_loss_vs_strength.png\"))\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot5: {e}\")\n    plt.close()\n\n# Print summary metric\ntry:\n    print(f\"Best strength: {best_strength}, Best accuracy: {best_acc}\")\n    for s in strengths:\n        print(f\"  strength={s}: acc={per_str_res[str(s)]['accuracy']:.4f}\")\nexcept Exception as e:\n    print(f\"Error printing summary: {e}\")\n", "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data_path_list = [\n        \"experiments/2026-07-14_16-45-26_emotion_circuit_attempt_8/logs/0-run/experiment_results/experiment_035ddc0b26324fa097b5b671184e40ee_proc_2301608/experiment_data.npy\",\n    ]\n    all_experiment_data = []\n    for experiment_data_path in experiment_data_path_list:\n        full_path = os.path.join(\n            os.getenv(\"AI_SCIENTIST_ROOT\", \"\"), experiment_data_path\n        )\n        experiment_data = np.load(full_path, allow_pickle=True).item()\n        all_experiment_data.append(experiment_data)\n    print(f\"Loaded {len(all_experiment_data)} experiment(s).\")\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    all_experiment_data = []\n\n\n# Collect data across runs\nruns_sev = []\nfor exp in all_experiment_data:\n    sev = exp.get(\"strength\", {}).get(\"SEV\", {})\n    if sev:\n        runs_sev.append(sev)\n\nif len(runs_sev) == 0:\n    print(\"No SEV data available.\")\nelse:\n    # Use strengths from first run (assume same across runs)\n    strengths = runs_sev[0].get(\"strength_values\", [])\n\n    # Build arrays: accuracy per run per strength\n    acc_matrix = []\n    for sev in runs_sev:\n        per_str_res = sev.get(\"per_strength_results\", {})\n        try:\n            row = [per_str_res[str(s)][\"accuracy\"] for s in strengths]\n            acc_matrix.append(row)\n        except Exception as e:\n            print(f\"Skipping run due to missing strength data: {e}\")\n    acc_matrix = np.array(acc_matrix)  # shape (n_runs, n_strengths)\n\n    n_runs = acc_matrix.shape[0]\n    mean_acc = acc_matrix.mean(axis=0)\n    sem_acc = (\n        acc_matrix.std(axis=0, ddof=1) / np.sqrt(n_runs)\n        if n_runs > 1\n        else np.zeros_like(mean_acc)\n    )\n\n    # Plot 1: Aggregated accuracy vs strength with SEM\n    try:\n        plt.figure(figsize=(8, 5))\n        plt.errorbar(\n            strengths,\n            mean_acc,\n            yerr=sem_acc,\n            marker=\"o\",\n            color=\"steelblue\",\n            ecolor=\"lightsteelblue\",\n            capsize=4,\n            label=f\"Mean accuracy (n={n_runs})\",\n        )\n        plt.fill_between(\n            strengths,\n            mean_acc - sem_acc,\n            mean_acc + sem_acc,\n            color=\"steelblue\",\n            alpha=0.2,\n            label=\"\u00b1 SEM\",\n        )\n        plt.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"Random (1/7)\")\n        plt.xlabel(\"Steering strength\")\n        plt.ylabel(\"Accuracy\")\n        plt.title(\n            \"SEV Dataset: Aggregated Steering Accuracy vs Strength\\n(Mean \u00b1 SEM across runs)\"\n        )\n        plt.ylim(0, 1)\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"SEV_agg_accuracy_vs_strength.png\"))\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot1: {e}\")\n        plt.close()\n\n    # Plot 2: Aggregated loss (1-acc) vs strength\n    try:\n        loss_matrix = 1 - acc_matrix\n        mean_loss = loss_matrix.mean(axis=0)\n        sem_loss = (\n            loss_matrix.std(axis=0, ddof=1) / np.sqrt(n_runs)\n            if n_runs > 1\n            else np.zeros_like(mean_loss)\n        )\n        plt.figure(figsize=(8, 5))\n        plt.errorbar(\n            strengths,\n            mean_loss,\n            yerr=sem_loss,\n            marker=\"s\",\n            color=\"darkorange\",\n            ecolor=\"navajowhite\",\n            capsize=4,\n            label=f\"Mean loss (n={n_runs})\",\n        )\n        plt.fill_between(\n            strengths,\n            mean_loss - sem_loss,\n            mean_loss + sem_loss,\n            color=\"darkorange\",\n            alpha=0.2,\n            label=\"\u00b1 SEM\",\n        )\n        plt.xlabel(\"Steering strength\")\n        plt.ylabel(\"Loss (1 - accuracy)\")\n        plt.title(\n            \"SEV Dataset: Aggregated Validation Loss vs Steering Strength\\n(Mean \u00b1 SEM across runs, lower is better)\"\n        )\n        plt.ylim(0, 1)\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"SEV_agg_loss_vs_strength.png\"))\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot2: {e}\")\n        plt.close()\n\n    # Plot 3: Aggregated per-emotion accuracy at best strength across runs\n    try:\n        # Collect per-emotion accuracy at each run's best strength\n        emo_keys = None\n        per_emo_matrix = []\n        for sev in runs_sev:\n            best_per_emo = sev.get(\"per_emotion_accuracy\", {})\n            if not best_per_emo:\n                continue\n            if emo_keys is None:\n                emo_keys = list(best_per_emo.keys())\n            vals = [best_per_emo.get(e, np.nan) for e in emo_keys]\n            per_emo_matrix.append(vals)\n        per_emo_matrix = np.array(per_emo_matrix, dtype=float)\n        mean_emo = np.nanmean(per_emo_matrix, axis=0)\n        sem_emo = (\n            np.nanstd(per_emo_matrix, axis=0, ddof=1) / np.sqrt(per_emo_matrix.shape[0])\n            if per_emo_matrix.shape[0] > 1\n            else np.zeros_like(mean_emo)\n        )\n\n        plt.figure(figsize=(9, 5))\n        x = np.arange(len(emo_keys))\n        plt.bar(\n            x,\n            mean_emo,\n            yerr=sem_emo,\n            capsize=4,\n            color=\"steelblue\",\n            ecolor=\"black\",\n            label=f\"Mean \u00b1 SEM (n={per_emo_matrix.shape[0]})\",\n        )\n        plt.axhline(1 / 7, color=\"r\", linestyle=\"--\", label=\"Random (1/7)\")\n        plt.xticks(x, emo_keys, rotation=30)\n        plt.ylabel(\"Accuracy\")\n        plt.title(\n            \"SEV Dataset: Aggregated Per-Emotion Accuracy at Best Strength\\n(Mean \u00b1 SEM across runs)\"\n        )\n        plt.ylim(0, 1)\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"SEV_agg_per_emotion_best_strength.png\"))\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot3: {e}\")\n        plt.close()\n\n    # Plot 4: Aggregated heatmap of per-emotion accuracy vs strength (mean across runs)\n    try:\n        # collect per-emotion matrix per run: shape (n_runs, n_strengths, n_emotions)\n        emo_keys2 = None\n        cubes = []\n        for sev in runs_sev:\n            per_str_res = sev.get(\"per_strength_results\", {})\n            try:\n                first_key = str(strengths[0])\n                if emo_keys2 is None:\n                    emo_keys2 = list(\n                        per_str_res[first_key][\"per_emotion_accuracy\"].keys()\n                    )\n                mat = np.array(\n                    [\n                        [\n                            per_str_res[str(s)][\"per_emotion_accuracy\"][e]\n                            for e in emo_keys2\n                        ]\n                        for s in strengths\n                    ]\n                )\n                cubes.append(mat)\n            except Exception:\n                continue\n        cube = np.array(cubes)  # (n_runs, n_strengths, n_emotions)\n        mean_mat = cube.mean(axis=0)\n\n        plt.figure(figsize=(9, 5))\n        im = plt.imshow(mean_mat, aspect=\"auto\", cmap=\"viridis\", vmin=0, vmax=1)\n        plt.colorbar(im, label=\"Mean Accuracy\")\n        plt.xticks(range(len(emo_keys2)), emo_keys2, rotation=30)\n        plt.yticks(range(len(strengths)), strengths)\n        plt.xlabel(\"Emotion\")\n        plt.ylabel(\"Steering strength\")\n        plt.title(\n            f\"SEV Dataset: Aggregated Per-Emotion Accuracy Heatmap\\n(Mean across n={cube.shape[0]} runs)\"\n        )\n        for i in range(mean_mat.shape[0]):\n            for j in range(mean_mat.shape[1]):\n                plt.text(\n                    j,\n                    i,\n                    f\"{mean_mat[i,j]:.2f}\",\n                    ha=\"center\",\n                    va=\"center\",\n                    color=\"white\" if mean_mat[i, j] < 0.5 else \"black\",\n                    fontsize=8,\n                )\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"SEV_agg_per_emotion_heatmap.png\"))\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot4: {e}\")\n        plt.close()\n\n    # Print summary metrics\n    try:\n        print(\"\\n=== Aggregated Summary (SEV) ===\")\n        print(f\"Number of runs: {n_runs}\")\n        for i, s in enumerate(strengths):\n            print(f\"  strength={s}: mean_acc={mean_acc[i]:.4f} \u00b1 SEM {sem_acc[i]:.4f}\")\n        best_idx = int(np.argmax(mean_acc))\n        print(\n            f\"Best mean strength: {strengths[best_idx]} with mean_acc={mean_acc[best_idx]:.4f}\"\n        )\n    except Exception as e:\n        print(f\"Error printing summary: {e}\")\n"], "plot_plan": ["I'll create visualizations for the SEV emotion steering experiment: per-emotion accuracy bar chart, overall accuracy summary, confusion matrix of predictions vs targets, and a distribution of predicted emotion labels. Each plot is wrapped in try/except and saved to the working directory with descriptive names.", "I'll create visualizations for the SEV steering experiment data, including strength sweep curves, per-emotion accuracy for the best strength, per-emotion accuracy across all strengths (heatmap), confusion matrix, and sample generations preview.", null, null], "ablation_name": [null, null, null, null], "hyperparam_name": [null, "STRENGTH (steering vector strength)", null, null], "is_seed_node": [false, false, true, true], "is_seed_agg_node": [false, false, false, true], "parse_metrics_plan": ["Load the experiment_data.npy from the working directory, extract the SEV dataset\nmetrics including overall validation accuracy and per-emotion accuracies, and\nprint each with clear labels.", "I'll load the experiment_data.npy file from the working directory, navigate the\nnested structure under `strength -> SEV`, and print the best strength, best\naccuracy, and per-emotion accuracies clearly labeled.", "I'll load the experiment_data.npy file from the working directory, navigate the\nnested structure under `strength -> SEV`, and print the best strength, best\naccuracy, and per-emotion accuracies clearly labeled.", ""], "parse_metrics_code": ["import os\nimport numpy as np\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nexperiment_data = np.load(\n    os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n).item()\n\nfor dataset_name, dataset_data in experiment_data.items():\n    print(f\"Dataset: {dataset_name}\")\n\n    val_metrics = dataset_data.get(\"metrics\", {}).get(\"val\", [])\n    if val_metrics:\n        final_val = val_metrics[-1]\n        acc = final_val.get(\"emotion_expression_accuracy\", None)\n        if acc is not None:\n            print(f\"  SEV final validation emotion expression accuracy: {acc:.4f}\")\n            print(f\"  SEV final validation loss (1 - accuracy): {1 - acc:.4f}\")\n\n    per_emo_acc = dataset_data.get(\"per_emotion_accuracy\", {})\n    for emo, val in per_emo_acc.items():\n        print(f\"  SEV per-emotion steering accuracy [{emo}]: {val:.4f}\")\n\n    preds = dataset_data.get(\"predictions\", [])\n    gts = dataset_data.get(\"ground_truth\", [])\n    if preds and gts:\n        overall = sum(int(p == g) for p, g in zip(preds, gts)) / len(preds)\n        print(f\"  SEV overall prediction-vs-target accuracy: {overall:.4f}\")\n        print(f\"  SEV total evaluated samples: {len(preds)}\")\n", "import os\nimport numpy as np\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nexp_path = os.path.join(working_dir, \"experiment_data.npy\")\n\nexperiment_data = np.load(exp_path, allow_pickle=True).item()\n\nsev = experiment_data[\"strength\"][\"SEV\"]\n\ndataset_name = \"SEV (Synthetic Emotion Vignettes)\"\nprint(f\"Dataset: {dataset_name}\")\n\nbest_strength = sev.get(\"best_strength\")\nbest_accuracy = sev.get(\"best_accuracy\")\n\nprint(f\"Best Steering Strength: {best_strength}\")\nprint(f\"Best Overall Emotion Expression Accuracy (validation): {best_accuracy:.4f}\")\n\nper_strength = sev.get(\"per_strength_results\", {})\nprint(\"\\nPer-Strength Overall Emotion Expression Accuracy (validation):\")\nfor s, res in per_strength.items():\n    print(\n        f\"  Strength {s} - validation emotion expression accuracy: {res['accuracy']:.4f}\"\n    )\n\nbest_per_emo = sev.get(\"per_emotion_accuracy\", {})\nprint(f\"\\nPer-Emotion Validation Accuracy at Best Strength ({best_strength}):\")\nfor emo, val in best_per_emo.items():\n    print(f\"  {emo} accuracy: {val:.4f}\")\n\nval_losses = sev.get(\"losses\", {}).get(\"val\", [])\nif val_losses:\n    best_val_loss_entry = min(val_losses, key=lambda x: x[\"loss\"])\n    print(\n        f\"\\nBest Validation Loss (1 - accuracy): {best_val_loss_entry['loss']:.4f} at strength {best_val_loss_entry['strength']}\"\n    )\n", "import os\nimport numpy as np\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nexp_path = os.path.join(working_dir, \"experiment_data.npy\")\n\nexperiment_data = np.load(exp_path, allow_pickle=True).item()\n\nsev = experiment_data[\"strength\"][\"SEV\"]\n\ndataset_name = \"SEV (Synthetic Emotion Vignettes)\"\nprint(f\"Dataset: {dataset_name}\")\n\nbest_strength = sev.get(\"best_strength\")\nbest_accuracy = sev.get(\"best_accuracy\")\n\nprint(f\"Best Steering Strength: {best_strength}\")\nprint(f\"Best Overall Emotion Expression Accuracy (validation): {best_accuracy:.4f}\")\n\nper_strength = sev.get(\"per_strength_results\", {})\nprint(\"\\nPer-Strength Overall Emotion Expression Accuracy (validation):\")\nfor s, res in per_strength.items():\n    print(\n        f\"  Strength {s} - validation emotion expression accuracy: {res['accuracy']:.4f}\"\n    )\n\nbest_per_emo = sev.get(\"per_emotion_accuracy\", {})\nprint(f\"\\nPer-Emotion Validation Accuracy at Best Strength ({best_strength}):\")\nfor emo, val in best_per_emo.items():\n    print(f\"  {emo} accuracy: {val:.4f}\")\n\nval_losses = sev.get(\"losses\", {}).get(\"val\", [])\nif val_losses:\n    best_val_loss_entry = min(val_losses, key=lambda x: x[\"loss\"])\n    print(\n        f\"\\nBest Validation Loss (1 - accuracy): {best_val_loss_entry['loss']:.4f} at strength {best_val_loss_entry['strength']}\"\n    )\n", ""], "parse_term_out": ["['Dataset: SEV', '\\n', '  SEV final validation emotion expression accuracy:\n0.6778', '\\n', '  SEV final validation loss (1 - accuracy): 0.3222', '\\n', '\nSEV per-emotion steering accuracy [joy]: 0.6000', '\\n', '  SEV per-emotion\nsteering accuracy [sadness]: 0.9667', '\\n', '  SEV per-emotion steering accuracy\n[anger]: 0.9667', '\\n', '  SEV per-emotion steering accuracy [fear]: 0.7667',\n'\\n', '  SEV per-emotion steering accuracy [surprise]: 0.5333', '\\n', '  SEV\nper-emotion steering accuracy [disgust]: 0.2333', '\\n', '  SEV overall\nprediction-vs-target accuracy: 0.6778', '\\n', '  SEV total evaluated samples:\n180', '\\n', 'Execution time: a moment seconds (time limit is 10 hours).']", "['Dataset: SEV (Synthetic Emotion Vignettes)', '\\n', 'Best Steering Strength:\n10.0', '\\n', 'Best Overall Emotion Expression Accuracy (validation): 0.7222',\n'\\n', '\\nPer-Strength Overall Emotion Expression Accuracy (validation):', '\\n',\n'  Strength 4.0 - validation emotion expression accuracy: 0.3611', '\\n', '\nStrength 6.0 - validation emotion expression accuracy: 0.5778', '\\n', '\nStrength 8.0 - validation emotion expression accuracy: 0.6778', '\\n', '\nStrength 10.0 - validation emotion expression accuracy: 0.7222', '\\n', '\nStrength 12.0 - validation emotion expression accuracy: 0.6889', '\\n', '\\nPer-\nEmotion Validation Accuracy at Best Strength (10.0):', '\\n', '  joy accuracy:\n0.7000', '\\n', '  sadness accuracy: 0.9667', '\\n', '  anger accuracy: 0.9000',\n'\\n', '  fear accuracy: 0.8667', '\\n', '  surprise accuracy: 0.7000', '\\n', '\ndisgust accuracy: 0.2000', '\\n', '\\nBest Validation Loss (1 - accuracy): 0.2778\nat strength 10.0', '\\n', 'Execution time: a moment seconds (time limit is 10\nhours).']", "['Dataset: SEV (Synthetic Emotion Vignettes)', '\\n', 'Best Steering Strength:\n10.0', '\\n', 'Best Overall Emotion Expression Accuracy (validation): 0.7167',\n'\\n', '\\nPer-Strength Overall Emotion Expression Accuracy (validation):', '\\n',\n'  Strength 4.0 - validation emotion expression accuracy: 0.3667', '\\n', '\nStrength 6.0 - validation emotion expression accuracy: 0.5833', '\\n', '\nStrength 8.0 - validation emotion expression accuracy: 0.6889', '\\n', '\nStrength 10.0 - validation emotion expression accuracy: 0.7167', '\\n', '\nStrength 12.0 - validation emotion expression accuracy: 0.6889', '\\n', '\\nPer-\nEmotion Validation Accuracy at Best Strength (10.0):', '\\n', '  joy accuracy:\n0.6667', '\\n', '  sadness accuracy: 0.9667', '\\n', '  anger accuracy: 0.9000',\n'\\n', '  fear accuracy: 0.8667', '\\n', '  surprise accuracy: 0.7333', '\\n', '\ndisgust accuracy: 0.1667', '\\n', '\\nBest Validation Loss (1 - accuracy): 0.2833\nat strength 10.0', '\\n', 'Execution time: a moment seconds (time limit is 10\nhours).']", ""], "parse_exc_type": [null, null, null, null], "parse_exc_info": [null, null, null, null], "parse_exc_stack": [null, null, null, null], "completed_stages": ["Stage_1", "Stage_2"], "current_stage": "Stage_2"};
+
+// Add log directory path and stage info to the tree data
+treeStructData.log_dir_path = window.location.pathname.split('/').slice(0, -1).join('/');
+treeStructData.current_stage = window.location.pathname.includes('stage_')
+  ? window.location.pathname.split('stage_')[1].split('/')[0]
+  : 'Stage_1';
+
+// Initialize background color
+window.bgColCurrent = bgCol;
+
+// Function to set background color that can be called from the console
+function setBackgroundColor(color) {
+  // Update the global color
+  updateBackgroundColor(color);
+
+  // Refresh the current sketch to apply the new background color
+  if (currentStage) {
+    startSketch(currentStage);
+  }
+}
+
+// Load all stage data and initialize the visualization
+loadAllStageData(treeStructData);
+
+    </script>
+    <title>AI Scientist-v2 Visualization</title>
+    <style>
+      body,
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background-color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      #canvas-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 40vw;
+        height: 100vh;
+        background-color: inherit;
+        padding-top: 40px;
+      }
+      canvas {
+        float: left;
+        height: 100vh;
+        width: 100vw;
+      }
+      #text-container {
+        float: right;
+        height: 100vh;
+        width: 50vw;
+        background-color: #282c34;
+        overflow: auto;
+      }
+      #plan {
+        /* border-left: 2px solid #282c34; */
+        background-color: #282c34;
+        color: #f2f0e7;
+        min-height: 5rem;
+        padding: 1em 0 1em 1em;
+      }
+      #plot_plan {
+        background-color: #282c34;
+        color: #f2f0e7;
+        min-height: 5rem;
+        padding: 1em 0 1em 1em;
+        white-space: pre-wrap;
+      }
+      #exec_time_feedback {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #exec_time {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #exc_info {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #2c1f1f;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #metrics {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+      }
+      #vlm_feedback {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #1f2c2f;
+        color: #f2f0e7;
+        border-left: 3px solid #55ff55;
+      }
+      #vlm_feedback p {
+        margin: 0.5em 0;
+        white-space: pre-wrap;
+      }
+      .datasets_successfully_tested {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+        border-left: 3px solid #55ff55;
+      }
+      .plots-container {
+        float: right;
+        width: 50vw;
+        padding: 1rem;
+        background-color: #282c34;
+        margin-top: 1rem;
+      }
+
+      .plot-item {
+        flex: 1 1 300px;
+        max-width: 100%;
+        margin-bottom: 1rem;
+        white-space: pre-wrap;
+      }
+
+      .plot-item img {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: block;
+      }
+
+      .metric-group {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .metric-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      .metric-table th,
+      .metric-table td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid #ddd;
+      }
+
+      .metric-table th {
+        background-color: #363b44;
+      }
+
+      /* Styles for tabs */
+      .tabs-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 49vw;
+        background-color: #000000;
+        z-index: 10;
+        display: flex;
+        padding: 0;
+      }
+
+      .tab {
+        cursor: pointer;
+        padding: 10px 15px;
+        background-color: #333;
+        color: #f2f0e7;
+        border: none;
+        outline: none;
+        transition: background-color 0.3s;
+        flex: 1;
+        text-align: center;
+      }
+
+      .tab:hover {
+        background-color: #444;
+      }
+
+      .tab.active {
+        background-color: #4c76af;
+        font-weight: bold;
+      }
+
+      .tab.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #282c34;
+      }
+
+      .tab-content {
+        display: none;
+        padding-top: 40px; /* Space for tabs */
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .stage-info {
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+      }
+
+      .stage-status {
+        display: inline-block;
+        padding: 3px 6px;
+        border-radius: 3px;
+        margin-left: 8px;
+        font-size: 0.8em;
+      }
+
+      .stage-status.completed {
+        background-color: #4caf50;
+      }
+
+      .stage-status.in-progress {
+        background-color: #2196f3;
+      }
+
+      .stage-status.not-started {
+        background-color: #9e9e9e;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tabs-container" id="stage-tabs">
+      <button class="tab" data-stage="Stage_1" onclick="selectStage('Stage_1')">Stage 1</button>
+      <button class="tab" data-stage="Stage_2" onclick="selectStage('Stage_2')">Stage 2</button>
+      <button class="tab" data-stage="Stage_3" onclick="selectStage('Stage_3')">Stage 3</button>
+      <button class="tab" data-stage="Stage_4" onclick="selectStage('Stage_4')">Stage 4</button>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <pre id="text-container">
+        <div id="stage-info" class="stage-info"></div>
+        <div id="plan"></div>
+        <hr>
+        <div id="exc_info"></div>
+        <hr>
+        <div id="exec_time"></div>
+        <hr>
+        <div id="exec_time_feedback"></div>
+        <hr>
+        <div id="metrics"></div>
+        <hr>
+        <div id="plot_plan"></div>
+        <hr>
+        <div class="plots-container" id="plots"></div>
+        <hr>
+        <div id="vlm_feedback"></div>
+        <hr>
+        <div id="datasets_successfully_tested"></div>
+        <hr>
+        <code id="code" class="language-python"></code>
+        <hr>
+        <code id="plot_code" class="language-python"></code>
+    </pre>
+  </body>
+</html>

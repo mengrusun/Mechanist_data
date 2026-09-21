@@ -1,0 +1,15 @@
+{
+  "claim_id": "C1",
+  "milestone_scope": ["M1"],
+  "audit_date": "2026-07-14",
+  "checks": {
+    "A_gt_provenance": {"verdict": "pass", "note": "condition attribute -> gt_vote 0/1; no LLM-derived GT"},
+    "B_score_normalization": {"verdict": "pass", "note": "StandardScaler on train split; no self-referential normalization"},
+    "C_result_existence": {"verdict": "pass", "note": "runs/M1/verdict.json, probe_layer*.json all exist; numbers confirmed"},
+    "D_dead_code": {"verdict": "pass", "note": "verdicts.py, train_probe.py, text_only_judge.py all live end-to-end"},
+    "E_scope": {"verdict": "warn", "note": "49-test-scenario set (24-25/class) below plan 50/class floor; dev=16-17/class below 25 WARN floor; layer-selection instability (dev-best != test-best). Reported openly as underpower."},
+    "F_eval_type": {"verdict": "pass", "note": "supervised binary, real_gt (design attribute), three sanity controls"}
+  },
+  "overall_verdict": "warn",
+  "summary": "Methodology is sound; WARN from under-power (small dev/test splits, layer instability). No fake results or broken evaluation."
+}

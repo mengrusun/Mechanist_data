@@ -1,0 +1,35 @@
+{
+  "date": "2026-07-13",
+  "auditor": "executor (cross-model self-review; llm-chat MCP degraded gracefully)",
+  "audit_type": "experiment",
+  "claim_id": "C4",
+  "linked_milestones": ["M5"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Selectivity matrix entries M[V,W] computed from τ decoded via Llama-3.1-8B-Instruct greedy generation — synthetic_proxy evaluation (same issue as C3). Unavoidable for this measurement type but should be labeled. Evidence: m4_steer_and_m5_selectivity.py lines 276-283.",
+      "evidence": "w_effects[W] = mean(τ|W=pos) - mean(τ|W=neg) over baseline held-out trials under V's activation steering. τ from model decode."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "M[V,W] in absolute transfer-dollar units. c4_ratio = max_offdiag / max(min_diag, 1e-9) — numeric guard against /0, not self-normalization. Criterion max_offdiag ≤ 0.30 × min_diag is a relative comparison of physical quantities."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "runs/M_main_v1/artifacts/m5/selectivity_matrix.json verified: matrix entries consistent with EXPERIMENT_RESULTS.md (V=G all zeros, V=A uniform ~-0.45, min_diag=0.0, max_offdiag=0.455, c4_ratio~454M, n_missing=0). runs/M_main_v1/artifacts/m5/permutation_test.json: p=0.839 consistent with reported 0.84. Tracker M5_r1 done.",
+      "evidence": "Spot-checked selectivity_matrix.json: matrix.G = {G:0.0, A:0.0, I:0.0, M:0.0}; matrix.A = {G:-0.450, A:-0.041, I:-0.455, M:-0.446}; max_offdiag=0.455 (A-I cell); min_diag=0.0 (G-G cell)."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "permutation_test_offdiag_vs_diag() called at line 473. M5 matrix loop (lines 450-469) executes in main(). extract_run() lambda used. No dead code."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "Min-diagonal zero (V=G: 0.000) is a legitimate outcome given sigma_proj=0.038 at ell_V*=4, not a measurement error or phantom result. Permutation test operates over the 4 diagonal + 12 off-diagonal entries (not over trials), which is the correct statistical unit for this test. c4_ratio=infinity is degenerate but correctly reported. V=A's uniform off-diagonal pattern (-0.44 to -0.46 across G,I,M) is consistent with a global mean shift (under-power causing non-specific shift) rather than a V=A-specific selectivity failure.",
+      "evidence": "selectivity_matrix.json: diagonal = {G:0.0, A:0.041, I:0.202, M:0.248}. permutation_test.json: observed_mean_diff=-0.102 (off-diag > diag in magnitude), p=0.839. w_effects computation: m4_steer_and_m5_selectivity.py lines 276-283 uses baseline rows only."
+    },
+    "eval_type": "synthetic_proxy — τ decoded from model greedy generation; same as C3"
+  }
+}

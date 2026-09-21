@@ -1,0 +1,37 @@
+{
+  "date": "2026-07-14",
+  "auditor": "gpt-5.4 via dmxapi (cross-model)",
+  "audit_type": "mechanism",
+  "claim_id": "C2",
+  "linked_milestones": ["M2"],
+  "triggered_checks": ["A"],
+  "overall_verdict": "fail",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "fail",
+      "triggered": true,
+      "trigger_match": ["mlr/m2_projection_eval.py:95 (new_hidden = hidden + self.alpha * proj)", "mlr/m2_projection_eval.py:146 (--alpha default=-1.0)"],
+      "intervention_type": "projection-based steering (null-space projection)",
+      "sweep_grid": [-1.0],
+      "sigma_proj_scaling": false,
+      "capability_metric": null,
+      "plateau_range": null,
+      "locked_alpha": -1.0,
+      "alpha_position": "n/a (no plateau)",
+      "random_baseline": {"run": true, "n_random": 1, "passed": false},
+      "sign_pattern": "n/a (only negative alpha tested)",
+      "output_case_spotcheck": {
+        "cases_available": true,
+        "verdict": "metric_text_mismatch",
+        "note": "alpha=-1 yields macro_acc=0.065-0.029 vs baseline 0.762; chosen alpha is in severe capability collapse range, not a preserved-capability operating point"
+      },
+      "evidence": ["mlr/m2_projection_eval.py:79-95 (SteeringHooks)", "mlr/m2_projection_eval.py:146 (--alpha)", "results/m2/screen_mid_r2_ktop12_s42_summary.json", "results/m2/random_ctrl_mid_ktop12_s42_summary.json"],
+      "details": "FAIL: (1) Single hardcoded alpha=-1, no sweep. (2) No usable capability/coherence metric independent of MGSM accuracy (GlotLID fidelity=0.0 everywhere, unusable). (3) alpha chosen in collapse range (macro_acc 0.065 vs baseline 0.762 = 70pp below). (4) Random baseline n=1, required >=30."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

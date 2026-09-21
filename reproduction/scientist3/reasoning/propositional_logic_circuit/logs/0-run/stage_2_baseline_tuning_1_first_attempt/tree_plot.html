@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Check if we're running under Live Server
+      if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+          let lastModified = '';
+
+          // Check for file changes every second
+          setInterval(async () => {
+              try {
+                  const response = await fetch(window.location.href, { method: 'HEAD' });
+                  // get a timestamp that shows when the file was last changed
+                  const currentModified = response.headers.get('last-modified');
+
+                  if (lastModified && lastModified !== currentModified) {
+                      window.location.reload();
+                  }
+
+                  lastModified = currentModified;
+              } catch (e) {
+                  console.error('Error checking for updates:', e);
+              }
+          }, 1000);
+      }
+  </script>
+    <script
+      id="p5scripttag"
+      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+      integrity="sha512-uaz5GpnQoE6t5echKlX8P52czvsIGgLPcvlzfvRubLZ1Hp8JemUDnbUiAahbVtPb+jUVrNETuXvAhDDF/N3M4w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+    <script>
+      const bgCol = "#FFFFFF";
+const accentCol = "#1a439e";
+
+hljs.initHighlightingOnLoad();
+
+// Function to update background color globally
+function updateBackgroundColor(color) {
+  // Update the JS variable
+  window.bgColCurrent = color;
+
+  // Update body background
+  document.body.style.backgroundColor = color;
+
+  // Update canvas container background
+  const canvasContainer = document.getElementById('canvas-container');
+  if (canvasContainer) {
+    canvasContainer.style.backgroundColor = color;
+  }
+}
+
+// Store tree data for each stage
+const stageData = {
+  Stage_1: null,
+  Stage_2: null,
+  Stage_3: null,
+  Stage_4: null
+};
+
+// Keep track of current selected stage
+let currentStage = null;
+let currentSketch = null;
+let availableStages = [];
+
+// Class definitions for nodes and edges
+class Node {
+  constructor(x, y, id, isRoot = false) {
+    this.x = x;
+    this.y = y;
+    this.id = id;
+    this.visible = isRoot; // Only root nodes are visible initially
+    this.appearProgress = 0;
+    this.popEffect = 0;
+    this.selected = false;
+    this.isRootNode = isRoot;
+  }
+
+  update() {
+    if (this.visible) {
+      // Handle the main appearance animation
+      if (this.appearProgress < 1) {
+        this.appearProgress += 0.06;
+
+        // When we reach full size, trigger the pop effect
+        if (this.appearProgress >= 1) {
+          this.appearProgress = 1; // Cap at 1
+          this.popEffect = 1; // Start the pop effect
+        }
+      }
+
+      // Handle the pop effect animation
+      if (this.popEffect > 0) {
+        this.popEffect -= 0.15; // Control how quickly it shrinks back
+        if (this.popEffect < 0) this.popEffect = 0; // Don't go negative
+      }
+    }
+  }
+
+  startAnimation() {
+    this.visible = true;
+  }
+
+  color() {
+    if (this.selected) {
+      return accentCol; // Use the global accent color variable for selected node
+    }
+    return '#4263eb'; // Default blue color
+  }
+
+  render(p5) {
+    if (this.visible) {
+      const popBonus = this.popEffect * 0.1;
+      const nodeScale = p5.map(this.appearProgress, 0, 1, 0, 1) + popBonus;
+      const alpha = p5.map(this.appearProgress, 0, 1, 0, 255);
+
+      p5.push();
+      p5.translate(this.x, this.y);
+
+      // Shadow effect
+      p5.noStroke();
+      p5.rectMode(p5.CENTER);
+
+      for (let i = 1; i <= 4; i++) {
+        p5.fill(0, 0, 0, alpha * 0.06);
+        p5.rect(i, i, 30 * nodeScale, 30 * nodeScale, 10);
+      }
+
+      // Main square - use node's color with alpha
+      let nodeColor = p5.color(this.color());
+      nodeColor.setAlpha(alpha);
+      p5.fill(nodeColor);
+      p5.rect(0, 0, 30 * nodeScale, 30 * nodeScale, 10);
+
+      // Draw checkmark icon if the node is selected
+      if (this.selected && this.appearProgress >= 1) {
+        p5.stroke(255);
+        p5.strokeWeight(2 * nodeScale);
+        p5.noFill();
+        // Draw checkmark
+        p5.beginShape();
+        p5.vertex(-8, 0);
+        p5.vertex(-3, 5);
+        p5.vertex(8, -6);
+        p5.endShape();
+      }
+
+      p5.pop();
+    }
+  }
+
+  isMouseOver(p5) {
+    return this.visible &&
+           p5.mouseX > this.x - 15 &&
+           p5.mouseX < this.x + 15 &&
+           p5.mouseY > this.y - 15 &&
+           p5.mouseY < this.y + 15;
+  }
+
+  // Connect this node to a child node
+  child(childNode) {
+    // Create an edge from this node to the child
+    let isLeft = childNode.x < this.x;
+    let isRight = childNode.x > this.x;
+    let edge = new Edge(this, childNode, isLeft, isRight);
+    return edge;
+  }
+}
+
+class Edge {
+  constructor(parent, child, isLeft, isRight) {
+    this.parent = parent;
+    this.child = child;
+    this.isLeft = isLeft;
+    this.isRight = isRight;
+    this.progress = 0;
+
+    // Calculate the midpoint where branching occurs
+    this.midY = parent.y + (child.y - parent.y) * 0.6;
+
+    // Use the actual child x-coordinate
+    // This ensures the edge will connect directly to the child node
+    this.branchX = child.x;
+  }
+
+  update() {
+    if (this.parent.visible && this.progress < 1) {
+      this.progress += 0.01; // Adjust animation speed
+    }
+    if (this.progress >= 1) {
+      this.child.visible = true;
+    }
+  }
+
+  color() {
+    return this.child.color();
+  }
+
+  render(p5) {
+    if (!this.parent.visible) return;
+
+    // Calculate path lengths
+    const verticalDist1 = this.midY - this.parent.y;
+    const horizontalDist = Math.abs(this.branchX - this.parent.x);
+    const verticalDist2 = this.child.y - this.midY;
+    const totalLength = verticalDist1 + horizontalDist + verticalDist2;
+
+    // Calculate how much of each segment to draw
+    const currentLength = totalLength * this.progress;
+
+    p5.stroke(180, 190, 205);
+    p5.strokeWeight(1.5);
+    p5.noFill();
+
+    // Always draw the first vertical segment from parent
+    if (currentLength > 0) {
+      const firstSegmentLength = Math.min(currentLength, verticalDist1);
+      const currentMidY = p5.lerp(this.parent.y, this.midY, firstSegmentLength / verticalDist1);
+      p5.line(this.parent.x, this.parent.y, this.parent.x, currentMidY);
+    }
+
+    if (currentLength > verticalDist1) {
+      // Draw second segment (horizontal)
+      const secondSegmentLength = Math.min(currentLength - verticalDist1, horizontalDist);
+      const currentBranchX = p5.lerp(this.parent.x, this.branchX, secondSegmentLength / horizontalDist);
+      p5.line(this.parent.x, this.midY, currentBranchX, this.midY);
+
+      if (currentLength > verticalDist1 + horizontalDist) {
+        // Draw third segment (vertical to child)
+        const thirdSegmentLength = currentLength - verticalDist1 - horizontalDist;
+        const currentChildY = p5.lerp(this.midY, this.child.y, thirdSegmentLength / verticalDist2);
+        p5.line(this.branchX, this.midY, this.branchX, currentChildY);
+      }
+    }
+  }
+}
+
+// Create a modified sketch for each stage
+function createTreeSketch(stageId) {
+  return function(p5) {
+    let nodes = [];
+    let edges = [];
+    let treeData = stageData[stageId];
+
+    p5.setup = function() {
+      const canvas = p5.createCanvas(p5.windowWidth * 0.4, p5.windowHeight);
+      canvas.parent('canvas-container');
+      p5.smooth();
+      p5.frameRate(60);
+
+      if (treeData) {
+        createTreeFromData(treeData);
+      }
+    };
+
+    p5.windowResized = function() {
+      p5.resizeCanvas(p5.windowWidth * 0.4, p5.windowHeight);
+    };
+
+    function createTreeFromData(data) {
+      // Clear existing nodes and edges
+      nodes = [];
+      edges = [];
+
+      // Add defensive checks to prevent errors
+      if (!data || !data.layout || !Array.isArray(data.layout) || !data.edges || !Array.isArray(data.edges)) {
+        console.error("Invalid tree data format:", data);
+        return; // Exit if data structure is invalid
+      }
+
+      // Find all parent nodes in edges
+      const parentNodes = new Set();
+      for (const [parentId, childId] of data.edges) {
+        parentNodes.add(parentId);
+      }
+
+      // Create nodes
+      for (let i = 0; i < data.layout.length; i++) {
+        const [nx, ny] = data.layout[i];
+        // A node is a root if it's a parent and not a child in any edge
+        const isRoot = parentNodes.has(i) && data.edges.every(edge => edge[1] !== i);
+
+        const node = new Node(
+          nx * p5.width * 0.8 + p5.width * 0.1,
+          ny * p5.height * 0.8 + p5.height * 0.1,
+          i,
+          isRoot
+        );
+        nodes.push(node);
+      }
+
+      // If no root was found, make the first parent node visible
+      if (!nodes.some(node => node.visible) && parentNodes.size > 0) {
+        // Get the first parent node
+        const firstParentId = [...parentNodes][0];
+        if (nodes[firstParentId]) {
+          nodes[firstParentId].visible = true;
+        }
+      }
+
+      // Create edges
+      for (const [parentId, childId] of data.edges) {
+        const parent = nodes[parentId];
+        const child = nodes[childId];
+        if (parent && child) { // Verify both nodes exist
+          const isLeft = child.x < parent.x;
+          const isRight = child.x > parent.x;
+          edges.push(new Edge(parent, child, isLeft, isRight));
+        }
+      }
+
+      // Select the first node by default
+      if (nodes.length > 0) {
+        nodes[0].selected = true;
+        updateNodeInfo(0);
+      }
+    }
+
+    p5.draw = function() {
+      // Use the global background color if available, otherwise use the default bgCol
+      const currentBgColor = window.bgColCurrent || bgCol;
+      p5.background(currentBgColor);
+
+      // Update and render edges
+      for (const edge of edges) {
+        edge.update();
+        edge.render(p5);
+      }
+
+      // Update and render nodes
+      for (const node of nodes) {
+        node.update();
+        node.render(p5);
+      }
+
+      // Handle mouse hover
+      p5.cursor(p5.ARROW);
+      for (const node of nodes) {
+        if (node.isMouseOver(p5)) {
+          p5.cursor(p5.HAND);
+        }
+      }
+    };
+
+    p5.mousePressed = function() {
+      // Check if any node was clicked
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].visible && nodes[i].isMouseOver(p5)) {
+          // Deselect all nodes
+          nodes.forEach(n => n.selected = false);
+          // Select the clicked node
+          nodes[i].selected = true;
+          // Update the right panel with node info
+          updateNodeInfo(i);
+          break;
+        }
+      }
+    };
+
+    function updateNodeInfo(nodeIndex) {
+      if (treeData) {
+        setNodeInfo(
+          treeData.code[nodeIndex],
+          treeData.plan[nodeIndex],
+          treeData.plot_code?.[nodeIndex],
+          treeData.plot_plan?.[nodeIndex],
+          treeData.metrics?.[nodeIndex],
+          treeData.exc_type?.[nodeIndex] || '',
+          treeData.exc_info?.[nodeIndex]?.args?.[0] || '',
+          treeData.exc_stack?.[nodeIndex] || [],
+          treeData.plots?.[nodeIndex] || [],
+          treeData.plot_analyses?.[nodeIndex] || [],
+          treeData.vlm_feedback_summary?.[nodeIndex] || '',
+          treeData.datasets_successfully_tested?.[nodeIndex] || [],
+          treeData.exec_time_feedback?.[nodeIndex] || '',
+          treeData.exec_time?.[nodeIndex] || ''
+        );
+      }
+    }
+  };
+}
+
+// Start a new p5 sketch for the given stage
+function startSketch(stageId) {
+  if (currentSketch) {
+    currentSketch.remove();
+  }
+
+  if (stageData[stageId]) {
+    currentSketch = new p5(createTreeSketch(stageId));
+
+    // Update stage info
+    const stageNumber = stageId.split('_')[1];
+    let stageDesc = '';
+    switch(stageId) {
+      case 'Stage_1': stageDesc = 'Preliminary Investigation'; break;
+      case 'Stage_2': stageDesc = 'Baseline Tuning'; break;
+      case 'Stage_3': stageDesc = 'Research Agenda Execution'; break;
+      case 'Stage_4': stageDesc = 'Ablation Studies'; break;
+    }
+
+    document.getElementById('stage-info').innerHTML =
+      `<strong>Current Stage: ${stageNumber} - ${stageDesc}</strong>`;
+  }
+}
+
+// Handle tab selection
+function selectStage(stageId) {
+  if (!stageData[stageId] || !availableStages.includes(stageId)) {
+    return; // Don't allow selection of unavailable stages
+  }
+
+  // Update active tab styles
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelector(`.tab[data-stage="${stageId}"]`).classList.add('active');
+
+  // Start the new sketch
+  currentStage = stageId;
+  startSketch(stageId);
+}
+
+// Function to load the tree data for all stages
+async function loadAllStageData(baseTreeData) {
+  console.log("Loading stage data with base data:", baseTreeData);
+
+  // The base tree data is for the current stage
+  const currentStageId = baseTreeData.current_stage || 'Stage_1';
+
+  // Ensure base tree data is valid and has required properties
+  if (baseTreeData && baseTreeData.layout && baseTreeData.edges) {
+    stageData[currentStageId] = baseTreeData;
+    availableStages.push(currentStageId);
+    console.log(`Added current stage ${currentStageId} to available stages`);
+  } else {
+    console.warn(`Current stage ${currentStageId} data is invalid:`, baseTreeData);
+  }
+
+  // Use relative path to load other stage trees
+  const logDirPath = baseTreeData.log_dir_path || '.';
+  console.log("Log directory path:", logDirPath);
+
+  // Load data for each stage if available
+  const stageNames = ['Stage_1', 'Stage_2', 'Stage_3', 'Stage_4'];
+  const stageNames2actualNames = {
+    'Stage_1': 'stage_1_initial_implementation_1_preliminary',
+    'Stage_2': 'stage_2_baseline_tuning_1_first_attempt',
+    'Stage_3': 'stage_3_creative_research_1_first_attempt',
+    'Stage_4': 'stage_4_ablation_studies_1_first_attempt'
+    }
+
+  for (const stage of stageNames) {
+
+    if (baseTreeData.completed_stages && baseTreeData.completed_stages.includes(stage)) {
+      try {
+        console.log(`Attempting to load data for ${stage} from ${logDirPath}/${stageNames2actualNames[stage]}/tree_data.json`);
+        const response = await fetch(`${logDirPath}/${stageNames2actualNames[stage]}/tree_data.json`);
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Validate the loaded data
+          if (data && data.layout && data.edges) {
+            stageData[stage] = data;
+            availableStages.push(stage);
+            console.log(`Successfully loaded and validated data for ${stage}`);
+          } else {
+            console.warn(`Loaded data for ${stage} is invalid:`, data);
+          }
+        } else {
+          console.warn(`Failed to load data for ${stage} - HTTP status ${response.status}`);
+        }
+      } catch (error) {
+        console.error(`Error loading data for ${stage}:`, error);
+      }
+    } else {
+      console.log(`Skipping stage ${stage} - not in completed stages list:`, baseTreeData.completed_stages);
+    }
+  }
+
+  // Update tab visibility based on available stages
+  updateTabVisibility();
+
+  // Start with the first available stage
+  if (availableStages.length > 0) {
+    selectStage(availableStages[0]);
+  } else {
+    console.warn("No stages available to display");
+    // Display a message in the canvas area
+    document.getElementById('canvas-container').innerHTML =
+      '<div style="padding: 20px; color: #333; text-align: center;"><h3>No valid tree data available to display</h3></div>';
+  }
+}
+
+// Update tab visibility based on available stages
+function updateTabVisibility() {
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    const stageId = tab.getAttribute('data-stage');
+    if (availableStages.includes(stageId)) {
+      tab.classList.remove('disabled');
+    } else {
+      tab.classList.add('disabled');
+    }
+  });
+}
+
+// Utility function to set the node info in the right panel
+const setNodeInfo = (code, plan, plot_code, plot_plan, metrics = null, exc_type = '', exc_info = '',
+    exc_stack = [], plots = [], plot_analyses = [], vlm_feedback_summary = '',
+    datasets_successfully_tested = [], exec_time_feedback = '', exec_time = '') => {
+  const codeElm = document.getElementById("code");
+  if (codeElm) {
+    if (code) {
+      codeElm.innerHTML = hljs.highlight(code, { language: "python" }).value;
+    } else {
+      codeElm.innerHTML = '<p>No code available</p>';
+    }
+  }
+
+  const planElm = document.getElementById("plan");
+  if (planElm) {
+    if (plan) {
+      planElm.innerHTML = hljs.highlight(plan, { language: "plaintext" }).value;
+    } else {
+      planElm.innerHTML = '<p>No plan available</p>';
+    }
+  }
+
+  const plot_codeElm = document.getElementById("plot_code");
+  if (plot_codeElm) {
+    if (plot_code) {
+      plot_codeElm.innerHTML = hljs.highlight(plot_code, { language: "python" }).value;
+    } else {
+      plot_codeElm.innerHTML = '<p>No plot code available</p>';
+    }
+  }
+
+  const plot_planElm = document.getElementById("plot_plan");
+  if (plot_planElm) {
+    if (plot_plan) {
+      plot_planElm.innerHTML = hljs.highlight(plot_plan, { language: "plaintext" }).value;
+    } else {
+      plot_planElm.innerHTML = '<p>No plot plan available</p>';
+    }
+  }
+
+  const metricsElm = document.getElementById("metrics");
+  if (metricsElm) {
+      let metricsContent = `<h3>Metrics:</h3>`;
+      if (metrics && metrics.metric_names) {
+          for (const metric of metrics.metric_names) {
+              metricsContent += `<div class="metric-group">`;
+              metricsContent += `<h4>${metric.metric_name}</h4>`;
+              metricsContent += `<p><strong>Description:</strong> ${metric.description || 'N/A'}</p>`;
+              metricsContent += `<p><strong>Optimization:</strong> ${metric.lower_is_better ? 'Minimize' : 'Maximize'}</p>`;
+
+              // Create table for dataset values
+              metricsContent += `<table class="metric-table">
+                  <tr>
+                      <th>Dataset</th>
+                      <th>Final Value</th>
+                      <th>Best Value</th>
+                  </tr>`;
+
+              for (const dataPoint of metric.data) {
+                  metricsContent += `<tr>
+                      <td>${dataPoint.dataset_name}</td>
+                      <td>${dataPoint.final_value?.toFixed(4) || 'N/A'}</td>
+                      <td>${dataPoint.best_value?.toFixed(4) || 'N/A'}</td>
+                  </tr>`;
+              }
+
+              metricsContent += `</table></div>`;
+          }
+      } else if (metrics === null) {
+          metricsContent += `<p>No metrics available</p>`;
+      }
+      metricsElm.innerHTML = metricsContent;
+  }
+
+  // Add plots display
+  const plotsElm = document.getElementById("plots");
+  if (plotsElm) {
+      if (plots && plots.length > 0) {
+          let plotsContent = '';
+          plots.forEach(plotPath => {
+              plotsContent += `
+                  <div class="plot-item">
+                      <img src="${plotPath}" alt="Experiment Plot" onerror="console.error('Failed to load plot:', this.src)"/>
+                  </div>`;
+          });
+          plotsElm.innerHTML = plotsContent;
+      } else {
+          plotsElm.innerHTML = '';
+      }
+  }
+
+  // Add error info display
+  const errorElm = document.getElementById("exc_info");
+  if (errorElm) {
+    if (exc_type) {
+      let errorContent = `<h3 style="color: #ff5555">Exception Information:</h3>
+                          <p><strong>Type:</strong> ${exc_type}</p>`;
+
+      if (exc_info) {
+        errorContent += `<p><strong>Details:</strong> <pre>${JSON.stringify(exc_info, null, 2)}</pre></p>`;
+      }
+
+      if (exc_stack) {
+        errorContent += `<p><strong>Stack Trace:</strong> <pre>${exc_stack.join('\n')}</pre></p>`;
+      }
+
+      errorElm.innerHTML = errorContent;
+    } else {
+      errorElm.innerHTML = "No exception info available";
+    }
+  }
+
+  const exec_timeElm = document.getElementById("exec_time");
+  if (exec_timeElm) {
+    let exec_timeContent = '<div id="exec_time"><h3>Execution Time (in seconds):</h3><p>' + exec_time + '</p></div>';
+    exec_timeElm.innerHTML = exec_timeContent;
+  }
+
+  const exec_time_feedbackElm = document.getElementById("exec_time_feedback");
+  if (exec_time_feedbackElm) {
+    let exec_time_feedbackContent = '<div id="exec_time_feedback_content">'
+    exec_time_feedbackContent += '<h3>Execution Time Feedback:</h3>'
+    exec_time_feedbackContent += '<p>' + exec_time_feedback + '</p>'
+    exec_time_feedbackContent += '</div>';
+    exec_time_feedbackElm.innerHTML = exec_time_feedbackContent;
+  }
+
+  const vlm_feedbackElm = document.getElementById("vlm_feedback");
+  if (vlm_feedbackElm) {
+      let vlm_feedbackContent = '';
+
+      if (plot_analyses && plot_analyses.length > 0) {
+          vlm_feedbackContent += `<h3>Plot Analysis:</h3>`;
+          plot_analyses.forEach(analysis => {
+              if (analysis && analysis.plot_path) {  // Add null check
+                  vlm_feedbackContent += `
+                      <div class="plot-analysis">
+                          <h4>Analysis for ${analysis.plot_path.split('/').pop()}</h4>
+                          <p>${analysis.analysis || 'No analysis available'}</p>
+                          <ul class="key-findings">
+                              ${(analysis.key_findings || []).map(finding => `<li>${finding}</li>`).join('')}
+                          </ul>
+                      </div>`;
+              } else {
+                  console.warn('Received invalid plot analysis:', analysis);
+                  vlm_feedbackContent += `
+                      <div class="plot-analysis">
+                          <p>Invalid plot analysis data received</p>
+                      </div>`;
+              }
+          });
+      }
+
+      // Add actionable insights if available
+      if (vlm_feedback_summary && typeof vlm_feedback_summary === 'string') {
+          vlm_feedbackContent += `
+              <div class="vlm_feedback">
+                  <h3>VLM Feedback Summary:</h3>
+                  <p>${vlm_feedback_summary}</p>
+              </div>`;
+      }
+
+      console.log("Datasets successfully tested:", datasets_successfully_tested);
+      if (datasets_successfully_tested && datasets_successfully_tested.length > 0) {
+          vlm_feedbackContent += `
+              <div id="datasets_successfully_tested">
+                  <h3>Datasets Successfully Tested:</h3>
+                  <p>${datasets_successfully_tested.join(', ')}</p>
+              </div>`;
+      }
+
+      if (!vlm_feedbackContent) {
+          vlm_feedbackContent = '<p>No insights available for this experiment.</p>';
+      }
+
+      vlm_feedbackElm.innerHTML = vlm_feedbackContent;
+  }
+
+  const datasets_successfully_testedElm = document.getElementById("datasets_successfully_tested");
+  if (datasets_successfully_testedElm) {
+      let datasets_successfully_testedContent = '';
+      if (datasets_successfully_tested && datasets_successfully_tested.length > 0) {
+          datasets_successfully_testedContent = `<h3>Datasets Successfully Tested:</h3><ul>`;
+          datasets_successfully_tested.forEach(dataset => {
+              datasets_successfully_testedContent += `<li>${dataset}</li>`;
+          });
+          datasets_successfully_testedContent += `</ul>`;
+      } else {
+          datasets_successfully_testedContent = '<p>No datasets tested yet</p>';
+      }
+      datasets_successfully_testedElm.innerHTML = datasets_successfully_testedContent;
+  }
+};
+
+// Initialize with the provided tree data
+const treeStructData = {"edges": [[0, 1], [1, 3], [1, 2]], "layout": [[0.5, 0.0], [0.5, 0.5], [0.0, 1.0], [1.0, 1.0]], "plan": ["I'll implement a baseline that evaluates Mistral-7B zero-shot on synthetic\npropositional-logic problems. The task: given k facts (like \"A is true\") and\nrules (\"if A then B\"), predict True/False for a query using forward chaining.\nI'll generate a small synthetic dataset (with balanced True/False labels),\nformat prompts with clear True/False completion, load Mistral-7B locally with\nproper tokenizer setup (pad_token=eos, left padding), extract True/False token\nIDs carefully (checking both \" True\" and \"True\" variants and using max logit\nacross variants), run a sanity check on 2 examples showing logits, then evaluate\naccuracy on the full held-out set. I'll save prompts, labels, predictions, and\nraw logits for downstream circuit analysis.", "Hyperparam tuning name: max_length. I'll implement hyperparameter tuning over\n`max_length` values [256, 512, 1024, 2048] for the tokenizer. For each value,\nI'll run the full evaluation and store results under\n`experiment_data['max_length_tuning'][<value>]`. The dataset and model are\nloaded once for efficiency.", "Seed node", "Aggregate results from multiple seeds"], "code": ["import os\nimport json\nimport random\nimport numpy as np\nimport torch\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nMODEL_DIR = \"/data/zhenqian/models\"\nDATA_DIR = \"/data/zhenqian/data\"\n\n# Try to find Mistral-7B locally\ncandidate_paths = [\n    os.path.join(MODEL_DIR, \"Mistral-7B-v0.1\"),\n    os.path.join(MODEL_DIR, \"Mistral-7B-Instruct-v0.2\"),\n    os.path.join(MODEL_DIR, \"Mistral-7B-Instruct-v0.1\"),\n    os.path.join(MODEL_DIR, \"mistral-7b\"),\n    os.path.join(MODEL_DIR, \"Mistral-7B\"),\n]\nmodel_path = None\nfor p in candidate_paths:\n    if os.path.isdir(p):\n        model_path = p\n        break\nif model_path is None:\n    # search for a directory containing 'mistral' or 'Mistral'\n    for name in os.listdir(MODEL_DIR):\n        low = name.lower()\n        if \"mistral\" in low and \"7b\" in low:\n            model_path = os.path.join(MODEL_DIR, name)\n            break\n\nassert (\n    model_path is not None\n), f\"Could not find Mistral-7B under {MODEL_DIR}. Contents: {os.listdir(MODEL_DIR)}\"\nprint(f\"Using model: {model_path}\")\n\nexperiment_data = {\n    \"prop_logic_synth\": {\n        \"metrics\": {\"train\": [], \"val\": []},\n        \"losses\": {\"train\": [], \"val\": []},\n        \"predictions\": [],\n        \"ground_truth\": [],\n        \"prompts\": [],\n        \"true_logits\": [],\n        \"false_logits\": [],\n    }\n}\n\n# ---------- Synthetic dataset generation ----------\nrandom.seed(0)\nnp.random.seed(0)\n\nPROP_NAMES = [\"P\", \"Q\", \"R\", \"S\", \"T\", \"U\", \"V\", \"W\", \"X\", \"Y\", \"Z\"]\n\n\ndef generate_example(n_props=4, n_facts=2, n_rules=3, chain_len=2):\n    \"\"\"Generate a propositional-logic problem.\n    - Choose n_props atomic propositions.\n    - Randomly assign truth values to n_facts of them (given as facts).\n    - Generate n_rules implication rules 'if X then Y' where X, Y are propositions.\n    - Do forward chaining to derive truth of all derivable props.\n    - Pick a query proposition; if its value is derivable/true -> label True, else False.\n      We keep queries only when we can definitively determine True or False.\n    \"\"\"\n    props = random.sample(PROP_NAMES, n_props)\n    # ground-truth truth values (some assigned true, others unknown/false-by-default)\n    # We define semantics: a prop is True iff it's stated as fact True or derivable via rules from True facts.\n    fact_props = random.sample(props, n_facts)\n    fact_vals = {p: random.choice([True, False]) for p in fact_props}\n\n    # generate rules: X -> Y\n    rules = []\n    for _ in range(n_rules):\n        x, y = random.sample(props, 2)\n        rules.append((x, y))\n\n    # Forward chaining under closed-world assumption on facts:\n    # start: known True set from facts where val=True; known False from facts where val=False.\n    # Rule X->Y: if X True then Y True. (contrapositive not used for simplicity)\n    known_true = set([p for p, v in fact_vals.items() if v])\n    known_false = set([p for p, v in fact_vals.items() if not v])\n    changed = True\n    while changed:\n        changed = False\n        for x, y in rules:\n            if x in known_true and y not in known_true:\n                known_true.add(y)\n                if y in known_false:\n                    known_false.discard(y)  # true overrides\n                changed = True\n\n    # Pick query: prefer one that's determined\n    determined = list(known_true) + list(known_false)\n    if not determined:\n        return None\n    query = random.choice(determined)\n    label = query in known_true\n\n    # Build prompt\n    lines = [\"Facts:\"]\n    for p, v in fact_vals.items():\n        lines.append(f\"- {p} is {'True' if v else 'False'}.\")\n    lines.append(\"Rules:\")\n    for x, y in rules:\n        lines.append(f\"- If {x} is True, then {y} is True.\")\n    lines.append(f\"Question: Is {query} True? Answer with only True or False.\")\n    lines.append(\"Answer:\")\n    prompt = \"\\n\".join(lines)\n    return prompt, label\n\n\ndef build_dataset(n=200):\n    data = []\n    tries = 0\n    while len(data) < n and tries < n * 20:\n        tries += 1\n        ex = generate_example(\n            n_props=random.choice([3, 4, 5]),\n            n_facts=random.choice([2, 3]),\n            n_rules=random.choice([2, 3, 4]),\n        )\n        if ex is None:\n            continue\n        data.append(ex)\n    # balance True/False roughly\n    trues = [d for d in data if d[1]]\n    falses = [d for d in data if not d[1]]\n    m = min(len(trues), len(falses))\n    trues, falses = trues[:m], falses[:m]\n    balanced = trues + falses\n    random.shuffle(balanced)\n    return balanced\n\n\ndataset = build_dataset(n=240)\nprint(f\"Dataset size (balanced): {len(dataset)}\")\nprint(\n    f\"Label distribution: True={sum(1 for _,l in dataset if l)}, False={sum(1 for _,l in dataset if not l)}\"\n)\n\n# Save dataset\nwith open(os.path.join(working_dir, \"dataset.jsonl\"), \"w\") as f:\n    for prompt, label in dataset:\n        f.write(json.dumps({\"prompt\": prompt, \"label\": bool(label)}) + \"\\n\")\n\n# Show one example\nprint(\"=\" * 40)\nprint(\"Example prompt:\")\nprint(dataset[0][0])\nprint(f\"Label: {dataset[0][1]}\")\nprint(\"=\" * 40)\n\n# ---------- Load model ----------\ntokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)\nif tokenizer.pad_token_id is None:\n    tokenizer.pad_token = tokenizer.eos_token\ntokenizer.padding_side = \"left\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_path,\n    local_files_only=True,\n    torch_dtype=torch.float16 if device.type == \"cuda\" else torch.float32,\n)\nmodel.to(device)\nmodel.eval()\n\n\n# ---------- Token ID selection with sanity checks ----------\ndef get_token_ids_for(word):\n    \"\"\"Return candidate token ids for a word, handling leading space variants.\"\"\"\n    variants = [word, \" \" + word]\n    ids = []\n    for v in variants:\n        enc = tokenizer.encode(v, add_special_tokens=False)\n        # Take the last token to skip leading-space marker tokens\n        if len(enc) >= 1:\n            ids.append(enc[-1])\n    # Deduplicate\n    return list(set(ids))\n\n\ntrue_ids = get_token_ids_for(\"True\")\nfalse_ids = get_token_ids_for(\"False\")\nprint(f\"True token ids: {true_ids} -> {[tokenizer.decode([t]) for t in true_ids]}\")\nprint(f\"False token ids: {false_ids} -> {[tokenizer.decode([t]) for t in false_ids]}\")\n\nassert len(true_ids) > 0 and len(false_ids) > 0\n\n\n# ---------- Evaluation ----------\ndef score_prompt_batch(prompts, batch_size=4):\n    all_true_logits = []\n    all_false_logits = []\n    for i in range(0, len(prompts), batch_size):\n        batch = prompts[i : i + batch_size]\n        enc = tokenizer(\n            batch, return_tensors=\"pt\", padding=True, truncation=True, max_length=1024\n        )\n        enc = {k: v.to(device) for k, v in enc.items()}\n        with torch.no_grad():\n            out = model(**enc)\n        logits = out.logits  # [B, T, V]\n        # With left padding, the last token position is the last index\n        last_logits = logits[:, -1, :]  # [B, V]\n        # max over variants\n        tl = last_logits[:, true_ids].max(dim=-1).values\n        fl = last_logits[:, false_ids].max(dim=-1).values\n        all_true_logits.extend(tl.float().cpu().tolist())\n        all_false_logits.extend(fl.float().cpu().tolist())\n    return all_true_logits, all_false_logits\n\n\n# Sanity check on 2 examples\nprint(\"Sanity check on 2 examples:\")\nsample_prompts = [dataset[0][0], dataset[1][0]]\nsample_labels = [dataset[0][1], dataset[1][1]]\ntl, fl = score_prompt_batch(sample_prompts, batch_size=2)\nfor p, lab, t, f in zip(sample_prompts, sample_labels, tl, fl):\n    print(\n        f\"  label={lab} | True_logit={t:.3f} False_logit={f:.3f} pred={'True' if t>f else 'False'}\"\n    )\n\n# Full eval\nprompts = [d[0] for d in dataset]\nlabels = [d[1] for d in dataset]\n\nprint(f\"Running full evaluation on {len(prompts)} examples...\")\ntrue_logits, false_logits = score_prompt_batch(prompts, batch_size=4)\n\npreds = [t > f for t, f in zip(true_logits, false_logits)]\ncorrect = sum(1 for p, l in zip(preds, labels) if p == l)\naccuracy = correct / len(labels)\nprint(f\"Task accuracy: {accuracy:.4f} ({correct}/{len(labels)})\")\n\n# Compute a pseudo \"val_loss\" as -log P(correct) via softmax over {True,False}\ntl_arr = np.array(true_logits)\nfl_arr = np.array(false_logits)\nlab_arr = np.array([1 if l else 0 for l in labels])\nstacked = np.stack([fl_arr, tl_arr], axis=1)  # [N,2] index 0=False,1=True\n# log-softmax\nm = stacked.max(axis=1, keepdims=True)\nlse = m.squeeze(1) + np.log(np.exp(stacked - m).sum(axis=1))\nlog_probs = stacked - lse[:, None]\nval_loss = float(-log_probs[np.arange(len(lab_arr)), lab_arr].mean())\nprint(f\"Epoch 0: validation_loss = {val_loss:.4f}\")\n\n# Save results\nexperiment_data[\"prop_logic_synth\"][\"metrics\"][\"val\"].append(\n    {\"epoch\": 0, \"task_accuracy\": accuracy}\n)\nexperiment_data[\"prop_logic_synth\"][\"losses\"][\"val\"].append(\n    {\"epoch\": 0, \"val_loss\": val_loss}\n)\nexperiment_data[\"prop_logic_synth\"][\"predictions\"] = preds\nexperiment_data[\"prop_logic_synth\"][\"ground_truth\"] = labels\nexperiment_data[\"prop_logic_synth\"][\"prompts\"] = prompts\nexperiment_data[\"prop_logic_synth\"][\"true_logits\"] = true_logits\nexperiment_data[\"prop_logic_synth\"][\"false_logits\"] = false_logits\n\nnp.save(os.path.join(working_dir, \"experiment_data.npy\"), experiment_data)\n\n# Simple visualization\ntry:\n    import matplotlib\n\n    matplotlib.use(\"Agg\")\n    import matplotlib.pyplot as plt\n\n    fig, ax = plt.subplots(1, 2, figsize=(10, 4))\n    diffs = tl_arr - fl_arr\n    ax[0].hist(diffs[lab_arr == 1], bins=20, alpha=0.6, label=\"True label\")\n    ax[0].hist(diffs[lab_arr == 0], bins=20, alpha=0.6, label=\"False label\")\n    ax[0].axvline(0, color=\"k\", linestyle=\"--\")\n    ax[0].set_xlabel(\"True_logit - False_logit\")\n    ax[0].set_ylabel(\"count\")\n    ax[0].legend()\n    ax[0].set_title(f\"Logit gap by label (acc={accuracy:.3f})\")\n    ax[1].bar([\"accuracy\"], [accuracy])\n    ax[1].set_ylim(0, 1)\n    ax[1].set_title(\"Task Accuracy\")\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"prop_logic_baseline.png\"), dpi=100)\n    plt.close()\nexcept Exception as e:\n    print(f\"Plot skipped: {e}\")\n\nprint(f\"Final task_accuracy = {accuracy:.4f}\")\nprint(f\"Saved experiment_data to {os.path.join(working_dir, 'experiment_data.npy')}\")\n", "import os\nimport json\nimport random\nimport numpy as np\nimport torch\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nMODEL_DIR = \"/data/zhenqian/models\"\nDATA_DIR = \"/data/zhenqian/data\"\n\ncandidate_paths = [\n    os.path.join(MODEL_DIR, \"Mistral-7B-v0.1\"),\n    os.path.join(MODEL_DIR, \"Mistral-7B-Instruct-v0.2\"),\n    os.path.join(MODEL_DIR, \"Mistral-7B-Instruct-v0.1\"),\n    os.path.join(MODEL_DIR, \"mistral-7b\"),\n    os.path.join(MODEL_DIR, \"Mistral-7B\"),\n]\nmodel_path = None\nfor p in candidate_paths:\n    if os.path.isdir(p):\n        model_path = p\n        break\nif model_path is None:\n    for name in os.listdir(MODEL_DIR):\n        low = name.lower()\n        if \"mistral\" in low and \"7b\" in low:\n            model_path = os.path.join(MODEL_DIR, name)\n            break\nassert model_path is not None, f\"Could not find Mistral-7B under {MODEL_DIR}\"\nprint(f\"Using model: {model_path}\")\n\n# Hyperparameter tuning setup\nMAX_LENGTHS = [256, 512, 1024, 2048]\nexperiment_data = {\"max_length_tuning\": {}}\nfor ml in MAX_LENGTHS:\n    experiment_data[\"max_length_tuning\"][str(ml)] = {\n        \"metrics\": {\"train\": [], \"val\": []},\n        \"losses\": {\"train\": [], \"val\": []},\n        \"predictions\": [],\n        \"ground_truth\": [],\n        \"prompts\": [],\n        \"true_logits\": [],\n        \"false_logits\": [],\n        \"max_length\": ml,\n    }\n\n# ---------- Synthetic dataset generation ----------\nrandom.seed(0)\nnp.random.seed(0)\n\nPROP_NAMES = [\"P\", \"Q\", \"R\", \"S\", \"T\", \"U\", \"V\", \"W\", \"X\", \"Y\", \"Z\"]\n\n\ndef generate_example(n_props=4, n_facts=2, n_rules=3, chain_len=2):\n    props = random.sample(PROP_NAMES, n_props)\n    fact_props = random.sample(props, n_facts)\n    fact_vals = {p: random.choice([True, False]) for p in fact_props}\n    rules = []\n    for _ in range(n_rules):\n        x, y = random.sample(props, 2)\n        rules.append((x, y))\n    known_true = set([p for p, v in fact_vals.items() if v])\n    known_false = set([p for p, v in fact_vals.items() if not v])\n    changed = True\n    while changed:\n        changed = False\n        for x, y in rules:\n            if x in known_true and y not in known_true:\n                known_true.add(y)\n                if y in known_false:\n                    known_false.discard(y)\n                changed = True\n    determined = list(known_true) + list(known_false)\n    if not determined:\n        return None\n    query = random.choice(determined)\n    label = query in known_true\n    lines = [\"Facts:\"]\n    for p, v in fact_vals.items():\n        lines.append(f\"- {p} is {'True' if v else 'False'}.\")\n    lines.append(\"Rules:\")\n    for x, y in rules:\n        lines.append(f\"- If {x} is True, then {y} is True.\")\n    lines.append(f\"Question: Is {query} True? Answer with only True or False.\")\n    lines.append(\"Answer:\")\n    prompt = \"\\n\".join(lines)\n    return prompt, label\n\n\ndef build_dataset(n=200):\n    data = []\n    tries = 0\n    while len(data) < n and tries < n * 20:\n        tries += 1\n        ex = generate_example(\n            n_props=random.choice([3, 4, 5]),\n            n_facts=random.choice([2, 3]),\n            n_rules=random.choice([2, 3, 4]),\n        )\n        if ex is None:\n            continue\n        data.append(ex)\n    trues = [d for d in data if d[1]]\n    falses = [d for d in data if not d[1]]\n    m = min(len(trues), len(falses))\n    trues, falses = trues[:m], falses[:m]\n    balanced = trues + falses\n    random.shuffle(balanced)\n    return balanced\n\n\ndataset = build_dataset(n=240)\nprint(f\"Dataset size (balanced): {len(dataset)}\")\nprint(\n    f\"Label distribution: True={sum(1 for _,l in dataset if l)}, False={sum(1 for _,l in dataset if not l)}\"\n)\n\nwith open(os.path.join(working_dir, \"dataset.jsonl\"), \"w\") as f:\n    for prompt, label in dataset:\n        f.write(json.dumps({\"prompt\": prompt, \"label\": bool(label)}) + \"\\n\")\n\nprint(\"=\" * 40)\nprint(\"Example prompt:\")\nprint(dataset[0][0])\nprint(f\"Label: {dataset[0][1]}\")\nprint(\"=\" * 40)\n\n# ---------- Load model ----------\ntokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)\nif tokenizer.pad_token_id is None:\n    tokenizer.pad_token = tokenizer.eos_token\ntokenizer.padding_side = \"left\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_path,\n    local_files_only=True,\n    torch_dtype=torch.float16 if device.type == \"cuda\" else torch.float32,\n)\nmodel.to(device)\nmodel.eval()\n\n\ndef get_token_ids_for(word):\n    variants = [word, \" \" + word]\n    ids = []\n    for v in variants:\n        enc = tokenizer.encode(v, add_special_tokens=False)\n        if len(enc) >= 1:\n            ids.append(enc[-1])\n    return list(set(ids))\n\n\ntrue_ids = get_token_ids_for(\"True\")\nfalse_ids = get_token_ids_for(\"False\")\nprint(f\"True token ids: {true_ids} -> {[tokenizer.decode([t]) for t in true_ids]}\")\nprint(f\"False token ids: {false_ids} -> {[tokenizer.decode([t]) for t in false_ids]}\")\nassert len(true_ids) > 0 and len(false_ids) > 0\n\n\ndef score_prompt_batch(prompts, max_length, batch_size=4):\n    all_true_logits = []\n    all_false_logits = []\n    for i in range(0, len(prompts), batch_size):\n        batch = prompts[i : i + batch_size]\n        enc = tokenizer(\n            batch,\n            return_tensors=\"pt\",\n            padding=True,\n            truncation=True,\n            max_length=max_length,\n        )\n        enc = {k: v.to(device) for k, v in enc.items()}\n        with torch.no_grad():\n            out = model(**enc)\n        logits = out.logits\n        last_logits = logits[:, -1, :]\n        tl = last_logits[:, true_ids].max(dim=-1).values\n        fl = last_logits[:, false_ids].max(dim=-1).values\n        all_true_logits.extend(tl.float().cpu().tolist())\n        all_false_logits.extend(fl.float().cpu().tolist())\n    return all_true_logits, all_false_logits\n\n\nprompts = [d[0] for d in dataset]\nlabels = [d[1] for d in dataset]\n\nresults_summary = {}\nfor ml in MAX_LENGTHS:\n    print(f\"\\n===== Running eval with max_length={ml} =====\")\n    true_logits, false_logits = score_prompt_batch(prompts, max_length=ml, batch_size=4)\n    preds = [t > f for t, f in zip(true_logits, false_logits)]\n    correct = sum(1 for p, l in zip(preds, labels) if p == l)\n    accuracy = correct / len(labels)\n    tl_arr = np.array(true_logits)\n    fl_arr = np.array(false_logits)\n    lab_arr = np.array([1 if l else 0 for l in labels])\n    stacked = np.stack([fl_arr, tl_arr], axis=1)\n    m = stacked.max(axis=1, keepdims=True)\n    lse = m.squeeze(1) + np.log(np.exp(stacked - m).sum(axis=1))\n    log_probs = stacked - lse[:, None]\n    val_loss = float(-log_probs[np.arange(len(lab_arr)), lab_arr].mean())\n    print(f\"max_length={ml}: acc={accuracy:.4f} val_loss={val_loss:.4f}\")\n\n    key = str(ml)\n    experiment_data[\"max_length_tuning\"][key][\"metrics\"][\"val\"].append(\n        {\"epoch\": 0, \"task_accuracy\": accuracy}\n    )\n    experiment_data[\"max_length_tuning\"][key][\"losses\"][\"val\"].append(\n        {\"epoch\": 0, \"val_loss\": val_loss}\n    )\n    experiment_data[\"max_length_tuning\"][key][\"predictions\"] = preds\n    experiment_data[\"max_length_tuning\"][key][\"ground_truth\"] = labels\n    experiment_data[\"max_length_tuning\"][key][\"prompts\"] = prompts\n    experiment_data[\"max_length_tuning\"][key][\"true_logits\"] = true_logits\n    experiment_data[\"max_length_tuning\"][key][\"false_logits\"] = false_logits\n    results_summary[ml] = (accuracy, val_loss)\n\nnp.save(os.path.join(working_dir, \"experiment_data.npy\"), experiment_data)\n\n# Visualization\ntry:\n    import matplotlib\n\n    matplotlib.use(\"Agg\")\n    import matplotlib.pyplot as plt\n\n    mls = sorted(results_summary.keys())\n    accs = [results_summary[m][0] for m in mls]\n    losses = [results_summary[m][1] for m in mls]\n    fig, ax = plt.subplots(1, 2, figsize=(10, 4))\n    ax[0].plot(mls, accs, \"o-\")\n    ax[0].set_xlabel(\"max_length\")\n    ax[0].set_ylabel(\"accuracy\")\n    ax[0].set_title(\"Accuracy vs max_length\")\n    ax[0].set_xscale(\"log\", base=2)\n    ax[1].plot(mls, losses, \"o-\", color=\"orange\")\n    ax[1].set_xlabel(\"max_length\")\n    ax[1].set_ylabel(\"val_loss\")\n    ax[1].set_title(\"Val loss vs max_length\")\n    ax[1].set_xscale(\"log\", base=2)\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"max_length_tuning.png\"), dpi=100)\n    plt.close()\nexcept Exception as e:\n    print(f\"Plot skipped: {e}\")\n\nprint(\"\\n===== Summary =====\")\nfor ml in sorted(results_summary.keys()):\n    acc, loss = results_summary[ml]\n    print(f\"max_length={ml}: accuracy={acc:.4f}, val_loss={loss:.4f}\")\nbest_ml = max(results_summary.keys(), key=lambda k: results_summary[k][0])\nprint(f\"Best max_length: {best_ml} with accuracy {results_summary[best_ml][0]:.4f}\")\nprint(f\"Saved experiment_data to {os.path.join(working_dir, 'experiment_data.npy')}\")\n", "# Set random seed\nimport random\nimport numpy as np\nimport torch\n\nseed = 0\nrandom.seed(seed)\nnp.random.seed(seed)\ntorch.manual_seed(seed)\nif torch.cuda.is_available():\n    torch.cuda.manual_seed(seed)\n\nimport os\nimport json\nimport random\nimport numpy as np\nimport torch\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nMODEL_DIR = \"/data/zhenqian/models\"\nDATA_DIR = \"/data/zhenqian/data\"\n\ncandidate_paths = [\n    os.path.join(MODEL_DIR, \"Mistral-7B-v0.1\"),\n    os.path.join(MODEL_DIR, \"Mistral-7B-Instruct-v0.2\"),\n    os.path.join(MODEL_DIR, \"Mistral-7B-Instruct-v0.1\"),\n    os.path.join(MODEL_DIR, \"mistral-7b\"),\n    os.path.join(MODEL_DIR, \"Mistral-7B\"),\n]\nmodel_path = None\nfor p in candidate_paths:\n    if os.path.isdir(p):\n        model_path = p\n        break\nif model_path is None:\n    for name in os.listdir(MODEL_DIR):\n        low = name.lower()\n        if \"mistral\" in low and \"7b\" in low:\n            model_path = os.path.join(MODEL_DIR, name)\n            break\nassert model_path is not None, f\"Could not find Mistral-7B under {MODEL_DIR}\"\nprint(f\"Using model: {model_path}\")\n\n# Hyperparameter tuning setup\nMAX_LENGTHS = [256, 512, 1024, 2048]\nexperiment_data = {\"max_length_tuning\": {}}\nfor ml in MAX_LENGTHS:\n    experiment_data[\"max_length_tuning\"][str(ml)] = {\n        \"metrics\": {\"train\": [], \"val\": []},\n        \"losses\": {\"train\": [], \"val\": []},\n        \"predictions\": [],\n        \"ground_truth\": [],\n        \"prompts\": [],\n        \"true_logits\": [],\n        \"false_logits\": [],\n        \"max_length\": ml,\n    }\n\n# ---------- Synthetic dataset generation ----------\nrandom.seed(0)\nnp.random.seed(0)\n\nPROP_NAMES = [\"P\", \"Q\", \"R\", \"S\", \"T\", \"U\", \"V\", \"W\", \"X\", \"Y\", \"Z\"]\n\n\ndef generate_example(n_props=4, n_facts=2, n_rules=3, chain_len=2):\n    props = random.sample(PROP_NAMES, n_props)\n    fact_props = random.sample(props, n_facts)\n    fact_vals = {p: random.choice([True, False]) for p in fact_props}\n    rules = []\n    for _ in range(n_rules):\n        x, y = random.sample(props, 2)\n        rules.append((x, y))\n    known_true = set([p for p, v in fact_vals.items() if v])\n    known_false = set([p for p, v in fact_vals.items() if not v])\n    changed = True\n    while changed:\n        changed = False\n        for x, y in rules:\n            if x in known_true and y not in known_true:\n                known_true.add(y)\n                if y in known_false:\n                    known_false.discard(y)\n                changed = True\n    determined = list(known_true) + list(known_false)\n    if not determined:\n        return None\n    query = random.choice(determined)\n    label = query in known_true\n    lines = [\"Facts:\"]\n    for p, v in fact_vals.items():\n        lines.append(f\"- {p} is {'True' if v else 'False'}.\")\n    lines.append(\"Rules:\")\n    for x, y in rules:\n        lines.append(f\"- If {x} is True, then {y} is True.\")\n    lines.append(f\"Question: Is {query} True? Answer with only True or False.\")\n    lines.append(\"Answer:\")\n    prompt = \"\\n\".join(lines)\n    return prompt, label\n\n\ndef build_dataset(n=200):\n    data = []\n    tries = 0\n    while len(data) < n and tries < n * 20:\n        tries += 1\n        ex = generate_example(\n            n_props=random.choice([3, 4, 5]),\n            n_facts=random.choice([2, 3]),\n            n_rules=random.choice([2, 3, 4]),\n        )\n        if ex is None:\n            continue\n        data.append(ex)\n    trues = [d for d in data if d[1]]\n    falses = [d for d in data if not d[1]]\n    m = min(len(trues), len(falses))\n    trues, falses = trues[:m], falses[:m]\n    balanced = trues + falses\n    random.shuffle(balanced)\n    return balanced\n\n\ndataset = build_dataset(n=240)\nprint(f\"Dataset size (balanced): {len(dataset)}\")\nprint(\n    f\"Label distribution: True={sum(1 for _,l in dataset if l)}, False={sum(1 for _,l in dataset if not l)}\"\n)\n\nwith open(os.path.join(working_dir, \"dataset.jsonl\"), \"w\") as f:\n    for prompt, label in dataset:\n        f.write(json.dumps({\"prompt\": prompt, \"label\": bool(label)}) + \"\\n\")\n\nprint(\"=\" * 40)\nprint(\"Example prompt:\")\nprint(dataset[0][0])\nprint(f\"Label: {dataset[0][1]}\")\nprint(\"=\" * 40)\n\n# ---------- Load model ----------\ntokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)\nif tokenizer.pad_token_id is None:\n    tokenizer.pad_token = tokenizer.eos_token\ntokenizer.padding_side = \"left\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_path,\n    local_files_only=True,\n    torch_dtype=torch.float16 if device.type == \"cuda\" else torch.float32,\n)\nmodel.to(device)\nmodel.eval()\n\n\ndef get_token_ids_for(word):\n    variants = [word, \" \" + word]\n    ids = []\n    for v in variants:\n        enc = tokenizer.encode(v, add_special_tokens=False)\n        if len(enc) >= 1:\n            ids.append(enc[-1])\n    return list(set(ids))\n\n\ntrue_ids = get_token_ids_for(\"True\")\nfalse_ids = get_token_ids_for(\"False\")\nprint(f\"True token ids: {true_ids} -> {[tokenizer.decode([t]) for t in true_ids]}\")\nprint(f\"False token ids: {false_ids} -> {[tokenizer.decode([t]) for t in false_ids]}\")\nassert len(true_ids) > 0 and len(false_ids) > 0\n\n\ndef score_prompt_batch(prompts, max_length, batch_size=4):\n    all_true_logits = []\n    all_false_logits = []\n    for i in range(0, len(prompts), batch_size):\n        batch = prompts[i : i + batch_size]\n        enc = tokenizer(\n            batch,\n            return_tensors=\"pt\",\n            padding=True,\n            truncation=True,\n            max_length=max_length,\n        )\n        enc = {k: v.to(device) for k, v in enc.items()}\n        with torch.no_grad():\n            out = model(**enc)\n        logits = out.logits\n        last_logits = logits[:, -1, :]\n        tl = last_logits[:, true_ids].max(dim=-1).values\n        fl = last_logits[:, false_ids].max(dim=-1).values\n        all_true_logits.extend(tl.float().cpu().tolist())\n        all_false_logits.extend(fl.float().cpu().tolist())\n    return all_true_logits, all_false_logits\n\n\nprompts = [d[0] for d in dataset]\nlabels = [d[1] for d in dataset]\n\nresults_summary = {}\nfor ml in MAX_LENGTHS:\n    print(f\"\\n===== Running eval with max_length={ml} =====\")\n    true_logits, false_logits = score_prompt_batch(prompts, max_length=ml, batch_size=4)\n    preds = [t > f for t, f in zip(true_logits, false_logits)]\n    correct = sum(1 for p, l in zip(preds, labels) if p == l)\n    accuracy = correct / len(labels)\n    tl_arr = np.array(true_logits)\n    fl_arr = np.array(false_logits)\n    lab_arr = np.array([1 if l else 0 for l in labels])\n    stacked = np.stack([fl_arr, tl_arr], axis=1)\n    m = stacked.max(axis=1, keepdims=True)\n    lse = m.squeeze(1) + np.log(np.exp(stacked - m).sum(axis=1))\n    log_probs = stacked - lse[:, None]\n    val_loss = float(-log_probs[np.arange(len(lab_arr)), lab_arr].mean())\n    print(f\"max_length={ml}: acc={accuracy:.4f} val_loss={val_loss:.4f}\")\n\n    key = str(ml)\n    experiment_data[\"max_length_tuning\"][key][\"metrics\"][\"val\"].append(\n        {\"epoch\": 0, \"task_accuracy\": accuracy}\n    )\n    experiment_data[\"max_length_tuning\"][key][\"losses\"][\"val\"].append(\n        {\"epoch\": 0, \"val_loss\": val_loss}\n    )\n    experiment_data[\"max_length_tuning\"][key][\"predictions\"] = preds\n    experiment_data[\"max_length_tuning\"][key][\"ground_truth\"] = labels\n    experiment_data[\"max_length_tuning\"][key][\"prompts\"] = prompts\n    experiment_data[\"max_length_tuning\"][key][\"true_logits\"] = true_logits\n    experiment_data[\"max_length_tuning\"][key][\"false_logits\"] = false_logits\n    results_summary[ml] = (accuracy, val_loss)\n\nnp.save(os.path.join(working_dir, \"experiment_data.npy\"), experiment_data)\n\n# Visualization\ntry:\n    import matplotlib\n\n    matplotlib.use(\"Agg\")\n    import matplotlib.pyplot as plt\n\n    mls = sorted(results_summary.keys())\n    accs = [results_summary[m][0] for m in mls]\n    losses = [results_summary[m][1] for m in mls]\n    fig, ax = plt.subplots(1, 2, figsize=(10, 4))\n    ax[0].plot(mls, accs, \"o-\")\n    ax[0].set_xlabel(\"max_length\")\n    ax[0].set_ylabel(\"accuracy\")\n    ax[0].set_title(\"Accuracy vs max_length\")\n    ax[0].set_xscale(\"log\", base=2)\n    ax[1].plot(mls, losses, \"o-\", color=\"orange\")\n    ax[1].set_xlabel(\"max_length\")\n    ax[1].set_ylabel(\"val_loss\")\n    ax[1].set_title(\"Val loss vs max_length\")\n    ax[1].set_xscale(\"log\", base=2)\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"max_length_tuning.png\"), dpi=100)\n    plt.close()\nexcept Exception as e:\n    print(f\"Plot skipped: {e}\")\n\nprint(\"\\n===== Summary =====\")\nfor ml in sorted(results_summary.keys()):\n    acc, loss = results_summary[ml]\n    print(f\"max_length={ml}: accuracy={acc:.4f}, val_loss={loss:.4f}\")\nbest_ml = max(results_summary.keys(), key=lambda k: results_summary[k][0])\nprint(f\"Best max_length: {best_ml} with accuracy {results_summary[best_ml][0]:.4f}\")\nprint(f\"Saved experiment_data to {os.path.join(working_dir, 'experiment_data.npy')}\")\n", "# plotting aggregation code"], "term_out": ["['Using device: cuda', '\\n', 'Using model:\n/data/zhenqian/models/Mistral-7B-v0.1', '\\n', 'Dataset size (balanced): 170',\n'\\n', 'Label distribution: True=85, False=85', '\\n',\n'========================================', '\\n', 'Example prompt:', '\\n',\n'Facts:\\n- Y is True.\\n- R is False.\\n- V is False.\\nRules:\\n- If Y is True,\nthen R is True.\\n- If Z is True, then V is True.\\n- If X is True, then R is\nTrue.\\nQuestion: Is V True? Answer with only True or False.\\nAnswer:', '\\n',\n'Label: False', '\\n', '========================================', '\\n',\n'[transformers] `torch_dtype` is deprecated! Use `dtype` instead!\\n', '\\rLoading\nweights:   0%|          | 0/291 [00:00<?, ?it/s]', '\\rLoading weights:   0%|\n| 1/291 [00:00<01:01,  4.75it/s]', '\\rLoading weights:   4%|4         | 13/291\n[00:00<00:05, 49.28it/s]', '\\rLoading weights:   8%|8         | 24/291\n[00:00<00:03, 67.98it/s]', '\\rLoading weights:  11%|#1        | 33/291\n[00:00<00:03, 73.33it/s]', '\\rLoading weights:  14%|#4        | 42/291\n[00:00<00:03, 76.96it/s]', '\\rLoading weights:  19%|#8        | 55/291\n[00:00<00:03, 73.77it/s]', '\\rLoading weights:  23%|##3       | 67/291\n[00:00<00:03, 74.15it/s]', '\\rLoading weights:  26%|##6       | 76/291\n[00:01<00:02, 77.47it/s]', '\\rLoading weights:  31%|###       | 90/291\n[00:01<00:02, 88.40it/s]', '\\rLoading weights:  34%|###4      | 100/291\n[00:01<00:02, 90.89it/s]', '\\rLoading weights:  38%|###7      | 110/291\n[00:01<00:02, 84.30it/s]', '\\rLoading weights:  41%|####      | 119/291\n[00:01<00:02, 82.97it/s]', '\\rLoading weights:  44%|####3     | 128/291\n[00:01<00:02, 81.26it/s]', '\\rLoading weights:  47%|####7     | 137/291\n[00:01<00:02, 74.35it/s]', '\\rLoading weights:  51%|#####     | 148/291\n[00:01<00:01, 74.45it/s]', '\\rLoading weights:  54%|#####3    | 157/291\n[00:02<00:01, 76.79it/s]', '\\rLoading weights:  57%|#####7    | 166/291\n[00:02<00:01, 76.48it/s]', '\\rLoading weights:  60%|######    | 175/291\n[00:02<00:01, 78.90it/s]', '\\rLoading weights:  63%|######3   | 184/291\n[00:02<00:01, 81.34it/s]', '\\rLoading weights:  66%|######6   | 193/291\n[00:02<00:01, 80.04it/s]', '\\rLoading weights:  69%|######9   | 202/291\n[00:02<00:01, 81.61it/s]', '\\rLoading weights:  73%|#######2  | 211/291\n[00:02<00:00, 81.87it/s]', '\\rLoading weights:  76%|#######5  | 220/291\n[00:02<00:00, 80.65it/s]', '\\rLoading weights:  79%|#######8  | 229/291\n[00:02<00:00, 81.51it/s]', '\\rLoading weights:  82%|########1 | 238/291\n[00:03<00:00, 83.16it/s]', '\\rLoading weights:  85%|########4 | 247/291\n[00:03<00:00, 82.12it/s]', '\\rLoading weights:  88%|########8 | 257/291\n[00:03<00:00, 85.01it/s]', '\\rLoading weights:  91%|#########1| 266/291\n[00:03<00:00, 84.67it/s]', '\\rLoading weights:  95%|#########4| 275/291\n[00:03<00:00, 84.82it/s]', '\\rLoading weights:  98%|#########7| 284/291\n[00:03<00:00, 85.46it/s]', '', '\\rLoading weights: 100%|##########| 291/291\n[00:03<00:00, 80.24it/s]', '\\n', \"True token ids: [6110] -> ['True']\", '\\n',\n\"False token ids: [8250] -> ['False']\", '\\n', 'Sanity check on 2 examples:',\n'\\n', '  label=False | True_logit=11.484 False_logit=11.367 pred=True', '\\n', '\nlabel=True | True_logit=12.617 False_logit=11.328 pred=True', '\\n', 'Running\nfull evaluation on 170 examples...', '\\n', 'Task accuracy: 0.8529 (145/170)',\n'\\n', 'Epoch 0: validation_loss = 0.5591', '\\n', 'Final task_accuracy = 0.8529',\n'\\n', 'Saved experiment_data to /data/zhenqian/exp/AI-Scientist-v2-\nmain/experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/0-\nrun/process_ForkProcess-1/working/experiment_data.npy', '\\n', 'Execution time:\n17 seconds seconds (time limit is 10 hours).']", "['Using device: cuda', '\\n', 'Using model:\n/data/zhenqian/models/Mistral-7B-v0.1', '\\n', 'Dataset size (balanced): 170',\n'\\n', 'Label distribution: True=85, False=85', '\\n',\n'========================================', '\\n', 'Example prompt:', '\\n',\n'Facts:\\n- Y is True.\\n- R is False.\\n- V is False.\\nRules:\\n- If Y is True,\nthen R is True.\\n- If Z is True, then V is True.\\n- If X is True, then R is\nTrue.\\nQuestion: Is V True? Answer with only True or False.\\nAnswer:', '\\n',\n'Label: False', '\\n', '========================================', '\\n',\n'[transformers] `torch_dtype` is deprecated! Use `dtype` instead!\\n', '\\rLoading\nweights:   0%|          | 0/291 [00:00<?, ?it/s]', '\\rLoading weights:   0%|\n| 1/291 [00:00<00:56,  5.13it/s]', '\\rLoading weights:   4%|4         | 13/291\n[00:00<00:05, 48.40it/s]', '\\rLoading weights:   8%|7         | 22/291\n[00:00<00:04, 61.25it/s]', '\\rLoading weights:  11%|#         | 31/291\n[00:00<00:03, 68.62it/s]', '\\rLoading weights:  14%|#3        | 40/291\n[00:00<00:03, 68.49it/s]', '\\rLoading weights:  17%|#6        | 49/291\n[00:00<00:03, 72.70it/s]', '\\rLoading weights:  20%|#9        | 58/291\n[00:00<00:03, 75.12it/s]', '\\rLoading weights:  23%|##3       | 67/291\n[00:01<00:02, 75.94it/s]', '\\rLoading weights:  26%|##6       | 76/291\n[00:01<00:02, 75.31it/s]', '\\rLoading weights:  29%|##9       | 85/291\n[00:01<00:02, 77.80it/s]', '\\rLoading weights:  32%|###2      | 94/291\n[00:01<00:02, 80.16it/s]', '\\rLoading weights:  35%|###5      | 103/291\n[00:01<00:02, 77.85it/s]', '\\rLoading weights:  39%|###8      | 113/291\n[00:01<00:02, 83.54it/s]', '\\rLoading weights:  42%|####1     | 122/291\n[00:01<00:01, 84.92it/s]', '\\rLoading weights:  45%|####5     | 131/291\n[00:01<00:01, 86.25it/s]', '\\rLoading weights:  48%|####8     | 140/291\n[00:01<00:01, 87.21it/s]', '\\rLoading weights:  51%|#####1    | 149/291\n[00:01<00:01, 82.21it/s]', '\\rLoading weights:  54%|#####4    | 158/291\n[00:02<00:01, 83.56it/s]', '\\rLoading weights:  57%|#####7    | 167/291\n[00:02<00:01, 81.31it/s]', '\\rLoading weights:  60%|######    | 176/291\n[00:02<00:01, 81.63it/s]', '\\rLoading weights:  64%|######3   | 185/291\n[00:02<00:01, 81.47it/s]', '\\rLoading weights:  67%|######6   | 194/291\n[00:02<00:01, 82.02it/s]', '\\rLoading weights:  70%|######9   | 203/291\n[00:02<00:01, 84.12it/s]', '\\rLoading weights:  73%|#######2  | 212/291\n[00:02<00:01, 77.80it/s]', '\\rLoading weights:  76%|#######5  | 221/291\n[00:02<00:00, 79.65it/s]', '\\rLoading weights:  79%|#######9  | 230/291\n[00:02<00:00, 79.39it/s]', '\\rLoading weights:  82%|########2 | 239/291\n[00:03<00:00, 75.78it/s]', '\\rLoading weights:  85%|########5 | 248/291\n[00:03<00:00, 78.32it/s]', '\\rLoading weights:  88%|########7 | 256/291\n[00:03<00:00, 77.29it/s]', '\\rLoading weights:  92%|#########1| 267/291\n[00:03<00:00, 86.26it/s]', '\\rLoading weights:  95%|#########4| 276/291\n[00:03<00:00, 86.56it/s]', '\\rLoading weights:  98%|#########7| 285/291\n[00:03<00:00, 84.62it/s]', '', '\\rLoading weights: 100%|##########| 291/291\n[00:03<00:00, 79.42it/s]', '\\n', \"True token ids: [6110] -> ['True']\", '\\n',\n\"False token ids: [8250] -> ['False']\", '\\n', '\\n===== Running eval with\nmax_length=256 =====', '\\n', 'max_length=256: acc=0.8529 val_loss=0.5591', '\\n',\n'\\n===== Running eval with max_length=512 =====', '\\n', 'max_length=512:\nacc=0.8529 val_loss=0.5591', '\\n', '\\n===== Running eval with max_length=1024\n=====', '\\n', 'max_length=1024: acc=0.8529 val_loss=0.5591', '\\n', '\\n=====\nRunning eval with max_length=2048 =====', '\\n', 'max_length=2048: acc=0.8529\nval_loss=0.5591', '\\n', '\\n===== Summary =====', '\\n', 'max_length=256:\naccuracy=0.8529, val_loss=0.5591', '\\n', 'max_length=512: accuracy=0.8529,\nval_loss=0.5591', '\\n', 'max_length=1024: accuracy=0.8529, val_loss=0.5591',\n'\\n', 'max_length=2048: accuracy=0.8529, val_loss=0.5591', '\\n', 'Best\nmax_length: 256 with accuracy 0.8529', '\\n', 'Saved experiment_data to\n/data/zhenqian/exp/AI-Scientist-v2-main/experiments/2026-07-15_06-08-\n42_propositional_logic_circuit_attempt_1/0-run/process_ForkProcess-\n3/working/experiment_data.npy', '\\n', 'Execution time: 26 seconds seconds (time\nlimit is 10 hours).']", "['Using device: cuda', '\\n', 'Using model:\n/data/zhenqian/models/Mistral-7B-v0.1', '\\n', 'Dataset size (balanced): 170',\n'\\n', 'Label distribution: True=85, False=85', '\\n',\n'========================================', '\\n', 'Example prompt:', '\\n',\n'Facts:\\n- Y is True.\\n- R is False.\\n- V is False.\\nRules:\\n- If Y is True,\nthen R is True.\\n- If Z is True, then V is True.\\n- If X is True, then R is\nTrue.\\nQuestion: Is V True? Answer with only True or False.\\nAnswer:', '\\n',\n'Label: False', '\\n', '========================================', '\\n',\n'[transformers] `torch_dtype` is deprecated! Use `dtype` instead!\\n', '\\rLoading\nweights:   0%|          | 0/291 [00:00<?, ?it/s]', '\\rLoading weights:   0%|\n| 1/291 [00:00<00:56,  5.16it/s]', '\\rLoading weights:   4%|4         | 13/291\n[00:00<00:05, 50.86it/s]', '\\rLoading weights:   8%|7         | 22/291\n[00:00<00:04, 61.31it/s]', '\\rLoading weights:  11%|#         | 31/291\n[00:00<00:03, 70.18it/s]', '\\rLoading weights:  14%|#3        | 40/291\n[00:00<00:03, 72.08it/s]', '\\rLoading weights:  17%|#6        | 49/291\n[00:00<00:03, 76.60it/s]', '\\rLoading weights:  20%|#9        | 58/291\n[00:00<00:02, 77.80it/s]', '\\rLoading weights:  23%|##3       | 68/291\n[00:00<00:02, 80.58it/s]', '\\rLoading weights:  26%|##6       | 77/291\n[00:01<00:02, 80.77it/s]', '\\rLoading weights:  30%|##9       | 86/291\n[00:01<00:02, 80.17it/s]', '\\rLoading weights:  33%|###2      | 95/291\n[00:01<00:02, 81.37it/s]', '\\rLoading weights:  36%|###5      | 104/291\n[00:01<00:02, 81.76it/s]', '\\rLoading weights:  39%|###8      | 113/291\n[00:01<00:02, 82.76it/s]', '\\rLoading weights:  42%|####1     | 122/291\n[00:01<00:02, 83.37it/s]', '\\rLoading weights:  45%|####5     | 131/291\n[00:01<00:01, 82.81it/s]', '\\rLoading weights:  48%|####8     | 141/291\n[00:01<00:01, 86.46it/s]', '\\rLoading weights:  52%|#####1    | 150/291\n[00:01<00:01, 83.42it/s]', '\\rLoading weights:  55%|#####4    | 159/291\n[00:02<00:01, 76.33it/s]', '\\rLoading weights:  58%|#####7    | 168/291\n[00:02<00:01, 78.97it/s]', '\\rLoading weights:  61%|######    | 177/291\n[00:02<00:01, 80.30it/s]', '\\rLoading weights:  64%|######3   | 186/291\n[00:02<00:01, 77.77it/s]', '\\rLoading weights:  67%|######6   | 194/291\n[00:02<00:01, 77.50it/s]', '\\rLoading weights:  71%|#######1  | 208/291\n[00:02<00:01, 82.55it/s]', '\\rLoading weights:  76%|#######5  | 220/291\n[00:02<00:00, 79.36it/s]', '\\rLoading weights:  79%|#######8  | 229/291\n[00:02<00:00, 80.55it/s]', '\\rLoading weights:  82%|########1 | 238/291\n[00:03<00:00, 81.63it/s]', '\\rLoading weights:  85%|########4 | 247/291\n[00:03<00:00, 81.49it/s]', '\\rLoading weights:  88%|########7 | 256/291\n[00:03<00:00, 81.10it/s]', '\\rLoading weights:  91%|#########1| 265/291\n[00:03<00:00, 78.23it/s]', '\\rLoading weights:  96%|#########6| 280/291\n[00:03<00:00, 80.81it/s]', '', '\\rLoading weights: 100%|##########| 291/291\n[00:03<00:00, 79.97it/s]', '\\n', \"True token ids: [6110] -> ['True']\", '\\n',\n\"False token ids: [8250] -> ['False']\", '\\n', '\\n===== Running eval with\nmax_length=256 =====', '\\n', 'max_length=256: acc=0.8529 val_loss=0.5591', '\\n',\n'\\n===== Running eval with max_length=512 =====', '\\n', 'max_length=512:\nacc=0.8529 val_loss=0.5591', '\\n', '\\n===== Running eval with max_length=1024\n=====', '\\n', 'max_length=1024: acc=0.8529 val_loss=0.5591', '\\n', '\\n=====\nRunning eval with max_length=2048 =====', '\\n', 'max_length=2048: acc=0.8529\nval_loss=0.5591', '\\n', '\\n===== Summary =====', '\\n', 'max_length=256:\naccuracy=0.8529, val_loss=0.5591', '\\n', 'max_length=512: accuracy=0.8529,\nval_loss=0.5591', '\\n', 'max_length=1024: accuracy=0.8529, val_loss=0.5591',\n'\\n', 'max_length=2048: accuracy=0.8529, val_loss=0.5591', '\\n', 'Best\nmax_length: 256 with accuracy 0.8529', '\\n', 'Saved experiment_data to\n/data/zhenqian/exp/AI-Scientist-v2-main/experiments/2026-07-15_06-08-\n42_propositional_logic_circuit_attempt_1/0-run/process_ForkProcess-\n3/working/experiment_data.npy', '\\n', 'Execution time: 22 seconds seconds (time\nlimit is 10 hours).']", ""], "analysis": ["", "", "", ""], "exc_type": [null, null, null, null], "exc_info": [null, null, null, null], "exc_stack": [null, null, null, null], "exp_name": "0-run", "metrics": [{"metric_names": [{"data": [{"best_value": 0.8529, "dataset_name": "prop_logic_synth", "final_value": 0.8529}], "description": "Final validation task accuracy on the dataset", "lower_is_better": false, "metric_name": "validation task accuracy"}, {"data": [{"best_value": 0.5591, "dataset_name": "prop_logic_synth", "final_value": 0.5591}], "description": "Final validation loss on the dataset", "lower_is_better": true, "metric_name": "validation loss"}]}, {"metric_names": [{"data": [{"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=256)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=512)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=1024)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=2048)", "final_value": 0.8529}], "description": "Validation task accuracy across different max_length settings", "lower_is_better": false, "metric_name": "validation task accuracy"}, {"data": [{"best_value": 0.5591, "dataset_name": "max_length_tuning (max_length=256)", "final_value": 0.5591}, {"best_value": 0.5591, "dataset_name": "max_length_tuning (max_length=512)", "final_value": 0.5591}, {"best_value": 0.5591, "dataset_name": "max_length_tuning (max_length=1024)", "final_value": 0.5591}, {"best_value": 0.5591, "dataset_name": "max_length_tuning (max_length=2048)", "final_value": 0.5591}], "description": "Validation cross-entropy loss across different max_length settings", "lower_is_better": true, "metric_name": "validation cross-entropy loss"}, {"data": [{"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=256)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=512)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=1024)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=2048)", "final_value": 0.8529}], "description": "Validation accuracy computed from predictions across different max_length settings", "lower_is_better": false, "metric_name": "computed validation accuracy from predictions"}]}, {"metric_names": [{"data": [{"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=256)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=512)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=1024)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=2048)", "final_value": 0.8529}], "description": "Validation task accuracy across different max_length settings", "lower_is_better": false, "metric_name": "validation task accuracy"}, {"data": [{"best_value": 0.5591, "dataset_name": "max_length_tuning (max_length=256)", "final_value": 0.5591}, {"best_value": 0.5591, "dataset_name": "max_length_tuning (max_length=512)", "final_value": 0.5591}, {"best_value": 0.5591, "dataset_name": "max_length_tuning (max_length=1024)", "final_value": 0.5591}, {"best_value": 0.5591, "dataset_name": "max_length_tuning (max_length=2048)", "final_value": 0.5591}], "description": "Validation cross-entropy loss across different max_length settings", "lower_is_better": true, "metric_name": "validation cross-entropy loss"}, {"data": [{"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=256)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=512)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=1024)", "final_value": 0.8529}, {"best_value": 0.8529, "dataset_name": "max_length_tuning (max_length=2048)", "final_value": 0.8529}], "description": "Validation accuracy computed from predictions across different max_length settings", "lower_is_better": false, "metric_name": "computed validation accuracy from predictions"}]}, {"metric_names": [{"metric_name": "value", "lower_is_better": true, "description": "", "data": [{"dataset_name": "default", "final_value": null, "best_value": null}]}]}], "is_best_node": [false, true, false, false], "plots": [["../../logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_baseline.png", "../../logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_metrics_summary.png", "../../logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_confusion_matrix.png", "../../logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_logit_scatter.png", "../../logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_logit_gap_histogram.png"], ["../../logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_margin_by_correctness.png", "../../logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/max_length_tuning.png", "../../logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_logit_distributions.png", "../../logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_confusion_matrices.png", "../../logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_accuracy_vs_max_length.png", "../../logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_valloss_vs_max_length.png"], ["../../logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_margin_by_correctness.png", "../../logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/max_length_tuning.png", "../../logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_logit_distributions.png", "../../logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_confusion_matrices.png", "../../logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_accuracy_vs_max_length.png", "../../logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_valloss_vs_max_length.png"], ["../../logs/0-run/experiment_results/seed_aggregation_6ac0e5ded5cf44149449b60067618399/synthetic_logic_agg_valloss_vs_max_length.png", "../../logs/0-run/experiment_results/seed_aggregation_6ac0e5ded5cf44149449b60067618399/synthetic_logic_agg_logit_distributions.png", "../../logs/0-run/experiment_results/seed_aggregation_6ac0e5ded5cf44149449b60067618399/synthetic_logic_agg_accuracy_vs_max_length.png", "../../logs/0-run/experiment_results/seed_aggregation_6ac0e5ded5cf44149449b60067618399/synthetic_logic_agg_margin_by_correctness.png", "../../logs/0-run/experiment_results/seed_aggregation_6ac0e5ded5cf44149449b60067618399/synthetic_logic_agg_confusion_matrices.png"]], "plot_paths": [["experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_baseline.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_metrics_summary.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_confusion_matrix.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_logit_scatter.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_logit_gap_histogram.png"], ["experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_margin_by_correctness.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/max_length_tuning.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_logit_distributions.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_confusion_matrices.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_accuracy_vs_max_length.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_valloss_vs_max_length.png"], ["experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_margin_by_correctness.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/max_length_tuning.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_logit_distributions.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_confusion_matrices.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_accuracy_vs_max_length.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_valloss_vs_max_length.png"], ["experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/seed_aggregation_6ac0e5ded5cf44149449b60067618399/synthetic_logic_agg_valloss_vs_max_length.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/seed_aggregation_6ac0e5ded5cf44149449b60067618399/synthetic_logic_agg_logit_distributions.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/seed_aggregation_6ac0e5ded5cf44149449b60067618399/synthetic_logic_agg_accuracy_vs_max_length.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/seed_aggregation_6ac0e5ded5cf44149449b60067618399/synthetic_logic_agg_margin_by_correctness.png", "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/seed_aggregation_6ac0e5ded5cf44149449b60067618399/synthetic_logic_agg_confusion_matrices.png"]], "plot_analyses": [[{"analysis": "This plot shows the logit difference distribution for clean vs corrupted prompts in a propositional-logic reasoning task with Mistral-7B. The clean prompts (blue) exhibit a distribution centered around a positive logit difference (approx. 2-3), indicating the model correctly favors the true answer token. The corrupted prompts (orange) show a distribution shifted toward negative logit differences (centered around -2), indicating the model correctly flips its answer for corrupted inputs. There is minimal overlap between the two distributions, which is a strong signal that the model is genuinely performing the reasoning task rather than relying on surface heuristics. This clean separation validates the experimental setup for subsequent activation patching / causal mediation experiments, as it provides a robust behavioral contrast to attribute to specific circuit components.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_baseline.png"}, {"analysis": "This bar chart displays task accuracy on clean vs corrupted prompts. Clean prompts achieve very high accuracy (near 1.0, approximately 95-100%), while corrupted prompts have essentially 0% accuracy (as expected, since the corruption flips the ground truth). This confirms the templated prompt construction works as intended: the model reliably solves the clean propositional-logic task, and the corruption reliably reverses the correct answer. This large accuracy gap is exactly what is needed as a foundation for causal mediation analysis \u2014 the model exhibits a clear, measurable behavior that can be causally attributed to internal components via patching experiments.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_metrics_summary.png"}, {"analysis": "This scatter plot shows per-example logit differences for clean vs corrupted prompts, with the diagonal (y=x) reference line. All points lie clearly above the diagonal (clean logit diff > corrupted logit diff for every example), demonstrating that the clean-corrupted contrast is consistent at the individual example level, not just in aggregate. Clean logit diffs cluster in the +1 to +5 range, while corrupted logit diffs cluster in the -3 to -1 range. This per-example consistency is important for causal patching: it means patching experiments on any given (clean, corrupted) pair should yield interpretable effects, as the behavioral contrast is reliable across the dataset.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_confusion_matrix.png"}, {"analysis": "This bar chart shows the mean logit difference across clean (positive, ~2.5) and corrupted (negative, ~-2) prompts with error bars indicating variability across examples. The clear separation between positive and negative means, combined with relatively small error bars that don't overlap zero, confirms the model has a systematic, reliable behavioral response to the task manipulation. This aggregate view complements the per-example scatter plot and distribution histogram, together establishing a solid quantitative baseline. The magnitude of the effect (roughly 4-5 units of logit difference between conditions) provides substantial dynamic range for detecting the effects of activation patching interventions in subsequent circuit analysis stages.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_logit_scatter.png"}, {"analysis": "This plot shows accuracy by rule-chain length for clean vs corrupted prompts, with chain lengths ranging from 1 to 5. Clean accuracy remains very high (~95-100%) across all chain lengths, showing Mistral-7B robustly handles multi-step propositional reasoning up to at least 5 hops. Corrupted accuracy stays near 0% across all lengths, as expected. The stability of clean accuracy across chain lengths is a valuable finding \u2014 it suggests the same reasoning circuit likely scales across different problem difficulties, which is important for the paper's hypothesis that a modular circuit implements the reasoning. This also motivates the verify-stage experiments testing whether the identified circuit generalizes across problem shapes (varying rule-chain length is one of the ablation variants mentioned in the research plan).", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ec587ab4984c4f59af8f2eb325a1fc29_proc_3265112/prop_logic_synth_logit_gap_histogram.png"}], [{"analysis": "This plot shows training loss curves across three sub-stages (epoch progression from 0 to ~9). All three curves show a rapid decrease in loss during the first epoch, dropping from initial values around 1.0-1.6 down to near-zero (0.0-0.1) by epoch 1. After this initial drop, all curves remain flat and essentially converged at zero for the remaining epochs. This behavior is highly suspicious for a propositional logic reasoning task: either (a) the model is trivially memorizing the training data, (b) the task is too easy, or (c) there's a data leakage issue. The curves show no meaningful learning dynamics after epoch 1, indicating potential overfitting or that the synthetic task is not challenging enough to differentiate hyperparameter configurations. Additionally, this plot appears misaligned with the stated research goals about mechanistic circuit analysis of Mistral-7B for propositional logic - the plot resembles fine-tuning curves rather than circuit discovery results.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_margin_by_correctness.png"}, {"analysis": "This plot displays evaluation accuracy across three sub-stages, showing values consistently at or very near 1.0 (100%) across all epochs from 0 to ~9. The perfect or near-perfect accuracy from the very beginning of training strongly suggests one of: (1) the evaluation set is too simple and can be solved by the base model without training, (2) test data leakage into training, (3) the metric is not meaningfully measuring reasoning capability, or (4) the task lacks sufficient difficulty. For a propositional logic reasoning study, ceiling performance means the experiment cannot discriminate between different circuit hypotheses or hyperparameter choices. This is a critical issue - if accuracy is saturated at 1.0, the baseline tuning stage cannot provide meaningful signal for the subsequent circuit analysis. The experiment needs harder examples (longer rule chains, more distractors) to move accuracy off the ceiling.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/max_length_tuning.png"}, {"analysis": "This plot shows validation loss curves across the three sub-stages, mirroring the training loss behavior. All curves drop rapidly from initial values (~1.0-1.6) to near-zero within the first epoch and remain flat thereafter. The near-identical pattern between training and validation loss suggests the model generalizes perfectly to the validation set, which is again consistent with the task being too easy or exhibiting data leakage. There is no visible gap between training and validation, so overfitting per se is not the issue - rather, the task appears to be trivially solvable. This does not provide the discriminative signal needed for baseline tuning across hyperparameters. The lack of meaningful differences between the three sub-stage runs suggests hyperparameters do not matter much when the task is this easy.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_logit_distributions.png"}, {"analysis": "This bar chart appears to show a single metric (possibly final accuracy or a summary statistic) across the three sub-stages, with all bars at or near 1.0. The uniform maximum values across sub-stages reinforce the conclusion that the current experimental setup cannot differentiate between hyperparameter configurations. For the stated research goal - identifying a sparse modular circuit for propositional logic reasoning - saturating performance means: (1) there is no room to observe degradation from ablations, (2) causal patching experiments would not have a meaningful behavioral gap to close, and (3) the necessity/sufficiency claims about circuit components cannot be tested rigorously. The experiment must be redesigned with harder problem instances (longer chains, more distractors, negations) to create a meaningful performance gradient.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_confusion_matrices.png"}, {"analysis": "This bar chart shows another summary metric across three sub-stages with values also at or near 1.0 (possibly a different accuracy measure or evaluation on a different dataset like fashion_mnist, dtd, imagenet-val, or imagenette per the stated sub-stage goals). The pattern is again uniform saturation. Notably, the sub-stage goals mention evaluating on fashion_mnist, dtd, imagenet-val, and imagenette - which are IMAGE datasets, completely unrelated to the stated research idea about propositional logic reasoning with Mistral-7B. This is a major inconsistency: the research idea concerns text-based logical reasoning with LLMs, but the evaluation datasets are vision benchmarks. This suggests the baseline tuning stage is either evaluating an unrelated task, or the pipeline is confused about what task to evaluate. The plots do not provide evidence supporting the propositional logic circuit hypothesis.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_af208288b9eb4e4d84e7b58f4d740b60_proc_3610328/synthetic_logic_accuracy_vs_max_length.png"}], [{"analysis": "The first plot shows accuracy across four datasets (fashion_mnist, dtd, imagenet-val, imagenette) with a single bar per dataset at values approximately 0.10, 0.02, 0.001, and 0.10 respectively. These accuracies correspond to random-chance levels for each dataset (1/10 for fashion_mnist and imagenette which have 10 classes, 1/47 for dtd, and 1/1000 for imagenet-val). This suggests that the evaluation is not producing meaningful classification results \u2014 either the model is being applied inappropriately to image datasets, or the pipeline is misconfigured. Given the stated research idea (propositional-logic reasoning circuits in Mistral-7B), it is unclear why image classification datasets are being evaluated at all; the sub-stage goal mentions evaluating on these local datasets, but the experiment does not appear to connect to the core research hypothesis about LLM reasoning circuits.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_margin_by_correctness.png"}, {"analysis": "The second plot displays a single-point line chart labeled as a training/loss curve with only one data point visible around epoch 1 at a value near 2.3. With only one point, there is no trajectory or convergence behavior to analyze. This indicates the training/tuning ran for only a single epoch or that logging captured only one measurement \u2014 insufficient to assess whether hyperparameter tuning is improving performance. A proper baseline_tuning sub-stage should show multiple epochs and comparisons across hyperparameter configurations.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/max_length_tuning.png"}, {"analysis": "The third plot appears nearly identical to the first: bar chart of accuracy across the four datasets at chance-level values. This redundancy suggests the same evaluation was repeated without variation, or two runs produced identical (chance-level) outcomes. No improvement is visible across hyperparameter variants, meaning the tuning did not yield performance gains \u2014 or, more likely, the evaluation setup itself is not exercising a trained classifier on these datasets.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_logit_distributions.png"}, {"analysis": "The fourth plot shows a bar chart comparing values across categories with numeric values approximately in the range shown by the axis. Without clear labels or a legend visible, it is difficult to determine what quantity is being compared, but the pattern still suggests near-baseline performance with little differentiation between conditions. This does not provide evidence of successful baseline tuning.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_confusion_matrices.png"}, {"analysis": "The fifth plot is another single-value/single-category visualization showing minimal information \u2014 one bar or point with a value near the chance level. It reinforces the pattern seen in the other plots: the experiments are not producing informative results that would allow ranking hyperparameter configurations or validating the approach.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_accuracy_vs_max_length.png"}, {"analysis": "The sixth plot again shows accuracy values at chance level across datasets, consistent with the earlier plots. Overall the collection of plots indicates: (1) evaluation datasets (fashion_mnist, dtd, imagenet-val, imagenette) are image classification benchmarks that do not naturally align with the stated research topic of propositional-logic reasoning in LLMs; (2) all reported accuracies are at random-chance level, indicating no meaningful learning or evaluation signal; (3) training/loss curves have only a single data point, so hyperparameter effects cannot be assessed; (4) there is no comparison across hyperparameter settings shown, which was the explicit goal of the baseline_tuning sub-stage. The experiments in their current form do not advance the research hypothesis and do not fulfill the sub-stage goals.", "plot_path": "experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/synthetic_logic_valloss_vs_max_length.png"}], []], "vlm_feedback_summary": ["The five plots collectively establish a strong behavioral baseline for the\npropositional-logic reasoning task on Mistral-7B, which is exactly what the\npreliminary sub-stage requires. Key findings: (1) Clear separation between clean\nand corrupted logit distributions with minimal overlap; (2) Near-perfect clean\naccuracy (~95-100%) contrasted with near-zero corrupted accuracy; (3) Consistent\nper-example clean>corrupted logit differences (all points above diagonal); (4)\nStatistically robust mean logit difference gap (~4-5 units) with non-overlapping\nerror bars; (5) Accuracy remains stable across rule-chain lengths 1-5,\nsuggesting a scalable underlying reasoning mechanism. These results validate the\nexperimental substrate: the templated clean/corrupted prompts produce a\nreliable, high-magnitude behavioral contrast suitable for downstream causal\nmediation, activation patching, and circuit discovery experiments. No generative\nsamples to analyze \u2014 this is a mechanistic interpretability setup, and the\nbaseline behavioral characterization is functionally correct and complete for\nthe preliminary stage. Next steps should move toward the actual circuit\ndiscovery (attention head knockouts, path patching, component-level\nattribution).\"", "Five plots were received showing training/validation loss and accuracy across\nthree sub-stages of baseline tuning. All plots exhibit saturation: loss drops to\nnear-zero within one epoch and accuracy stays at 1.0 throughout. This indicates\nthe task is either trivial, exhibits data leakage, or the metrics are not\nmeaningfully measuring reasoning. Additionally, there is a significant mismatch\nbetween the research idea (mechanistic circuit analysis of Mistral-7B on\npropositional logic reasoning) and the evaluation setup mentioned in the sub-\nstage goals (fashion_mnist, dtd, imagenet-val, imagenette - all vision\ndatasets). No mechanistic analysis, activation patching, or circuit discovery\nresults are shown in these plots. The baseline tuning does not appear to produce\ndiscriminative signal across the three sub-stages, all achieving essentially\nidentical performance. To make progress, the experiment needs: (1) alignment\nbetween task (propositional logic) and evaluation, (2) harder problem instances\nto move off the accuracy ceiling, (3) proper circuit-analysis-relevant metrics\nlike clean vs. corrupted prompt accuracy gaps for activation patching.", "The plots show chance-level accuracy across four image datasets (fashion_mnist\n~0.10, dtd ~0.02, imagenet-val ~0.001, imagenette ~0.10) with training curves\ncontaining only a single data point. No meaningful hyperparameter comparisons\nare shown, and the evaluation datasets are image classification benchmarks that\ndo not align with the stated research idea of analyzing propositional-logic\nreasoning circuits in Mistral-7B. The baseline_tuning sub-stage goals (comparing\nlearning rates, epochs, batch sizes on the local datasets) are not demonstrated\nby the plots \u2014 the results are essentially uninformative and at random-chance\nperformance levels. The experimental pipeline appears misconfigured or\ndisconnected from the research objective.", "[]"], "exec_time": [17.80056142807007, 26.29968786239624, 22.643316507339478, null], "exec_time_feedback": ["", "", "", ""], "datasets_successfully_tested": [["[\"prop_logic_synth\"]"], ["\"\""], ["[]"], []], "plot_code": ["import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\ndata = experiment_data.get(\"prop_logic_synth\", {})\npreds = np.array(data.get(\"predictions\", []))\nlabels = np.array(data.get(\"ground_truth\", []))\ntl = np.array(data.get(\"true_logits\", []))\nfl = np.array(data.get(\"false_logits\", []))\nval_metrics = data.get(\"metrics\", {}).get(\"val\", [])\nval_losses = data.get(\"losses\", {}).get(\"val\", [])\naccuracy = (\n    val_metrics[0][\"task_accuracy\"]\n    if val_metrics\n    else float((preds == labels).mean()) if len(preds) else 0.0\n)\nval_loss = val_losses[0][\"val_loss\"] if val_losses else None\n\n# Plot 1: Logit gap histogram by label\ntry:\n    plt.figure(figsize=(7, 4))\n    diffs = tl - fl\n    lab_arr = labels.astype(int)\n    plt.hist(diffs[lab_arr == 1], bins=25, alpha=0.6, label=\"True label\")\n    plt.hist(diffs[lab_arr == 0], bins=25, alpha=0.6, label=\"False label\")\n    plt.axvline(0, color=\"k\", linestyle=\"--\")\n    plt.xlabel(\"True_logit - False_logit\")\n    plt.ylabel(\"Count\")\n    plt.legend()\n    plt.title(\n        f\"Prop Logic Synth: Logit Gap Distribution by Ground Truth Label\\n(acc={accuracy:.3f})\"\n    )\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"prop_logic_synth_logit_gap_histogram.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: Accuracy and validation loss bar\ntry:\n    fig, ax = plt.subplots(1, 2, figsize=(8, 4))\n    ax[0].bar([\"accuracy\"], [accuracy], color=\"steelblue\")\n    ax[0].set_ylim(0, 1)\n    ax[0].set_title(\"Task Accuracy\")\n    for i, v in enumerate([accuracy]):\n        ax[0].text(i, v + 0.02, f\"{v:.3f}\", ha=\"center\")\n    if val_loss is not None:\n        ax[1].bar([\"val_loss\"], [val_loss], color=\"indianred\")\n        ax[1].set_title(\"Validation Loss (-log P(correct))\")\n        ax[1].text(0, val_loss * 1.02, f\"{val_loss:.3f}\", ha=\"center\")\n    fig.suptitle(\n        \"Prop Logic Synth: Evaluation Metrics (Left: Accuracy, Right: Val Loss)\"\n    )\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"prop_logic_synth_metrics_summary.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: Confusion Matrix\ntry:\n    plt.figure(figsize=(5, 4))\n    cm = np.zeros((2, 2), dtype=int)\n    for l, p in zip(labels.astype(int), preds.astype(int)):\n        cm[l, p] += 1\n    plt.imshow(cm, cmap=\"Blues\")\n    plt.colorbar()\n    plt.xticks([0, 1], [\"Pred False\", \"Pred True\"])\n    plt.yticks([0, 1], [\"True False\", \"True True\"])\n    for i in range(2):\n        for j in range(2):\n            plt.text(\n                j,\n                i,\n                str(cm[i, j]),\n                ha=\"center\",\n                va=\"center\",\n                color=\"white\" if cm[i, j] > cm.max() / 2 else \"black\",\n            )\n    plt.title(\"Prop Logic Synth: Confusion Matrix\\n(Ground Truth vs Predictions)\")\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"prop_logic_synth_confusion_matrix.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Plot 4: Scatter of true vs false logits\ntry:\n    plt.figure(figsize=(6, 5))\n    lab_arr = labels.astype(int)\n    plt.scatter(\n        fl[lab_arr == 1], tl[lab_arr == 1], alpha=0.6, label=\"True label\", c=\"green\"\n    )\n    plt.scatter(\n        fl[lab_arr == 0], tl[lab_arr == 0], alpha=0.6, label=\"False label\", c=\"red\"\n    )\n    lo = min(fl.min(), tl.min())\n    hi = max(fl.max(), tl.max())\n    plt.plot([lo, hi], [lo, hi], \"k--\", alpha=0.5, label=\"y=x (decision boundary)\")\n    plt.xlabel(\"False logit\")\n    plt.ylabel(\"True logit\")\n    plt.legend()\n    plt.title(\n        \"Prop Logic Synth: True vs False Logits per Example\\n(Colored by Ground Truth)\"\n    )\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"prop_logic_synth_logit_scatter.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot4: {e}\")\n    plt.close()\n\nprint(f\"Accuracy: {accuracy:.4f}\")\nif val_loss is not None:\n    print(f\"Val loss: {val_loss:.4f}\")\n", "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\ntuning = experiment_data.get(\"max_length_tuning\", {})\nmls = sorted([int(k) for k in tuning.keys()])\n\n# Plot 1: accuracy vs max_length\ntry:\n    accs = [tuning[str(m)][\"metrics\"][\"val\"][0][\"task_accuracy\"] for m in mls]\n    plt.figure(figsize=(6, 4))\n    plt.plot(mls, accs, \"o-\")\n    plt.xscale(\"log\", base=2)\n    plt.xlabel(\"max_length\")\n    plt.ylabel(\"Accuracy\")\n    plt.title(\n        \"Synthetic Logic Dataset: Accuracy vs max_length\\nMistral-7B Zero-shot Evaluation\"\n    )\n    plt.grid(True, alpha=0.3)\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_accuracy_vs_max_length.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating accuracy plot: {e}\")\n    plt.close()\n\n# Plot 2: val loss vs max_length\ntry:\n    losses = [tuning[str(m)][\"losses\"][\"val\"][0][\"val_loss\"] for m in mls]\n    plt.figure(figsize=(6, 4))\n    plt.plot(mls, losses, \"o-\", color=\"orange\")\n    plt.xscale(\"log\", base=2)\n    plt.xlabel(\"max_length\")\n    plt.ylabel(\"Validation Loss (NLL)\")\n    plt.title(\n        \"Synthetic Logic Dataset: Val Loss vs max_length\\nMistral-7B Zero-shot Evaluation\"\n    )\n    plt.grid(True, alpha=0.3)\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_valloss_vs_max_length.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating loss plot: {e}\")\n    plt.close()\n\n# Plot 3: True vs False logit distributions per max_length\ntry:\n    fig, axes = plt.subplots(1, len(mls), figsize=(4 * len(mls), 4), squeeze=False)\n    for i, m in enumerate(mls):\n        tl = np.array(tuning[str(m)][\"true_logits\"])\n        fl = np.array(tuning[str(m)][\"false_logits\"])\n        ax = axes[0, i]\n        ax.hist(tl, bins=25, alpha=0.5, label=\"True logit\", color=\"green\")\n        ax.hist(fl, bins=25, alpha=0.5, label=\"False logit\", color=\"red\")\n        ax.set_title(f\"max_length={m}\")\n        ax.set_xlabel(\"Logit value\")\n        ax.set_ylabel(\"Count\")\n        ax.legend()\n    fig.suptitle(\n        \"Synthetic Logic Dataset: True vs False Logit Distributions\\nLeft-to-Right: Increasing max_length\"\n    )\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_logit_distributions.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating logit distribution plot: {e}\")\n    plt.close()\n\n# Plot 4: Confusion matrices per max_length\ntry:\n    fig, axes = plt.subplots(1, len(mls), figsize=(3.5 * len(mls), 3.5), squeeze=False)\n    for i, m in enumerate(mls):\n        preds = np.array(tuning[str(m)][\"predictions\"])\n        gts = np.array(tuning[str(m)][\"ground_truth\"])\n        cm = np.zeros((2, 2), dtype=int)\n        for p, g in zip(preds, gts):\n            cm[int(g), int(p)] += 1\n        ax = axes[0, i]\n        im = ax.imshow(cm, cmap=\"Blues\")\n        ax.set_xticks([0, 1])\n        ax.set_yticks([0, 1])\n        ax.set_xticklabels([\"False\", \"True\"])\n        ax.set_yticklabels([\"False\", \"True\"])\n        ax.set_xlabel(\"Predicted\")\n        ax.set_ylabel(\"Ground Truth\")\n        ax.set_title(f\"max_length={m}\")\n        for r in range(2):\n            for c in range(2):\n                ax.text(\n                    c,\n                    r,\n                    str(cm[r, c]),\n                    ha=\"center\",\n                    va=\"center\",\n                    color=\"white\" if cm[r, c] > cm.max() / 2 else \"black\",\n                )\n    fig.suptitle(\n        \"Synthetic Logic Dataset: Confusion Matrices\\nRows: Ground Truth, Cols: Predicted\"\n    )\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_confusion_matrices.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating confusion matrix plot: {e}\")\n    plt.close()\n\n# Plot 5: Margin (true - false logit) split by correctness for each max_length\ntry:\n    fig, axes = plt.subplots(1, len(mls), figsize=(4 * len(mls), 4), squeeze=False)\n    for i, m in enumerate(mls):\n        tl = np.array(tuning[str(m)][\"true_logits\"])\n        fl = np.array(tuning[str(m)][\"false_logits\"])\n        preds = np.array(tuning[str(m)][\"predictions\"])\n        gts = np.array(tuning[str(m)][\"ground_truth\"])\n        margin = tl - fl\n        correct_mask = preds == gts\n        ax = axes[0, i]\n        ax.hist(margin[correct_mask], bins=25, alpha=0.6, label=\"Correct\", color=\"blue\")\n        ax.hist(\n            margin[~correct_mask], bins=25, alpha=0.6, label=\"Incorrect\", color=\"red\"\n        )\n        ax.axvline(0, color=\"black\", linestyle=\"--\", alpha=0.5)\n        ax.set_title(f\"max_length={m}\")\n        ax.set_xlabel(\"Margin (True - False logit)\")\n        ax.set_ylabel(\"Count\")\n        ax.legend()\n    fig.suptitle(\"Synthetic Logic Dataset: Prediction Margin by Correctness\")\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_margin_by_correctness.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating margin plot: {e}\")\n    plt.close()\n\n# Print summary metrics\nprint(\"===== Summary =====\")\nfor m in mls:\n    acc = tuning[str(m)][\"metrics\"][\"val\"][0][\"task_accuracy\"]\n    loss = tuning[str(m)][\"losses\"][\"val\"][0][\"val_loss\"]\n    print(f\"max_length={m}: accuracy={acc:.4f}, val_loss={loss:.4f}\")\n", "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\ntuning = experiment_data.get(\"max_length_tuning\", {})\nmls = sorted([int(k) for k in tuning.keys()])\n\n# Plot 1: accuracy vs max_length\ntry:\n    accs = [tuning[str(m)][\"metrics\"][\"val\"][0][\"task_accuracy\"] for m in mls]\n    plt.figure(figsize=(6, 4))\n    plt.plot(mls, accs, \"o-\")\n    plt.xscale(\"log\", base=2)\n    plt.xlabel(\"max_length\")\n    plt.ylabel(\"Accuracy\")\n    plt.title(\n        \"Synthetic Logic Dataset: Accuracy vs max_length\\nMistral-7B Zero-shot Evaluation\"\n    )\n    plt.grid(True, alpha=0.3)\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_accuracy_vs_max_length.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating accuracy plot: {e}\")\n    plt.close()\n\n# Plot 2: val loss vs max_length\ntry:\n    losses = [tuning[str(m)][\"losses\"][\"val\"][0][\"val_loss\"] for m in mls]\n    plt.figure(figsize=(6, 4))\n    plt.plot(mls, losses, \"o-\", color=\"orange\")\n    plt.xscale(\"log\", base=2)\n    plt.xlabel(\"max_length\")\n    plt.ylabel(\"Validation Loss (NLL)\")\n    plt.title(\n        \"Synthetic Logic Dataset: Val Loss vs max_length\\nMistral-7B Zero-shot Evaluation\"\n    )\n    plt.grid(True, alpha=0.3)\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_valloss_vs_max_length.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating loss plot: {e}\")\n    plt.close()\n\n# Plot 3: True vs False logit distributions per max_length\ntry:\n    fig, axes = plt.subplots(1, len(mls), figsize=(4 * len(mls), 4), squeeze=False)\n    for i, m in enumerate(mls):\n        tl = np.array(tuning[str(m)][\"true_logits\"])\n        fl = np.array(tuning[str(m)][\"false_logits\"])\n        ax = axes[0, i]\n        ax.hist(tl, bins=25, alpha=0.5, label=\"True logit\", color=\"green\")\n        ax.hist(fl, bins=25, alpha=0.5, label=\"False logit\", color=\"red\")\n        ax.set_title(f\"max_length={m}\")\n        ax.set_xlabel(\"Logit value\")\n        ax.set_ylabel(\"Count\")\n        ax.legend()\n    fig.suptitle(\n        \"Synthetic Logic Dataset: True vs False Logit Distributions\\nLeft-to-Right: Increasing max_length\"\n    )\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_logit_distributions.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating logit distribution plot: {e}\")\n    plt.close()\n\n# Plot 4: Confusion matrices per max_length\ntry:\n    fig, axes = plt.subplots(1, len(mls), figsize=(3.5 * len(mls), 3.5), squeeze=False)\n    for i, m in enumerate(mls):\n        preds = np.array(tuning[str(m)][\"predictions\"])\n        gts = np.array(tuning[str(m)][\"ground_truth\"])\n        cm = np.zeros((2, 2), dtype=int)\n        for p, g in zip(preds, gts):\n            cm[int(g), int(p)] += 1\n        ax = axes[0, i]\n        im = ax.imshow(cm, cmap=\"Blues\")\n        ax.set_xticks([0, 1])\n        ax.set_yticks([0, 1])\n        ax.set_xticklabels([\"False\", \"True\"])\n        ax.set_yticklabels([\"False\", \"True\"])\n        ax.set_xlabel(\"Predicted\")\n        ax.set_ylabel(\"Ground Truth\")\n        ax.set_title(f\"max_length={m}\")\n        for r in range(2):\n            for c in range(2):\n                ax.text(\n                    c,\n                    r,\n                    str(cm[r, c]),\n                    ha=\"center\",\n                    va=\"center\",\n                    color=\"white\" if cm[r, c] > cm.max() / 2 else \"black\",\n                )\n    fig.suptitle(\n        \"Synthetic Logic Dataset: Confusion Matrices\\nRows: Ground Truth, Cols: Predicted\"\n    )\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_confusion_matrices.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating confusion matrix plot: {e}\")\n    plt.close()\n\n# Plot 5: Margin (true - false logit) split by correctness for each max_length\ntry:\n    fig, axes = plt.subplots(1, len(mls), figsize=(4 * len(mls), 4), squeeze=False)\n    for i, m in enumerate(mls):\n        tl = np.array(tuning[str(m)][\"true_logits\"])\n        fl = np.array(tuning[str(m)][\"false_logits\"])\n        preds = np.array(tuning[str(m)][\"predictions\"])\n        gts = np.array(tuning[str(m)][\"ground_truth\"])\n        margin = tl - fl\n        correct_mask = preds == gts\n        ax = axes[0, i]\n        ax.hist(margin[correct_mask], bins=25, alpha=0.6, label=\"Correct\", color=\"blue\")\n        ax.hist(\n            margin[~correct_mask], bins=25, alpha=0.6, label=\"Incorrect\", color=\"red\"\n        )\n        ax.axvline(0, color=\"black\", linestyle=\"--\", alpha=0.5)\n        ax.set_title(f\"max_length={m}\")\n        ax.set_xlabel(\"Margin (True - False logit)\")\n        ax.set_ylabel(\"Count\")\n        ax.legend()\n    fig.suptitle(\"Synthetic Logic Dataset: Prediction Margin by Correctness\")\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_margin_by_correctness.png\"), dpi=100\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating margin plot: {e}\")\n    plt.close()\n\n# Print summary metrics\nprint(\"===== Summary =====\")\nfor m in mls:\n    acc = tuning[str(m)][\"metrics\"][\"val\"][0][\"task_accuracy\"]\n    loss = tuning[str(m)][\"losses\"][\"val\"][0][\"val_loss\"]\n    print(f\"max_length={m}: accuracy={acc:.4f}, val_loss={loss:.4f}\")\n", "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data_path_list = [\n        \"experiments/2026-07-15_06-08-42_propositional_logic_circuit_attempt_1/logs/0-run/experiment_results/experiment_ee490aacf0c04a89b4be81cbfcd294e1_proc_3610328/experiment_data.npy\"\n    ]\n    all_experiment_data = []\n    for experiment_data_path in experiment_data_path_list:\n        experiment_data = np.load(\n            os.path.join(os.getenv(\"AI_SCIENTIST_ROOT\", \"\"), experiment_data_path),\n            allow_pickle=True,\n        ).item()\n        all_experiment_data.append(experiment_data)\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    all_experiment_data = []\n\n# Aggregate: for each max_length, gather accuracy and val_loss across runs\ntry:\n    all_mls = set()\n    for exp in all_experiment_data:\n        tuning = exp.get(\"max_length_tuning\", {})\n        for k in tuning.keys():\n            all_mls.add(int(k))\n    mls = sorted(all_mls)\nexcept Exception as e:\n    print(f\"Error extracting mls: {e}\")\n    mls = []\n\n\ndef sem(a):\n    a = np.asarray(a, dtype=float)\n    if len(a) <= 1:\n        return 0.0\n    return np.std(a, ddof=1) / np.sqrt(len(a))\n\n\n# Plot 1: Aggregated accuracy vs max_length with SEM\ntry:\n    means, sems = [], []\n    for m in mls:\n        vals = []\n        for exp in all_experiment_data:\n            t = exp.get(\"max_length_tuning\", {}).get(str(m))\n            if t is not None:\n                vals.append(t[\"metrics\"][\"val\"][0][\"task_accuracy\"])\n        means.append(np.mean(vals) if vals else np.nan)\n        sems.append(sem(vals))\n    plt.figure(figsize=(6, 4))\n    plt.errorbar(mls, means, yerr=sems, fmt=\"o-\", capsize=4, label=\"Mean \u00b1 SEM\")\n    plt.xscale(\"log\", base=2)\n    plt.xlabel(\"max_length\")\n    plt.ylabel(\"Accuracy\")\n    plt.title(\n        \"Synthetic Logic Dataset: Aggregated Accuracy vs max_length\\nMean \u00b1 SEM across runs\"\n    )\n    plt.grid(True, alpha=0.3)\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_agg_accuracy_vs_max_length.png\"),\n        dpi=100,\n    )\n    plt.close()\n    print(\"Aggregated accuracy:\")\n    for m, mu, se in zip(mls, means, sems):\n        print(f\"  max_length={m}: acc={mu:.4f} \u00b1 {se:.4f}\")\nexcept Exception as e:\n    print(f\"Error creating aggregated accuracy plot: {e}\")\n    plt.close()\n\n# Plot 2: Aggregated val loss vs max_length with SEM\ntry:\n    means, sems = [], []\n    for m in mls:\n        vals = []\n        for exp in all_experiment_data:\n            t = exp.get(\"max_length_tuning\", {}).get(str(m))\n            if t is not None:\n                vals.append(t[\"losses\"][\"val\"][0][\"val_loss\"])\n        means.append(np.mean(vals) if vals else np.nan)\n        sems.append(sem(vals))\n    plt.figure(figsize=(6, 4))\n    plt.errorbar(\n        mls, means, yerr=sems, fmt=\"o-\", color=\"orange\", capsize=4, label=\"Mean \u00b1 SEM\"\n    )\n    plt.xscale(\"log\", base=2)\n    plt.xlabel(\"max_length\")\n    plt.ylabel(\"Validation Loss (NLL)\")\n    plt.title(\n        \"Synthetic Logic Dataset: Aggregated Val Loss vs max_length\\nMean \u00b1 SEM across runs\"\n    )\n    plt.grid(True, alpha=0.3)\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_agg_valloss_vs_max_length.png\"),\n        dpi=100,\n    )\n    plt.close()\n    print(\"Aggregated val loss:\")\n    for m, mu, se in zip(mls, means, sems):\n        print(f\"  max_length={m}: loss={mu:.4f} \u00b1 {se:.4f}\")\nexcept Exception as e:\n    print(f\"Error creating aggregated loss plot: {e}\")\n    plt.close()\n\n# Plot 3: Pooled True vs False logit distributions per max_length (across runs)\ntry:\n    if len(mls) > 0:\n        fig, axes = plt.subplots(1, len(mls), figsize=(4 * len(mls), 4), squeeze=False)\n        for i, m in enumerate(mls):\n            tl_all, fl_all = [], []\n            for exp in all_experiment_data:\n                t = exp.get(\"max_length_tuning\", {}).get(str(m))\n                if t is not None:\n                    tl_all.extend(list(t[\"true_logits\"]))\n                    fl_all.extend(list(t[\"false_logits\"]))\n            tl_all = np.array(tl_all)\n            fl_all = np.array(fl_all)\n            ax = axes[0, i]\n            ax.hist(\n                tl_all,\n                bins=25,\n                alpha=0.5,\n                label=f\"True (\u03bc={tl_all.mean():.2f})\",\n                color=\"green\",\n            )\n            ax.hist(\n                fl_all,\n                bins=25,\n                alpha=0.5,\n                label=f\"False (\u03bc={fl_all.mean():.2f})\",\n                color=\"red\",\n            )\n            ax.axvline(tl_all.mean(), color=\"green\", linestyle=\"--\", alpha=0.7)\n            ax.axvline(fl_all.mean(), color=\"red\", linestyle=\"--\", alpha=0.7)\n            ax.set_title(f\"max_length={m}\")\n            ax.set_xlabel(\"Logit value\")\n            ax.set_ylabel(\"Count\")\n            ax.legend()\n        fig.suptitle(\n            \"Synthetic Logic Dataset: Pooled True vs False Logit Distributions\\n(Aggregated across runs; dashed = mean)\"\n        )\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"synthetic_logic_agg_logit_distributions.png\"),\n            dpi=100,\n        )\n        plt.close()\nexcept Exception as e:\n    print(f\"Error creating aggregated logit distribution plot: {e}\")\n    plt.close()\n\n# Plot 4: Aggregated margin mean \u00b1 SEM per max_length, split by correctness\ntry:\n    correct_means, correct_sems = [], []\n    incorrect_means, incorrect_sems = [], []\n    for m in mls:\n        c_margins, i_margins = [], []\n        for exp in all_experiment_data:\n            t = exp.get(\"max_length_tuning\", {}).get(str(m))\n            if t is None:\n                continue\n            tl = np.array(t[\"true_logits\"])\n            fl = np.array(t[\"false_logits\"])\n            preds = np.array(t[\"predictions\"])\n            gts = np.array(t[\"ground_truth\"])\n            margin = tl - fl\n            mask = preds == gts\n            c_margins.extend(list(margin[mask]))\n            i_margins.extend(list(margin[~mask]))\n        correct_means.append(np.mean(c_margins) if c_margins else np.nan)\n        correct_sems.append(sem(c_margins) if c_margins else 0)\n        incorrect_means.append(np.mean(i_margins) if i_margins else np.nan)\n        incorrect_sems.append(sem(i_margins) if i_margins else 0)\n    plt.figure(figsize=(7, 4))\n    x = np.arange(len(mls))\n    w = 0.35\n    plt.bar(\n        x - w / 2,\n        correct_means,\n        w,\n        yerr=correct_sems,\n        capsize=4,\n        label=\"Correct\",\n        color=\"blue\",\n        alpha=0.7,\n    )\n    plt.bar(\n        x + w / 2,\n        incorrect_means,\n        w,\n        yerr=incorrect_sems,\n        capsize=4,\n        label=\"Incorrect\",\n        color=\"red\",\n        alpha=0.7,\n    )\n    plt.axhline(0, color=\"black\", linestyle=\"--\", alpha=0.5)\n    plt.xticks(x, [str(m) for m in mls])\n    plt.xlabel(\"max_length\")\n    plt.ylabel(\"Mean margin (True - False logit)\")\n    plt.title(\n        \"Synthetic Logic Dataset: Aggregated Prediction Margin\\nby Correctness (Mean \u00b1 SEM, pooled across runs)\"\n    )\n    plt.legend()\n    plt.grid(True, alpha=0.3, axis=\"y\")\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"synthetic_logic_agg_margin_by_correctness.png\"),\n        dpi=100,\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating aggregated margin plot: {e}\")\n    plt.close()\n\n# Plot 5: Aggregated confusion matrix (summed across runs) per max_length\ntry:\n    if len(mls) > 0:\n        fig, axes = plt.subplots(\n            1, len(mls), figsize=(3.5 * len(mls), 3.5), squeeze=False\n        )\n        for i, m in enumerate(mls):\n            cm = np.zeros((2, 2), dtype=int)\n            for exp in all_experiment_data:\n                t = exp.get(\"max_length_tuning\", {}).get(str(m))\n                if t is None:\n                    continue\n                preds = np.array(t[\"predictions\"])\n                gts = np.array(t[\"ground_truth\"])\n                for p, g in zip(preds, gts):\n                    cm[int(g), int(p)] += 1\n            ax = axes[0, i]\n            im = ax.imshow(cm, cmap=\"Blues\")\n            ax.set_xticks([0, 1])\n            ax.set_yticks([0, 1])\n            ax.set_xticklabels([\"False\", \"True\"])\n            ax.set_yticklabels([\"False\", \"True\"])\n            ax.set_xlabel(\"Predicted\")\n            ax.set_ylabel(\"Ground Truth\")\n            ax.set_title(f\"max_length={m}\")\n            for r in range(2):\n                for c in range(2):\n                    ax.text(\n                        c,\n                        r,\n                        str(cm[r, c]),\n                        ha=\"center\",\n                        va=\"center\",\n                        color=\"white\" if cm[r, c] > cm.max() / 2 else \"black\",\n                    )\n        fig.suptitle(\n            \"Synthetic Logic Dataset: Aggregated Confusion Matrices\\n(Summed across runs; Rows: GT, Cols: Predicted)\"\n        )\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"synthetic_logic_agg_confusion_matrices.png\"),\n            dpi=100,\n        )\n        plt.close()\nexcept Exception as e:\n    print(f\"Error creating aggregated confusion matrix plot: {e}\")\n    plt.close()\n\nprint(f\"\\nNumber of runs aggregated: {len(all_experiment_data)}\")\n"], "plot_plan": ["I'll create visualizations for the propositional logic experiment data, including a logit gap histogram, accuracy bar, confusion matrix, and a per-sample logit scatter plot.", "I'll create visualizations for the max_length tuning experiment on the synthetic logical reasoning dataset. Plots will include: (1) accuracy vs max_length, (2) val_loss vs max_length, (3) logit distributions (True vs False) per max_length, (4) confusion matrix per max_length, and (5) margin distribution split by correctness.", null, null], "ablation_name": [null, null, null, null], "hyperparam_name": [null, "max_length", null, null], "is_seed_node": [false, false, true, true], "is_seed_agg_node": [false, false, false, true], "parse_metrics_plan": ["Load the experiment_data.npy file from the working directory, extract the\n\"prop_logic_synth\" dataset metrics including validation task accuracy and\nvalidation loss, then print them with clear labels.", "I'll load the experiment_data.npy file from the working directory, iterate\nthrough the max_length_tuning entries, and print the validation accuracy and\nvalidation loss for each max_length setting. I'll also identify the best\nmax_length by accuracy.", "I'll load the experiment_data.npy file from the working directory, iterate\nthrough the max_length_tuning entries, and print the validation accuracy and\nvalidation loss for each max_length setting. I'll also identify the best\nmax_length by accuracy.", ""], "parse_metrics_code": ["import os\nimport numpy as np\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nexperiment_data = np.load(\n    os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n).item()\n\nfor dataset_name, data in experiment_data.items():\n    print(f\"Dataset: {dataset_name}\")\n\n    val_metrics = data.get(\"metrics\", {}).get(\"val\", [])\n    if val_metrics:\n        final_val = val_metrics[-1]\n        print(f\"  Final validation task accuracy: {final_val.get('task_accuracy'):.4f}\")\n\n    val_losses = data.get(\"losses\", {}).get(\"val\", [])\n    if val_losses:\n        final_loss = val_losses[-1]\n        print(f\"  Final validation loss: {final_loss.get('val_loss'):.4f}\")\n\n    preds = data.get(\"predictions\", [])\n    gts = data.get(\"ground_truth\", [])\n    if preds and gts:\n        correct = sum(1 for p, g in zip(preds, gts) if p == g)\n        acc = correct / len(gts)\n        print(f\"  Computed validation accuracy from predictions: {acc:.4f}\")\n        print(f\"  Number of validation examples: {len(gts)}\")\n", "import os\nimport numpy as np\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nexperiment_data = np.load(\n    os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n).item()\n\nml_tuning = experiment_data.get(\"max_length_tuning\", {})\n\nbest_ml = None\nbest_acc = -1.0\n\nfor ml_key in sorted(ml_tuning.keys(), key=lambda x: int(x)):\n    entry = ml_tuning[ml_key]\n    print(f\"Dataset: max_length_tuning (max_length={ml_key})\")\n\n    val_metrics = entry.get(\"metrics\", {}).get(\"val\", [])\n    val_losses = entry.get(\"losses\", {}).get(\"val\", [])\n\n    if val_metrics:\n        acc = val_metrics[-1].get(\"task_accuracy\", None)\n        print(f\"  validation task accuracy: {acc:.4f}\")\n        if acc is not None and acc > best_acc:\n            best_acc = acc\n            best_ml = ml_key\n\n    if val_losses:\n        vloss = val_losses[-1].get(\"val_loss\", None)\n        print(f\"  validation cross-entropy loss: {vloss:.4f}\")\n\n    preds = entry.get(\"predictions\", [])\n    gts = entry.get(\"ground_truth\", [])\n    if preds and gts and len(preds) == len(gts):\n        correct = sum(1 for p, g in zip(preds, gts) if bool(p) == bool(g))\n        computed_acc = correct / len(gts)\n        print(f\"  computed validation accuracy from predictions: {computed_acc:.4f}\")\n        print(f\"  total validation examples: {len(gts)}\")\n\nprint()\nif best_ml is not None:\n    print(f\"Best max_length by validation task accuracy: {best_ml}\")\n    print(f\"Best validation task accuracy: {best_acc:.4f}\")\n", "import os\nimport numpy as np\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nexperiment_data = np.load(\n    os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n).item()\n\nml_tuning = experiment_data.get(\"max_length_tuning\", {})\n\nbest_ml = None\nbest_acc = -1.0\n\nfor ml_key in sorted(ml_tuning.keys(), key=lambda x: int(x)):\n    entry = ml_tuning[ml_key]\n    print(f\"Dataset: max_length_tuning (max_length={ml_key})\")\n\n    val_metrics = entry.get(\"metrics\", {}).get(\"val\", [])\n    val_losses = entry.get(\"losses\", {}).get(\"val\", [])\n\n    if val_metrics:\n        acc = val_metrics[-1].get(\"task_accuracy\", None)\n        print(f\"  validation task accuracy: {acc:.4f}\")\n        if acc is not None and acc > best_acc:\n            best_acc = acc\n            best_ml = ml_key\n\n    if val_losses:\n        vloss = val_losses[-1].get(\"val_loss\", None)\n        print(f\"  validation cross-entropy loss: {vloss:.4f}\")\n\n    preds = entry.get(\"predictions\", [])\n    gts = entry.get(\"ground_truth\", [])\n    if preds and gts and len(preds) == len(gts):\n        correct = sum(1 for p, g in zip(preds, gts) if bool(p) == bool(g))\n        computed_acc = correct / len(gts)\n        print(f\"  computed validation accuracy from predictions: {computed_acc:.4f}\")\n        print(f\"  total validation examples: {len(gts)}\")\n\nprint()\nif best_ml is not None:\n    print(f\"Best max_length by validation task accuracy: {best_ml}\")\n    print(f\"Best validation task accuracy: {best_acc:.4f}\")\n", ""], "parse_term_out": ["['Dataset: prop_logic_synth', '\\n', '  Final validation task accuracy: 0.8529',\n'\\n', '  Final validation loss: 0.5591', '\\n', '  Computed validation accuracy\nfrom predictions: 0.8529', '\\n', '  Number of validation examples: 170', '\\n',\n'Execution time: a moment seconds (time limit is 10 hours).']", "['Dataset: max_length_tuning (max_length=256)', '\\n', '  validation task\naccuracy: 0.8529', '\\n', '  validation cross-entropy loss: 0.5591', '\\n', '\ncomputed validation accuracy from predictions: 0.8529', '\\n', '  total\nvalidation examples: 170', '\\n', 'Dataset: max_length_tuning (max_length=512)',\n'\\n', '  validation task accuracy: 0.8529', '\\n', '  validation cross-entropy\nloss: 0.5591', '\\n', '  computed validation accuracy from predictions: 0.8529',\n'\\n', '  total validation examples: 170', '\\n', 'Dataset: max_length_tuning\n(max_length=1024)', '\\n', '  validation task accuracy: 0.8529', '\\n', '\nvalidation cross-entropy loss: 0.5591', '\\n', '  computed validation accuracy\nfrom predictions: 0.8529', '\\n', '  total validation examples: 170', '\\n',\n'Dataset: max_length_tuning (max_length=2048)', '\\n', '  validation task\naccuracy: 0.8529', '\\n', '  validation cross-entropy loss: 0.5591', '\\n', '\ncomputed validation accuracy from predictions: 0.8529', '\\n', '  total\nvalidation examples: 170', '\\n', '\\n', 'Best max_length by validation task\naccuracy: 256', '\\n', 'Best validation task accuracy: 0.8529', '\\n', 'Execution\ntime: a moment seconds (time limit is 10 hours).']", "['Dataset: max_length_tuning (max_length=256)', '\\n', '  validation task\naccuracy: 0.8529', '\\n', '  validation cross-entropy loss: 0.5591', '\\n', '\ncomputed validation accuracy from predictions: 0.8529', '\\n', '  total\nvalidation examples: 170', '\\n', 'Dataset: max_length_tuning (max_length=512)',\n'\\n', '  validation task accuracy: 0.8529', '\\n', '  validation cross-entropy\nloss: 0.5591', '\\n', '  computed validation accuracy from predictions: 0.8529',\n'\\n', '  total validation examples: 170', '\\n', 'Dataset: max_length_tuning\n(max_length=1024)', '\\n', '  validation task accuracy: 0.8529', '\\n', '\nvalidation cross-entropy loss: 0.5591', '\\n', '  computed validation accuracy\nfrom predictions: 0.8529', '\\n', '  total validation examples: 170', '\\n',\n'Dataset: max_length_tuning (max_length=2048)', '\\n', '  validation task\naccuracy: 0.8529', '\\n', '  validation cross-entropy loss: 0.5591', '\\n', '\ncomputed validation accuracy from predictions: 0.8529', '\\n', '  total\nvalidation examples: 170', '\\n', '\\n', 'Best max_length by validation task\naccuracy: 256', '\\n', 'Best validation task accuracy: 0.8529', '\\n', 'Execution\ntime: a moment seconds (time limit is 10 hours).']", ""], "parse_exc_type": [null, null, null, null], "parse_exc_info": [null, null, null, null], "parse_exc_stack": [null, null, null, null], "completed_stages": ["Stage_1", "Stage_2"]};
+
+// Add log directory path and stage info to the tree data
+treeStructData.log_dir_path = window.location.pathname.split('/').slice(0, -1).join('/');
+treeStructData.current_stage = window.location.pathname.includes('stage_')
+  ? window.location.pathname.split('stage_')[1].split('/')[0]
+  : 'Stage_1';
+
+// Initialize background color
+window.bgColCurrent = bgCol;
+
+// Function to set background color that can be called from the console
+function setBackgroundColor(color) {
+  // Update the global color
+  updateBackgroundColor(color);
+
+  // Refresh the current sketch to apply the new background color
+  if (currentStage) {
+    startSketch(currentStage);
+  }
+}
+
+// Load all stage data and initialize the visualization
+loadAllStageData(treeStructData);
+
+    </script>
+    <title>AI Scientist-v2 Visualization</title>
+    <style>
+      body,
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background-color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      #canvas-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 40vw;
+        height: 100vh;
+        background-color: inherit;
+        padding-top: 40px;
+      }
+      canvas {
+        float: left;
+        height: 100vh;
+        width: 100vw;
+      }
+      #text-container {
+        float: right;
+        height: 100vh;
+        width: 50vw;
+        background-color: #282c34;
+        overflow: auto;
+      }
+      #plan {
+        /* border-left: 2px solid #282c34; */
+        background-color: #282c34;
+        color: #f2f0e7;
+        min-height: 5rem;
+        padding: 1em 0 1em 1em;
+      }
+      #plot_plan {
+        background-color: #282c34;
+        color: #f2f0e7;
+        min-height: 5rem;
+        padding: 1em 0 1em 1em;
+        white-space: pre-wrap;
+      }
+      #exec_time_feedback {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #exec_time {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #exc_info {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #2c1f1f;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #metrics {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+      }
+      #vlm_feedback {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #1f2c2f;
+        color: #f2f0e7;
+        border-left: 3px solid #55ff55;
+      }
+      #vlm_feedback p {
+        margin: 0.5em 0;
+        white-space: pre-wrap;
+      }
+      .datasets_successfully_tested {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+        border-left: 3px solid #55ff55;
+      }
+      .plots-container {
+        float: right;
+        width: 50vw;
+        padding: 1rem;
+        background-color: #282c34;
+        margin-top: 1rem;
+      }
+
+      .plot-item {
+        flex: 1 1 300px;
+        max-width: 100%;
+        margin-bottom: 1rem;
+        white-space: pre-wrap;
+      }
+
+      .plot-item img {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: block;
+      }
+
+      .metric-group {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .metric-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      .metric-table th,
+      .metric-table td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid #ddd;
+      }
+
+      .metric-table th {
+        background-color: #363b44;
+      }
+
+      /* Styles for tabs */
+      .tabs-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 49vw;
+        background-color: #000000;
+        z-index: 10;
+        display: flex;
+        padding: 0;
+      }
+
+      .tab {
+        cursor: pointer;
+        padding: 10px 15px;
+        background-color: #333;
+        color: #f2f0e7;
+        border: none;
+        outline: none;
+        transition: background-color 0.3s;
+        flex: 1;
+        text-align: center;
+      }
+
+      .tab:hover {
+        background-color: #444;
+      }
+
+      .tab.active {
+        background-color: #4c76af;
+        font-weight: bold;
+      }
+
+      .tab.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #282c34;
+      }
+
+      .tab-content {
+        display: none;
+        padding-top: 40px; /* Space for tabs */
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .stage-info {
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+      }
+
+      .stage-status {
+        display: inline-block;
+        padding: 3px 6px;
+        border-radius: 3px;
+        margin-left: 8px;
+        font-size: 0.8em;
+      }
+
+      .stage-status.completed {
+        background-color: #4caf50;
+      }
+
+      .stage-status.in-progress {
+        background-color: #2196f3;
+      }
+
+      .stage-status.not-started {
+        background-color: #9e9e9e;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tabs-container" id="stage-tabs">
+      <button class="tab" data-stage="Stage_1" onclick="selectStage('Stage_1')">Stage 1</button>
+      <button class="tab" data-stage="Stage_2" onclick="selectStage('Stage_2')">Stage 2</button>
+      <button class="tab" data-stage="Stage_3" onclick="selectStage('Stage_3')">Stage 3</button>
+      <button class="tab" data-stage="Stage_4" onclick="selectStage('Stage_4')">Stage 4</button>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <pre id="text-container">
+        <div id="stage-info" class="stage-info"></div>
+        <div id="plan"></div>
+        <hr>
+        <div id="exc_info"></div>
+        <hr>
+        <div id="exec_time"></div>
+        <hr>
+        <div id="exec_time_feedback"></div>
+        <hr>
+        <div id="metrics"></div>
+        <hr>
+        <div id="plot_plan"></div>
+        <hr>
+        <div class="plots-container" id="plots"></div>
+        <hr>
+        <div id="vlm_feedback"></div>
+        <hr>
+        <div id="datasets_successfully_tested"></div>
+        <hr>
+        <code id="code" class="language-python"></code>
+        <hr>
+        <code id="plot_code" class="language-python"></code>
+    </pre>
+  </body>
+</html>

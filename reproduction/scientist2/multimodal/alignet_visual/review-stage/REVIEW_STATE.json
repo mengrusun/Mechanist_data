@@ -1,0 +1,22 @@
+{
+  "iterations_consumed": 5,
+  "claim_reentries_consumed": 2,
+  "status": "completed",
+  "termination_reason": "positive_verdict",
+  "last_score": 8.0,
+  "last_verdict": "ready",
+  "consecutive_noop_count": 1,
+  "iteration_breakdown": [
+    {"i": 1, "type": "main_experiment_fix", "target_claims": ["C4a", "C4b"], "produced_claims": [], "action_summary": "alpha 1.0 -> 0.1 (M3 rerun + M7 + M8); C2a preserved; C4a still not-established; C4b still conditional"},
+    {"i": 2, "type": "main_experiment_fix", "target_claims": ["C4a", "C4b"], "produced_claims": [], "action_summary": "LoRA scope (r=16, alpha=1.0). Best regime. C4a mean delta improved from -0.284 to -0.239; C4b mean delta from -0.110 to -0.063. Code fixes: LoRA device placement + LoRA checkpoint eval-time load."},
+    {"i": 3, "type": "claim_reentry_lightweight", "target_claims": ["C4a"], "produced_claims": ["C4a_v2"], "action_summary": "Lightweight rewrite of C4a: 'documented trade-off; LoRA best-regime disclosed'. No new compute."},
+    {"i": 4, "type": "claim_reentry_lightweight", "target_claims": ["C4b"], "produced_claims": ["C4b_v2"], "action_summary": "Lightweight rewrite of C4b: 'selective OOD gains on BREEDS-style subpopulation shift; non-universal across panel'. No new compute. Claim-reentry sub-budget EXHAUSTED (2/2)."},
+    {"i": 5, "type": "noop_termination", "target_claims": [], "produced_claims": [], "action_summary": "Reviewer re-scored under both rewrites: score 7 -> 8, verdict almost -> ready. Three-dimensional STOP satisfied. Reviewer explicitly recommends STOP."}
+  ],
+  "claim_stage_reentries": ["C4a", "C4b"],
+  "pending_upstream_calls": [],
+  "runs_total": 6,
+  "gpu_hours_total": 1.12,
+  "thread_id": null,
+  "timestamp": "2026-07-15T04:55:00"
+}

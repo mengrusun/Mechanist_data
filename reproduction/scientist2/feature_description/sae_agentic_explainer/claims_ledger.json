@@ -1,0 +1,155 @@
+{
+  "project": "Faithful SAGE reproduction — iterative, activation-grounded SAE-feature explanation vs. Neuronpedia",
+  "direction": "SAGE (multi-agent propose→test→revise pipeline over an SAE dictionary) produces natural-language explanations that outperform Neuronpedia on generative and predictive accuracy across multiple LLM+SAE pairs and early-to-late layers.",
+  "date_range": {"start": "2026-07-14", "end": "2026-07-14"},
+  "models": {"claim": "claude-opus-4-7", "experiment": "claude-opus-4-7", "verify": "claude-sonnet-4-6", "iteration": "claude-opus-4-7"},
+  "pipeline_status": "completed",
+  "round_end": {"qualifier": "", "detail": "", "remedy": "", "see": "", "partial_artifacts": [], "next_round_options": []},
+  "journey_summary": {
+    "claim": "1 faithful-capture idea (behavior_source=given) → 4 claims (C1-C4) targeting generative + predictive accuracy on the main pair, layer-depth generalization, and cross-LLM+SAE-pair generalization.",
+    "mechanism_strategy": "directions: [Unit Interpretation]",
+    "mechanism_routing": "family=Feature Dictionary Learning / SAE, submethod=SAE-feature auto-interpretation (Explainer→Designer→Analyzer→Reviewer loop) — no Screen (SAE feature ids ARE the located units), Decode via SAGE loop, Verify via paired generative + predictive assays.",
+    "experiment": "5 runs, 1.66 GPU-hours (of 10-hour budget), headline: mixed — C1 partial (attribution-confounded), C2/C3 null (under-powered), C4 positive-trend (under-powered).",
+    "verify": "4 claims: 1 PASS (C4) / 0 FAIL / 0 INCONCLUSIVE / 0 ZEV / 3 INTEGRITY_ONLY (cap=3, swap_off=0); integrity[Phase2/Phase9]: WARN/PASS.",
+    "iteration": "1/6 iteration (0/2 claim-reentries consumed — only type-⓪ narrative-only), score 6/10 verdict almost, termination=positive_verdict (three-dimensional STOP rule fired on entry).",
+    "figures": "4 tables across 4 claims; 0 judgment-skipped; 0 render-skipped, 0 errored."
+  },
+  "open_items": [
+    "Attribution confound (M0.5-flagged): single-pass GPT-5 already outscores Neuronpedia's GPT-4o-mini baseline, so C1's beat over Neuronpedia is NOT attributable to the SAGE loop itself (Δ vs matched-backbone = -0.005 n.s.). Reviewer type-⓪ paper-side recommendation: split into C1a (vs public Neuronpedia older-backbone catalog) + C1b (vs matched-backbone GPT-5-1shot, promote in abstract).",
+    "DMXAPI throughput variance (occasional 10-20 min stalls per call) was the wall-clock bottleneck — realized n at ~15% of planned for M1 (44/300), ~15% for C3 per-layer (14-15/100), ~23% for M2 (34/150). All four claims tagged suspected_under_power (UNDERPOWER=tag).",
+    "C1 verify swap-test deferred (max_verify_claims cap): upgrade via /auto-verify C1 — resume: true, swap-variants: true. **Highest reviewer priority** (~1 GPU-hr) — closes the attribution-confound argument.",
+    "C2 verify swap-test deferred (max_verify_claims cap): upgrade via /auto-verify C2 — resume: true, swap-variants: true. Second priority.",
+    "C3 verify swap-test deferred (max_verify_claims cap): upgrade via /auto-verify C3 — resume: true, swap-variants: true. Lowest priority (underlying issue is under-power, not integrity); combine with a larger M1 n_features_per_layer + L20 l0_71 SAE swap.",
+    "L20 SAE l0 alignment looser than L4/L12; l0_71 variant available but not swapped in — potential noise source on C3-L20.",
+    "M2 scope-narrowed at experiment stage to predictive-only + SAGE-lite (no Designer+Analyzer) on Qwen3-4B; full-SAGE + generative-accuracy on Qwen3-4B never tested.",
+    "Paper-side wording checklist (all type ⓪, execution is paper author's responsibility) — see review-stage/AUTO_ITERATION_FINAL_REPORT.md §Paper-side wording checklist."
+  ],
+  "iteration_summary": {"score": 6, "verdict": "almost", "rounds_consumed": 1, "max_rounds": 6},
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "On Gemma-2-2B + gemmascope-res-16k, SAGE explanations trigger the target feature more reliably than Neuronpedia's on paired same-feature-id probe texts (paired 95% CI lower bound > 0).",
+      "origin": "task.md (given behavior) — generative-accuracy half of the SAGE claim",
+      "data": {"provenance": "existing", "source": "Neuronpedia activation corpus for gemmascope-res-16k", "available_n": "16k features × 26 layers; ~50k activating snippets per feature", "used_n": "44 features × 5 probe texts (planned: 300 × 5); ~15% of planned scale", "subset_note": "under-powered due to DMXAPI throughput variance"},
+      "models": ["Gemma-2-2B", "gemmascope-res-16k", "GPT-5 via DMXAPI"],
+      "method": "Milestone M1 — paired bootstrap 95% CI on (SAGE − Neuronpedia) generative-accuracy per feature; matched-backbone GPT-5-1shot attribution control (M0.5).",
+      "main_experiment": {
+        "verdict": "partial-support [provisional — suspected under-power] [attribution-confounded]",
+        "key_stats": "Δgen_acc (SAGE − Neuronpedia) = +0.018, 95% CI [+0.005, +0.036], Wilcoxon p=0.045; but Δgen_acc (SAGE − GPT-5-1shot) = -0.005, n.s.",
+        "headline": "SAGE beats Neuronpedia's public GPT-4o-mini explanations by +1.8pp gen_acc, but gain is attributable to backbone upgrade — no significant advantage over matched-backbone GPT-5-1shot control."
+      },
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"}, "integrity": "WARN", "verdict": "INTEGRITY_ONLY", "stage2_skip_reason": "max_verify_claims_cap"},
+      "iteration": {"final_reviewer_status": "score 6 'almost' — reviewer endorses honest reframing; no back-edge fired (type-⓪ only)", "changed": ["Recommended paper-side split into C1a (vs public Neuronpedia older-backbone) + C1b (vs matched-backbone GPT-5-1shot)"], "falsified": [], "narrowed_to": "SAGE's +1.8pp beat is over the *specific* public Neuronpedia catalog (an older-backbone historical baseline), NOT over a matched-backbone control — the pipeline itself does not produce a significant loop-only gain at n=44"},
+      "final_status": "⚪ integrity_only [WARN — audit passed with warnings, swap-test deferred (max_verify_claims cap)]; iteration narrowed the claim: the Neuronpedia-beat is a backbone-upgrade artifact, matched-backbone loop-only Δ ≈ 0",
+      "caveats": ["suspected under-power: used_n 44/300, seeds 1/1, grid 3/3", "attribution-confound: SAGE beat over Neuronpedia is a backbone-upgrade artifact (GPT-5 vs GPT-4o-mini)"],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M1", "refine-logs/EXPERIMENT_RESULTS.md", "results/m1/features_L{4,12,20}.jsonl", "results/aggregate.json", "verify/C1_gen_acc_main_pair/main_experiment_audit/", "review-stage/AUTO_ITERATION_FINAL_REPORT.md#C1"],
+      "figures": [
+        {
+          "id": "c1_comparison_table",
+          "type": "table",
+          "caption": "C1 headline metric — SAGE vs. Neuronpedia public catalog vs. matched-backbone GPT-5-1shot control on generative accuracy. The +1.8pp SAGE-vs-Neuronpedia gain (CI excludes 0) is not attributable to the SAGE loop: SAGE − GPT-5-1shot Δ ≈ 0.",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C1/c1_comparison_table.md",
+          "tex": "figures/C1/c1_comparison_table.tex",
+          "source_data": "refine-logs/EXPERIMENT_RESULTS.md",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "statement": "On Gemma-2-2B + gemmascope-res-16k, SAGE explanations yield higher per-feature Pearson correlation between explanation-conditioned activation predictions and ground-truth activations on Neuronpedia's held-out text than Neuronpedia's (paired 95% CI lower bound > 0).",
+      "origin": "task.md (given behavior) — predictive-accuracy half of the SAGE claim",
+      "data": {"provenance": "existing", "source": "Neuronpedia activation corpus for gemmascope-res-16k", "available_n": "16k features × 26 layers; ~50k activating snippets per feature", "used_n": "44 features × 20 held-out texts (planned: 300 × 20); ~15% of planned scale", "subset_note": "same feature set as C1 (paired within feature); under-powered due to DMXAPI throughput variance"},
+      "models": ["Gemma-2-2B", "gemmascope-res-16k", "GPT-5 via DMXAPI"],
+      "method": "Milestone M1 — per-feature Pearson r between GPT-5 explanation-conditioned predicted activations and true activations from Gemma-2-2B forward pass; paired bootstrap 95% CI.",
+      "main_experiment": {
+        "verdict": "not-supported [provisional — suspected under-power]",
+        "key_stats": "Δpearson (SAGE − Neuronpedia) = -0.018, 95% CI [-0.094, +0.058], p=0.43",
+        "headline": "No significant SAGE advantage in predictive Pearson r over Neuronpedia; CI includes zero; verdict provisional at 15% of planned n."
+      },
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"}, "integrity": "PASS", "verdict": "INTEGRITY_ONLY", "stage2_skip_reason": "max_verify_claims_cap"},
+      "iteration": {"final_reviewer_status": "score 6 'almost' — reviewer endorses reframing as failed replication / null result", "changed": ["Recommended paper-side reframing as failed replication / null result — make it prominent"], "falsified": [], "narrowed_to": "Failed replication: no significant SAGE advantage in per-feature Pearson r vs Neuronpedia at n=44"},
+      "final_status": "⚪ integrity_only [PASS — audit clean, swap-test deferred (max_verify_claims cap)]; iteration reframes as failed-replication / null result (paper-side)",
+      "caveats": ["suspected under-power: used_n 44/300, seeds 1/1, grid 3/3"],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M1", "refine-logs/EXPERIMENT_RESULTS.md", "results/m1/features_L{4,12,20}.jsonl", "verify/C2_pred_acc_main_pair/main_experiment_audit/", "review-stage/AUTO_ITERATION_FINAL_REPORT.md#C2"],
+      "figures": [
+        {
+          "id": "c2_result_table",
+          "type": "table",
+          "caption": "C2 predictive-accuracy result — no significant SAGE advantage in per-feature Pearson r over Neuronpedia (provisional at 15% of planned n).",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C2/c2_result_table.md",
+          "tex": "figures/C2/c2_result_table.tex",
+          "source_data": "refine-logs/EXPERIMENT_RESULTS.md",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "statement": "The C1 and C2 improvements hold individually at early / mid / late residual-stream depths (L4, L12, L20) after Bonferroni correction over 3 depths × 2 metrics.",
+      "origin": "task.md (given behavior) — layer-depth generalization",
+      "data": {"provenance": "existing", "source": "Neuronpedia corpus stratified by layer", "available_n": "same as C1/C2 broken into 3 depth bins", "used_n": "14-15 per depth (planned: 100 per depth); ~15% of planned per-depth n", "subset_note": "same 44 features re-stratified by depth"},
+      "models": ["Gemma-2-2B", "gemmascope-res-16k", "GPT-5 via DMXAPI"],
+      "method": "M1 read-off — per-depth paired bootstrap 95% CI with Bonferroni α=0.05/6.",
+      "main_experiment": {
+        "verdict": "not-supported [provisional — suspected under-power]",
+        "key_stats": "no per-layer CI excludes zero at L4/L12/L20 for either metric at n=14-15/layer",
+        "headline": "Layer-stratified n=14-15/layer is too small to detect layer-specific effects; all per-layer nulls are provisional."
+      },
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"}, "integrity": "WARN", "verdict": "INTEGRITY_ONLY", "stage2_skip_reason": "max_verify_claims_cap"},
+      "iteration": {"final_reviewer_status": "score 6 'almost' — reviewer endorses reframing as unresolved due to under-power (NOT evidence for absence of depth dependence)", "changed": ["Recommended paper-side reframing as unresolved-due-to-under-power"], "falsified": [], "narrowed_to": "Unresolved-due-to-under-power: n=14-15 per layer is too small to conclude either presence or absence of layer-dependence"},
+      "final_status": "⚪ integrity_only [WARN — audit passed with warnings, swap-test deferred (max_verify_claims cap)]; iteration reframes as unresolved-due-to-under-power (NOT absence of depth dependence)",
+      "caveats": ["suspected under-power: used_n 14-15 per depth vs 100 planned", "L20 SAE l0 alignment looser (l0_71 variant available but not swapped in)"],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M1", "refine-logs/EXPERIMENT_RESULTS.md", "verify/C3_layer_depth_generalization/main_experiment_audit/", "review-stage/AUTO_ITERATION_FINAL_REPORT.md#C3"],
+      "figures": [
+        {
+          "id": "c3_layer_table",
+          "type": "table",
+          "caption": "C3 layer-stratified read-off — per-layer n=14-15 features is too small to detect layer-specific effects at any of L4/L12/L20. All per-layer nulls provisional (Bonferroni α=0.05/6).",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C3/c3_layer_table.md",
+          "tex": "figures/C3/c3_layer_table.tex",
+          "source_data": "refine-logs/EXPERIMENT_RESULTS.md",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "statement": "The C1 / C2 improvements hold on at least one cross-LLM+SAE pair from {Qwen3-4B + transcoder-hp, GPT-OSS-20B + resid-post-aa}; the second pair is deferred to /auto-verify.",
+      "origin": "task.md (given behavior) — cross-LLM+SAE-pair generalization",
+      "data": {"provenance": "existing", "source": "Qwen3-4B + transcoder-hp (main); GPT-OSS-20B + resid-post-aa (variant)", "available_n": "SAE features × layers of each verify LLM", "used_n": "34 features on Qwen3-4B (planned 150) + 45 features on GPT-OSS-20B (variant)", "subset_note": "scope-narrowed to SAGE-lite predictive-only on Qwen3-4B; GPT-OSS-20B variant covers the deferred second pair"},
+      "models": ["Qwen3-4B + transcoder-hp (main M2)", "GPT-OSS-20B + resid-post-aa (variant)", "GPT-5 via DMXAPI"],
+      "method": "Milestone M2 — same M1 protocol scaled to 34 features on Qwen3-4B; verify model-swap ran same protocol on 45 features on GPT-OSS-20B at layers L3/L11/L19.",
+      "main_experiment": {
+        "verdict": "inconclusive-positive-trend [provisional — suspected under-power] [scope-narrowed]",
+        "key_stats": "Qwen3-4B: Δpearson (SAGE-lite − Neuronpedia-proxy) = +0.153, 95% CI [-0.031, +0.341], p=0.18",
+        "headline": "Qwen3-4B M2 shows positive-trend +0.153 in predictive Pearson r but CI crosses zero at n=34."
+      },
+      "verify": {"robustness": 1.00, "axes": {"method": "n/a", "dataset": "n/a", "model": "pass"}, "integrity": "PASS", "verdict": "PASS", "stage2_skip_reason": null},
+      "iteration": {"final_reviewer_status": "score 6 'almost' — reviewer emphasizes this is a *verified negative transfer* result, NOT a SAGE-succeeds-cross-pair result", "changed": ["Recommended paper-side reframing as verified negative transfer (effect directions differ +0.153 vs -0.045, only null verdict is robust)"], "falsified": ["A positive SAGE-lite advantage on cross-LLM+SAE-pair (both pairs show non-significance in opposite directions)"], "narrowed_to": "Verified negative transfer: SAGE-lite predictive-accuracy does not consistently outperform Neuronpedia-proxy on either Qwen3-4B or GPT-OSS-20B; only the non-significance is robust; NOT a positive cross-pair generalization result"},
+      "final_status": "✓ verify PASS but scientifically NEGATIVE — verified negative transfer across two pairs (Qwen3-4B Δ=+0.153 n.s.; GPT-OSS-20B Δ=-0.045 n.s.); SAGE-lite fails to outperform Neuronpedia-proxy on either cross-pair. Do NOT frame as SAGE succeeding cross-pair.",
+      "caveats": ["suspected under-power: used_n 34/150 on main, 45 features on variant", "scope-narrowed: SAGE-lite (no Designer+Analyzer) + predictive-only on both cross-pairs; full-SAGE + generative-accuracy on cross-pairs not yet tested"],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M2", "refine-logs/EXPERIMENT_RESULTS.md", "results/m2/features.jsonl", "verify/C4_cross_pair_generalization/main_experiment_audit/", "verify/C4_cross_pair_generalization/variant_audit/", "verify/C4_cross_pair_generalization/variants/model-swap-gpt-oss-20b/", "verify/C4_cross_pair_generalization/ROBUSTNESS.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md#C4"],
+      "figures": [
+        {
+          "id": "c4_crosspair_table",
+          "type": "table",
+          "caption": "C4 cross-pair generalization — SAGE-lite predictive-accuracy on two architecturally distinct LLM+SAE pairs. Effect directions differ (+0.153 vs -0.045), only the non-significance is robust; no positive transfer observed.",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C4/c4_crosspair_table.md",
+          "tex": "figures/C4/c4_crosspair_table.tex",
+          "source_data": "verify/C4_cross_pair_generalization/ROBUSTNESS.md",
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

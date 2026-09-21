@@ -1,0 +1,129 @@
+{
+  "project": "Verbal Confidence Cache Hypothesis — cached mid-generation, not computed on demand",
+  "direction": "When an LLM is asked to verbalize its confidence after answering, the confidence value is not freshly computed at the moment of verbalization; instead, it is written into hidden states immediately following the answer and is later retrieved from that cache when the model speaks the confidence token.",
+  "date_range": {"start": "2026-07-13", "end": ""},
+  "models": {"claim": "claude-opus-4-7", "experiment": "claude-opus-4-7", "verify": "claude-sonnet-4-6", "iteration": "claude-opus-4-7"},
+  "pipeline_status": "completed",
+  "round_end": {"qualifier": "", "detail": "", "remedy": "", "see": "", "partial_artifacts": [], "next_round_options": []},
+  "journey_summary": {
+    "claim": "1 given behavior faithfully captured → single unified claim C1 (verbal-confidence cache hypothesis); mechanism_strategy = Location → Causal Intervention",
+    "mechanism_strategy": "Location → Causal Intervention",
+    "mechanism_routing": "family=Probing/Residual Stream States + Causal Attribution/Patching + Causal Attribution/Ablation + Representation and Parameter Analysis/Steering Vectors (canonical composed chain)",
+    "experiment": "~14 runs (sanity + M1×3 + M2 + M3×3sites×2seeds + M4×2seeds + M5×2methods×2seeds + M6 a/b/c/d ×2seeds), ~3.7 GPU-hours, headline = partial (probe decodability confirmed strongly, causal mediation fails on single-site interventions)",
+    "verify": "1 claim: 0 PASS / 0 FAIL / 1 INCONCLUSIVE / 0 ZEV / 0 INTEGRITY_ONLY; integrity[Phase2=FAIL/Phase9=skipped]; Qwen 2.5 7B swap never deployed (Stage 2 gated by Phase 2 FAIL — driven by M5 mechanism-audit); iteration back-edge = verify-inconclusive",
+    "iteration": "4/6 iterations (+ 1 narrative-closure ⓪) consumed, claim-reentries=0/2, score 7/10 verdict ready, termination=positive_verdict; ~2.29 GPU-hours; all four back-edges were type ② main-experiment-script fixes progressively closing argmax/sub-argmax/site-narrowness/distributed-multi-site loopholes",
+    "figures": "3 across 1 claim; 0 judgment-skipped; 0 render-skipped, 0 errored"
+  },
+  "open_items": [
+    "seed2024 downstream still running at experiment-stage return; iteration completed seed2024 M6c during iteration 1 (values [3.57, 0.10, 0.43] — cross-seed variance gate HOLD, retained as acceptable caveat within narrowed dissociation framing).",
+    "On-disk `verify/VERIFY_REPORT.md` still shows C1 = verify_inconclusive because iteration cannot rewrite VERIFY_REPORT. Iteration-loop reviewer (gpt-5.4) CERTIFIED mechanism-audit gate as PASS at score 7/10 verdict ready. Recommended next action: user invokes `/auto-verify C1 — resume: false, swap_variants: true, dimensions: model` to formally close the on-disk state and deploy the Qwen 2.5 7B swap.",
+    "PAPER-WRITING CAUTION: the recommended framing per the iteration-loop reviewer is 'Decodable but Not Strongly Controllable: A Dissociation Between Confidence Readout and Single-Site Causal Steering'. Do NOT write 'confidence is not causally used' / 'causal null' / 'epiphenomenal representation' — a small distributed joint effect (~0.32 first-digit units at joint top-5 steering) was detected below threshold and leaves the door open for 'weak distributed causal sensitivity without strong steering leverage'.",
+    "P5 M6c cross-seed variability persists as caveat [3.57, 0.10, 0.43 across seeds 42/123/2024]; reviewer certified as acceptable within the narrowed dissociation framing but the paper should report it transparently as a HOLD verdict, not a clean PASS."
+  ],
+  "iteration_summary": {"score": 7.0, "verdict": "ready", "rounds_consumed": 4, "max_rounds": 6},
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "For a decoder-only LLM asked to (i) answer a question then (ii) verbalize a confidence value about that answer, the residual-stream hidden states at the post-answer positions already carry a linearly-decodable representation that determines the eventual verbalized confidence value, and this representation is causally used by the confidence-generation step (as opposed to the confidence being freshly computed at the confidence token from token log-probabilities or a fresh reading of the answer).",
+      "origin": "task.md (verbatim capture); given behavior, faithfully translated into H1 with predicates P1-P5",
+      "data": {
+        "provenance": "existing",
+        "source": "TriviaQA validation split (rc.nocontext)",
+        "available_n": "17944",
+        "used_n": "1500 × 2 completed seeds = 3000 (seed 2024 still running at return time — planned 3 × 1500)",
+        "subset_note": "M1 pools 1500 items per seed; M3 n_pairs=200/site × 3 sites, M4 n_items=300, M5 n_items=300, M6c n_pairs=150 — all at planned scale per completed seed"
+      },
+      "models": ["gemma-3-27b-pt (62 layers)"],
+      "method": "Location: per-position × per-layer ridge probe (5 positions × 12 layers) with log-prob-only baseline; Causal Intervention chain — (M3) residual-stream patching at top-3 cache sites from M2 with clean_high/corrupt_low pairs matched on n_answer_tokens, (M4) attention-block from cache position → confidence-generation position across layer band [top_L, last_L], (M5) direction-steering α ∈ {-4,-2,-1,0,1,2,4} × {diff_of_means, LDA}; (M6) matched non-cache-position control, within-recall-bin probe/steering, log-prob-restatement null with frozen answer, answer-accuracy preservation — composition: screen (M2 probe) → intervene (M3/M4/M5 causal) → verify (M6 controls & nulls)",
+      "main_experiment": {
+        "verdict": "partial (2/5 predicates: P1 Location & P5 Specificity pass; P2 Sufficiency, P3 Retrieval path, P4 Steering fail)",
+        "key_stats": "P1: top R²=0.541 at (E4, L10) with Spearman ρ=0.696, ΔR² over log-prob-only = +0.542; C0 conf-gen probe best R²=0.321. P2: top-site signed effect 0.55–0.75 vs. MID-question control 3.07; main/control ratio ≈ 0.24 (plan requires ≥3). P3: cache→conf-gen block mean shift only +0.19, KL(blocked ‖ prior)=0.066 (no collapse). P4: diff_of_means α-span = −0.98, LDA α-span = −0.58 (both flat and wrong-signed on avg). P5: matched non-cache control effect ≈ 3.07 (larger, not smaller — but the log-prob-null falsification holds: frozen-answer patch still shifts confidence by +1.83). Answer accuracy preserved throughout (Δ log-prob ≈ 0).",
+        "headline": "Verbal confidence is strongly linearly-decodable from post-answer residual states in Gemma-3-27B (probe R²=0.54, ΔR²=+0.54 over log-prob-only), but the strong causal-mediation claim FAILS on this implementation: single-site patching / attention-blocking / direction-steering at the top probe cache site (E4, L10) yields effects far below plan thresholds while MID-question control patches yield larger effects — decodability holds, single-site causal-mediation does not."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {"method": "n/a", "dataset": "excluded", "model": "excluded"},
+        "integrity": "FAIL",
+        "verdict": "INCONCLUSIVE",
+        "stage2_skip_reason": null
+      },
+      "iteration": {
+        "final_reviewer_status": "ready (score 7/10) — mechanism-audit gate certified as PASS for narrowed dissociation claim",
+        "changed": [
+          "scripts/m5_steer_v2.py (new — capability probe on unrelated-continuation NLL, n=8 random-direction control, locked α*, extended α ∈ [-16,+16], greedy 20-token samples per α)",
+          "scripts/run_m5_v2_all_seeds.py (new — multi-seed launcher reusing one loaded model)",
+          "scripts/m5_steer_v3_logit.py (new — logit-level E[first_digit] + digit-entropy, closes sub-argmax loophole, multi-site support)",
+          "scripts/m5_steer_v3_joint.py (new — MultiSiteSteeringHook simultaneous top-5-site perturbation)",
+          "scripts/aggregate_results_v2.py (new — per-seed P2 transparency, P5 variance gate, site-sweep + joint verdicts)",
+          "refine-logs/EXPERIMENT_PLAN.md M5 section rewritten (v1 kept for reference; v2 authoritative + v3 logit-supplement + joint distributed-cause test; resource_fidelity marker preserved verbatim)",
+          "refine-logs/EXPERIMENT_RESULTS.md regenerated as v2 report (P1 pass, P2 fail, P3 fail, P4-v2 fail, P5 HOLD; adds M5-v3 site-sweep and joint sections)"
+        ],
+        "falsified": [
+          "Strong causal cache-and-retrieve claim at single-site interventions on top-K decodable sites: argmax null at E4L10 (M5-v2, 3 seeds × diff_of_means × 9 α × 8 random dirs)",
+          "Sub-argmax logit-level null at E4L10 (M5-v3, digit-distribution E[first_digit] span < 0.01 across α ∈ [-16,+16], 3 seeds)",
+          "Site-generalization null across top-5 decodable sites (M5-v3 sitesweep: E4L10, E1L5, E2L5, E3L10, E3L5 — all max |span| < 0.5)",
+          "Joint 5-site simultaneous steering: distributed_null verdict (max joint |span| = 0.32 first-digit units < 0.5 threshold across seeds 42/123/2024)",
+          "Original P5 log-prob-null 'falsification' downgraded to HOLD (M6c cross-seed values [3.57, 0.10, 0.43] fail the variance gate — cannot cleanly claim the log-prob-restatement null is refuted)"
+        ],
+        "narrowed_to": "Decodability holds strongly (probe R²=0.541 at E4L10, ΔR²=+0.542 over log-prob-only baseline), but the causal-control claim does NOT — the correct scientific reading is a decodability-vs-causal-control DISSOCIATION. A small distributed joint effect (~0.32 first-digit units, ≈3.2 verbal-conf-score points) was detected under joint top-5 steering that single-site sweeps missed, leaving the door open for 'weak distributed causal sensitivity without strong steering leverage'. Recommended paper title: 'Decodable but Not Strongly Controllable: A Dissociation Between Confidence Readout and Single-Site Causal Steering in Gemma-3-27B'."
+      },
+      "final_status": "⚠ narrowed — decodability of verbal confidence from post-answer residuals HOLDS strongly (P1: probe R²=0.541 at E4L10 vs log-prob-only ≈0 baseline), but the strong causal cache-and-retrieve claim is FALSIFIED across four intervention modes (argmax, sub-argmax logit, top-5 site sweep, joint 5-site) — a small distributed joint effect (~0.32 first-digit units) below threshold is preserved as a caveat. Correct framing: 'decodable but not strongly controllable under tested interventions', NOT 'not causally used'. On-disk verify/VERIFY_REPORT.md still shows INCONCLUSIVE (iteration cannot rewrite it); reviewer-certified mech-audit PASS is on record.",
+      "caveats": [
+        "seed2024 still running at experiment return; aggregates reflect seeds 42 & 123 only. Pattern judged stable by experiment agent given large effect-size gaps.",
+        "Base pretrained model saturates zero-shot confidence at 100 — a fixed 6-example few-shot prefix was inserted to induce variable elicitation (identical across items/seeds; stays within T0 scientific intent per Phase 1.5 reconciliation).",
+        "M6(a) MID-question control produced a LARGER effect than the cache site (ratio 0.24), which is itself a partial falsification of the localization claim — the top-K probe cache site is NOT the causally privileged position for verbalization."
+      ],
+      "artifacts": [
+        "idea-stage/IDEA_REPORT.md",
+        "refine-logs/FINAL_PROPOSAL.md",
+        "refine-logs/EXPERIMENT_PLAN.md",
+        "refine-logs/EXPERIMENT_TRACKER.md",
+        "refine-logs/MECHANISM_ROUTING.md",
+        "refine-logs/EXPERIMENT_RESULTS.md",
+        "refine-logs/EXPERIMENT_TIPS.md",
+        "results/m1/, results/m2/, results/m3/, results/m4/, results/m5/, results/m6/, results/m5_v2/, results/m5_v3/, results/m5_v3_joint/",
+        "results/all_summary.json, results/all_summary_v2.json",
+        "runs/*/cost.json + runs/iteration_round_{1..4}/*/cost.json (GPU-pin witnesses; all runs on subset of {1,2,3,5} ⊂ {1,2,3,5,6})",
+        "verify/VERIFY_REPORT.md, verify/INTEGRITY_AUDIT.md, verify/STAGE2_PICK.json",
+        "verify/C1_verbal_confidence_cache/{main_experiment_audit, ROBUSTNESS.md}",
+        "review-stage/AUTO_REVIEW.md, review-stage/REVIEW_STATE.json, review-stage/REVIEWER_MEMORY.md, review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+      ],
+      "figures": [
+        {
+          "id": "c1_m2_probe_heatmap",
+          "type": "heatmap",
+          "caption": "M2 Location probe — per-(position × layer) ridge R² for verbal confidence in Gemma-3-27B-pt on TriviaQA (rc.nocontext) validation; strong signal at post-answer positions E1-E4 in layers 5-10 (peak R²=0.541 at E4L10, marked red) clearly exceeds the log-prob-only baseline R²≈0. Grounds P1 Location PASS.",
+          "png": "figures/C1/c1_m2_probe_heatmap.png",
+          "pdf": "figures/C1/c1_m2_probe_heatmap.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/m2/pos*_L*_ridge.json + results/all_summary_v2.json (m2.baseline_log_prob_only_r2)",
+          "status": "ok"
+        },
+        {
+          "id": "c1_m5v2_alpha_trained_vs_random",
+          "type": "line",
+          "caption": "M5-v2 steering at E4L10 (Gemma-3-27B-pt on TriviaQA): mean verbal confidence vs α ∈ [-16, +16] for the trained direction (diff-of-means) and n=8 random-direction controls, averaged across seeds 42/123/2024 (min-max envelope shaded). Both curves are flat while the capability-preservation NLL delta (right panel) stays well below the 0.3-nat/token tolerance — the intervention IS applied but yields no downstream effect on greedy confidence decode. Grounds P4 Steering FAIL / argmax null.",
+          "png": "figures/C1/c1_m5v2_alpha_trained_vs_random.png",
+          "pdf": "figures/C1/c1_m5v2_alpha_trained_vs_random.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/m5_v2/m5v2_diff_of_means_seed{42,123,2024}.json",
+          "status": "ok"
+        },
+        {
+          "id": "c1_top5_site_and_joint_sweep",
+          "type": "table",
+          "caption": "Top-5 cache-site sweep and joint 5-site steering (M5-v3, logit-level E[first_digit] across α ∈ [-16, +16], 3 seeds × 40 items × 9 α). Single-site max |span| for E4L10, E1L5, E2L5, E3L10, E3L5 and joint 5-site max |span| per seed. All single-site spans < 0.15; joint spans (0.14, 0.20, 0.32) below the 0.5 first-digit-units threshold. Grounds dissociation_generalizes + distributed_null verdicts and the paper's central negative finding.",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C1/c1_top5_site_and_joint_sweep.md",
+          "tex": "figures/C1/c1_top5_site_and_joint_sweep.tex",
+          "source_data": "results/m5_v3/m5v3_expected_score_{E4L10,E1L5,E2L5,E3L10,E3L5}_seed{42,123,2024}.json + results/m5_v3_joint/m5v3_joint_expected_score_seed{42,123,2024}.json",
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

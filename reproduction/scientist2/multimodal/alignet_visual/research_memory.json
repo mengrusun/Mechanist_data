@@ -1,0 +1,94 @@
+{
+  "direction": "Hierarchical human-alignment of pretrained vision foundation models: distilling THINGS-triplet-shaped human-similarity structure (via a SigLIP-So400m teacher) into DINOv2 ViT-B and testing multi-level Spearman gain, behavioural/uncertainty match, downstream utility, and OOD robustness.",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "A THINGS-triplet-fit SigLIP-So400m teacher, distilled into DINOv2 ViT-B via a dedicated alignment loss, injects hierarchical human-similarity structure into the student that improves human-triplet Spearman + reproduces human behaviour/uncertainty, while trading off fine-grained one-shot utility (this trade-off attenuates but does not disappear under LoRA-scope adaptation).",
+      "status": "established",
+      "behavior_conclusion": "The alignment-injection phenomenon holds strongly on its target metrics: a THINGS-fit SigLIP-So400m teacher beats unaligned SigLIP + chance by +13pp on held-out THINGS triplets, and distilling it into DINOv2 ViT-B yields a +0.366 aggregate Spearman gain vs the unaligned student (77% of the gain is human-alignment-specific vs a matched-cost non-aligned control, ruling out generic KD-as-label-smoothing). The aligned student also reproduces human behaviour + uncertainty + RSA on all three tested predicates. However, the alignment recipe also produces a general-ability degradation: aligned DINOv2 loses on fine-grained one-shot classification (mean Δ = −28pp under full α=1.0 KD, attenuated to −24pp under LoRA r=16), and OOD gains concentrate specifically on BREEDS-style subpopulation-shift splits (BREEDS super13/26 win) rather than uniformly across all held-out splits. Adaptation scope, not loss weight, is the utility bottleneck (LoRA scope > full-backbone α↓).",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": 1
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Tuning & Editing → Location → Decision Auditing",
+          "family": "Representation and Parameter Analysis / Parameter-Space Task Vectors",
+          "headline": "The alignment finetune's task vector τ_aligned = θ_M3 − θ_pretrained produces a large + specific Spearman gain (+0.366 aggregate, robust to a smaller-student swap at robustness=1.00; 77% of the gain is human-alignment-specific vs a matched-cost non-human-aligned control τ_control = θ_M5 − θ_pretrained). Behavioural + uncertainty + RSA match human data on all three predicates. But apply_to(base, α=1.0) with full-backbone scope damages fine-grained downstream utility (−28pp mean 1-shot), and OOD gains concentrate specifically on BREEDS-style subpopulation-shift splits. LoRA scope (r=16, α=1.0) is the strictly best attainable regime for utility preservation — the trade-off attenuates (−24pp) and BREEDS super13 gain grows (+0.201 → +0.248) — but does not disappear. α↓ from 1.0 to 0.1 does NOT help (adaptation scope, not loss weight, is the utility bottleneck).",
+          "claims": [
+            {
+              "id": "C1a",
+              "statement": "A THINGS-fit SigLIP-So400m teacher head strictly beats unaligned SigLIP-So400m and 1/3 chance on held-out THINGS odd-one-out triplets.",
+              "method": "Triplet-KL fit of a small alignment head on frozen SigLIP-So400m features; held-out triplet-choice accuracy vs unaligned + chance with bootstrap CI95.",
+              "conclusion": "Teacher head reaches 0.590 [0.582, 0.598] triplet accuracy vs unaligned SigLIP 0.460 [0.452, 0.467] and chance 0.333, non-overlapping CI95 on both comparisons — audit passed, swap-test deferred (max_verify_claims cap)."
+            },
+            {
+              "id": "C1b",
+              "statement": "The THINGS-fit teacher's triplet-choice signal on ImageNet-synthesised triplets is monotonically level-organised across coarse / mid / fine (each level above chance; ordering pre-declared).",
+              "method": "Forward-only per-triplet choice-agreement rate at each hierarchy level on 3,000 ImageNet-WordNet triplets (1,000 per level).",
+              "conclusion": "All three levels beat chance (coarse=0.750, mid=0.747, fine=0.817), but ordering is fine > coarse ≈ mid — not strictly monotonic (likely SigLIP training-signal bias toward basic-level distinctions); audit passed, swap-test deferred (max_verify_claims cap)."
+            },
+            {
+              "id": "C2a",
+              "statement": "Alignment finetune of DINOv2 ViT-B against the THINGS-fit teacher increases aggregate Spearman correlation with human THINGS-triplet similarity by Δρ ≥ 0.05 vs the unaligned baseline.",
+              "method": "M3 full-backbone KD finetune (triplet_kl loss, α=1.0, lr=5e-5) against the M1 teacher on a 40k ImageNet-val subset; held-out THINGS Spearman vs M4 with paired-bootstrap α=0.05.",
+              "conclusion": "Robust across a model swap (DINOv2 ViT-B → ViT-S variant also produced Δρ=+0.324 vs main +0.366; robustness=1.00): aligned finetune yields a +0.366 aggregate Spearman gain, 7× the required +0.05 threshold, with non-overlapping CI95."
+            },
+            {
+              "id": "C2b",
+              "statement": "The aggregate Spearman gain in C2a holds separately at each of the coarse / mid / fine abstraction levels.",
+              "method": "Per-level Spearman on THINGS held-out, aligned − unaligned; predicted-direction gain required at each of coarse / mid / fine.",
+              "conclusion": "Coarse (Δρ=+0.526) + mid (Δρ=+0.427) established with non-overlapping CI95; fine level yielded 0 Spearman-usable pairs under the current stratification (construction artifact, not under-power) — audit WARN, swap-test deferred (max_verify_claims cap)."
+            },
+            {
+              "id": "C2c",
+              "statement": "The C2a Spearman gain is specifically attributable to human-similarity alignment (aligned student strictly beats a matched non-human-aligned soft-label control), not to generic KD label smoothing.",
+              "method": "M5 matched-schedule finetune with unaligned SigLIP-So400m soft labels (no THINGS fit); paired-bootstrap Spearman comparison against M3 on THINGS held-out.",
+              "conclusion": "77% of the aligned gain is human-alignment-specific (aligned Δ = 4.3× control Δ; +0.281 of +0.366 aggregate Spearman) — rules out generic KD-as-label-smoothing as the primary driver; audit passed, swap-test deferred (max_verify_claims cap)."
+            },
+            {
+              "id": "C3",
+              "statement": "The aligned DINOv2 ViT-B more accurately reproduces human behaviour AND per-triplet uncertainty than the unaligned baseline, conjunctively across choice-agreement, uncertainty-KL / uncertainty-Spearman, and RSA.",
+              "method": "M6 forward-only behavioural + uncertainty comparison on 36,187 THINGS testset2 vs testset2_repeat two-worker triplets; three predicates (choice, uncertainty, RSA) with paired-bootstrap α=0.05.",
+              "conclusion": "All 3 predicates met in the predicted direction (choice_acc 0.586 vs 0.434; uncertainty_spearman 0.054 vs 0.017 — weak but correct direction; RSA_spearman 0.555 vs 0.189); audit passed, swap-test deferred (max_verify_claims cap)."
+            },
+            {
+              "id": "C4a",
+              "statement": "The aligned DINOv2 ViT-B is non-inferior to the unaligned baseline on downstream one-shot classification (4-of-10 stratified subset).",
+              "method": "M7 per-dataset 1-shot cosine/linear-probe top-1 with paired-bootstrap non-inferiority test on 4 substitute datasets (DTD / Fashion-MNIST / imagenet_val_top100 / imagenet_val_top20).",
+              "conclusion": "Falsified as originally stated (mean Δ = −0.284 under α=1.0 full-backbone KD; iter 1 α↓ falsified, iter 2 LoRA attenuated to −0.239); rewritten as C4a_v2 — 'documented one-shot fine-grained classification trade-off, LoRA best-regime' — retracts the preserved/improved fine-grained utility framing."
+            },
+            {
+              "id": "C4b",
+              "statement": "The aligned DINOv2 ViT-B strictly improves OOD robustness over the unaligned baseline on every held-out split (BREEDS panel + ImageNet-A).",
+              "method": "M8 feature-extraction + protocol-standard top-1 per split on 5 substitute OOD splits (BREEDS super13/26 + imagenet_val_20_easy/hard + fashion_mnist_ood).",
+              "conclusion": "Falsified as originally stated (2/5 splits win under every regime — both true subpopulation-shift OOD: BREEDS super13 Δ=+0.201 → +0.248 under LoRA best-regime, super26 Δ=+0.115 → +0.080); rewritten as C4b_v2 — 'selective OOD-robustness gains on BREEDS-style subpopulation-shift only, not universal'."
+            },
+            {
+              "id": "C4a_v2",
+              "statement": "Under LoRA-scope alignment (r=16, α=1.0), the aligned DINOv2 ViT-B exhibits a documented one-shot fine-grained classification trade-off vs the unaligned baseline; the original preserved/improved fine-grained utility claim is retracted.",
+              "method": "M7 1-shot cosine/linear-probe top-1 with paired-bootstrap across three adaptation regimes {full α=1.0, full α=0.1, LoRA α=1.0}; narrowing anchors the claim to the honestly-supported best regime.",
+              "conclusion": "LoRA best-regime mean Δ = −0.239 (attenuated from full α=1.0's −0.284; α↓ falsified at Δ=−0.294); adaptation scope, not loss weight, is the utility bottleneck; audit passed (rewrite), swap-test deferred (max_verify_claims cap)."
+            },
+            {
+              "id": "C4b_v2",
+              "statement": "Under LoRA-scope alignment (r=16, α=1.0), the aligned DINOv2 ViT-B shows selective OOD-robustness gains concentrated on BREEDS-style subpopulation-shift splits; the universal-per-split claim is retracted.",
+              "method": "M8 protocol-standard top-1 per split across three adaptation regimes; narrowing ties the supported gain to BREEDS-style subpopulation-shift.",
+              "conclusion": "LoRA best-regime BREEDS super13 Δ=+0.248 (up from +0.201 full-backbone), super26 Δ=+0.080; imagenet_val_20_easy/hard and fashion_mnist_ood all negative; alignment reshapes representation toward taxonomy-compatible subpopulation-shift structure, not universal OOD robustness; audit passed (rewrite), swap-test deferred (max_verify_claims cap)."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Causal Intervention",
+        "Formation Tracing",
+        "Unit Interpretation"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

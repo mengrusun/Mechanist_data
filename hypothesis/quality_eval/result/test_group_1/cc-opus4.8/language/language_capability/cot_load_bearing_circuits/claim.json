@@ -1,0 +1,24 @@
+{
+  "Name": "cot_load_bearing_circuits",
+  "Title": "Are Chain-of-Thought Tokens Computation or Narration? A Causal Circuit Audit",
+  "Short Hypothesis": "We hypothesize that only a subset of chain-of-thought (CoT) tokens are computationally load-bearing (the model reads back its own generated intermediate results to condition later steps), while the rest are post-hoc narration that can be corrupted without changing the answer. Mechanistically, load-bearing tokens are exactly those whose later attention read-back is causally necessary. This is the ideal setting to connect 'language production' (CoT) to 'intelligence' (correct reasoning): it asks whether producing language actually performs the computation or merely reports it.",
+  "Related Work": "Behavioral work shows CoT can be unfaithful (Turpin et al. 2023) and that filler/pause tokens sometimes help (Pfau et al. 2024; Goyal et al.). Lanham et al. probe faithfulness by truncation. We move from behavioral perturbation to mechanistic causal attribution: using attention knock-out and activation patching to identify which specific generated tokens are read back and are necessary, and whether the answer is already latent before verbalization (decoded via logit lens), distinguishing genuine computational offloading from narration.",
+  "Abstract": "Chain-of-thought prompting improves reasoning, but whether the generated words perform computation or merely narrate a conclusion the model has already reached is unclear, and it bears directly on how language mediates machine intelligence. We causally dissect CoT. For each solved multi-step problem we (i) use the logit lens and probing to detect at which internal layer/token the final answer becomes linearly decodable, testing whether it precedes verbalization; (ii) apply per-token attention knock-out, blocking later tokens from attending to each earlier CoT token, to measure each token's causal contribution to the answer; and (iii) corrupt individual CoT tokens (replace intermediate results with wrong values) and measure whether downstream computation uses the corrupted value (indicating genuine read-back) or ignores it (narration). We predict a sparse set of 'result-carrying' tokens whose corruption flips the answer and whose attention is necessary, surrounded by narration tokens that are causally inert. We further test whether load-bearing structure increases with problem depth and model scale, and whether models can be steered to shift computation from hidden activations into explicit tokens. This distinguishes CoT-as-scratchpad (language extends working memory, a real intelligence mechanism) from CoT-as-rationalization, quantifies the fraction of tokens doing work, and offers a faithfulness metric grounded in mechanism rather than behavior.",
+  "Experiments": [
+    "Dataset: 500 multi-hop arithmetic and symbolic reasoning problems requiring explicit intermediate results.",
+    "Generate CoT solutions with Llama-3-8B and Qwen2.5-7B; keep only correctly solved items.",
+    "Logit-lens/probe timeline: at each layer and generated token, probe for the final answer; record earliest reliable decoding point relative to verbalization.",
+    "Attention knock-out: for each earlier token, zero later-token attention to it; measure answer-preservation drop; define load-bearing tokens as those with drop > threshold.",
+    "Value-corruption test: overwrite an intermediate numeric result token with a wrong value; check whether the emitted final answer changes consistently with the corrupted value (read-back) or not (narration).",
+    "Scaling/depth analysis: correlate fraction of load-bearing tokens with problem hop-count and model size.",
+    "Metrics: per-token causal-contribution (Delta accuracy), read-back consistency rate, earliest-decodability layer, fraction load-bearing.",
+    "Control: apply same corruptions to filler tokens to confirm inertness."
+  ],
+  "Risk Factors and Limitations": [
+    "Attention knock-out can have off-target effects that overstate importance.",
+    "Some computation may be distributed across many tokens, so no clean sparse set exists.",
+    "Results may depend heavily on prompt format and decoding temperature.",
+    "The 'answer already decodable' signal from logit lens can be an artifact of probe leakage rather than true early computation.",
+    "Findings may not transfer to RL-trained reasoning models whose CoT dynamics differ."
+  ]
+}

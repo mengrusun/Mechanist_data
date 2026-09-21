@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The three hypotheses align well with the experiments: the plan measures acquisition and entrenchment across checkpoints, tests their partial correlation, and then intervenes on the proposed recall mechanism. It supplies directional, decidable criteria, including “≥60% of facts show acquisition-then-entrenchment ordering,” “raw correlation r ≥ 0.4,” and “≥15-percentage-point revision recovery,” alongside explicit rejection outcomes such as “raw r < 0.2” and “<5 pt recovery or matched by control.” However, the underlying “belief-probe criterion” and revision-rate criterion are deferred to preregistration, and the labels and readout target for the “L2 logistic regression” belief probe are not defined clearly enough to make per-fact acquisition fully unambiguous; there is also a minor mismatch between the hypothesis's “later checkpoint” and the criterion allowing “entrenchment ≥ acquisition.” These gaps require clarification, but the non-probe log-probability corroboration, controls, and quantified decision rules make the central proposal strongly falsifiable.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to “localize ... the parametric-recall component (heads/FFNs) that carries the entrenched belief and suppresses context reliance”; this requires custom component selection and validation, but activation patching, logit decomposition, component down-scaling, and contrastive activation steering are standard, well-supported interpretability operations rather than a magic step. Pythia checkpoints, OLMo-7B checkpoints, CounterFact, T-REx, linear probes, and WikiText exist and are supported by mature tooling, although the specific “published OLMo/Pythia term-frequency estimates” could not be independently verified here and may need to be computed from the corresponding training corpora. Resources are unusually concrete—“~4,000” facts, models at “160M, 1.4B, and 6.9B,” “5-fold CV,” three seeds, a “1k” benchmark subset, and “2k” WikiText lines—and therefore support direct planning. The refuting branch is runnable because the design includes shuffled-label probes, supportive and irrelevant contexts, comprehension checks, random and neighbouring-component ablations, matched-magnitude directions, neutral-context accuracy, perplexity, and explicit negative outcomes.",
+      "score": 8
+    }
+  }
+}

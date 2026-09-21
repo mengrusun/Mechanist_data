@@ -1,0 +1,19 @@
+{
+  "claim_id": "C5",
+  "claim_dir": "C5_internal_monitor_beats_gpt",
+  "overall_verdict": "pass",
+  "checks": {
+    "A_gt_provenance": {"verdict": "pass", "note": "Dataset labels from HaluEval-General and ToxicChat benchmarks — original annotation, not model-generated. Clean 60/20/20 split with seed=42, no leakage (probe fit on train only, val for block selection, test for reported AUROC). GPT-4o evaluated on exact same test rows (c5_baselines.py reads c5_monitoring_test.jsonl directly). Fair comparison confirmed."},
+    "B_score_normalization": {"verdict": "pass", "note": "AUROC is rank-based and scale-free — no normalization by model maximum possible or applied. probe_auroc uses correct rank-sum formula."},
+    "C_result_file_existence": {"verdict": "pass", "note": "All artifacts exist: summary.json with per-block arrays, activation cache .npy, 8 per-block AUROC .npy files, GPT-4o score .npy, T5 score .npy. Split files saved on disk for reproducibility. Test set sizes confirmed: HaluEval test n=400, ToxicChat test n=118."},
+    "D_dead_code": {"verdict": "pass", "note": "All evaluation functions called: cache_last_token_activations, fit_linear_probe, extract_rfm, probe_auroc, judge_gpt4o_binary, T5 soft-prob scoring — all active in execution path."},
+    "E_scope": {"verdict": "pass", "note": "GPT-4o judge sees full (prompt, response) text — NOT handicapped. Internal probe sees only last-token activations (strictly less information). Per-block AUROC reported for all 32 blocks on disk (not cherry-picked). Test-split sizes (400, 118) are below plan's ≥1000 absolute floor but are the correct 20% of the balanced subsets; effect sizes (Δ≈0.30, 0.06) are not noise-dependent at these sizes."},
+    "F_eval_type": {"verdict": "pass", "note": "real_gt — HaluEval-General and ToxicChat labels from original benchmark annotation. AUROC metric is well-suited for this binary classification task."}
+  },
+  "leakage_check": "PASS — probe fit on train only; val for block selection; test for reported AUROC",
+  "fair_comparison_check": "PASS — GPT-4o evaluated on same test rows via c5_baselines.py (reads c5_monitoring test.jsonl directly)",
+  "per_block_reporting": "PASS — all 32 blocks saved as .npy arrays",
+  "milestones_audited": ["M12_C5_activation_cache", "M13_C5_probe_fit", "M14_C5_baseline_judge", "M15_C5_report"],
+  "runs_audited": ["C5_monitoring", "C5_baselines"],
+  "audited_at": "2026-07-15"
+}

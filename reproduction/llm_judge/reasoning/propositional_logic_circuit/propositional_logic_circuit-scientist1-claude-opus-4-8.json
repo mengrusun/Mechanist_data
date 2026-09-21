@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "A Implies B: Circuit Analysis for Propositional Logic",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "There IS a selection process (top-K attention-head + top-M MLP selection by |attribution|), so this dimension is applicable, not n/a. The circuit is selected via attribution patching on the first n=128 examples (scripts/attr_patching.py, --n 128, `ds = load_dataset(args.data)[: args.n]`), and the necessity/sufficiency causal test that reports the headline numbers is then evaluated on the first n=64 examples (scripts/nec_suff.py default `--n 64`, `ds = load_dataset(args.data)[: args.n]`). Those 64 evaluation examples are a strict SUBSET of the 128 examples used for selection — the components are chosen on data that fully contains the evaluation set, a genuine selection/eval overlap. Mitigating factors: (a) the reported effect is a mechanistic causal intervention (patch/ablate), not a generalization claim, so the overlap is less damaging than for a fitted classifier; (b) random-K controls (3 seeds, scripts/nec_suff.py lines 218-232) are scored on the same eval set and provide a within-run contrast. This is one unverified hygiene gap of the 'validation set reused for reporting' type rather than clean disjoint splits.",
+    "score": 3,
+    "evidence_files": ["scripts/attr_patching.py", "scripts/nec_suff.py", "scripts/patching_utils.py", "data/logic_ds.jsonl"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The main clean/corrupt ground truth is deterministic and non-circular: the correct completion is the rule's consequent polarity token X, assigned by construction in scripts/gen_dataset.py (`clean_polarity = rng.choice(['true','false'])`, `corrupt_polarity` = its flip), and both models hit 100% accuracy (results/baseline_mistral.json clean_acc=1.0, corrupt_acc=1.0). However there are two operationalization gaps. (1) In the simplified task the answer token X appears verbatim inside the rule ('...then Q is X. Question: Q is'), so the label marks the correct answer but does NOT isolate multi-step reasoning from near-copying of the polarity token — the metric may characterize a copy/projection circuit rather than the 'propositional-logic reasoning' the claim targets. (2) The modularity axes use heuristically ASSUMED labels: gen_dataset.py hard-codes `fact_flip_answer='false'` and `query_flip_answer='false'` (lines 63, 70) without verifying the model produces them, and for a denied antecedent modus ponens is logically 'undetermined', not 'false'. The main-axis label is valid; auxiliary-axis labels are unvalidated proxies.",
+    "score": 3,
+    "evidence_files": ["scripts/gen_dataset.py", "results/baseline_mistral.json", "data/logic_ds.jsonl"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "Lead/main model is honored exactly: scripts/patching_utils.py load_hooked_mistral points at '/data/zhenqian/models/Mistral-7B-v0.1' loaded via HookedTransformer('mistralai/Mistral-7B-v0.1'), matching task.md's specified Mistral-7B lead model, run at bfloat16 full model (no shrink). The dataset is a custom minimal propositional-logic set, which task.md explicitly permits ('a custom minimal propositional-logic problem set'), though it is materially simpler than the paper's 5-variable/2-rule/LogOp task (single rule, single antecedent + one distractor fact) — a fidelity concern more relevant to Dimension 9. Verify stage: task.md nominated Gemma-2-9B / Gemma-2-27B, but the run used gemma-2-2b (report.md §1 lines 26-28: '9b/27b were permission-denied on this cluster; gemma-2-2b is the largest accessible member'). This is a downgrade to a model NOT on the verify-candidate list, but the rubric exempts verify-stage swaps from this dimension, and the substitution is explicitly disclosed with a justification. Main experiment resource fidelity is essentially intact; deduct slightly for the disclosed verify-model downgrade and task simplification.",
+    "score": 4,
+    "evidence_files": ["scripts/patching_utils.py", "scripts/attr_patching.py", "report.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Sample sizes are adequate and well above the 40-item concern threshold: baseline over n=200 (results/baseline_mistral.json n=200), attribution circuit discovery over n=128 (scripts/attr_patching.py default), necessity/sufficiency over n=64 (scripts/nec_suff.py default), modularity over n=128. Claim strength broadly matches evidence for claims 1-3. The main weakness is cross-model coverage (claim 4): only 2 models (Mistral-7B + Gemma-2-2B) rather than the three named, and the report flags this limitation honestly (report.md §7 line 200-202, §6 line 195-196). No conclusion is asserted without a corresponding run. Evidence base is sufficient in scale, with appropriately flagged coverage limits.",
+    "score": 4,
+    "evidence_files": ["results/baseline_mistral.json", "results/nec_suff_mistral.json", "results/attr_patching_mistral.npz", "report.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The main effect estimates (top-K sufficiency/necessity) are single-run point estimates on one dataset seed (seed=0) with no error bars: e.g. Mistral top-16 suff=+2.409, nec=-2.348 (results/nec_suff_mistral.json). Uncertainty IS quantified for the control arm — random-K uses 3 seeds with mean±std reported (rand_suff_mean=-1.367±0.131 at K=16), and the top-K vs random-K separation is enormous and clearly beyond noise (top suff +2.41 vs random -1.37, opposite sign). So the decisive comparison is well-separated, but the reported headline numbers themselves have no variance and the K-curve is non-monotonic and unstable (K=4 suff=+0.48, K=8=+0.50, then K=16=+2.41), which is explained post-hoc as helper/suppressor cancellation rather than probed with additional seeds. Single-seed main estimates with variance only on the control.",
+    "score": 3,
+    "evidence_files": ["results/nec_suff_mistral.json", "results/nec_suff_gemma2b.json", "scripts/nec_suff.py"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The central causal claim (necessity & sufficiency) rests on genuine interventions, not correlational dressing. scripts/nec_suff.py performs real activation patching: sufficiency patches only the top-K head z-outputs (and top-M MLP outputs) from a clean run into a corrupt run (lines 60-102), and necessity performs resample ablation, replacing top-K activations in the clean run with paired corrupt-run activations (lines 105-146). Both are accompanied by the necessary random-K control baseline (3 seeds, lines 218-232) demonstrating the effect is specific to the selected components, not to patching K arbitrary heads. Attribution patching is used only for ranking/discovery and is validated against exact activation patching (report.md §7 lines 209-212). Wording ('necessary and sufficient') matches the intervention evidence type. This is a properly controlled mechanistic intervention.",
+    "score": 5,
+    "evidence_files": ["scripts/nec_suff.py", "scripts/attr_patching.py", "results/nec_suff_mistral.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number in report.md traces to a specific on-disk product and agrees on independent recomputation. Verified by loading the npz/json: Mistral top heads L19H8 +0.14, L17H0 +0.12, L20H14 +0.09 ... and top MLPs L17 +0.15, L31 -0.13, L29 +0.09 (report §3) reproduce exactly from results/attr_patching_mistral.npz. Modularity correlations rule_flip vs fact_flip +0.37, rule_flip vs query_flip +0.61, fact_flip vs query_flip +0.22 (report §4) recompute exactly from results/modularity_attr_mistral.npz. The nec/suff table (top-16 suff +2.41 / nec -2.35, random -1.37±0.13; Gemma top-4 +1.04 / -1.08) matches results/nec_suff_mistral.json and results/nec_suff_gemma2b.json verbatim. Gemma top heads L16H4 +0.35, L18H6 +0.32 match results/attr_patching_gemma2b.npz. No sourceless or back-filled numbers were found.",
+    "score": 5,
+    "evidence_files": ["results/attr_patching_mistral.npz", "results/modularity_attr_mistral.npz", "results/nec_suff_mistral.json", "results/nec_suff_gemma2b.json", "results/attr_patching_gemma2b.npz"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline's records are largely self-consistent — the per-claim verdicts, tables, and figures agree with the on-disk products (see Dimension 7). One minor bookkeeping inconsistency: report.md §1's 'Behavioural baseline (200 examples...)' table reports Mistral clean +2.469 / corrupt -2.465, but the actual 200-example product results/baseline_mistral.json gives clean_mean=2.425 / corrupt_mean=-2.435; the +2.469/-2.465 values are in fact the 64-example nec_suff clean_ld/corrupt_ld (results/nec_suff_mistral.json clean_ld=2.46875, corrupt_ld=-2.46484). So the §1 table conflates the nec_suff subset baseline with the labelled 200-example behavioural baseline (and the Gemma row +1.033/-1.068 likewise comes from nec_suff, since no separate gemma baseline file exists). This is a stale/mislabelled-number inconsistency that changes no verdict but reveals loose bookkeeping. All integrity/verdict states ('supported') are propagated consistently across §3-§9.",
+    "score": 4,
+    "evidence_files": ["report.md", "results/baseline_mistral.json", "results/nec_suff_mistral.json", "results/nec_suff_gemma2b.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "A sparse subset of specific attention heads and MLP components jointly implements the minimal propositional-logic reasoning task — the circuit is small relative to the full model.",
+        "method": {
+          "justification": "9a: Attribution (gradient) patching over all heads/MLPs for discovery, validated against exact activation patching for the top-K nec/suff evaluation (scripts/attr_patching.py, scripts/nec_suff.py). This is the correct method family for locating a sparse causal circuit and closely mirrors the paper's head-output-patching CMA approach; MLPs are included (top-4 MLPs patched alongside heads). The first-order attribution approximation is disclosed and cross-checked (report §7). Method is well matched to a sparsity claim.",
+          "score": 5,
+          "evidence_files": ["scripts/attr_patching.py", "scripts/nec_suff.py"]
+        },
+        "experiment": {
+          "justification": "9b: A K-sweep (K=4,8,16,24,32,48) in both sufficiency and necessity directions with a 3-seed random-K control (results/nec_suff_mistral.json) is a reasonable design for a sparsity claim. Deductions: single dataset seed for the reported top-K estimates; the selection set (n=128) fully contains the eval set (n=64), a hygiene gap; the sparsity threshold is chosen post-hoc (top-4 recovers only +0.48, so '≤2% suffices' relies on K=16); and the simplified single-rule task makes 'implements the reasoning task' partly confounded with polarity-token copying. Honest and reasonably powered but with these gaps.",
+          "score": 4,
+          "evidence_files": ["scripts/nec_suff.py", "results/nec_suff_mistral.json"]
+        },
+        "result": {
+          "justification": "9c: Result qualitatively agrees with the paper's sparse-circuit finding: 16 heads (1.6% of 1024) recover 97.6% of the clean logit-diff (2.41/2.47) on Mistral and 4 heads (1.9% of 208) fully explain Gemma-2-2B, with random-K controls near zero and opposite sign (results/nec_suff_*.json). The analysis is grounded and honest. Minor deduction because the simplified task means the 'reasoning circuit' claim is somewhat generous relative to the paper's multi-hop task, but directionally consistent (a sparse circuit exists).",
+          "score": 4,
+          "evidence_files": ["results/nec_suff_mistral.json", "results/nec_suff_gemma2b.json", "figures/sparsity_mistral.png", "report.md"]
+        }
+      },
+      "C2": {
+        "claim": "The circuit decomposes into a small number of modular sub-circuits with distinct functional roles (e.g., identifying the facts in the prompt, applying an implication rule, projecting the derived truth value into the answer token) rather than presenting as an entangled mixture.",
+        "method": {
+          "justification": "9a: Modularity is argued from per-corruption-axis attribution maps (rule_flip/fact_flip/query_flip) compared via Pearson correlation plus layer-band separation (scripts/modularity_attr.py). This is a reasonable but WEAKER proxy for functional decomposition than the paper's targeted query/key/value sub-component CMA interventions that directly assign roles (rule-locating, mover, fact-processing, decision). Comparing which heads matter under different corruptions is correlational evidence of role separation, not an intervention that demonstrates each role. It also collapses the paper's 4 head families into 3 modules and structurally cannot test 'queried-rule locating' (the simplified task has only one rule). Method partially fits the claim.",
+          "score": 3,
+          "evidence_files": ["scripts/modularity_attr.py"]
+        },
+        "experiment": {
+          "justification": "9b: Three corruption axes give recomputed correlations rule vs fact +0.37, rule vs query +0.61, fact vs query +0.22 (results/modularity_attr_mistral.npz). The design has real weaknesses: fact_flip and query_flip use ASSUMED 'false' labels (gen_dataset.py) not verified against the model (denied antecedent is logically undetermined, not false); rule_flip vs query_flip correlation is 0.61, i.e. fairly entangled, undercutting a clean modularity story; the 'answer-projection' module is asserted from a couple of late heads (L31H22) without a dedicated intervention; and no query/key/value sub-patching is done to actually demonstrate functional roles. Honest but under-powered for a 'distinct functional roles' claim.",
+          "score": 3,
+          "evidence_files": ["scripts/modularity_attr.py", "results/modularity_attr_mistral.npz", "scripts/gen_dataset.py"]
+        },
+        "result": {
+          "justification": "9c: The report concludes modularity is 'supported, with the caveat that the modules are overlapping rather than strictly disjoint' (report §4 line 160-161), citing fact heads in layers 10-16 vs rule heads in 17-22 and fact-vs-query correlation of 0.22. This directionally agrees with the paper (which also reports sub-circuit reuse/overlap), but the supporting evidence is largely layer-band correlation rather than the paper's demonstrated functional roles, one key correlation (0.61) is high, and the assumed auxiliary labels weaken it. The reproduction is honest about the overlap caveat. Partial qualitative agreement with incompletely-established roles.",
+          "score": 3,
+          "evidence_files": ["results/modularity_attr_mistral.npz", "figures/modularity_mistral.png", "report.md"]
+        }
+      },
+      "C3": {
+        "claim": "Activation-patching / causal-mediation experiments show that the identified components are both necessary (patching them from a clean run into a corrupted run restores correct behaviour) and sufficient (their outputs alone drive the answer).",
+        "method": {
+          "justification": "9a: Genuine ground-truth activation patching for both directions — sufficiency patches top-K clean activations into the corrupt run, necessity resample-ablates top-K activations in the clean run using paired corrupt activations (scripts/nec_suff.py) — with a random-K control. This is exactly the CMA necessity/sufficiency method the paper uses and is well matched to the causal claim.",
+          "score": 5,
+          "evidence_files": ["scripts/nec_suff.py"]
+        },
+        "experiment": {
+          "justification": "9b: Both directions swept over K with 3-seed random controls and reported std (results/nec_suff_mistral.json), a solid causal design. Deductions: single dataset seed for the top-K estimates; the top-K set is selected on data (n=128) overlapping the eval set (n=64); no coefficient sweep is needed for patching so that is not held against it. Strong, minor gaps.",
+          "score": 4,
+          "evidence_files": ["scripts/nec_suff.py", "results/nec_suff_mistral.json"]
+        },
+        "result": {
+          "justification": "9c: Clear necessity and sufficiency, qualitatively matching the paper: Mistral top-16 sufficiency +2.41 (clean +2.47) and necessity -2.35 (corrupt -2.47), with random-K ~-1.37 and +1.41 (opposite direction); Gemma top-4 +1.04/-1.08 vs clean +1.03/corrupt -1.07 (results/nec_suff_*.json). Both halves succeed and are grounded in real products. Strong agreement.",
+          "score": 5,
+          "evidence_files": ["results/nec_suff_mistral.json", "results/nec_suff_gemma2b.json", "figures/nec_suff_mistral.png"]
+        }
+      },
+      "C4": {
+        "claim": "The high-level circuit schema recurs across LLM families and scales — the same modular decomposition shows up in Mistral-7B, Gemma-2-9B, and Gemma-2-27B — while the specific heads / MLPs realising each role differ between models.",
+        "method": {
+          "justification": "9a: The reproduction re-runs the identical attribution + nec/suff + modularity pipeline on a second model (scripts/patching_utils.load_hooked_gemma2_2b), which is the appropriate method for testing cross-model recurrence. However the second model is Gemma-2-2B, not the specified Gemma-2-9B/27B, so the cross-SCALE dimension of the claim (up to 27B) cannot be exercised at all; only a cross-family, cross-scale-downward comparison is possible. Method is right, but the models needed to test the specific claim are absent.",
+          "score": 3,
+          "evidence_files": ["scripts/patching_utils.py", "scripts/attr_patching.py"]
+        },
+        "experiment": {
+          "justification": "9b: Only 2 of the 3 named models are tested, and the substitute (Gemma-2-2B) is smaller than either specified verify model. Two of the three model conditions central to the claim (9B, 27B) are missing due to permission denial (report §7). The 'specific heads differ' sub-part is demonstrable (Mistral top heads L19H8/L17H0 vs Gemma L16H4/L18H6, results/attr_patching_*.npz), but the scale-invariance core of the claim is structurally untested. Honestly disclosed but substantially incomplete / under-powered for this claim.",
+          "score": 2,
+          "evidence_files": ["results/attr_patching_mistral.npz", "results/attr_patching_gemma2b.npz", "report.md"]
+        },
+        "result": {
+          "justification": "9c: The report claims both models show 'the same qualitative picture' — ~2% sparse head set, early-middle 'fact' vs late-middle 'rule' layer bands, overlapping sub-circuits (report §6), which directionally matches the paper's 'analogous but not identical' cross-model finding, and it correctly reports that specific heads differ across models. But this is shown on Mistral-7B + Gemma-2-2B, not the paper's 9B/27B, so it cannot confirm the paper's scale claim; the report is explicit about this limitation ('A run on Gemma-2-9B would further test this, but the 9B weights were not accessible', §6 line 195-196). Honest partial agreement with a reliably-stated gap rather than an overclaim of full reproduction.",
+          "score": 3,
+          "evidence_files": ["report.md", "results/attr_patching_gemma2b.npz", "results/nec_suff_gemma2b.json"]
+        }
+      }
+    }
+  }
+}

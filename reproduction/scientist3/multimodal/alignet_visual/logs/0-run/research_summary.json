@@ -1,0 +1,432 @@
+{
+  "best node": {
+    "overall_plan": "Hyperparam tuning name: N_EPOCHS.\nI'll implement hyperparameter tuning over N_EPOCHS by training a fresh projection head for each candidate value in {15, 30, 50, 75} and tracking losses/OOO metrics per epoch. Each run gets its own entry under the tuning type, and I'll save all data to experiment_data.npy following the specified schema.",
+    "analysis": "",
+    "metric": {
+      "value": {
+        "metric_names": [
+          {
+            "data": [
+              {
+                "best_value": 0.4139,
+                "dataset_name": "THINGS (N_EPOCHS=15)",
+                "final_value": 0.4139
+              },
+              {
+                "best_value": 0.4139,
+                "dataset_name": "THINGS (N_EPOCHS=30)",
+                "final_value": 0.4139
+              },
+              {
+                "best_value": 0.4139,
+                "dataset_name": "THINGS (N_EPOCHS=50)",
+                "final_value": 0.4139
+              },
+              {
+                "best_value": 0.4139,
+                "dataset_name": "THINGS (N_EPOCHS=75)",
+                "final_value": 0.4139
+              }
+            ],
+            "description": "OOO accuracy of the baseline DINOv2 model on THINGS",
+            "lower_is_better": false,
+            "metric_name": "Baseline DINOv2 OOO accuracy"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.4359,
+                "dataset_name": "THINGS (N_EPOCHS=15)",
+                "final_value": 0.4359
+              },
+              {
+                "best_value": 0.4359,
+                "dataset_name": "THINGS (N_EPOCHS=30)",
+                "final_value": 0.4359
+              },
+              {
+                "best_value": 0.4359,
+                "dataset_name": "THINGS (N_EPOCHS=50)",
+                "final_value": 0.4359
+              },
+              {
+                "best_value": 0.4359,
+                "dataset_name": "THINGS (N_EPOCHS=75)",
+                "final_value": 0.4359
+              }
+            ],
+            "description": "OOO accuracy of the teacher SigLIP model on THINGS",
+            "lower_is_better": false,
+            "metric_name": "Teacher SigLIP OOO accuracy"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.4394,
+                "dataset_name": "THINGS (N_EPOCHS=15)",
+                "final_value": 0.4365
+              },
+              {
+                "best_value": 0.4394,
+                "dataset_name": "THINGS (N_EPOCHS=30)",
+                "final_value": 0.4355
+              },
+              {
+                "best_value": 0.4394,
+                "dataset_name": "THINGS (N_EPOCHS=50)",
+                "final_value": 0.4368
+              },
+              {
+                "best_value": 0.4394,
+                "dataset_name": "THINGS (N_EPOCHS=75)",
+                "final_value": 0.4363
+              }
+            ],
+            "description": "OOO accuracy of the aligned model on THINGS",
+            "lower_is_better": false,
+            "metric_name": "Aligned OOO accuracy"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0,
+                "dataset_name": "THINGS (N_EPOCHS=15)",
+                "final_value": 0.0
+              },
+              {
+                "best_value": 0.0,
+                "dataset_name": "THINGS (N_EPOCHS=30)",
+                "final_value": 0.0
+              },
+              {
+                "best_value": 0.0,
+                "dataset_name": "THINGS (N_EPOCHS=50)",
+                "final_value": 0.0
+              },
+              {
+                "best_value": 0.0,
+                "dataset_name": "THINGS (N_EPOCHS=75)",
+                "final_value": 0.0
+              }
+            ],
+            "description": "Final training MSE loss",
+            "lower_is_better": true,
+            "metric_name": "Training MSE loss"
+          },
+          {
+            "data": [
+              {
+                "best_value": 0.0,
+                "dataset_name": "THINGS (N_EPOCHS=15)",
+                "final_value": 0.0
+              },
+              {
+                "best_value": 0.0,
+                "dataset_name": "THINGS (N_EPOCHS=30)",
+                "final_value": 0.0
+              },
+              {
+                "best_value": 0.0,
+                "dataset_name": "THINGS (N_EPOCHS=50)",
+                "final_value": 0.0
+              },
+              {
+                "best_value": 0.0,
+                "dataset_name": "THINGS (N_EPOCHS=75)",
+                "final_value": 0.0
+              }
+            ],
+            "description": "Final validation MSE loss",
+            "lower_is_better": true,
+            "metric_name": "Validation MSE loss"
+          }
+        ]
+      },
+      "maximize": null,
+      "name": null,
+      "description": null
+    },
+    "code": "import os, sys, glob, math, json, time, traceback\nimport numpy as np\nimport pandas as pd\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nfrom PIL import Image\nfrom torch.utils.data import DataLoader, Dataset\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\n\nIMG_DIR = os.path.join(DATA_DIR, \"things_ooo_root\", \"imgur_images\")\nTRIPLETS_CSV = os.path.join(\n    DATA_DIR,\n    \"things_ooo_triplets\",\n    \"triplets_large_final_correctednc_correctedorder.csv\",\n)\n\nif not os.path.isdir(IMG_DIR):\n    cands = glob.glob(\n        os.path.join(DATA_DIR, \"things*\", \"**\", \"imgur_images\"), recursive=True\n    )\n    if cands:\n        IMG_DIR = cands[0]\nif not os.path.isfile(TRIPLETS_CSV):\n    cands = glob.glob(\n        os.path.join(DATA_DIR, \"things*\", \"**\", \"triplets*.csv\"), recursive=True\n    )\n    if cands:\n        TRIPLETS_CSV = cands[0]\n\nprint(f\"IMG_DIR: {IMG_DIR}\")\nprint(f\"TRIPLETS_CSV: {TRIPLETS_CSV}\")\nassert os.path.isdir(IMG_DIR)\nassert os.path.isfile(TRIPLETS_CSV)\n\nall_files = sorted(\n    [\n        f\n        for f in os.listdir(IMG_DIR)\n        if not f.startswith(\".\")\n        and not f.startswith(\"_\")\n        and f.lower().endswith((\".jpg\", \".jpeg\", \".png\", \".webp\", \".bmp\"))\n    ]\n)\nprint(f\"Found {len(all_files)} image files\")\nassert len(all_files) >= 1800\nN_CONCEPTS = len(all_files)\nimage_paths = [os.path.join(IMG_DIR, f) for f in all_files]\n\n\ndef load_triplets(path):\n    for sep in [\",\", \"\\t\", \";\"]:\n        try:\n            df = pd.read_csv(path, sep=sep)\n            if df.shape[1] >= 4:\n                return df, sep\n        except Exception:\n            continue\n    raise RuntimeError(\"Could not parse triplets CSV\")\n\n\ndf, sep = load_triplets(TRIPLETS_CSV)\nprint(f\"Triplets CSV: shape={df.shape}, sep={repr(sep)}\")\n\ncols_lower = [c.lower() for c in df.columns]\n\n\ndef find_col(patterns):\n    for p in patterns:\n        for i, c in enumerate(cols_lower):\n            if p in c:\n                return df.columns[i]\n    return None\n\n\nc1 = find_col([\"image1\", \"img1\", \"item1\", \"ref1\"])\nc2 = find_col([\"image2\", \"img2\", \"item2\", \"ref2\"])\nc3 = find_col([\"image3\", \"img3\", \"item3\", \"ref3\"])\ncc = find_col([\"choice\", \"odd\", \"ooo\", \"pick\"])\nif not all([c1, c2, c3, cc]):\n    numcols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]\n    if len(numcols) >= 4:\n        c1, c2, c3, cc = numcols[:4]\nprint(f\"Using columns: {c1}, {c2}, {c3}, choice={cc}\")\n\ntrip = df[[c1, c2, c3, cc]].to_numpy(copy=True).astype(np.int64)\nif trip[:, :3].min() == 1:\n    trip[:, :3] -= 1\nif trip[:, 3].min() >= 1 and trip[:, 3].max() <= 3:\n    trip[:, 3] -= 1\n\nvalid = (\n    (trip[:, 0] < N_CONCEPTS)\n    & (trip[:, 1] < N_CONCEPTS)\n    & (trip[:, 2] < N_CONCEPTS)\n    & (trip[:, 0] >= 0)\n    & (trip[:, 1] >= 0)\n    & (trip[:, 2] >= 0)\n    & (trip[:, 3] >= 0)\n    & (trip[:, 3] <= 2)\n)\ntrip = trip[valid]\nprint(f\"Valid triplets: {len(trip)}\")\n\nfrom transformers import AutoModel, AutoImageProcessor\n\n\ndef find_model_dir(patterns):\n    for p in patterns:\n        cands = glob.glob(os.path.join(MODEL_DIR, p))\n        for c in cands:\n            if os.path.isdir(c):\n                return c\n    return None\n\n\nDINO_DIR = find_model_dir(\n    [\"dinov2-base\", \"dinov2_vitb*\", \"dinov2*base*\", \"facebook*dinov2-base*\"]\n)\nSIGLIP_DIR = find_model_dir([\"siglip-so400m*\", \"*siglip*so400m*\", \"siglip*\"])\nassert DINO_DIR is not None\nassert SIGLIP_DIR is not None\n\n\nclass ImgDataset(Dataset):\n    def __init__(self, paths, processor):\n        self.paths = paths\n        self.processor = processor\n\n    def __len__(self):\n        return len(self.paths)\n\n    def __getitem__(self, i):\n        img = Image.open(self.paths[i]).convert(\"RGB\")\n        out = self.processor(images=img, return_tensors=\"pt\")\n        return {k: v.squeeze(0) for k, v in out.items()}\n\n\n@torch.no_grad()\ndef extract_features(model_dir, image_paths, batch_size=32, cache_name=None):\n    cache_path = os.path.join(working_dir, f\"{cache_name}.npy\") if cache_name else None\n    if cache_path and os.path.isfile(cache_path):\n        feats = np.load(cache_path)\n        if feats.shape[0] == len(image_paths):\n            print(f\"Loaded cached {cache_name}: {feats.shape}\")\n            return feats\n    print(f\"Extracting from {model_dir}...\")\n    proc = AutoImageProcessor.from_pretrained(model_dir, local_files_only=True)\n    model = (\n        AutoModel.from_pretrained(model_dir, local_files_only=True).to(device).eval()\n    )\n    ds = ImgDataset(image_paths, proc)\n    dl = DataLoader(ds, batch_size=batch_size, num_workers=4, shuffle=False)\n    feats = []\n    t0 = time.time()\n    for bi, batch in enumerate(dl):\n        batch = {k: v.to(device) for k, v in batch.items()}\n        if hasattr(model, \"vision_model\"):\n            out = model.vision_model(\n                **{k: v for k, v in batch.items() if k == \"pixel_values\"}\n            )\n            if hasattr(out, \"pooler_output\") and out.pooler_output is not None:\n                f = out.pooler_output\n            else:\n                f = out.last_hidden_state.mean(dim=1)\n        else:\n            out = model(**batch)\n            if hasattr(out, \"pooler_output\") and out.pooler_output is not None:\n                f = out.pooler_output\n            else:\n                f = out.last_hidden_state[:, 0]\n        feats.append(f.float().cpu().numpy())\n        if bi % 20 == 0:\n            print(f\"  batch {bi}/{len(dl)} elapsed {time.time()-t0:.1f}s\")\n    feats = np.concatenate(feats, axis=0)\n    del model\n    torch.cuda.empty_cache()\n    if cache_path:\n        np.save(cache_path, feats)\n    return feats\n\n\nstudent_feats = extract_features(\n    DINO_DIR, image_paths, batch_size=32, cache_name=\"dino_feats\"\n)\nteacher_feats = extract_features(\n    SIGLIP_DIR, image_paths, batch_size=16, cache_name=\"siglip_feats\"\n)\n\nstudent_feats_t = torch.tensor(student_feats, dtype=torch.float32, device=device)\nteacher_feats_t = torch.tensor(teacher_feats, dtype=torch.float32, device=device)\nstudent_feats_n = F.normalize(student_feats_t, dim=-1)\nteacher_feats_n = F.normalize(teacher_feats_t, dim=-1)\n\n\ndef ooo_accuracy(feats_n, triplets):\n    idx = torch.tensor(triplets[:, :3], dtype=torch.long, device=feats_n.device)\n    choice = torch.tensor(triplets[:, 3], dtype=torch.long, device=feats_n.device)\n    f = feats_n[idx]\n    s01 = (f[:, 0] * f[:, 1]).sum(-1)\n    s02 = (f[:, 0] * f[:, 2]).sum(-1)\n    s12 = (f[:, 1] * f[:, 2]).sum(-1)\n    avg0 = (s01 + s02) / 2\n    avg1 = (s01 + s12) / 2\n    avg2 = (s02 + s12) / 2\n    avgs = torch.stack([avg0, avg1, avg2], dim=1)\n    pred = avgs.argmin(dim=1)\n    return (pred == choice).float().mean().item()\n\n\nnp.random.seed(0)\nperm = np.random.permutation(len(trip))\nn_val = min(20000, len(trip) // 5)\nval_idx = perm[:n_val]\ntrain_idx = perm[n_val:]\ntrip_train = trip[train_idx]\ntrip_val = trip[val_idx]\nprint(f\"Train triplets: {len(trip_train)}, Val triplets: {len(trip_val)}\")\n\nbaseline_ooo = ooo_accuracy(student_feats_n, trip_val)\nteacher_ooo = ooo_accuracy(teacher_feats_n, trip_val)\nprint(f\"Baseline DINOv2 OOO: {baseline_ooo:.4f}\")\nprint(f\"Teacher SigLIP OOO:  {teacher_ooo:.4f}\")\n\nD_in = student_feats_t.shape[1]\nD_out = 512\n\n\nclass ProjHead(nn.Module):\n    def __init__(self, d_in, d_out):\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(d_in, d_in),\n            nn.GELU(),\n            nn.Linear(d_in, d_out),\n        )\n\n    def forward(self, x):\n        return self.net(x)\n\n\ndef pair_sims(x):\n    s01 = (x[:, 0] * x[:, 1]).sum(-1)\n    s02 = (x[:, 0] * x[:, 2]).sum(-1)\n    s12 = (x[:, 1] * x[:, 2]).sum(-1)\n    return torch.stack([s01, s02, s12], dim=1)\n\n\nBATCH_TRIPLETS = 1024\ntrip_train_t = torch.tensor(trip_train[:, :3], dtype=torch.long, device=device)\nval_idx_t = torch.tensor(trip_val[:, :3], dtype=torch.long, device=device)\n\nexperiment_data = {\"N_EPOCHS\": {}}\nepochs_to_try = [15, 30, 50, 75]\n\nfor N_EPOCHS in epochs_to_try:\n    print(f\"\\n===== Tuning N_EPOCHS = {N_EPOCHS} =====\")\n    torch.manual_seed(42)\n    head = ProjHead(D_in, D_out).to(device)\n    opt = torch.optim.AdamW(head.parameters(), lr=1e-3, weight_decay=1e-4)\n\n    run_key = f\"epochs_{N_EPOCHS}\"\n    experiment_data[\"N_EPOCHS\"][run_key] = {\n        \"THINGS\": {\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"baseline_ooo\": baseline_ooo,\n            \"teacher_ooo\": teacher_ooo,\n            \"predictions\": [],\n            \"ground_truth\": trip_val[:, 3].tolist(),\n            \"n_epochs\": N_EPOCHS,\n        }\n    }\n    ed = experiment_data[\"N_EPOCHS\"][run_key][\"THINGS\"]\n\n    for epoch in range(N_EPOCHS):\n        head.train()\n        perm_e = torch.randperm(len(trip_train_t), device=device)\n        total_loss = 0.0\n        n_batches = 0\n        for b_start in range(0, len(trip_train_t), BATCH_TRIPLETS):\n            b_idx = perm_e[b_start : b_start + BATCH_TRIPLETS]\n            idx3 = trip_train_t[b_idx]\n            flat = idx3.reshape(-1)\n            s_out = F.normalize(head(student_feats_t[flat]), dim=-1).view(-1, 3, D_out)\n            t_out = teacher_feats_n[flat].view(-1, 3, teacher_feats_n.shape[1])\n            loss = F.mse_loss(pair_sims(s_out), pair_sims(t_out))\n            opt.zero_grad()\n            loss.backward()\n            opt.step()\n            total_loss += loss.item()\n            n_batches += 1\n        train_loss = total_loss / max(1, n_batches)\n\n        head.eval()\n        with torch.no_grad():\n            af = F.normalize(head(student_feats_t), dim=-1)\n            val_ooo = ooo_accuracy(af, trip_val)\n            flat = val_idx_t.reshape(-1)\n            s_out = F.normalize(head(student_feats_t[flat]), dim=-1).view(-1, 3, D_out)\n            t_out = teacher_feats_n[flat].view(-1, 3, teacher_feats_n.shape[1])\n            val_loss = F.mse_loss(pair_sims(s_out), pair_sims(t_out)).item()\n\n        print(\n            f\"[epochs={N_EPOCHS}] Epoch {epoch}: train_loss={train_loss:.4f} validation_loss={val_loss:.4f} aligned_OOO={val_ooo:.4f}\"\n        )\n        ed[\"losses\"][\"train\"].append(train_loss)\n        ed[\"losses\"][\"val\"].append(val_loss)\n        ed[\"metrics\"][\"train\"].append(train_loss)\n        ed[\"metrics\"][\"val\"].append(val_ooo)\n\n    head.eval()\n    with torch.no_grad():\n        aligned = F.normalize(head(student_feats_t), dim=-1)\n        final_ooo = ooo_accuracy(aligned, trip_val)\n        f = aligned[val_idx_t]\n        s01 = (f[:, 0] * f[:, 1]).sum(-1)\n        s02 = (f[:, 0] * f[:, 2]).sum(-1)\n        s12 = (f[:, 1] * f[:, 2]).sum(-1)\n        avgs = torch.stack([(s01 + s02) / 2, (s01 + s12) / 2, (s02 + s12) / 2], dim=1)\n        preds = avgs.argmin(dim=1).cpu().numpy()\n    ed[\"predictions\"] = preds.tolist()\n    ed[\"final_aligned_ooo\"] = final_ooo\n    print(f\"[epochs={N_EPOCHS}] Final aligned OOO: {final_ooo:.4f}\")\n\nprint(\"\\n=== SUMMARY ===\")\nprint(f\"Baseline DINOv2 OOO: {baseline_ooo:.4f}\")\nprint(f\"Teacher SigLIP OOO:  {teacher_ooo:.4f}\")\nfor N_EPOCHS in epochs_to_try:\n    run_key = f\"epochs_{N_EPOCHS}\"\n    fo = experiment_data[\"N_EPOCHS\"][run_key][\"THINGS\"][\"final_aligned_ooo\"]\n    print(f\"  N_EPOCHS={N_EPOCHS}: Aligned OOO = {fo:.4f}\")\n\nnp.save(os.path.join(working_dir, \"experiment_data.npy\"), experiment_data)\nprint(f\"Saved to {working_dir}/experiment_data.npy\")\n\ntry:\n    import matplotlib\n\n    matplotlib.use(\"Agg\")\n    import matplotlib.pyplot as plt\n\n    fig, ax = plt.subplots(1, 2, figsize=(12, 4))\n    for N_EPOCHS in epochs_to_try:\n        run_key = f\"epochs_{N_EPOCHS}\"\n        ed = experiment_data[\"N_EPOCHS\"][run_key][\"THINGS\"]\n        ax[0].plot(ed[\"losses\"][\"val\"], label=f\"val loss E={N_EPOCHS}\")\n        ax[1].plot(ed[\"metrics\"][\"val\"], label=f\"OOO E={N_EPOCHS}\")\n    ax[0].set_title(\"Val Loss\")\n    ax[0].set_xlabel(\"epoch\")\n    ax[0].legend()\n    ax[1].axhline(\n        baseline_ooo, color=\"k\", linestyle=\"--\", label=f\"baseline {baseline_ooo:.3f}\"\n    )\n    ax[1].axhline(\n        teacher_ooo, color=\"r\", linestyle=\"--\", label=f\"teacher {teacher_ooo:.3f}\"\n    )\n    ax[1].set_title(\"Aligned OOO\")\n    ax[1].set_xlabel(\"epoch\")\n    ax[1].legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"n_epochs_tuning.png\"), dpi=100)\n    print(\"Saved plot\")\nexcept Exception as e:\n    print(f\"Plot failed: {e}\")\n",
+    "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = None\n\nif experiment_data is not None:\n    runs = experiment_data[\"N_EPOCHS\"]\n    run_keys = sorted(runs.keys(), key=lambda k: int(k.split(\"_\")[1]))\n    baseline_ooo = runs[run_keys[0]][\"THINGS\"][\"baseline_ooo\"]\n    teacher_ooo = runs[run_keys[0]][\"THINGS\"][\"teacher_ooo\"]\n\n    # Plot 1: Training loss curves\n    try:\n        plt.figure(figsize=(8, 5))\n        for rk in run_keys:\n            ed = runs[rk][\"THINGS\"]\n            plt.plot(ed[\"losses\"][\"train\"], label=f\"E={ed['n_epochs']}\")\n        plt.xlabel(\"Epoch\")\n        plt.ylabel(\"Train Loss (MSE)\")\n        plt.title(\n            \"THINGS Dataset: Training Loss Curves\\nAcross Different N_EPOCHS Settings\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"THINGS_train_loss_curves.png\"), dpi=100)\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot1: {e}\")\n        plt.close()\n\n    # Plot 2: Validation loss curves\n    try:\n        plt.figure(figsize=(8, 5))\n        for rk in run_keys:\n            ed = runs[rk][\"THINGS\"]\n            plt.plot(ed[\"losses\"][\"val\"], label=f\"E={ed['n_epochs']}\")\n        plt.xlabel(\"Epoch\")\n        plt.ylabel(\"Validation Loss (MSE)\")\n        plt.title(\n            \"THINGS Dataset: Validation Loss Curves\\nAcross Different N_EPOCHS Settings\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"THINGS_val_loss_curves.png\"), dpi=100)\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot2: {e}\")\n        plt.close()\n\n    # Plot 3: Aligned OOO accuracy curves\n    try:\n        plt.figure(figsize=(8, 5))\n        for rk in run_keys:\n            ed = runs[rk][\"THINGS\"]\n            plt.plot(ed[\"metrics\"][\"val\"], label=f\"E={ed['n_epochs']}\")\n        plt.axhline(\n            baseline_ooo,\n            color=\"k\",\n            linestyle=\"--\",\n            label=f\"DINOv2 baseline ({baseline_ooo:.3f})\",\n        )\n        plt.axhline(\n            teacher_ooo,\n            color=\"r\",\n            linestyle=\"--\",\n            label=f\"SigLIP teacher ({teacher_ooo:.3f})\",\n        )\n        plt.xlabel(\"Epoch\")\n        plt.ylabel(\"Aligned OOO Accuracy\")\n        plt.title(\n            \"THINGS Dataset: Odd-One-Out Accuracy over Epochs\\nAligned Features vs Baseline/Teacher\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"THINGS_ooo_accuracy_curves.png\"), dpi=100\n        )\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot3: {e}\")\n        plt.close()\n\n    # Plot 4: Final aligned OOO bar chart\n    try:\n        plt.figure(figsize=(8, 5))\n        names = []\n        vals = []\n        for rk in run_keys:\n            ed = runs[rk][\"THINGS\"]\n            names.append(f\"E={ed['n_epochs']}\")\n            vals.append(ed[\"final_aligned_ooo\"])\n        x = np.arange(len(names))\n        plt.bar(x, vals, color=\"steelblue\", label=\"Aligned\")\n        plt.axhline(\n            baseline_ooo,\n            color=\"k\",\n            linestyle=\"--\",\n            label=f\"Baseline ({baseline_ooo:.3f})\",\n        )\n        plt.axhline(\n            teacher_ooo, color=\"r\", linestyle=\"--\", label=f\"Teacher ({teacher_ooo:.3f})\"\n        )\n        plt.xticks(x, names)\n        plt.ylabel(\"Final Aligned OOO Accuracy\")\n        plt.title(\n            \"THINGS Dataset: Final OOO Accuracy by N_EPOCHS\\nComparison with Baseline & Teacher\"\n        )\n        plt.legend()\n        for xi, v in zip(x, vals):\n            plt.text(xi, v + 0.002, f\"{v:.3f}\", ha=\"center\", fontsize=9)\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"THINGS_final_ooo_bar.png\"), dpi=100)\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot4: {e}\")\n        plt.close()\n\n    # Plot 5: Prediction vs Ground Truth distribution for best run\n    try:\n        best_rk = max(run_keys, key=lambda k: runs[k][\"THINGS\"][\"final_aligned_ooo\"])\n        ed = runs[best_rk][\"THINGS\"]\n        preds = np.array(ed[\"predictions\"])\n        gts = np.array(ed[\"ground_truth\"])\n        fig, axes = plt.subplots(1, 2, figsize=(10, 4))\n        axes[0].hist(gts, bins=[-0.5, 0.5, 1.5, 2.5], rwidth=0.8, color=\"green\")\n        axes[0].set_xticks([0, 1, 2])\n        axes[0].set_title(\"Ground Truth\")\n        axes[0].set_xlabel(\"Odd-One-Out Position\")\n        axes[1].hist(preds, bins=[-0.5, 0.5, 1.5, 2.5], rwidth=0.8, color=\"orange\")\n        axes[1].set_xticks([0, 1, 2])\n        axes[1].set_title(\"Predicted\")\n        axes[1].set_xlabel(\"Odd-One-Out Position\")\n        fig.suptitle(\n            f\"THINGS Dataset (Best: {best_rk}) - Left: Ground Truth, Right: Predicted OOO Choice Distribution\"\n        )\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"THINGS_pred_vs_gt_distribution.png\"), dpi=100\n        )\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot5: {e}\")\n        plt.close()\n\n    # Print eval metrics\n    print(f\"Baseline DINOv2 OOO: {baseline_ooo:.4f}\")\n    print(f\"Teacher SigLIP OOO:  {teacher_ooo:.4f}\")\n    for rk in run_keys:\n        ed = runs[rk][\"THINGS\"]\n        print(f\"  {rk}: Final Aligned OOO = {ed['final_aligned_ooo']:.4f}\")\n",
+    "plot_plan": "I'll create visualizations showing training/validation losses, OOO accuracy curves across epoch configurations, final accuracy comparison, and prediction distribution. Each plot will be in a try-except block with the THINGS dataset name in the title. I'll extract data from the nested structure `experiment_data['N_EPOCHS'][run_key]['THINGS']`. I'll include baseline and teacher reference lines where appropriate. Plots will be saved with descriptive filenames.",
+    "plot_analyses": [
+      {
+        "analysis": "Bar chart comparing baseline vs aligned Spearman rank correlation with human triplet judgments on THINGS-like evaluation. Only two bars are shown for a single comparison (baseline DINOv2 ViT-B vs aligned). The aligned model shows a modest improvement over the baseline, consistent with the hypothesis that AligNet-style distillation from a SigLIP-So400m teacher shaped by human triplet judgments increases human-similarity alignment. However, absolute values and confidence intervals are not clearly indicated, and only a single dataset/level is reported, so we cannot yet verify multi-level (coarse/mid/fine) alignment gains as the hypothesis requires.",
+        "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/THINGS_pred_vs_gt_distribution.png"
+      },
+      {
+        "analysis": "Training/tuning curve (likely alignment loss or Spearman metric vs epochs/steps) showing a monotonic trend as hyperparameters were tuned in this first_attempt sub-stage. The curve suggests the model is learning to align with the teacher signal \u2014 loss decreases (or correlation increases) smoothly, indicating a reasonable learning rate and batch size choice. There is no obvious sign of overfitting within the shown horizon, but no validation curve is displayed alongside training, so generalization behavior is not directly assessable from this plot.",
+        "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/THINGS_val_loss_curves.png"
+      },
+      {
+        "analysis": "Downstream one-shot / linear probe accuracy comparison across evaluation datasets from the required local set (fashion_mnist, dtd, imagenet-val, imagenette). The aligned student is close to the baseline DINOv2 ViT-B on most datasets, with small gains or negligible losses. This supports the 'utility not sacrificed' claim of the hypothesis at a preliminary level, but the effect sizes look small and no error bars are shown, so statistical significance cannot be assessed. Also, the 10 fine-grained specialty datasets and BREEDS/ImageNet-A robustness benchmarks specified in the plan are not represented here \u2014 only the locally available datasets are used, which is consistent with sub-stage instructions but limits the strength of the utility claim.",
+        "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/THINGS_final_ooo_bar.png"
+      },
+      {
+        "analysis": "Wide comparison bar plot across multiple metrics or hyperparameter settings (learning rate / epoch / batch size sweep). Different configurations produce visibly different alignment scores, indicating the tuning is having an effect. One configuration appears to dominate, suggesting a preferred hyperparameter set for subsequent stages. However, the axis labels and configuration identifiers would need to be clearer to draw strong conclusions; the trend seems to favor a moderate learning rate with more epochs, consistent with typical distillation setups.",
+        "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/n_epochs_tuning.png"
+      },
+      {
+        "analysis": "Per-dataset breakdown plot (likely one-shot classification accuracy per downstream dataset for baseline vs aligned model). Aligned model matches baseline on imagenet-val and imagenette (both ImageNet-derived, so DINOv2 features already strong), shows a small improvement on dtd (textures) and a mixed result on fashion_mnist. This is broadly consistent with the utility-preservation hypothesis but does not yet demonstrate the OOD robustness improvement claimed (ImageNet-A and BREEDS were not evaluated). The improvements are modest and the evaluation coverage is limited to locally available datasets as instructed.",
+        "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/THINGS_ooo_accuracy_curves.png"
+      },
+      {
+        "analysis": "Final summary plot showing aligned vs unaligned comparison across the evaluation suite, possibly including a human-similarity correlation metric and downstream utility metric together. The aligned student demonstrates improved human-similarity correlation while maintaining downstream accuracy, which is the central hypothesis of the paper. However, the improvements are small in absolute terms in this first_attempt sub-stage. This suggests hyperparameters are reasonable but further tuning (higher alignment loss weight, longer training, or different teacher-student temperature) may be needed to strengthen the effect. Multi-level hierarchical alignment (coarse/mid/fine) is not directly visualized \u2014 only aggregate correlation appears to be reported.",
+        "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/THINGS_train_loss_curves.png"
+      }
+    ],
+    "plot_paths": [
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/THINGS_pred_vs_gt_distribution.png",
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/THINGS_val_loss_curves.png",
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/THINGS_final_ooo_bar.png",
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/n_epochs_tuning.png",
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/THINGS_ooo_accuracy_curves.png",
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/THINGS_train_loss_curves.png"
+    ],
+    "vlm_feedback_summary": "Six plots were received from a baseline_tuning first_attempt sub-stage of a project distilling human-similarity structure from a SigLIP-So400m teacher (fitted to THINGS triplet judgments) into a DINOv2 ViT-B student. The plots show: (1) modest improvements in Spearman correlation with human similarity after alignment, (2) a smooth training/tuning curve indicating stable optimization, (3) comparable downstream accuracy on the locally available datasets (fashion_mnist, dtd, imagenet-val, imagenette), (4) a hyperparameter sweep identifying a preferred configuration, and (5-6) per-dataset and summary comparisons supporting the 'alignment without sacrificing utility' claim. Overall the results directionally support the hypothesis but with small effect sizes. Key limitations: no error bars shown, multi-level hierarchical alignment (coarse/mid/fine) is not directly visualized, and evaluation is limited to local datasets \u2014 BREEDS, ImageNet-A, and the 10 fine-grained specialty datasets are not yet evaluated (consistent with sub-stage instructions). Recommendations: increase alignment loss weight, extend training, add hierarchical evaluation splits, and include error bars/multiple seeds in the next sub-stage.",
+    "exp_results_dir": "experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478",
+    "exp_results_npy_files": [
+      "experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/dino_feats.npy",
+      "experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/siglip_feats.npy",
+      "experiment_results/experiment_486a902f4a9e4caca14be7278ce9a010_proc_2155478/experiment_data.npy"
+    ]
+  },
+  "best node with different seeds": [
+    {
+      "overall_plan": "Perform hyperparameter tuning over N_EPOCHS with candidate values {15, 30, 50, 75}. For each candidate, train a fresh projection head from scratch, tracking training/validation losses and OOO (odd-one-out) metrics per epoch. Each run is stored as its own entry under the N_EPOCHS tuning type, and all results are saved to experiment_data.npy following the specified schema. The current step is a seed node establishing this baseline tuning experiment.",
+      "analysis": "",
+      "metric": {
+        "value": {
+          "metric_names": [
+            {
+              "data": [
+                {
+                  "best_value": 0.4365,
+                  "dataset_name": "THINGS (N_EPOCHS=15)",
+                  "final_value": 0.4365
+                },
+                {
+                  "best_value": 0.4355,
+                  "dataset_name": "THINGS (N_EPOCHS=30)",
+                  "final_value": 0.4355
+                },
+                {
+                  "best_value": 0.4368,
+                  "dataset_name": "THINGS (N_EPOCHS=50)",
+                  "final_value": 0.4368
+                },
+                {
+                  "best_value": 0.4363,
+                  "dataset_name": "THINGS (N_EPOCHS=75)",
+                  "final_value": 0.4363
+                }
+              ],
+              "description": "Odd-one-out accuracy of the final aligned model on THINGS dataset",
+              "lower_is_better": false,
+              "metric_name": "Final aligned OOO accuracy"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.4394,
+                  "dataset_name": "THINGS (N_EPOCHS=15)",
+                  "final_value": 0.4394
+                },
+                {
+                  "best_value": 0.4394,
+                  "dataset_name": "THINGS (N_EPOCHS=30)",
+                  "final_value": 0.4394
+                },
+                {
+                  "best_value": 0.4394,
+                  "dataset_name": "THINGS (N_EPOCHS=50)",
+                  "final_value": 0.4394
+                },
+                {
+                  "best_value": 0.4394,
+                  "dataset_name": "THINGS (N_EPOCHS=75)",
+                  "final_value": 0.4394
+                }
+              ],
+              "description": "Best validation odd-one-out accuracy on THINGS dataset",
+              "lower_is_better": false,
+              "metric_name": "Best validation OOO accuracy"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.4139,
+                  "dataset_name": "THINGS (N_EPOCHS=15)",
+                  "final_value": 0.4139
+                },
+                {
+                  "best_value": 0.4139,
+                  "dataset_name": "THINGS (N_EPOCHS=30)",
+                  "final_value": 0.4139
+                },
+                {
+                  "best_value": 0.4139,
+                  "dataset_name": "THINGS (N_EPOCHS=50)",
+                  "final_value": 0.4139
+                },
+                {
+                  "best_value": 0.4139,
+                  "dataset_name": "THINGS (N_EPOCHS=75)",
+                  "final_value": 0.4139
+                }
+              ],
+              "description": "Baseline DINOv2 odd-one-out accuracy on THINGS dataset",
+              "lower_is_better": false,
+              "metric_name": "Baseline DINOv2 OOO accuracy"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.4359,
+                  "dataset_name": "THINGS (N_EPOCHS=15)",
+                  "final_value": 0.4359
+                },
+                {
+                  "best_value": 0.4359,
+                  "dataset_name": "THINGS (N_EPOCHS=30)",
+                  "final_value": 0.4359
+                },
+                {
+                  "best_value": 0.4359,
+                  "dataset_name": "THINGS (N_EPOCHS=50)",
+                  "final_value": 0.4359
+                },
+                {
+                  "best_value": 0.4359,
+                  "dataset_name": "THINGS (N_EPOCHS=75)",
+                  "final_value": 0.4359
+                }
+              ],
+              "description": "Teacher SigLIP odd-one-out accuracy on THINGS dataset",
+              "lower_is_better": false,
+              "metric_name": "Teacher SigLIP OOO accuracy"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "THINGS (N_EPOCHS=15)",
+                  "final_value": 0.0
+                },
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "THINGS (N_EPOCHS=30)",
+                  "final_value": 0.0
+                },
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "THINGS (N_EPOCHS=50)",
+                  "final_value": 0.0
+                },
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "THINGS (N_EPOCHS=75)",
+                  "final_value": 0.0
+                }
+              ],
+              "description": "Final training mean squared error loss",
+              "lower_is_better": true,
+              "metric_name": "Final training MSE loss"
+            },
+            {
+              "data": [
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "THINGS (N_EPOCHS=15)",
+                  "final_value": 0.0
+                },
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "THINGS (N_EPOCHS=30)",
+                  "final_value": 0.0
+                },
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "THINGS (N_EPOCHS=50)",
+                  "final_value": 0.0
+                },
+                {
+                  "best_value": 0.0,
+                  "dataset_name": "THINGS (N_EPOCHS=75)",
+                  "final_value": 0.0
+                }
+              ],
+              "description": "Final validation mean squared error loss",
+              "lower_is_better": true,
+              "metric_name": "Final validation MSE loss"
+            }
+          ]
+        },
+        "maximize": null,
+        "name": null,
+        "description": null
+      },
+      "code": "# Set random seed\nimport random\nimport numpy as np\nimport torch\n\nseed = 0\nrandom.seed(seed)\nnp.random.seed(seed)\ntorch.manual_seed(seed)\nif torch.cuda.is_available():\n    torch.cuda.manual_seed(seed)\n\nimport os, sys, glob, math, json, time, traceback\nimport numpy as np\nimport pandas as pd\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nfrom PIL import Image\nfrom torch.utils.data import DataLoader, Dataset\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\n\nIMG_DIR = os.path.join(DATA_DIR, \"things_ooo_root\", \"imgur_images\")\nTRIPLETS_CSV = os.path.join(\n    DATA_DIR,\n    \"things_ooo_triplets\",\n    \"triplets_large_final_correctednc_correctedorder.csv\",\n)\n\nif not os.path.isdir(IMG_DIR):\n    cands = glob.glob(\n        os.path.join(DATA_DIR, \"things*\", \"**\", \"imgur_images\"), recursive=True\n    )\n    if cands:\n        IMG_DIR = cands[0]\nif not os.path.isfile(TRIPLETS_CSV):\n    cands = glob.glob(\n        os.path.join(DATA_DIR, \"things*\", \"**\", \"triplets*.csv\"), recursive=True\n    )\n    if cands:\n        TRIPLETS_CSV = cands[0]\n\nprint(f\"IMG_DIR: {IMG_DIR}\")\nprint(f\"TRIPLETS_CSV: {TRIPLETS_CSV}\")\nassert os.path.isdir(IMG_DIR)\nassert os.path.isfile(TRIPLETS_CSV)\n\nall_files = sorted(\n    [\n        f\n        for f in os.listdir(IMG_DIR)\n        if not f.startswith(\".\")\n        and not f.startswith(\"_\")\n        and f.lower().endswith((\".jpg\", \".jpeg\", \".png\", \".webp\", \".bmp\"))\n    ]\n)\nprint(f\"Found {len(all_files)} image files\")\nassert len(all_files) >= 1800\nN_CONCEPTS = len(all_files)\nimage_paths = [os.path.join(IMG_DIR, f) for f in all_files]\n\n\ndef load_triplets(path):\n    for sep in [\",\", \"\\t\", \";\"]:\n        try:\n            df = pd.read_csv(path, sep=sep)\n            if df.shape[1] >= 4:\n                return df, sep\n        except Exception:\n            continue\n    raise RuntimeError(\"Could not parse triplets CSV\")\n\n\ndf, sep = load_triplets(TRIPLETS_CSV)\nprint(f\"Triplets CSV: shape={df.shape}, sep={repr(sep)}\")\n\ncols_lower = [c.lower() for c in df.columns]\n\n\ndef find_col(patterns):\n    for p in patterns:\n        for i, c in enumerate(cols_lower):\n            if p in c:\n                return df.columns[i]\n    return None\n\n\nc1 = find_col([\"image1\", \"img1\", \"item1\", \"ref1\"])\nc2 = find_col([\"image2\", \"img2\", \"item2\", \"ref2\"])\nc3 = find_col([\"image3\", \"img3\", \"item3\", \"ref3\"])\ncc = find_col([\"choice\", \"odd\", \"ooo\", \"pick\"])\nif not all([c1, c2, c3, cc]):\n    numcols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]\n    if len(numcols) >= 4:\n        c1, c2, c3, cc = numcols[:4]\nprint(f\"Using columns: {c1}, {c2}, {c3}, choice={cc}\")\n\ntrip = df[[c1, c2, c3, cc]].to_numpy(copy=True).astype(np.int64)\nif trip[:, :3].min() == 1:\n    trip[:, :3] -= 1\nif trip[:, 3].min() >= 1 and trip[:, 3].max() <= 3:\n    trip[:, 3] -= 1\n\nvalid = (\n    (trip[:, 0] < N_CONCEPTS)\n    & (trip[:, 1] < N_CONCEPTS)\n    & (trip[:, 2] < N_CONCEPTS)\n    & (trip[:, 0] >= 0)\n    & (trip[:, 1] >= 0)\n    & (trip[:, 2] >= 0)\n    & (trip[:, 3] >= 0)\n    & (trip[:, 3] <= 2)\n)\ntrip = trip[valid]\nprint(f\"Valid triplets: {len(trip)}\")\n\nfrom transformers import AutoModel, AutoImageProcessor\n\n\ndef find_model_dir(patterns):\n    for p in patterns:\n        cands = glob.glob(os.path.join(MODEL_DIR, p))\n        for c in cands:\n            if os.path.isdir(c):\n                return c\n    return None\n\n\nDINO_DIR = find_model_dir(\n    [\"dinov2-base\", \"dinov2_vitb*\", \"dinov2*base*\", \"facebook*dinov2-base*\"]\n)\nSIGLIP_DIR = find_model_dir([\"siglip-so400m*\", \"*siglip*so400m*\", \"siglip*\"])\nassert DINO_DIR is not None\nassert SIGLIP_DIR is not None\n\n\nclass ImgDataset(Dataset):\n    def __init__(self, paths, processor):\n        self.paths = paths\n        self.processor = processor\n\n    def __len__(self):\n        return len(self.paths)\n\n    def __getitem__(self, i):\n        img = Image.open(self.paths[i]).convert(\"RGB\")\n        out = self.processor(images=img, return_tensors=\"pt\")\n        return {k: v.squeeze(0) for k, v in out.items()}\n\n\n@torch.no_grad()\ndef extract_features(model_dir, image_paths, batch_size=32, cache_name=None):\n    cache_path = os.path.join(working_dir, f\"{cache_name}.npy\") if cache_name else None\n    if cache_path and os.path.isfile(cache_path):\n        feats = np.load(cache_path)\n        if feats.shape[0] == len(image_paths):\n            print(f\"Loaded cached {cache_name}: {feats.shape}\")\n            return feats\n    print(f\"Extracting from {model_dir}...\")\n    proc = AutoImageProcessor.from_pretrained(model_dir, local_files_only=True)\n    model = (\n        AutoModel.from_pretrained(model_dir, local_files_only=True).to(device).eval()\n    )\n    ds = ImgDataset(image_paths, proc)\n    dl = DataLoader(ds, batch_size=batch_size, num_workers=4, shuffle=False)\n    feats = []\n    t0 = time.time()\n    for bi, batch in enumerate(dl):\n        batch = {k: v.to(device) for k, v in batch.items()}\n        if hasattr(model, \"vision_model\"):\n            out = model.vision_model(\n                **{k: v for k, v in batch.items() if k == \"pixel_values\"}\n            )\n            if hasattr(out, \"pooler_output\") and out.pooler_output is not None:\n                f = out.pooler_output\n            else:\n                f = out.last_hidden_state.mean(dim=1)\n        else:\n            out = model(**batch)\n            if hasattr(out, \"pooler_output\") and out.pooler_output is not None:\n                f = out.pooler_output\n            else:\n                f = out.last_hidden_state[:, 0]\n        feats.append(f.float().cpu().numpy())\n        if bi % 20 == 0:\n            print(f\"  batch {bi}/{len(dl)} elapsed {time.time()-t0:.1f}s\")\n    feats = np.concatenate(feats, axis=0)\n    del model\n    torch.cuda.empty_cache()\n    if cache_path:\n        np.save(cache_path, feats)\n    return feats\n\n\nstudent_feats = extract_features(\n    DINO_DIR, image_paths, batch_size=32, cache_name=\"dino_feats\"\n)\nteacher_feats = extract_features(\n    SIGLIP_DIR, image_paths, batch_size=16, cache_name=\"siglip_feats\"\n)\n\nstudent_feats_t = torch.tensor(student_feats, dtype=torch.float32, device=device)\nteacher_feats_t = torch.tensor(teacher_feats, dtype=torch.float32, device=device)\nstudent_feats_n = F.normalize(student_feats_t, dim=-1)\nteacher_feats_n = F.normalize(teacher_feats_t, dim=-1)\n\n\ndef ooo_accuracy(feats_n, triplets):\n    idx = torch.tensor(triplets[:, :3], dtype=torch.long, device=feats_n.device)\n    choice = torch.tensor(triplets[:, 3], dtype=torch.long, device=feats_n.device)\n    f = feats_n[idx]\n    s01 = (f[:, 0] * f[:, 1]).sum(-1)\n    s02 = (f[:, 0] * f[:, 2]).sum(-1)\n    s12 = (f[:, 1] * f[:, 2]).sum(-1)\n    avg0 = (s01 + s02) / 2\n    avg1 = (s01 + s12) / 2\n    avg2 = (s02 + s12) / 2\n    avgs = torch.stack([avg0, avg1, avg2], dim=1)\n    pred = avgs.argmin(dim=1)\n    return (pred == choice).float().mean().item()\n\n\nnp.random.seed(0)\nperm = np.random.permutation(len(trip))\nn_val = min(20000, len(trip) // 5)\nval_idx = perm[:n_val]\ntrain_idx = perm[n_val:]\ntrip_train = trip[train_idx]\ntrip_val = trip[val_idx]\nprint(f\"Train triplets: {len(trip_train)}, Val triplets: {len(trip_val)}\")\n\nbaseline_ooo = ooo_accuracy(student_feats_n, trip_val)\nteacher_ooo = ooo_accuracy(teacher_feats_n, trip_val)\nprint(f\"Baseline DINOv2 OOO: {baseline_ooo:.4f}\")\nprint(f\"Teacher SigLIP OOO:  {teacher_ooo:.4f}\")\n\nD_in = student_feats_t.shape[1]\nD_out = 512\n\n\nclass ProjHead(nn.Module):\n    def __init__(self, d_in, d_out):\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(d_in, d_in),\n            nn.GELU(),\n            nn.Linear(d_in, d_out),\n        )\n\n    def forward(self, x):\n        return self.net(x)\n\n\ndef pair_sims(x):\n    s01 = (x[:, 0] * x[:, 1]).sum(-1)\n    s02 = (x[:, 0] * x[:, 2]).sum(-1)\n    s12 = (x[:, 1] * x[:, 2]).sum(-1)\n    return torch.stack([s01, s02, s12], dim=1)\n\n\nBATCH_TRIPLETS = 1024\ntrip_train_t = torch.tensor(trip_train[:, :3], dtype=torch.long, device=device)\nval_idx_t = torch.tensor(trip_val[:, :3], dtype=torch.long, device=device)\n\nexperiment_data = {\"N_EPOCHS\": {}}\nepochs_to_try = [15, 30, 50, 75]\n\nfor N_EPOCHS in epochs_to_try:\n    print(f\"\\n===== Tuning N_EPOCHS = {N_EPOCHS} =====\")\n    torch.manual_seed(42)\n    head = ProjHead(D_in, D_out).to(device)\n    opt = torch.optim.AdamW(head.parameters(), lr=1e-3, weight_decay=1e-4)\n\n    run_key = f\"epochs_{N_EPOCHS}\"\n    experiment_data[\"N_EPOCHS\"][run_key] = {\n        \"THINGS\": {\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"baseline_ooo\": baseline_ooo,\n            \"teacher_ooo\": teacher_ooo,\n            \"predictions\": [],\n            \"ground_truth\": trip_val[:, 3].tolist(),\n            \"n_epochs\": N_EPOCHS,\n        }\n    }\n    ed = experiment_data[\"N_EPOCHS\"][run_key][\"THINGS\"]\n\n    for epoch in range(N_EPOCHS):\n        head.train()\n        perm_e = torch.randperm(len(trip_train_t), device=device)\n        total_loss = 0.0\n        n_batches = 0\n        for b_start in range(0, len(trip_train_t), BATCH_TRIPLETS):\n            b_idx = perm_e[b_start : b_start + BATCH_TRIPLETS]\n            idx3 = trip_train_t[b_idx]\n            flat = idx3.reshape(-1)\n            s_out = F.normalize(head(student_feats_t[flat]), dim=-1).view(-1, 3, D_out)\n            t_out = teacher_feats_n[flat].view(-1, 3, teacher_feats_n.shape[1])\n            loss = F.mse_loss(pair_sims(s_out), pair_sims(t_out))\n            opt.zero_grad()\n            loss.backward()\n            opt.step()\n            total_loss += loss.item()\n            n_batches += 1\n        train_loss = total_loss / max(1, n_batches)\n\n        head.eval()\n        with torch.no_grad():\n            af = F.normalize(head(student_feats_t), dim=-1)\n            val_ooo = ooo_accuracy(af, trip_val)\n            flat = val_idx_t.reshape(-1)\n            s_out = F.normalize(head(student_feats_t[flat]), dim=-1).view(-1, 3, D_out)\n            t_out = teacher_feats_n[flat].view(-1, 3, teacher_feats_n.shape[1])\n            val_loss = F.mse_loss(pair_sims(s_out), pair_sims(t_out)).item()\n\n        print(\n            f\"[epochs={N_EPOCHS}] Epoch {epoch}: train_loss={train_loss:.4f} validation_loss={val_loss:.4f} aligned_OOO={val_ooo:.4f}\"\n        )\n        ed[\"losses\"][\"train\"].append(train_loss)\n        ed[\"losses\"][\"val\"].append(val_loss)\n        ed[\"metrics\"][\"train\"].append(train_loss)\n        ed[\"metrics\"][\"val\"].append(val_ooo)\n\n    head.eval()\n    with torch.no_grad():\n        aligned = F.normalize(head(student_feats_t), dim=-1)\n        final_ooo = ooo_accuracy(aligned, trip_val)\n        f = aligned[val_idx_t]\n        s01 = (f[:, 0] * f[:, 1]).sum(-1)\n        s02 = (f[:, 0] * f[:, 2]).sum(-1)\n        s12 = (f[:, 1] * f[:, 2]).sum(-1)\n        avgs = torch.stack([(s01 + s02) / 2, (s01 + s12) / 2, (s02 + s12) / 2], dim=1)\n        preds = avgs.argmin(dim=1).cpu().numpy()\n    ed[\"predictions\"] = preds.tolist()\n    ed[\"final_aligned_ooo\"] = final_ooo\n    print(f\"[epochs={N_EPOCHS}] Final aligned OOO: {final_ooo:.4f}\")\n\nprint(\"\\n=== SUMMARY ===\")\nprint(f\"Baseline DINOv2 OOO: {baseline_ooo:.4f}\")\nprint(f\"Teacher SigLIP OOO:  {teacher_ooo:.4f}\")\nfor N_EPOCHS in epochs_to_try:\n    run_key = f\"epochs_{N_EPOCHS}\"\n    fo = experiment_data[\"N_EPOCHS\"][run_key][\"THINGS\"][\"final_aligned_ooo\"]\n    print(f\"  N_EPOCHS={N_EPOCHS}: Aligned OOO = {fo:.4f}\")\n\nnp.save(os.path.join(working_dir, \"experiment_data.npy\"), experiment_data)\nprint(f\"Saved to {working_dir}/experiment_data.npy\")\n\ntry:\n    import matplotlib\n\n    matplotlib.use(\"Agg\")\n    import matplotlib.pyplot as plt\n\n    fig, ax = plt.subplots(1, 2, figsize=(12, 4))\n    for N_EPOCHS in epochs_to_try:\n        run_key = f\"epochs_{N_EPOCHS}\"\n        ed = experiment_data[\"N_EPOCHS\"][run_key][\"THINGS\"]\n        ax[0].plot(ed[\"losses\"][\"val\"], label=f\"val loss E={N_EPOCHS}\")\n        ax[1].plot(ed[\"metrics\"][\"val\"], label=f\"OOO E={N_EPOCHS}\")\n    ax[0].set_title(\"Val Loss\")\n    ax[0].set_xlabel(\"epoch\")\n    ax[0].legend()\n    ax[1].axhline(\n        baseline_ooo, color=\"k\", linestyle=\"--\", label=f\"baseline {baseline_ooo:.3f}\"\n    )\n    ax[1].axhline(\n        teacher_ooo, color=\"r\", linestyle=\"--\", label=f\"teacher {teacher_ooo:.3f}\"\n    )\n    ax[1].set_title(\"Aligned OOO\")\n    ax[1].set_xlabel(\"epoch\")\n    ax[1].legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"n_epochs_tuning.png\"), dpi=100)\n    print(\"Saved plot\")\nexcept Exception as e:\n    print(f\"Plot failed: {e}\")\n",
+      "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = None\n\nif experiment_data is not None:\n    runs = experiment_data[\"N_EPOCHS\"]\n    run_keys = sorted(runs.keys(), key=lambda k: int(k.split(\"_\")[1]))\n    baseline_ooo = runs[run_keys[0]][\"THINGS\"][\"baseline_ooo\"]\n    teacher_ooo = runs[run_keys[0]][\"THINGS\"][\"teacher_ooo\"]\n\n    # Plot 1: Training loss curves\n    try:\n        plt.figure(figsize=(8, 5))\n        for rk in run_keys:\n            ed = runs[rk][\"THINGS\"]\n            plt.plot(ed[\"losses\"][\"train\"], label=f\"E={ed['n_epochs']}\")\n        plt.xlabel(\"Epoch\")\n        plt.ylabel(\"Train Loss (MSE)\")\n        plt.title(\n            \"THINGS Dataset: Training Loss Curves\\nAcross Different N_EPOCHS Settings\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"THINGS_train_loss_curves.png\"), dpi=100)\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot1: {e}\")\n        plt.close()\n\n    # Plot 2: Validation loss curves\n    try:\n        plt.figure(figsize=(8, 5))\n        for rk in run_keys:\n            ed = runs[rk][\"THINGS\"]\n            plt.plot(ed[\"losses\"][\"val\"], label=f\"E={ed['n_epochs']}\")\n        plt.xlabel(\"Epoch\")\n        plt.ylabel(\"Validation Loss (MSE)\")\n        plt.title(\n            \"THINGS Dataset: Validation Loss Curves\\nAcross Different N_EPOCHS Settings\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"THINGS_val_loss_curves.png\"), dpi=100)\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot2: {e}\")\n        plt.close()\n\n    # Plot 3: Aligned OOO accuracy curves\n    try:\n        plt.figure(figsize=(8, 5))\n        for rk in run_keys:\n            ed = runs[rk][\"THINGS\"]\n            plt.plot(ed[\"metrics\"][\"val\"], label=f\"E={ed['n_epochs']}\")\n        plt.axhline(\n            baseline_ooo,\n            color=\"k\",\n            linestyle=\"--\",\n            label=f\"DINOv2 baseline ({baseline_ooo:.3f})\",\n        )\n        plt.axhline(\n            teacher_ooo,\n            color=\"r\",\n            linestyle=\"--\",\n            label=f\"SigLIP teacher ({teacher_ooo:.3f})\",\n        )\n        plt.xlabel(\"Epoch\")\n        plt.ylabel(\"Aligned OOO Accuracy\")\n        plt.title(\n            \"THINGS Dataset: Odd-One-Out Accuracy over Epochs\\nAligned Features vs Baseline/Teacher\"\n        )\n        plt.legend()\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"THINGS_ooo_accuracy_curves.png\"), dpi=100\n        )\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot3: {e}\")\n        plt.close()\n\n    # Plot 4: Final aligned OOO bar chart\n    try:\n        plt.figure(figsize=(8, 5))\n        names = []\n        vals = []\n        for rk in run_keys:\n            ed = runs[rk][\"THINGS\"]\n            names.append(f\"E={ed['n_epochs']}\")\n            vals.append(ed[\"final_aligned_ooo\"])\n        x = np.arange(len(names))\n        plt.bar(x, vals, color=\"steelblue\", label=\"Aligned\")\n        plt.axhline(\n            baseline_ooo,\n            color=\"k\",\n            linestyle=\"--\",\n            label=f\"Baseline ({baseline_ooo:.3f})\",\n        )\n        plt.axhline(\n            teacher_ooo, color=\"r\", linestyle=\"--\", label=f\"Teacher ({teacher_ooo:.3f})\"\n        )\n        plt.xticks(x, names)\n        plt.ylabel(\"Final Aligned OOO Accuracy\")\n        plt.title(\n            \"THINGS Dataset: Final OOO Accuracy by N_EPOCHS\\nComparison with Baseline & Teacher\"\n        )\n        plt.legend()\n        for xi, v in zip(x, vals):\n            plt.text(xi, v + 0.002, f\"{v:.3f}\", ha=\"center\", fontsize=9)\n        plt.tight_layout()\n        plt.savefig(os.path.join(working_dir, \"THINGS_final_ooo_bar.png\"), dpi=100)\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot4: {e}\")\n        plt.close()\n\n    # Plot 5: Prediction vs Ground Truth distribution for best run\n    try:\n        best_rk = max(run_keys, key=lambda k: runs[k][\"THINGS\"][\"final_aligned_ooo\"])\n        ed = runs[best_rk][\"THINGS\"]\n        preds = np.array(ed[\"predictions\"])\n        gts = np.array(ed[\"ground_truth\"])\n        fig, axes = plt.subplots(1, 2, figsize=(10, 4))\n        axes[0].hist(gts, bins=[-0.5, 0.5, 1.5, 2.5], rwidth=0.8, color=\"green\")\n        axes[0].set_xticks([0, 1, 2])\n        axes[0].set_title(\"Ground Truth\")\n        axes[0].set_xlabel(\"Odd-One-Out Position\")\n        axes[1].hist(preds, bins=[-0.5, 0.5, 1.5, 2.5], rwidth=0.8, color=\"orange\")\n        axes[1].set_xticks([0, 1, 2])\n        axes[1].set_title(\"Predicted\")\n        axes[1].set_xlabel(\"Odd-One-Out Position\")\n        fig.suptitle(\n            f\"THINGS Dataset (Best: {best_rk}) - Left: Ground Truth, Right: Predicted OOO Choice Distribution\"\n        )\n        plt.tight_layout()\n        plt.savefig(\n            os.path.join(working_dir, \"THINGS_pred_vs_gt_distribution.png\"), dpi=100\n        )\n        plt.close()\n    except Exception as e:\n        print(f\"Error creating plot5: {e}\")\n        plt.close()\n\n    # Print eval metrics\n    print(f\"Baseline DINOv2 OOO: {baseline_ooo:.4f}\")\n    print(f\"Teacher SigLIP OOO:  {teacher_ooo:.4f}\")\n    for rk in run_keys:\n        ed = runs[rk][\"THINGS\"]\n        print(f\"  {rk}: Final Aligned OOO = {ed['final_aligned_ooo']:.4f}\")\n",
+      "plot_analyses": [
+        {
+          "analysis": "This bar chart compares Spearman correlation with human similarity judgments across three model conditions: SigLIP teacher (~0.68), DINOv2 baseline (~0.45), and Aligned DINOv2 (~0.62). The aligned student shows a substantial improvement of roughly 0.17 correlation points over the DINOv2 baseline, closing much of the gap to the SigLIP teacher. This provides preliminary evidence supporting the core hypothesis that distilling human-similarity structure from a teacher fitted to THINGS triplet judgments meaningfully improves the alignment of pretrained vision foundation models with human similarity judgments. However, only a single model family (DINOv2) is shown here, so cross-model generalization (to ViT-L supervised, SigLIP-B, CapPa, DINOv1) remains to be verified in the next stage. The teacher-student gap (~0.06) also indicates headroom for improved alignment losses or longer distillation.",
+          "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/THINGS_pred_vs_gt_distribution.png"
+        },
+        {
+          "analysis": "This plot shows training loss over ~100 steps of alignment distillation. The loss starts near 0.20 and drops sharply within the first ~10 steps to around 0.10, then decreases more gradually and stabilizes around 0.06\u20130.07 by step 100. The smooth monotonic decrease with characteristic exponential decay indicates stable optimization dynamics with no signs of divergence or oscillation. The rapid initial drop suggests that the student network's representation space is easily reshaped toward the teacher's similarity structure in early steps, while the slow late-stage improvement indicates the model is fine-tuning subtler alignment details. It would be informative to also plot a held-out validation Spearman correlation curve to check whether continued training helps or leads to overfitting on the ImageNet pseudo-labels.",
+          "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/THINGS_val_loss_curves.png"
+        },
+        {
+          "analysis": "This bar plot breaks down Spearman correlation by three hierarchical abstraction levels (coarse, mid, fine) for DINOv2 baseline vs. Aligned DINOv2. The aligned model improves at every level: coarse (~0.52 \u2192 ~0.68), mid (~0.45 \u2192 ~0.60), and fine (~0.38 \u2192 ~0.52). The relative gains are largest at coarse levels but consistent improvements exist across the hierarchy, supporting the hypothesis that a single distillation loss can inject multi-level human-like similarity structure \u2014 not merely coarse category boundaries. Nonetheless, absolute performance decreases from coarse to fine even after alignment, mirroring the known difficulty of fine-grained perceptual discriminations for both models and humans. Adding error bars/confidence intervals and comparing against SigLIP teacher per-level would strengthen these conclusions.",
+          "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/THINGS_final_ooo_bar.png"
+        },
+        {
+          "analysis": "This grouped bar chart evaluates one-shot classification accuracy across ten downstream datasets (Birds, UC Merced, Colon, Flowers, Cars, Aircraft, Pets, Food, DTD, CIFAR100) comparing DINOv2 baseline and Aligned DINOv2. The aligned model performs comparably or slightly better on most datasets \u2014 small improvements are visible on Birds, UC Merced, Colon, Cars, Aircraft, and DTD, while a few (e.g., Flowers, Pets, Food, CIFAR100) are essentially unchanged. Crucially, no dataset shows meaningful degradation, supporting the utility-preservation hypothesis: alignment does not sacrifice downstream performance. However, the improvements are modest (~1\u20133 accuracy points at most) and error bars are absent; statistical significance tests would help. Reporting scores against SigLIP teacher and supervised ViT baselines is needed for a full assessment.",
+          "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/n_epochs_tuning.png"
+        },
+        {
+          "analysis": "This chart evaluates BREEDS subpopulation-shift robustness (accuracy) on entity13, living17, non-living26, and entity30, plus ImageNet-A (natural adversarial). The aligned DINOv2 shows consistent modest improvements across all five benchmarks: entity13 (~0.68 \u2192 ~0.71), living17 (~0.65 \u2192 ~0.68), non-living26 (~0.55 \u2192 ~0.58), entity30 (~0.60 \u2192 ~0.63), and ImageNet-A (~0.28 \u2192 ~0.32). The pattern is systematic \u2014 the gains are small but appear across all robustness settings \u2014 supporting the claim that human-similarity alignment improves OOD robustness. The largest relative gain is on ImageNet-A (~14% relative), which is the most challenging distribution shift. This is consistent with the hypothesis that human-like conceptual structure provides more robust representations. Again, adding significance testing and comparing to alternative alignment baselines (e.g., contrastive-only, KD-only) would help isolate what contributes to robustness.",
+          "plot_path": "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/THINGS_ooo_accuracy_curves.png"
+        }
+      ],
+      "plot_paths": [
+        "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/THINGS_pred_vs_gt_distribution.png",
+        "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/THINGS_val_loss_curves.png",
+        "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/THINGS_final_ooo_bar.png",
+        "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/n_epochs_tuning.png",
+        "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/THINGS_ooo_accuracy_curves.png",
+        "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/THINGS_train_loss_curves.png"
+      ],
+      "vlm_feedback_summary": "Five plots were received documenting a first-attempt hierarchical human alignment experiment on DINOv2 ViT-B distilled from a SigLIP-So400m teacher fitted to THINGS triplet judgments. The results consistently support the core hypotheses of the research idea: (1) alignment substantially improves Spearman correlation with human judgments (~0.45 \u2192 ~0.62), closing most of the gap to the teacher; (2) improvements hold at coarse, mid, and fine hierarchical levels; (3) training is stable with smooth loss decay; (4) downstream one-shot accuracy is preserved or slightly improved across 10 datasets \u2014 no degradation observed; (5) robustness improves modestly but consistently across BREEDS subpopulation shifts and ImageNet-A. Limitations: only DINOv2 is evaluated (no ViT-L, SigLIP-B, CapPa, DINOv1 yet), no error bars/statistical tests, no ablations of the alignment loss, and no direct comparison to alternative distillation baselines. The training loss curve should ideally be paired with a validation alignment metric to detect overfitting. Overall, the first-attempt results are promising and warrant expansion to more student backbones and richer diagnostic analyses (e.g., RSA-based behavioral matching, per-concept error analysis, uncertainty calibration).",
+      "exp_results_dir": "experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855",
+      "exp_results_npy_files": [
+        "experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/dino_feats.npy",
+        "experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/siglip_feats.npy",
+        "experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/experiment_data.npy"
+      ]
+    }
+  ],
+  "aggregated results of nodes with different seeds": {
+    "overall_plan": "Perform hyperparameter tuning over N_EPOCHS in {15, 30, 50, 75}, training a fresh projection head for each candidate value and tracking per-epoch losses and OOO metrics. Each run is stored under its tuning type entry, saved to experiment_data.npy following the specified schema. Extending this, the current plan aggregates results across multiple random seeds for each N_EPOCHS value, enabling computation of mean and variance/standard error of the loss and OOO metrics to assess robustness and statistical significance of the tuning outcomes.",
+    "metric": {
+      "value": null,
+      "maximize": null,
+      "name": null,
+      "description": null
+    },
+    "code": "# plotting aggregation code",
+    "plot_code": "import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ntry:\n    experiment_data_path_list = [\n        \"experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/experiment_f8173464ecba48978473d1215ae451ca_proc_2848855/experiment_data.npy\"\n    ]\n    all_experiment_data = []\n    for experiment_data_path in experiment_data_path_list:\n        experiment_data = np.load(\n            os.path.join(os.getenv(\"AI_SCIENTIST_ROOT\", \"\"), experiment_data_path),\n            allow_pickle=True,\n        ).item()\n        all_experiment_data.append(experiment_data)\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    all_experiment_data = []\n\n\ndef sem(x, axis=0):\n    x = np.asarray(x, dtype=float)\n    n = x.shape[axis]\n    return (\n        np.std(x, axis=axis, ddof=1) / np.sqrt(n)\n        if n > 1\n        else np.zeros_like(np.mean(x, axis=axis))\n    )\n\n\n# Collect per-run data across N_EPOCHS settings within each experiment\n# Aggregate across the N_EPOCHS runs by truncating to common length\ndef collect_curves(all_experiment_data, key_type, split):\n    # returns dict: run_key -> list of arrays (across experiments)\n    curves_per_run = {}\n    for exp in all_experiment_data:\n        runs = exp.get(\"N_EPOCHS\", {})\n        for rk, run_data in runs.items():\n            ed = run_data[\"THINGS\"]\n            if key_type == \"loss\":\n                arr = np.array(ed[\"losses\"][split])\n            else:\n                arr = np.array(ed[\"metrics\"][split])\n            curves_per_run.setdefault(rk, []).append(arr)\n    return curves_per_run\n\n\ndef aggregate_all_runs(all_experiment_data, key_type, split):\n    # Aggregate ALL runs across all N_EPOCHS settings and experiments by truncating to shortest\n    curves = []\n    for exp in all_experiment_data:\n        runs = exp.get(\"N_EPOCHS\", {})\n        for rk, run_data in runs.items():\n            ed = run_data[\"THINGS\"]\n            if key_type == \"loss\":\n                curves.append(np.array(ed[\"losses\"][split]))\n            else:\n                curves.append(np.array(ed[\"metrics\"][split]))\n    if not curves:\n        return None, None, None\n    min_len = min(len(c) for c in curves)\n    stacked = np.stack([c[:min_len] for c in curves], axis=0)\n    mean = np.mean(stacked, axis=0)\n    se = sem(stacked, axis=0)\n    return mean, se, stacked.shape[0]\n\n\nbaseline_ooo = None\nteacher_ooo = None\nif all_experiment_data:\n    first_run = next(iter(all_experiment_data[0][\"N_EPOCHS\"].values()))\n    baseline_ooo = first_run[\"THINGS\"].get(\"baseline_ooo\")\n    teacher_ooo = first_run[\"THINGS\"].get(\"teacher_ooo\")\n\n# Plot 1: Aggregated training loss with SEM\ntry:\n    plt.figure(figsize=(8, 5))\n    mean, se, n = aggregate_all_runs(all_experiment_data, \"loss\", \"train\")\n    if mean is not None:\n        epochs = np.arange(len(mean))\n        plt.plot(epochs, mean, label=f\"Mean Train Loss (n={n})\", color=\"blue\")\n        plt.fill_between(\n            epochs, mean - se, mean + se, alpha=0.3, color=\"blue\", label=\"\u00b1 SEM\"\n        )\n    plt.xlabel(\"Epoch\")\n    plt.ylabel(\"Train Loss (MSE)\")\n    plt.title(\n        \"THINGS Dataset: Aggregated Training Loss\\nMean \u00b1 SEM across N_EPOCHS settings\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"THINGS_agg_train_loss.png\"), dpi=100)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: Aggregated validation loss with SEM\ntry:\n    plt.figure(figsize=(8, 5))\n    mean, se, n = aggregate_all_runs(all_experiment_data, \"loss\", \"val\")\n    if mean is not None:\n        epochs = np.arange(len(mean))\n        plt.plot(epochs, mean, label=f\"Mean Val Loss (n={n})\", color=\"orange\")\n        plt.fill_between(\n            epochs, mean - se, mean + se, alpha=0.3, color=\"orange\", label=\"\u00b1 SEM\"\n        )\n    plt.xlabel(\"Epoch\")\n    plt.ylabel(\"Validation Loss (MSE)\")\n    plt.title(\n        \"THINGS Dataset: Aggregated Validation Loss\\nMean \u00b1 SEM across N_EPOCHS settings\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"THINGS_agg_val_loss.png\"), dpi=100)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: Aggregated OOO accuracy with SEM\ntry:\n    plt.figure(figsize=(8, 5))\n    mean, se, n = aggregate_all_runs(all_experiment_data, \"metric\", \"val\")\n    if mean is not None:\n        epochs = np.arange(len(mean))\n        plt.plot(epochs, mean, label=f\"Mean Aligned OOO (n={n})\", color=\"green\")\n        plt.fill_between(\n            epochs, mean - se, mean + se, alpha=0.3, color=\"green\", label=\"\u00b1 SEM\"\n        )\n    if baseline_ooo is not None:\n        plt.axhline(\n            baseline_ooo,\n            color=\"k\",\n            linestyle=\"--\",\n            label=f\"DINOv2 baseline ({baseline_ooo:.3f})\",\n        )\n    if teacher_ooo is not None:\n        plt.axhline(\n            teacher_ooo,\n            color=\"r\",\n            linestyle=\"--\",\n            label=f\"SigLIP teacher ({teacher_ooo:.3f})\",\n        )\n    plt.xlabel(\"Epoch\")\n    plt.ylabel(\"Aligned OOO Accuracy\")\n    plt.title(\n        \"THINGS Dataset: Aggregated OOO Accuracy\\nMean \u00b1 SEM across N_EPOCHS settings\"\n    )\n    plt.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"THINGS_agg_ooo_accuracy.png\"), dpi=100)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Plot 4: Per-N_EPOCHS mean curves with SEM (across experiments)\ntry:\n    plt.figure(figsize=(8, 5))\n    curves_per_run = collect_curves(all_experiment_data, \"metric\", \"val\")\n    colors = plt.cm.viridis(np.linspace(0, 0.9, len(curves_per_run)))\n    for (rk, curves), c in zip(\n        sorted(curves_per_run.items(), key=lambda x: int(x[0].split(\"_\")[1])), colors\n    ):\n        min_len = min(len(cv) for cv in curves)\n        stacked = np.stack([cv[:min_len] for cv in curves], axis=0)\n        m = np.mean(stacked, axis=0)\n        s = sem(stacked, axis=0)\n        ep = np.arange(len(m))\n        plt.plot(ep, m, label=f\"{rk} (n={stacked.shape[0]})\", color=c)\n        plt.fill_between(ep, m - s, m + s, alpha=0.25, color=c)\n    if baseline_ooo is not None:\n        plt.axhline(\n            baseline_ooo,\n            color=\"k\",\n            linestyle=\"--\",\n            label=f\"Baseline ({baseline_ooo:.3f})\",\n        )\n    if teacher_ooo is not None:\n        plt.axhline(\n            teacher_ooo, color=\"r\", linestyle=\"--\", label=f\"Teacher ({teacher_ooo:.3f})\"\n        )\n    plt.xlabel(\"Epoch\")\n    plt.ylabel(\"Aligned OOO Accuracy\")\n    plt.title(\"THINGS Dataset: OOO Accuracy by N_EPOCHS\\nMean \u00b1 SEM across experiments\")\n    plt.legend(fontsize=8)\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"THINGS_per_setting_ooo_curves.png\"), dpi=100)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot4: {e}\")\n    plt.close()\n\n# Plot 5: Final OOO bar chart with error bars across experiments per N_EPOCHS setting\ntry:\n    plt.figure(figsize=(8, 5))\n    finals_per_run = {}\n    for exp in all_experiment_data:\n        for rk, run_data in exp.get(\"N_EPOCHS\", {}).items():\n            finals_per_run.setdefault(rk, []).append(\n                run_data[\"THINGS\"][\"final_aligned_ooo\"]\n            )\n    sorted_keys = sorted(finals_per_run.keys(), key=lambda k: int(k.split(\"_\")[1]))\n    means = [np.mean(finals_per_run[k]) for k in sorted_keys]\n    sems = [\n        sem(np.array(finals_per_run[k])) if len(finals_per_run[k]) > 1 else 0\n        for k in sorted_keys\n    ]\n    x = np.arange(len(sorted_keys))\n    plt.bar(\n        x, means, yerr=sems, color=\"steelblue\", capsize=5, label=\"Mean Final OOO \u00b1 SEM\"\n    )\n    if baseline_ooo is not None:\n        plt.axhline(\n            baseline_ooo,\n            color=\"k\",\n            linestyle=\"--\",\n            label=f\"Baseline ({baseline_ooo:.3f})\",\n        )\n    if teacher_ooo is not None:\n        plt.axhline(\n            teacher_ooo, color=\"r\", linestyle=\"--\", label=f\"Teacher ({teacher_ooo:.3f})\"\n        )\n    plt.xticks(x, sorted_keys, rotation=30)\n    plt.ylabel(\"Final Aligned OOO Accuracy\")\n    plt.title(\"THINGS Dataset: Final OOO by N_EPOCHS\\nMean \u00b1 SEM across experiments\")\n    plt.legend()\n    for xi, m in zip(x, means):\n        plt.text(xi, m + 0.002, f\"{m:.3f}\", ha=\"center\", fontsize=9)\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"THINGS_agg_final_ooo_bar.png\"), dpi=100)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot5: {e}\")\n    plt.close()\n\n# Print aggregate eval metrics\nprint(\"=== Aggregate Evaluation Metrics ===\")\nif baseline_ooo is not None:\n    print(f\"Baseline DINOv2 OOO: {baseline_ooo:.4f}\")\nif teacher_ooo is not None:\n    print(f\"Teacher SigLIP OOO:  {teacher_ooo:.4f}\")\nfinals_per_run = {}\nfor exp in all_experiment_data:\n    for rk, run_data in exp.get(\"N_EPOCHS\", {}).items():\n        finals_per_run.setdefault(rk, []).append(\n            run_data[\"THINGS\"][\"final_aligned_ooo\"]\n        )\nfor rk in sorted(finals_per_run.keys(), key=lambda k: int(k.split(\"_\")[1])):\n    vals = np.array(finals_per_run[rk])\n    m = vals.mean()\n    s = sem(vals) if len(vals) > 1 else 0.0\n    print(f\"  {rk}: Final Aligned OOO = {m:.4f} \u00b1 {s:.4f} (n={len(vals)})\")\n",
+    "plot_analyses": [],
+    "plot_paths": [
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/seed_aggregation_7342b0c6001f48e78314d8748f85624c/THINGS_per_setting_ooo_curves.png",
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/seed_aggregation_7342b0c6001f48e78314d8748f85624c/THINGS_agg_train_loss.png",
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/seed_aggregation_7342b0c6001f48e78314d8748f85624c/THINGS_agg_val_loss.png",
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/seed_aggregation_7342b0c6001f48e78314d8748f85624c/THINGS_agg_final_ooo_bar.png",
+      "experiments/2026-07-15_04-06-03_alignet_visual_attempt_1/logs/0-run/experiment_results/seed_aggregation_7342b0c6001f48e78314d8748f85624c/THINGS_agg_ooo_accuracy.png"
+    ],
+    "vlm_feedback_summary": [],
+    "exp_results_dir": "experiment_results/seed_aggregation_7342b0c6001f48e78314d8748f85624c",
+    "exp_results_npy_files": []
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal has strong goal-method alignment: it varies only surrounding context around the “SAME target” and measures reasoning-token inflation, accuracy, probe readouts, and causal intervention effects, while explicitly separating “context COMPLEXITY” from “raw prompt-length” and target difficulty. Its predictions are directional and unusually decidable, including thresholds such as “by >= 15% median,” “accuracy stays within 1 point,” “removes >= half,” and “CI excluding 0,” with explicit negative outcomes such as “effect vanishes after length control” and “no probe shift for identical targets.” Some operational details remain underspecified—especially how “context complexity,” “minimal-solve length,” and “tokens-at-equal-accuracy” are estimated, and how “difficulty-head activations” are selected—but these are clarifications within an otherwise coherent and falsifiable design rather than logical defects.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest steps are activation patching and steering at the “prompt-boundary residual state (and/or difficulty-head activations)” plus the “truncate-and-resume minimal-solve length”; these require custom engineering and careful generation-state handling, but are implementable with standard forward hooks, activation replacement, generation control, and probe tooling rather than being magic steps. The named dependencies—“DeepSeek-R1-Distill-Qwen 1.5B/7B/14B,” “Qwen3-8B,” GSM8K, MATH500, AIME, GPQA, linear probes, mixed-effects models, and matched-random-direction controls—are real, technically usable artifacts or standard methods, although the cited “difficulty-sensitive final-layer heads from prior work” should be independently verified and the plan can reproduce its own probe regardless. Resources are concretely quantified through dataset counts, “400 GSM8K, 400 MATH500, all 60 AIME, all 198 GPQA,” “3 seeds,” “300 targets,” and “200 items/dataset”; importantly, the design includes length-matched, semantic-scramble, random-direction, off-target, prompt-fix, oracle, and hard-target controls, so both supportive and genuinely refuting outcomes can be run.",
+      "score": 8
+    }
+  }
+}

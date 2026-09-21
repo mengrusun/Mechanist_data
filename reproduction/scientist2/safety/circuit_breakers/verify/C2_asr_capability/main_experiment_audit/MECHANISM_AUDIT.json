@@ -1,0 +1,45 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4, via llm-chat MCP)",
+  "audit_type": "mechanism",
+  "claim_id": "C2",
+  "linked_milestones": ["M2", "M3", "M5"],
+  "triggered_checks": ["A"],
+  "overall_verdict": "fail",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "fail",
+      "triggered": true,
+      "trigger_match": [
+        "scripts/m3_rr_train.py:161 (alpha default=10.0, L_rr loss weight -- M3 in C2's scope)",
+        "scripts/m3_rr_train.py:9 (RepE rerouting loss)"
+      ],
+      "intervention_type": "RepE",
+      "sweep_grid": [10.0],
+      "sigma_proj_scaling": false,
+      "capability_metric": null,
+      "plateau_range": null,
+      "locked_alpha": 10.0,
+      "alpha_position": "n/a",
+      "random_baseline": {"run": true, "n_random": 1, "passed": false},
+      "sign_pattern": "n/a",
+      "output_case_spotcheck": {
+        "cases_available": true,
+        "verdict": "metric_text_mismatch",
+        "note": "RR_ASR=0.356 > B0_ASR=0.333 -- intervention worsened ASR. Consistent with mechanism failure (delta_cos_harmful=-0.020 vs target <=-0.30)."
+      },
+      "evidence": [
+        "scripts/m3_rr_train.py:161 (alpha=10.0, no sweep)",
+        "artifacts/m3/training_summary.json (final_L_rr_ema=0.0016)",
+        "artifacts/m4/activation_drift.json (delta_cos_harmful=-0.0197, reroute_passed=false)",
+        "artifacts/m5/RR_harmbench.json (aggregate_asr=0.356 vs B0=0.333)"
+      ],
+      "details": "Same three mandatory FAIL violations as C1: (1) single hardcoded alpha=10.0, no sweep; (2) no capability metric logged at multiple alpha values; (3) target reroute effect not demonstrated (delta_cos_harmful=-0.020 vs <=-0.30). C2's downstream ASR failure is a direct consequence of the mechanism never activating in M3."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-13",
+  "auditor": "executor (cross-model self-review; llm-chat MCP degraded gracefully)",
+  "audit_type": "mechanism",
+  "claim_id": "C4",
+  "linked_milestones": ["M5"],
+  "triggered_checks": ["steering_coefficient_sweep"],
+  "overall_verdict": "warn",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "warn",
+      "triggered": true,
+      "trigger_match": ["M5 reuses M4's SteeringHook (h ← h + alpha * unit_dir) via the same run_one_grid_point() calls; M5 extracts the alpha=+2σ canonical entry from M4's summary"],
+      "sub_checks": {
+        "alpha_range_orders_of_magnitude": {
+          "status": "warn",
+          "note": "M5 canonical matrix uses only alpha=+2σ. Underlying M4 sweep covers 7 points ±4σ at ell_V*. Same limitation as C3 main M4 — ±2σ to ±4σ at ell_V* but sigma_proj is very small (0.008-0.038) so only ~1 OOM absolute range."
+        },
+        "sigma_proj_scaled": {"status": "pass", "note": "Inherited from M4."},
+        "coherence_gate_logged": {"status": "pass", "note": "Inherited from M4 (format_ok_rate logged per grid point)."},
+        "plateau_lock": {"status": "warn", "note": "Same as C3. No formal plateau identification at ell_V*."},
+        "random_direction_control": {
+          "status": "warn",
+          "note": "B2 random-direction w_effects available at ell_V* from M6 steer_{V}_random files. B2 w_effects for V=G at a+2,s0: {G:-0.130, A:-0.139, I:1.535, M:0.465} — nearly identical to alpha=0 baseline {G:-0.380, A:0.106, I:1.287, M:0.713}. This confirms that at ell_V*, random direction injection is indistinguishable from no injection in its effect on W's effect estimates. However, no C4 matrix was computed from random-direction runs explicitly. V=A off-diagonal pattern not formally compared against random-direction w_effects at ell_V*=6."
+        },
+        "bidirectional_sign_coverage": {"status": "pass", "note": "alpha in {-2,0,+2}. Bidirectional."}
+      },
+      "overall_check_a": "warn"
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

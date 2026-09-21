@@ -1,0 +1,54 @@
+{
+  "novelty": {
+    "score": 8,
+    "reasoning": "Core novel claims: (1) numeral fragmentation changes inference-time reasoning compute (thinking-token count), not just accuracy; (2) the effect persists on matched-content math problems and is independent of true difficulty/prompt length; (3) there is a fragmentation-sensitive internal length-budget representation at prompt boundary that can be localized and causally steered; (4) a training-free re-encoding fix reduces compute at matched accuracy. Relative to prior work on numeral tokenization, the delta is specifically compute/overthinking rather than correctness, which is a meaningful shift. The strongest risk is that the apparent novelty collapses into prompt-length or genuine parsing difficulty, but if controlled as proposed the claim is non-trivial.",
+    "revision_notes": [
+      "State the novelty as a compute phenomenon, not a generic tokenizer effect: explicitly contrast with all prior accuracy-only numeral-tokenization work in the first paragraph.",
+      "Define the unit of novelty more sharply: 'matched-content, different-segmentation' prompts with measured thinking-token inflation.",
+      "Specify whether the representation claim is a new mechanism or just an interpretability probe; if the former, name the hypothesized length-budget variable and its causal role.",
+      "Add one sentence clarifying why this is not just 'longer prompts cause longer outputs' by separating content length, token count, and segmentation."
+    ]
+  },
+  "impact": {
+    "score": 8,
+    "reasoning": "The problem under study is inference efficiency/overthinking in reasoning LMs, a real deployment concern for cost, latency, and tokenizer design. Who cares: efficient-reasoning researchers, inference providers, and tokenizer/system designers. Strongest one-line case: if surface-form numeral fragmentation can inflate thinking compute without improving accuracy, then tokenization choices directly affect the cost of reasoning and can be fixed at the input layer. This would likely be cited and could change how people evaluate reasoning models, because it reveals a hidden source of wasted inference. The 'so what?' test is positive if the effect is robust: practitioners would care about cheaper prompts and model builders would reconsider tokenizer choices. If negative, the work still informs where compute budgets come from, but impact drops mainly to a niche interpretability finding.",
+    "revision_notes": [
+      "Add a concrete deployment story: how much latency/cost is saved per query and what class of systems would benefit.",
+      "Name the target audiences explicitly (inference optimization, tokenizer design, efficient reasoning, interpretability).",
+      "Include a sentence on evaluation practice: this could change benchmarking of reasoning models by controlling for numeral surface form.",
+      "Quantify the downstream effect in plain terms (e.g., token savings at fixed accuracy) so the practical relevance is immediate."
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The proposal is interesting and plausibly testable, but the central hypothesis is still vulnerable to confounds: prompt length, parsing difficulty, and genuine task difficulty are not fully separated in the current framing. The mechanism claim ('fragmentation-sensitive length-budget representation') is ambitious and may be underdetermined unless the probe/patching design is tightly controlled. Related work is directionally correct but too coarse; it needs more specific positioning around reasoning-compute, tokenization length effects, and interpretability of budget signals. Experiments are mostly feasible, but some are not yet decisive: mixed-effects alone won't prove causality, and steering without strong controls could be off-distribution. Overall, this looks potentially strong for a serious ML venue if the causal story is tightened and the controls are strengthened.",
+    "revision_notes": [
+      "Pre-register the exact causal estimand: compute inflation due to fragmentation after controlling for token count, prompt length, and problem identity.",
+      "Add a truly length-matched control set where segmentation changes but total prompt tokens are held constant, or use synthetic numerals to equalize length.",
+      "Separate three hypotheses experimentally: harder parsing, longer prompt, and fragmentation-specific representation; do not bundle them into one mechanism claim.",
+      "Include controls showing that answer correctness and solution path quality are unchanged, not just final accuracy.",
+      "Add a baseline against a simple heuristic model that predicts thinking length from prompt token count alone.",
+      "For the mechanistic part, require causal tests stronger than steering alone: patching across matched prompts, null controls, and specificity tests against unrelated length signals.",
+      "Reduce overclaiming in the abstract: replace 'revealed' and 'causally mediated' with conditional language unless the mediation test is direct.",
+      "Clarify the model/task scope: specify which reasoning models, which numeral formats, and what failure cases would falsify the claim."
+    ]
+  },
+  "revision_notes": [
+    "State the novelty as a compute phenomenon, not a generic tokenizer effect: explicitly contrast with all prior accuracy-only numeral-tokenization work in the first paragraph.",
+    "Define the unit of novelty more sharply: 'matched-content, different-segmentation' prompts with measured thinking-token inflation.",
+    "Specify whether the representation claim is a new mechanism or just an interpretability probe; if the former, name the hypothesized length-budget variable and its causal role.",
+    "Add one sentence clarifying why this is not just 'longer prompts cause longer outputs' by separating content length, token count, and segmentation.",
+    "Add a concrete deployment story: how much latency/cost is saved per query and what class of systems would benefit.",
+    "Name the target audiences explicitly (inference optimization, tokenizer design, efficient reasoning, interpretability).",
+    "Include a sentence on evaluation practice: this could change benchmarking of reasoning models by controlling for numeral surface form.",
+    "Quantify the downstream effect in plain terms (e.g., token savings at fixed accuracy) so the practical relevance is immediate.",
+    "Pre-register the exact causal estimand: compute inflation due to fragmentation after controlling for token count, prompt length, and problem identity.",
+    "Add a truly length-matched control set where segmentation changes but total prompt tokens are held constant, or use synthetic numerals to equalize length.",
+    "Separate three hypotheses experimentally: harder parsing, longer prompt, and fragmentation-specific representation; do not bundle them into one mechanism claim.",
+    "Include controls showing that answer correctness and solution path quality are unchanged, not just final accuracy.",
+    "Add a baseline against a simple heuristic model that predicts thinking length from prompt token count alone.",
+    "For the mechanistic part, require causal tests stronger than steering alone: patching across matched prompts, null controls, and specificity tests against unrelated length signals.",
+    "Reduce overclaiming in the abstract: replace 'revealed' and 'causally mediated' with conditional language unless the mediation test is direct.",
+    "Clarify the model/task scope: specify which reasoning models, which numeral formats, and what failure cases would falsify the claim."
+  ]
+}

@@ -1,0 +1,714 @@
+==================== ORCHESTRATE2 START 2026-07-19T01:38:16Z ====================
+[orch] === M1 calibration (GPU5, free-picked) 2026-07-19T01:38:17Z ===
+/data/wanghaoxiong/miniconda3/envs/scientist/lib/python3.11/site-packages/evo2/models.py:207: UserWarning: Transformer Engine not installed. Falling back to bf16 projections (use_fp8_input_projections=False). 
+  warnings.warn(
+Loading model from /data1/share_model/evo2/evo2_7b/evo2_7b.pt...
+Loading config from configs/evo2-7b-1m.yml...
+[07/19/26 09:38:19] INFO     StripedHyena - INFO - Initializing     model.py:645
+                             StripedHyena with config:                          
+                             {'model_name': 'shc-evo2-7b-8k-2T-v2',             
+                             'vocab_size': 512, 'hidden_size':                  
+                             4096, 'num_filters': 4096,                         
+                             'hcl_layer_idxs': [2, 6, 9, 13, 16,                
+                             20, 23, 27, 30], 'hcm_layer_idxs': [1,             
+                             5, 8, 12, 15, 19, 22, 26, 29],                     
+                             'hcs_layer_idxs': [0, 4, 7, 11, 14,                
+                             18, 21, 25, 28], 'attn_layer_idxs':                
+                             [3, 10, 17, 24, 31],                               
+                             'hcm_filter_length': 128,                          
+                             'hcl_filter_groups': 4096,                         
+                             'hcm_filter_groups': 256,                          
+                             'hcs_filter_groups': 256,                          
+                             'hcs_filter_length': 7, 'num_layers':              
+                             32, 'short_filter_length': 3,                      
+                             'num_attention_heads': 32,                         
+                             'short_filter_bias': False,                        
+                             'mlp_init_method':                                 
+                             'torch.nn.init.zeros_',                            
+                             'mlp_output_init_method':                          
+                             'torch.nn.init.zeros_', 'eps': 1e-06,              
+                             'state_size': 16, 'rotary_emb_base':               
+                             10000, 'rotary_emb_scaling_factor':                
+                             128,                                               
+                             'use_interpolated_rotary_pos_emb':                 
+                             True, 'make_vocab_size_divisible_by':              
+                             8, 'inner_size_multiple_of': 16,                   
+                             'inner_mlp_size': 11264,                           
+                             'log_intermediate_values': False,                  
+                             'proj_groups': 1,                                  
+                             'hyena_filter_groups': 1,                          
+                             'column_split_hyena': False,                       
+                             'column_split': True, 'interleave':                
+                             True, 'evo2_style_activations': True,              
+                             'model_parallel_size': 1,                          
+                             'pipe_parallel_size': 1,                           
+                             'tie_embeddings': True,                            
+                             'mha_out_proj_bias': True,                         
+                             'hyena_out_proj_bias': True,                       
+                             'hyena_flip_x1x2': False,                          
+                             'qkv_proj_bias': False,                            
+                             'use_fp8_input_projections': False,                
+                             'max_seqlen': 1048576,                             
+                             'max_batch_size': 1, 'final_norm':                 
+                             True, 'use_flash_attn': True,                      
+                             'use_flash_rmsnorm': False,                        
+                             'use_flash_depthwise': False,                      
+                             'use_flashfft': False,                             
+                             'use_laughing_hyena': False,                       
+                             'inference_mode': True,                            
+                             'tokenizer_type':                                  
+                             'CharLevelTokenizer', 'prefill_style':             
+                             'fft', 'mlp_activation': 'gelu',                   
+                             'print_activations': False}                        
+                    INFO     StripedHyena - INFO - Initializing 32  model.py:678
+                             blocks...                                          
+                    INFO     StripedHyena - INFO - Distributing     model.py:685
+                             across 1 GPUs, approximately 32 layers             
+                             per GPU                                            
+  0%|          | 0/32 [00:00<?, ?it/s]                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=0 to device='cuda:0'                     
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 0: 205571840                             
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=1 to device='cuda:0'                     
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 1: 205606912                             
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=2 to device='cuda:0'                     
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 2: 205705216                             
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=3 to device='cuda:0'                     
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 3: 205533184                             
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=4 to device='cuda:0'                     
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 4: 205571840                             
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=5 to device='cuda:0'                     
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 5: 205606912                             
+ 19%|█▉        | 6/32 [00:00<00:00, 59.08it/s]                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=6 to device='cuda:0'                     
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 6: 205705216                             
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=7 to device='cuda:0'                     
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 7: 205571840                             
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=8 to device='cuda:0'                     
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 8: 205606912                             
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=9 to device='cuda:0'                     
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 9: 205705216                             
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=10 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 10: 205533184                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=11 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 11: 205571840                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=12 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 12: 205606912                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=13 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 13: 205705216                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=14 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 14: 205571840                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=15 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 15: 205606912                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=16 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 16: 205705216                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=17 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 17: 205533184                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=18 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 18: 205571840                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=19 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 19: 205606912                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=20 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 20: 205705216                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=21 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 21: 205571840                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=22 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 22: 205606912                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=23 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 23: 205705216                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=24 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 24: 205533184                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=25 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 25: 205571840                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=26 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 26: 205606912                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=27 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 27: 205705216                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=28 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 28: 205571840                            
+ 91%|█████████ | 29/32 [00:00<00:00, 158.13it/s]                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=29 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 29: 205606912                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=30 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 30: 205705216                            
+                    INFO     StripedHyena - INFO - Assigned         model.py:703
+                             layer_idx=31 to device='cuda:0'                    
+                    INFO     StripedHyena - INFO - Parameter count  model.py:704
+                             for block 31: 205533184                            
+100%|██████████| 32/32 [00:00<00:00, 148.06it/s]
+                    INFO     StripedHyena - INFO - Initialized      model.py:723
+                             model                                              
+                    INFO     vortex.model.utils - INFO - Loading     utils.py:92
+                             /data1/share_model/evo2/evo2_7b/evo2_7b            
+                             .pt                                                
+Extra keys in state_dict: {'blocks.10.mixer.attn._extra_state', 'blocks.16.projections._extra_state', 'blocks.22.projections._extra_state', 'blocks.21.projections._extra_state', 'blocks.13.mixer.mixer.filter.t', 'blocks.9.projections._extra_state', 'blocks.27.projections._extra_state', 'blocks.11.projections._extra_state', 'blocks.15.projections._extra_state', 'blocks.6.projections._extra_state', 'blocks.8.projections._extra_state', 'blocks.9.mixer.mixer.filter.t', 'blocks.31.mixer.attn._extra_state', 'blocks.24.mixer.attn._extra_state', 'blocks.27.mixer.mixer.filter.t', 'unembed.weight', 'blocks.12.projections._extra_state', 'blocks.7.projections._extra_state', 'blocks.29.projections._extra_state', 'blocks.14.projections._extra_state', 'blocks.23.projections._extra_state', 'blocks.18.projections._extra_state', 'blocks.13.projections._extra_state', 'blocks.19.projections._extra_state', 'blocks.17.mixer.attn._extra_state', 'blocks.2.projections._extra_state', 'blocks.31.mixer.dense._extra_state', 'blocks.4.projections._extra_state', 'blocks.5.projections._extra_state', 'blocks.1.projections._extra_state', 'blocks.30.mixer.mixer.filter.t', 'blocks.26.projections._extra_state', 'blocks.10.mixer.dense._extra_state', 'blocks.20.projections._extra_state', 'blocks.20.mixer.mixer.filter.t', 'blocks.17.mixer.dense._extra_state', 'blocks.30.projections._extra_state', 'blocks.0.projections._extra_state', 'blocks.23.mixer.mixer.filter.t', 'blocks.24.mixer.dense._extra_state', 'blocks.16.mixer.mixer.filter.t', 'blocks.3.mixer.dense._extra_state', 'blocks.25.projections._extra_state', 'blocks.3.mixer.attn._extra_state', 'blocks.6.mixer.mixer.filter.t', 'blocks.2.mixer.mixer.filter.t', 'blocks.28.projections._extra_state'}
+[07/19/26 09:38:22] INFO     StripedHyena - INFO - Adjusting Wqkv  model.py:1008
+                             for column split (permuting rows)                  
+[m1] sigma_proj=0.4104 ||base_dir||=1.1019 c(raw a=8)=21.480 c(raw a=16)=42.960
+/data/wanghaoxiong/miniconda3/envs/scientist/lib/python3.11/site-packages/vortex/model/engine.py:616: UserWarning: Casting complex values to real discards the imaginary part (Triggered internally at /pytorch/aten/src/ATen/native/Copy.cpp:307.)
+  inference_params.state_dict[layer_idx] = state[..., L - 1].to(dtype=state_dtype)
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345Some weights of EsmForProteinFolding were not initialized from the model checkpoint at facebook/esmfold_v1 and are newly initialized: ['esm.contact_head.regression.bias', 'esm.contact_head.regression.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+Initializing inference params with max_seqlen=345
+[m1] baseline[esmfold] helix_w=0.4611640447066396 helix_gated60=None valid_orf=0.86 folded=345 plddt=63.67373707501785
+/data/wanghaoxiong/intergene_mechanist_v6/third_party/OmegaFold/omegafold/utils/protein_utils/residue_constants.py:482: UserWarning: Using torch.cross without specifying the dim arg is deprecated.
+Please either pass the dim explicitly or simply use torch.linalg.cross.
+The default value of dim will change to agree with that of linalg.cross in a future release. (Triggered internally at /pytorch/aten/src/ATen/native/Cross.cpp:62.)
+  eznorm = torch.cross(ex_normalized, ey_normalized)
+[m1] baseline[omegafold] helix_w=0.47898963097822767 helix_gated60=0.5317933768976284 valid_orf=0.86 folded=345 plddt=69.50879305169202
+[m1] pos_ctrl[esmfold] rich=0.7015974982651229 poor=0.131407744556083
+[m1] pos_ctrl[omegafold] rich=0.7106551812969969 poor=0.11946107436726146
+[m1] wrote results/m1_calibration.json; sigma_proj=0.410 n_per_dose_target=300 (9061s)
+[orch] M1 done rc=0 2026-07-19T04:09:20Z
+[orch] === M2 jobs 2026-07-19T04:09:20Z ===
+[jobs] phase=m2 n_jobs=30 -> results/jobs_m2.json
+[jobs] M2 doses (c_sigma): [-5.37, 0.0, 2.685, 5.37, 10.74, 21.4801, 32.2201, 42.9601, 64.4402, 85.9203]
+[jobs] round-1 alpha=8 -> c=21.4801, alpha=16 -> c=42.9601
+[orch] === M2 dispatch (GPUs 3,4,5,6) ===
+[dispatch] m2_alpha_helix_S_c-5.37_s200 done gpu=6 4846s (1/30)
+[dispatch] m2_alpha_helix_S_c-5.37_s42 done gpu=4 5446s (2/30)
+[dispatch] m2_alpha_helix_S_c-5.37_s201 done gpu=3 5028s (3/30)
+[dispatch] m2_alpha_helix_S_c0.0_s42 done gpu=5 5041s (4/30)
+[dispatch] m2_alpha_helix_S_c0.0_s200 done gpu=4 5149s (5/30)
+[dispatch] m2_alpha_helix_S_c2.685_s42 done gpu=6 5690s (6/30)
+[dispatch] m2_alpha_helix_S_c0.0_s201 done gpu=3 4802s (7/30)
+[dispatch] m2_alpha_helix_S_c2.685_s200 done gpu=5 5230s (8/30)
+[dispatch] m2_alpha_helix_S_c2.685_s201 done gpu=4 5336s (9/30)
+[dispatch] m2_alpha_helix_S_c5.37_s200 done gpu=6 5328s (10/30)
+[dispatch] m2_alpha_helix_S_c5.37_s42 done gpu=3 5301s (11/30)
+[dispatch] m2_alpha_helix_S_c5.37_s201 done gpu=5 5336s (12/30)
+[dispatch] m2_alpha_helix_S_c10.74_s42 done gpu=6 3744s (13/30)
+[dispatch] m2_alpha_helix_S_c10.74_s200 done gpu=4 3835s (14/30)
+[dispatch] m2_alpha_helix_S_c10.74_s201 done gpu=3 3789s (15/30)
+[dispatch] m2_alpha_helix_S_c21.4801_s42 done gpu=5 3972s (16/30)
+[dispatch] m2_alpha_helix_S_c21.4801_s200 done gpu=6 4327s (17/30)
+[dispatch] m2_alpha_helix_S_c32.2201_s42 done gpu=3 3840s (18/30)
+[dispatch] m2_alpha_helix_S_c21.4801_s201 done gpu=4 4277s (19/30)
+[dispatch] m2_alpha_helix_S_c32.2201_s200 done gpu=5 3905s (20/30)
+[dispatch] m2_alpha_helix_S_c42.9601_s42 done gpu=3 3203s (21/30)
+[dispatch] m2_alpha_helix_S_c32.2201_s201 done gpu=6 3685s (22/30)
+[dispatch] m2_alpha_helix_S_c42.9601_s200 done gpu=4 3041s (23/30)
+[dispatch] m2_alpha_helix_S_c42.9601_s201 done gpu=5 3068s (24/30)
+[dispatch] m2_alpha_helix_S_c64.4402_s42 done gpu=3 3243s (25/30)
+[dispatch] m2_alpha_helix_S_c64.4402_s200 done gpu=6 3427s (26/30)
+[dispatch] m2_alpha_helix_S_c64.4402_s201 done gpu=4 3788s (27/30)
+[dispatch] m2_alpha_helix_S_c85.9203_s42 done gpu=5 4174s (28/30)
+[dispatch] m2_alpha_helix_S_c85.9203_s200 done gpu=3 3464s (29/30)
+[dispatch] m2_alpha_helix_S_c85.9203_s201 done gpu=6 3863s (30/30)
+[dispatch] 30/30 done
+[orch] === M2 consolidate ===
+[m2c] c*=85.9203 (selected on seed 42, esmfold); base_vorf=0.88
+[m2c] esmfold: spearman_rho=0.8666666666666665 p=0.0011735381801554685 interior_c*=False delta(c*)={'delta': 0.4026332119999863, 'lo': 0.37497556637511364, 'hi': 0.4308405901257849, 'n_clusters': 285}
+[m2c] omegafold: spearman_rho=0.8787878787878788 p=0.0008138621117322101 interior_c*=False delta(c*)={'delta': 0.3905846112631521, 'lo': 0.36538537944545585, 'hi': 0.41598351851685306, 'n_clusters': 285}
+[m2c] wrote results/m2_dose_response_curve.json; c2_positive_trend=True agree=True
+[orch] === M3 at c*=85.9203 2026-07-19T14:24:47Z ===
+[jobs] phase=m3 n_jobs=27 -> results/jobs_m3.json
+[jobs] phase=null n_jobs=8 -> results/jobs_null.json
+[orch] === M3 arms dispatch ===
+=== RE-LAUNCH after c* fix (c*=21.48) 2026-07-19T14:35:33Z ===
+==================== ORCHESTRATE2 START 2026-07-19T14:35:33Z ====================
+[orch] M1 exists, skip
+[orch] M2 curve exists, skip
+[orch] === M3 at c*=21.4801 2026-07-19T14:35:34Z ===
+[jobs] phase=m3 n_jobs=36 -> results/jobs_m3.json
+[jobs] phase=null n_jobs=8 -> results/jobs_null.json
+[orch] === M3 arms dispatch ===
+[dispatch] m3_alpha_helix_S_c0.0_s200 done gpu=4 3659s (1/36)
+[dispatch] m3_alpha_helix_S_c0.0_s42 done gpu=3 4186s (2/36)
+[dispatch] m3_alpha_helix_S_c10.74_s42 done gpu=6 4295s (3/36)
+[dispatch] m3_alpha_helix_S_c0.0_s201 done gpu=5 5137s (4/36)
+[dispatch] m3_alpha_helix_S_c10.74_s200 done gpu=4 4389s (5/36)
+[dispatch] m3_alpha_helix_S_c21.4801_s42 done gpu=6 4970s (6/36)
+[dispatch] m3_alpha_helix_S_c10.74_s201 done gpu=3 5383s (7/36)
+[dispatch] m3_alpha_helix_S_c21.4801_s200 done gpu=5 5029s (8/36)
+[dispatch] m3_alpha_helix_S_c21.4801_s201 done gpu=4 4372s (9/36)
+[dispatch] m3_alpha_helix_S_c32.2201_s42 done gpu=6 3822s (10/36)
+[dispatch] m3_alpha_helix_S_c32.2201_s200 done gpu=3 4654s (11/36)
+[dispatch] m3_matched_control_c0.0_s42 done gpu=4 3684s (12/36)
+[dispatch] m3_alpha_helix_S_c32.2201_s201 done gpu=5 4946s (13/36)
+[dispatch] m3_matched_control_c0.0_s200 done gpu=6 4685s (14/36)
+[dispatch] m3_matched_control_c0.0_s201 done gpu=3 3769s (15/36)
+[dispatch] m3_matched_control_c10.74_s42 done gpu=4 3679s (16/36)
+[dispatch] m3_matched_control_c10.74_s200 done gpu=5 3676s (17/36)
+[dispatch] m3_matched_control_c10.74_s201 done gpu=6 3625s (18/36)
+[dispatch] m3_matched_control_c21.4801_s42 done gpu=3 3677s (19/36)
+[dispatch] m3_matched_control_c21.4801_s200 done gpu=4 3817s (20/36)
+[dispatch] m3_matched_control_c21.4801_s201 done gpu=5 3667s (21/36)
+[dispatch] m3_matched_control_c32.2201_s42 done gpu=6 3691s (22/36)
+[dispatch] m3_matched_control_c32.2201_s200 done gpu=3 3772s (23/36)
+[dispatch] m3_beta_sheet_offtarget_c0.0_s42 done gpu=5 3585s (24/36)
+[dispatch] m3_matched_control_c32.2201_s201 done gpu=4 3878s (25/36)
+[dispatch] m3_beta_sheet_offtarget_c0.0_s200 done gpu=6 3654s (26/36)
+[dispatch] m3_beta_sheet_offtarget_c0.0_s201 done gpu=3 3643s (27/36)
+[dispatch] m3_beta_sheet_offtarget_c10.74_s42 done gpu=5 3668s (28/36)
+[dispatch] m3_beta_sheet_offtarget_c10.74_s200 done gpu=4 3644s (29/36)
+[dispatch] m3_beta_sheet_offtarget_c21.4801_s201 skip (output exists) (30/36)
+[dispatch] m3_beta_sheet_offtarget_c32.2201_s42 skip (output exists) (31/36)
+[dispatch] m3_beta_sheet_offtarget_c32.2201_s200 skip (output exists) (32/36)
+[dispatch] m3_beta_sheet_offtarget_c32.2201_s201 skip (output exists) (33/36)
+[dispatch] m3_beta_sheet_offtarget_c10.74_s201 done gpu=6 3685s (34/36)
+[dispatch] m3_beta_sheet_offtarget_c21.4801_s42 done gpu=3 3557s (35/36)
+[dispatch] m3_beta_sheet_offtarget_c21.4801_s200 done gpu=5 3610s (36/36)
+[dispatch] 32/36 done
+[orch] === M3 random-null dispatch ===
+[dispatch] m3_random_c21.4801_d6-11 failed gpu=4 7222s (1/8)
+[dispatch] m3_random_c21.4801_d0-5 failed gpu=3 7223s (2/8)
+[dispatch] m3_random_c21.4801_d18-23 failed gpu=6 7222s (3/8)
+[dispatch] m3_random_c21.4801_d12-17 failed gpu=5 7222s (4/8)

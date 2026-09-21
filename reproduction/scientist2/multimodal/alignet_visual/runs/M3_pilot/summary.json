@@ -1,0 +1,51 @@
+{
+  "purpose": "M3 sanity_checked pilot per experiment-tips/finetune-hyperparameter-sweep",
+  "milestone": "M3",
+  "config_verified": {
+    "lr": 5e-5,
+    "align_loss": "triplet_kl",
+    "alpha": 1.0,
+    "temperature": 1.0,
+    "tune_scope": "full",
+    "batch_size": 32,
+    "imagenet_subset_size": 2000,
+    "epochs": 1,
+    "seed": 42
+  },
+  "diagnostic_signals_branch2": {
+    "A_descent_too_shallow": {
+      "loss_first20pct": 0.166,
+      "loss_last20pct": 0.116,
+      "descent_pct": 30.1,
+      "pass": true,
+      "threshold_pct": 30
+    },
+    "A_grad_norm_dead": {
+      "grad_norm_last20pct_mean": 3.92,
+      "pass": true,
+      "threshold": 0.05
+    },
+    "A_pilot_too_short": {
+      "n_optim_steps": 62,
+      "pass": true,
+      "threshold": 30
+    },
+    "A_base_lookalike": "not measured (no cheap held-out generation for vision KD; deferred to M4 vs M3 Spearman comparison)",
+    "B_loss_floor_collapse": {
+      "loss_last20pct": 0.116,
+      "pass": true,
+      "threshold_below_which_collapse": 0.05,
+      "note": "vision KD loss floor is very different from LLM SFT; 0.116 is expected for a well-behaved KD run at this batch size"
+    },
+    "C_bouncy_loss": "not evaluated (only 62 steps — too short for rolling-std diagnostic)",
+    "C_grad_norm_blowup": {
+      "grad_norm_last20pct": 3.92,
+      "pass": true,
+      "note": "grad-clip max_grad_norm=1.0 means clipping fires most steps; consistent with LR range and healthy"
+    },
+    "C_nan_inf": "no NaN or inf observed"
+  },
+  "sweep_status": "sanity_checked",
+  "sweep_status_summary": "pilot: runs/M3_pilot/, lr=5e-5, batch=32, all applicable A-D signals passed",
+  "action": "proceed to full M3 (40k images, batch=64, lr=5e-5) — no LR change needed"
+}

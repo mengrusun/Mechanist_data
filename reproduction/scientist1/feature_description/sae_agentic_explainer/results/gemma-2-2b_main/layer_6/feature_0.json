@@ -1,0 +1,400 @@
+{
+  "feature_idx": 0,
+  "max_act_ref": 47.720706939697266,
+  "trigger_threshold": 9.544141387939453,
+  "sage": {
+    "candidates": [
+      "JavaScript `console.log(...)` call syntax, especially the literal member-access pattern `console.log(` used to print a value or message.",
+      "JavaScript/HTML script debugging statements that log a variable or expression via `console.log(...)`, e.g. `console.log(data)` or `console.log('debug:', value)`.",
+      "JavaScript callback or handler snippets containing `console.log(...)`, such as `function(x){ console.log(x); }` or `x => console.log(x)`, but only as a secondary/contextual pattern rather than the core feature."
+    ],
+    "top": "JavaScript `console.log(...)` call syntax, especially the literal member-access pattern `console.log(` used to print a value or message.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates on JavaScript debugging statements that call `console.log(...)` to print a variable or expression.",
+            "positive_probes": [
+              "Use console.log(userId) to inspect the current value.",
+              "Add console.log(total + tax) for quick debugging.",
+              "The script calls console.log(response.data) during troubleshooting.",
+              "Insert console.log(isReady) before the conditional branch.",
+              "Debug with console.log(items.length) inside the loop."
+            ],
+            "positive_acts": [
+              28.894481658935547,
+              27.351612091064453,
+              22.563465118408203,
+              26.520896911621094,
+              22.619022369384766
+            ],
+            "distractor_probes": [
+              "Use console.error(userId) to report the failure.",
+              "Add printf(total + tax) for quick debugging.",
+              "The script logs response.data through a custom logger."
+            ],
+            "distractor_acts": [
+              10.71507740020752,
+              0.0,
+              0.0
+            ],
+            "score": 22.01820316314697
+          },
+          {
+            "hypothesis": "The feature fires specifically on the method name token `log` when it appears as part of the `console.log` member-access pattern in JS/HTML script code.",
+            "positive_probes": [
+              "Use console.log('debug message') inside the script block.",
+              "The handler calls console.log(user.id) after clicking submit.",
+              "Add console.log(response) before returning from the JavaScript function.",
+              "In HTML script tags, write console.log('loaded') on startup.",
+              "The example debugs state with console.log(count) in JS code."
+            ],
+            "positive_acts": [
+              28.898212432861328,
+              25.806079864501953,
+              27.387290954589844,
+              26.13616943359375,
+              22.449684143066406
+            ],
+            "distractor_probes": [
+              "Use logger.log('debug message') inside the script block.",
+              "The handler calls console.error(user.id) after clicking submit.",
+              "Add log(response) before returning from the JavaScript function."
+            ],
+            "distractor_acts": [
+              5.596817970275879,
+              9.835326194763184,
+              0.0
+            ],
+            "score": 20.991439310709637
+          },
+          {
+            "hypothesis": "The feature responds to short callback or handler bodies that contain a single diagnostic print statement like `console.log(data)`, `console.log(message)`, or `console.log(errorMessage)`.",
+            "positive_probes": [
+              "A callback body only logs console.log(data).",
+              "The handler just contains console.log(message).",
+              "Inside the function, only console.log(errorMessage) appears.",
+              "Short callback with a single console.log(data) statement.",
+              "Tiny handler body: console.log(message) and nothing else."
+            ],
+            "positive_acts": [
+              26.01632308959961,
+              25.825122833251953,
+              29.246131896972656,
+              24.18457794189453,
+              30.872417449951172
+            ],
+            "distractor_probes": [
+              "The callback returns data after console.log(message).",
+              "A handler prints message using alert(message) only.",
+              "Inside the function, console.error(errorMessage) is called."
+            ],
+            "distractor_acts": [
+              26.168365478515625,
+              0.0,
+              14.05756664276123
+            ],
+            "score": 13.820270601908364
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "JavaScript/HTML-script `console.log(...)` calls used for debugging or inspection, especially logging a variable or expression.",
+            "positive_probes": [
+              "Add console.log(userData) before returning the response.",
+              "Use console.log('debug:', totalPrice) to inspect calculations.",
+              "The script prints state with console.log(appState) during debugging.",
+              "Insert console.log(element.innerHTML) to verify rendered output.",
+              "Developers often call console.log(result) while troubleshooting code."
+            ],
+            "positive_acts": [
+              27.323612213134766,
+              28.788227081298828,
+              21.14011001586914,
+              26.513774871826172,
+              19.393051147460938
+            ],
+            "distractor_probes": [
+              "Use alert(userData) to show the value onscreen.",
+              "The browser console displays network errors automatically.",
+              "Log the server response to a text file."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 24.631755065917968
+          },
+          {
+            "hypothesis": "The feature is keyed to the `console.log` member-access pattern in JavaScript code, i.e. the specific call form `console.log(...)` rather than generic `log(...)` or other logger methods.",
+            "positive_probes": [
+              "Use console.log('debug') before returning the result.",
+              "The script prints values with console.log(userId).",
+              "Add console.log(\"checkpoint\") inside the loop.",
+              "I traced execution using console.log(response.status) yesterday.",
+              "Developers often call console.log(data) during debugging."
+            ],
+            "positive_acts": [
+              28.788223266601562,
+              22.293426513671875,
+              27.3236083984375,
+              23.721019744873047,
+              19.393047332763672
+            ],
+            "distractor_probes": [
+              "Use log('debug') before returning the result.",
+              "The script prints values with console.error(userId).",
+              "Developers often call logger.log(data) during debugging."
+            ],
+            "distractor_acts": [
+              0.0,
+              8.789966583251953,
+              5.005077362060547
+            ],
+            "score": 19.7055170694987
+          },
+          {
+            "hypothesis": "Short JavaScript callback/handler bodies whose main content is a `console.log(...)` statement, such as `function(data){ console.log(data); }`.",
+            "positive_probes": [
+              "Arrow callback logs the event: e => console.log(e).",
+              "Use function(msg){ console.log(msg); } in the handler.",
+              "Set onclick to function(){ console.log('clicked'); }.",
+              "Promise then callback: value => console.log(value).",
+              "Listener uses function(data){ console.log(data); }."
+            ],
+            "positive_acts": [
+              31.0205078125,
+              39.63119888305664,
+              41.566646575927734,
+              34.6691780090332,
+              41.89412307739258
+            ],
+            "distractor_probes": [
+              "The function returns data instead of logging it.",
+              "console.log(data) appears outside any callback function.",
+              "Callback body logs and then updates the DOM."
+            ],
+            "distractor_acts": [
+              0.0,
+              46.28074264526367,
+              3.18558406829834
+            ],
+            "score": 21.267555300394694
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "JavaScript `console.log(...)` call syntax, especially the literal member-access pattern `console.log(` used to print a value or message.",
+            "positive_probes": [
+              "Use console.log(\"debug\") to print a message.",
+              "The script calls console.log(userName) after login.",
+              "Add console.log(42) inside the loop.",
+              "Debug with console.log(\"value:\", total) here.",
+              "Place console.log(response.data) before returning."
+            ],
+            "positive_acts": [
+              28.830852508544922,
+              22.563461303710938,
+              27.35519027709961,
+              22.619029998779297,
+              26.142620086669922
+            ],
+            "distractor_probes": [
+              "Use print(\"debug\") to display a message.",
+              "The browser console shows an error after login.",
+              "Call logger.log(userName) after authentication."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              5.900521278381348
+            ],
+            "score": 23.53539040883382
+          },
+          {
+            "hypothesis": "JavaScript/HTML script debugging statements that log a variable or expression via `console.log(...)`, e.g. `console.log(data)` or `console.log('debug:', value)`.",
+            "positive_probes": [
+              "Add console.log(user) before returning the response.",
+              "Use console.log('debug:', total) inside the click handler.",
+              "I inserted console.log(items.length) to inspect the array.",
+              "Place console.log(error.message) after the failed fetch.",
+              "Try console.log(result + 1) during debugging."
+            ],
+            "positive_acts": [
+              27.323612213134766,
+              28.89447784423828,
+              24.84839630126953,
+              26.18708038330078,
+              27.026248931884766
+            ],
+            "distractor_probes": [
+              "Use console.error(error) instead of silent failure.",
+              "Print the value to the terminal for debugging.",
+              "Add a breakpoint before returning the response."
+            ],
+            "distractor_acts": [
+              10.71507740020752,
+              0.0,
+              4.160126686096191
+            ],
+            "score": 21.897561772664385
+          },
+          {
+            "hypothesis": "JavaScript callback or handler snippets containing `console.log(...)`, such as `function(x){ console.log(x); }` or `x => console.log(x)`, but only as a secondary/contextual pattern rather than the core feature.",
+            "positive_probes": [
+              "Arrow callback: item => console.log(item) inside map.",
+              "Click handler function(e){ console.log(e.type); } attached.",
+              "Promise then uses x => console.log(x) callback.",
+              "Event listener callback logs: function(msg){ console.log(msg); }.",
+              "setTimeout with () => console.log('done') handler snippet."
+            ],
+            "positive_acts": [
+              31.498157501220703,
+              41.00064468383789,
+              34.47331619262695,
+              39.06990432739258,
+              36.70698165893555
+            ],
+            "distractor_probes": [
+              "Arrow function returns x + 1 inside map.",
+              "console.log(value) appears outside any callback or handler.",
+              "Event handler updates state without calling console.log."
+            ],
+            "distractor_acts": [
+              0.0,
+              46.28074264526367,
+              26.022655487060547
+            ],
+            "score": 12.448668162027996
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "He plotted the data on a log-log scale.",
+    "Countries = <?php echo json_encode($allCountries, JSON_PRETTY_PRINT) ?>;\n    console.log(allCountries)\n</",
+    ".setState({\n      isLoading: false,\n      data: result.data.restaurants\n    })\n    console.log(result)\n    console.log",
+    "A soft breeze moved the curtains at dawn.",
+    "The old library sat quietly at the edge of the park.",
+    "The mountain trail wound past three small lakes.",
+    "Quiz.php\").success(function(data){\n    $scope.quizzes = data;\n    //console.log(data);\n   });\n};\n  $scope.getQuizByCamp",
+    "Small pebbles crunched under his boots on the path.",
+    "A single cloud drifted over the harbor."
+  ],
+  "heldout_true_acts": [
+    0.0,
+    44.383277893066406,
+    48.6455078125,
+    0.0,
+    0.0,
+    0.0,
+    46.201656341552734,
+    0.0,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "instances of logging statements in code",
+      "generative": {
+        "trigger_rate": 0.125,
+        "mean_max": 7.915807783603668,
+        "sentences": [
+          "logger.info(\"Server started successfully\");",
+          "console.log('User clicked submit');",
+          "logging.debug(\"Cache miss for key %s\", key)",
+          "app.logger.error(\"Database connection failed\")",
+          "System.out.println(\"Processing order 123\");",
+          "log.warn('Retrying request after timeout');",
+          "Trace.WriteLine(\"Entering payment handler\");",
+          "NSLog(@\"Location update received\");"
+        ],
+        "activations": [
+          2.6032962799072266,
+          46.36629104614258,
+          2.618617534637451,
+          2.068913459777832,
+          0.0,
+          5.709278106689453,
+          0.0,
+          3.9600658416748047
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9816739006398966,
+        "spearman": 0.9585966633705807,
+        "preds": [
+          0.0,
+          10.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          7.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "JavaScript `console.log(...)` call syntax, especially the literal member-access pattern `console.log(` used to print a value or message.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 46.264549255371094,
+        "sentences": [
+          "console.log(\"Hello, world!\");",
+          "console.log(user.name);",
+          "console.log(42);",
+          "console.log(\"Debug:\", response.status);",
+          "console.log(items.length);",
+          "console.log(true);",
+          "console.log(error.message);",
+          "console.log(\"Loading complete\");"
+        ],
+        "activations": [
+          46.29340744018555,
+          46.29340744018555,
+          46.23600769042969,
+          46.25602340698242,
+          46.29340744018555,
+          46.214725494384766,
+          46.29340744018555,
+          46.23600769042969
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9906689602384989,
+        "spearman": 0.9294117647058824,
+        "preds": [
+          0.0,
+          10.0,
+          9.0,
+          0.0,
+          0.0,
+          0.0,
+          8.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 67.38335704803467,
+  "layer": 6,
+  "sae_info": {
+    "layer": 6,
+    "width": "16k",
+    "l0": 70,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_6/width_16k/average_l0_70/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "instances of logging statements in code"
+}

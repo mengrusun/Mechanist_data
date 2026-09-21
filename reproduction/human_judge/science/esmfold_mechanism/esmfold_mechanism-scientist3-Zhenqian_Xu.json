@@ -1,0 +1,178 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "Two Stages of Folding: Convergent Mechanisms in AI Protein Folding Trunks",
+    "agent": "scientist3",
+    "review_date": "2026-07-19"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "n/a ",
+    "score": "n/a",
+    "evidence_files": [
+      "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_aebd1b506a874b4b96e009fbbf0a64b2.py",
+      "scientist3/science/esmfold_mechanism/logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签是 β-hairpin 存在与否的二值 gt_hairpin，赋值方式满足 task.md C3 的硬性要求『must be based on DSSP secondary-structure assignment on the predicted structure』——per_protein 记录显示 ss_tool='biotite'，对预测结构做 DSSP。",
+    "score": 4,
+    "evidence_files": [
+      "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_aebd1b506a874b4b96e009fbbf0a64b2.py",
+      "scientist3/science/esmfold_mechanism/logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy",
+      "scientist3/science/esmfold_mechanism/logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "严重静默降配。数据集从 12,055 链被静默替换为 8 条教科书蛋白，且完全未触及指定的 PISCES/CATH 资源。模型 ESMFold 本身使用正确（从 MODEL_DIR 加载）。",
+    "score": 1,
+    "evidence_files": [
+      "human_judge/science/esmfold_mechanism/task.md",
+      "scientist3/science/esmfold_mechanism/idea.md",
+      "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_aebd1b506a874b4b96e009fbbf0a64b2.py",
+      "scientist3/science/esmfold_mechanism/logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "used_n = 8（experiment_data.npy val: n_eval=8, n_correct=5），其中正例 6、负控 2（gt=[1,1,1,1,1,1,0,0]）。远低于 rubric『小于 40 条』的稀薄阈值，且这仅是 baseline。三条 claim（early-block 定位 / seq2pair / charge 因果）没有任何支撑实验",
+    "score": 1,
+    "evidence_files": [
+      "scientist3/science/esmfold_mechanism/logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy",
+      "scientist3/science/esmfold_mechanism/logs/0-run/draft_summary.json",
+      "scientist3/science/esmfold_mechanism/logs/0-run/ablation_summary.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "对三条 claim 没有任何方差/误差棒/显著性报告,因为实验根本没做。",
+    "score": "n/a",
+    "evidence_files": [
+      "scientist3/science/esmfold_mechanism/logs/0-run/research_summary.json",
+      "scientist3/science/esmfold_mechanism/logs/0-run/draft_summary.json",
+      "scientist3/science/esmfold_mechanism/logs/0-run/experiment_results"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "三条 claim 均为因果/机制性主张,该 run 未做任何干预。",
+    "score": 1,
+    "evidence_files": [
+      "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_aebd1b506a874b4b96e009fbbf0a64b2.py",
+      "paper/science/esmfold_mechanism/paper.pdf"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "对『实际报告的 baseline 数字』可溯源性良好且一致,总体核心数字扎实，仅个别图注失真。",
+    "score": 4,
+    "evidence_files": [
+      "scientist3/science/esmfold_mechanism/logs/0-run/draft_summary.json",
+      "scientist3/science/esmfold_mechanism/logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy",
+      "scientist3/science/esmfold_mechanism/logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "存在实质性判定层不一致：顶层 report.md 第 33 行给出『Partially or fully supported — summaries suggest supportive evidence』并对三条 claim 列『See overall verdict』（暗示获支持）；而底层 draft_summary.json 明言机理分析『not yet performed』、ablation_summary.json 为空 `[]`、四个 stage 的 best_node_id 全部停留在 baseline 节点 aebd1b50（stage_3 真正的机理 study 节点 f7f52968 为 buggy 被丢弃）。即『报告称部分/完全支持』与『落盘证据显示三条 claim 的实验根本没跑成』相矛盾。",
+    "score": 2,
+    "evidence_files": [
+      "scientist3/science/esmfold_mechanism/report.md",
+      "scientist3/science/esmfold_mechanism/logs/0-run/draft_summary.json",
+      "scientist3/science/esmfold_mechanism/logs/0-run/ablation_summary.json",
+      "scientist3/science/esmfold_mechanism/logs/0-run/stage_3_creative_research_1_first_attempt/best_node_id.txt",
+      "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_node_id.txt"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Folding decisions for β-hairpin structures are localized in the early blocks of the folding trunk, and the sequence representation s is the active locus of that decision during this early window.",
+        "method": {
+          "justification": "该 run 实际落定的 best-node 方法只是对预测结构做 DSSP hairpin 检测，无 per-block、无 patching。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_aebd1b506a874b4b96e009fbbf0a64b2.py",
+            "scientist3/science/esmfold_mechanism/logs/0-run/stage_3_creative_research_1_first_attempt/journal.json",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        },
+        "experiment": {
+          "justification": "没有跑任何定位实验。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/science/esmfold_mechanism/logs/0-run/stage_3_creative_research_1_first_attempt/journal.json",
+            "scientist3/science/esmfold_mechanism/logs/0-run/stage_3_creative_research_1_first_attempt/best_node_id.txt",
+            "scientist3/science/esmfold_mechanism/logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "没有关于 early-block 定位的任何结果",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/science/esmfold_mechanism/logs/0-run/draft_summary.json",
+            "scientist3/science/esmfold_mechanism/report.md",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The early-block seq2pair pathway is the critical channel through which the β-hairpin folding decision is transferred from s into z.",
+        "method": {
+          "justification": "该 run 代码对 'seq2pair'/'pair2seq'/'ablat' 命中 0，完全没有实现该方法族。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_aebd1b506a874b4b96e009fbbf0a64b2.py",
+            "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/journal.json",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        },
+        "experiment": {
+          "justification": "seq2pair 通道 ablation 实验完全没有运行",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/science/esmfold_mechanism/logs/0-run/ablation_summary.json",
+            "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_aebd1b506a874b4b96e009fbbf0a64b2.py"
+          ]
+        },
+        "result": {
+          "justification": "无 seq2pair 通道结果",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/science/esmfold_mechanism/report.md",
+            "scientist3/science/esmfold_mechanism/logs/0-run/draft_summary.json",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Charge is a linearly encoded chemical feature in early blocks of ESMFold and causally influences β-hairpin formation (opposite-charge on facing strands favors pairing; same-charge increases cross-strand distance).",
+        "method": {
+          "justification": "该 run 代码对 'charge'/'probe'/'linear'/'steer' 命中 0，无线性探针、无 charge 干预。仅有的 DSSP-on-predicted-structure 只是 C3 要求的读出方式（这一点被满足）。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_aebd1b506a874b4b96e009fbbf0a64b2.py",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        },
+        "experiment": {
+          "justification": "没有 charge 线性可分性实验、没有 charge steering / same-vs-opposite-charge 对照、没有系数 sweep。。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/science/esmfold_mechanism/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_aebd1b506a874b4b96e009fbbf0a64b2.py",
+            "scientist3/science/esmfold_mechanism/logs/0-run/ablation_summary.json",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        },
+        "result": {
+          "justification": "无 charge 因果结果",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/science/esmfold_mechanism/report.md",
+            "scientist3/science/esmfold_mechanism/logs/0-run/draft_summary.json",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        }
+      }
+    }
+  }
+}

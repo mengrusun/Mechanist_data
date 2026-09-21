@@ -1,0 +1,22 @@
+{
+  "Name": "pivot_language_routing",
+  "Title": "Latent Pivot: Do Multilingual Models Reason Through a Dominant-Language Interlingua?",
+  "Short Hypothesis": "When processing non-dominant languages, multilingual LMs transit through hidden states aligned with the model's dominant training language (often English) in intermediate layers before mapping back to the target language, and this pivot is causally load-bearing for cross-lingual reasoning rather than incidental.",
+  "Related Work": "Wendler et al. (2024) show Llama's intermediate logit-lens tokens are English-leaning; Zhao et al. and Schut et al. discuss latent-language effects. We extend beyond logit-lens observation to a causal test: suppressing the pivot-language direction should selectively harm reasoning in distant languages more than near ones, and we quantify pivot reliance as a function of language distance rather than reporting a single-language observation.",
+  "Abstract": "A recurring claim is that multilingual models 'think in English.' We formalize and causally test this pivot hypothesis. We hypothesize that for non-dominant input languages, intermediate representations pass through a region aligned with the dominant language before being re-expressed in the target language, and that reliance on this pivot increases with typological/resource distance from the dominant language. Using logit-lens and a trained dominant-language direction, we measure, layer by layer, how much intermediate computation aligns with the dominant language for inputs in 15 languages. We then causally intervene: ablate or dampen the dominant-language pivot direction and measure degradation on multi-step reasoning (arithmetic word problems, factual chains) across languages. We predict distant/low-resource languages suffer disproportionately, revealing the pivot is a functional bottleneck. We contrast two mechanisms: translation-through-pivot vs shared-concept computation, distinguishing them by whether the pivot carries lexical dominant-language content (translation) or only abstract structure (concepts). Metrics: layerwise pivot-alignment score, reasoning accuracy drop under pivot ablation stratified by language distance, and correlation between baseline pivot reliance and cross-lingual accuracy gap. Confirmation would explain persistent cross-lingual performance gaps as a routing artifact and suggest interventions (pivot-agnostic fine-tuning) to reduce them.",
+  "Experiments": [
+    "Compute logit-lens token distributions per layer for prompts in 15 languages; measure fraction of top tokens in the dominant language.",
+    "Train a linear 'dominant-language' direction from parallel activations; measure layerwise alignment for each input language.",
+    "Correlate pivot-alignment with language distance (lang2vec/URIEL features) and resource level.",
+    "Causal ablation: project out the dominant-language direction at pivot layers; measure reasoning accuracy (GSM8K-translated, factual chains) per language.",
+    "Discriminate translation vs concept: test whether pivot activations decode to dominant-language lexical items vs abstract concept probes.",
+    "Control: ablate a random equal-norm direction; and repeat on a model whose dominant language differs (e.g., a Chinese-centric model) to test generality.",
+    "Report accuracy gap vs pivot reliance scatter."
+  ],
+  "Risk Factors and Limitations": [
+    "Logit-lens can hallucinate dominant-language tokens due to unembedding geometry, not genuine pivoting.",
+    "'Dominant language' is entangled with data quantity; hard to isolate causal role from mere frequency.",
+    "Ablation may harm all languages if the direction overlaps general features.",
+    "Effect may be model-specific; a truly balanced multilingual model might show no pivot."
+  ]
+}

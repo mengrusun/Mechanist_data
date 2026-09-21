@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal has a clear directional test: it trains on the “SAME teacher-generated innocuous data” with “a sign-flipped objective” and predicts an “OPPOSITE trait,” with measurable outcomes such as “reduced owl preference below baseline” and “NEGATIVE cosine.” Its controls and comparisons are well aligned with the question, including ordinary positive transfer, content-negation, and labeled anti-trait training. However, terms such as “roughly sign-symmetric,” “practical,” and “strongest, cleanest anti-trait” are not operationalized, and H2 lacks a numerical tolerance for “|anti-trait| ≈ |positive-trait|”; the exact trait prompts, judge aggregation, statistical decision rule, and minimum effect size would require clarification.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is recovering and comparing the student and teacher steering vectors in the “compute cosine similarity to the teacher's original steering vector”; activation extraction, contrastive vector construction, and cosine computation are standard interpretability operations, though the proposal does not specify the vector-recovery procedure sufficiently to eliminate custom methodological choices. The named models (“Qwen2.5-7B, Llama-3-8B, Gemma-2-9B”), datasets (“GSM8K subset, HumanEval subset”), LoRA/full fine-tuning, KL regularization, and standard optimizers are real, implementable components with mature tooling, and the design includes runnable negative-result controls such as “mismatched-base negative controls,” content-negation, capability retention, and positive-transfer comparisons. Resources are partly quantified through “10 traits,” three model families, “LoRA rank (4-64),” and named benchmark subsets, but sample sizes, number of seeds, learning-rate values, and the KL-weight sweep are left generic, so execution is feasible but not fully specified.",
+      "score": 7
+    }
+  }
+}

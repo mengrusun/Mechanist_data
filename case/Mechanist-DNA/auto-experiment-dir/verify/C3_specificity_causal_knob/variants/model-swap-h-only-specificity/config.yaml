@@ -1,0 +1,21 @@
+# Variant config: C3 model-swap-h-only-specificity
+variant_tag: model-swap-h-only-specificity
+dimension: model
+claim_id: C3
+
+# DIFF from main experiment:
+primary_endpoint: helix_h_w   # was: helix_hgi_w
+
+# Frozen:
+c_star: 21.4801
+heldout_seeds: [200, 201]
+n_null_directions: 48
+predictors: [esmfold, omegafold]
+feature_kind: alpha_helix_S
+
+# Implementation:
+# Reads helix_h_w_mean from pre-computed M3 arm + null files
+input_pattern_arm: results/m3_alpha_helix_S_c21.4801_s*.json
+input_pattern_null: results/m3_random_c21.4801_d*.json
+output: verify/C3_specificity_causal_knob/variants/model-swap-h-only-specificity/result.json
+gpu_id: null

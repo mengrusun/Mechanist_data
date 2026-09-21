@@ -1,0 +1,76 @@
+{
+  "claim_id": "C1",
+  "audit_type": "experiment",
+  "phase": 2,
+  "date": "2026-07-15",
+  "milestone": "M1",
+  "overall_severity": "WARN",
+  "overall_verdict": "PASS",
+  "admission_decision": "ADMITTED",
+  "findings": [
+    {
+      "id": "E-C1-01",
+      "category": "data_provenance",
+      "severity": "PASS",
+      "description": "数据来源 PISCES cull list 与 task.md HARD 数据源一致，无偏移"
+    },
+    {
+      "id": "E-C1-02",
+      "category": "baseline_filter",
+      "severity": "PASS",
+      "description": "baseline_hairpin_rate=1.0 for all 197 paired chains — exceeds ≥0.7 threshold"
+    },
+    {
+      "id": "E-C1-03",
+      "category": "sample_size",
+      "severity": "PASS",
+      "description": "N=197 paired chains; effect size Δ=-0.862 means power >>0.99"
+    },
+    {
+      "id": "E-C1-04",
+      "category": "donor_independence",
+      "severity": "PASS",
+      "description": "Donor pool (100 chains) strictly non-overlapping with main set (200 chains); donor native DSSP verified no hairpin at target residue positions"
+    },
+    {
+      "id": "E-C1-05",
+      "category": "dssp_implementation",
+      "severity": "PASS",
+      "description": "is_hairpin_region() pure function; DSSP run on ESMFold predicted structure only (mkdssp on output_to_pdb output); no native structure contamination"
+    },
+    {
+      "id": "E-C1-06",
+      "category": "patching_implementation",
+      "severity": "PASS",
+      "description": "patch_s_at_blocks() correctly implements block-input pre-hook clone-then-replace with block-specific donor tensors; hook cleanup via handle.remove() prevents leakage"
+    },
+    {
+      "id": "E-C1-07",
+      "category": "specificity_controls",
+      "severity": "PASS",
+      "description": "Three specificity controls correctly implemented: z-patching same window, matched-ctrl non-target mask, late-window s-patching (implicit from band coverage)"
+    },
+    {
+      "id": "E-C1-08",
+      "category": "cath_annotation",
+      "severity": "WARN",
+      "description": "cath_label=null for all chains in manifest; CATH mapping was attempted but not written. Does not affect main experiment. Reduces dataset variant stratification to a single group."
+    },
+    {
+      "id": "E-C1-09",
+      "category": "multiple_comparisons",
+      "severity": "WARN",
+      "description": "32 tests (8 bands × 4 conditions) without Bonferroni/FDR correction. Given the 13:1 ratio between early s-patch effect (Δ=-0.862) and all controls (max Δ=-0.067), no correction would reverse the conclusion."
+    }
+  ],
+  "predicate_checks": {
+    "early_effect_>=0.2pp": {"result": true, "value": -0.862, "threshold": 0.2},
+    "early_p_<0.05": {"result": true, "value": 2.25e-36, "threshold": 0.05},
+    "matched_ctrl_<50pct_of_early": {"result": true, "value": 0.077, "threshold": 0.5},
+    "late_window_<50pct_of_early": {"result": true, "value": 0.098, "threshold": 0.5},
+    "z_same_window_<50pct_of_early": {"result": true, "value": 0.013, "threshold": 0.5}
+  },
+  "n_pass": 1,
+  "n_warn": 2,
+  "n_fail": 0
+}

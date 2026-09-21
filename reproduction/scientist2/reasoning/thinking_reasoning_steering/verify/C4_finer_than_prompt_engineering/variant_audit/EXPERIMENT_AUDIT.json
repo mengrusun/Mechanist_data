@@ -1,0 +1,44 @@
+{
+  "date": "2026-07-15",
+  "auditor": "auto-verify Phase 9 (audit-by-construction — symmetric to Phase 2)",
+  "claim_id": "C4",
+  "audit_type": "experiment",
+  "audit_target": "variant",
+  "variant": "model-swap-qwen-14b",
+  "linked_milestones": ["variant-M1-14b", "variant-M4-14b"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Same LLM-judge proxy pipeline as main experiment: GPT-5.4-generated gold answers, GPT-5.4 accuracy judge, automated behaviour annotation via LLM classifier. No human-annotation or dataset GT. Identical provenance warning as main experiment Phase 2 audit — not a new failure, inherited by design."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "n_distinct_operating_points is a count. accuracy and coherence_rate are proportions out of n=60 tasks. No normalization issues — consistent with main experiment."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All 8 controllers completed with results_summary.json confirmed at 8/8 entries. Steering controllers: coherence_rate in [0.0, 0.40], behaviour_rate=0.0 for all (consistent with sigma_proj=886 finding from M1). Prompt controllers: coherence_rate=1.0, behaviour_rate in [0.133, 0.35]. TI controllers: coherence_rate=1.0, behaviour_rate in [0.633, 0.667]. Results are internally consistent and plausible."
+    },
+    "dead_code": {
+      "status": "warn",
+      "details": "Matched-rate pairing algorithm (pair controllers with rate diff <=2pts) not exercised per-task for variant audit. Same WARN as Phase 2 — algorithm exists in source but per-task verification requires per-task result files not checked here. n_distinct computation verified independently from summary-level data."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "Variant scope: expressing_uncertainty only, n=60 tasks, same benchmark subset as main experiment. Documented in PLAN.md. No scope overreach. sigma_proj=886 finding is variant-specific and scientifically meaningful — not a scope violation."
+    },
+    "eval_type": "synthetic_proxy",
+    "variant_specific": {
+      "sigma_proj_finding": {
+        "status": "info",
+        "details": "sigma_proj=886 for Qwen-14B (vs 10.52 for Llama-8B, 84x larger). This is a meaningful architectural finding: the sigma_proj-scaled CAA formula produces coefficients ~84x larger on Qwen-14B, causing near-total output incoherence. The evaluation correctly captures this — coherence_rate collapses for all steering controllers. Not an audit failure."
+      },
+      "model_swap_fidelity": {
+        "status": "pass",
+        "details": "M1 re-run on Qwen-14B: 200 chains, 48 layers, L*=45 selected. M4 re-run with 8 controllers x 60 tasks. Same auxiliary corpus, same benchmark tasks, same evaluation pipeline. Model swap executed faithfully."
+      }
+    }
+  }
+}

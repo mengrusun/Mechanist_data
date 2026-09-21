@@ -1,0 +1,56 @@
+# Code Review — Phase 6 — APPROVED
+
+Reviewer: gpt-5.4 (via dmxapi.cn/v1)
+Date: 2026-07-14
+Variant: model-swap-qwen25-7b-instruct (C3a, model swap)
+
+## Review Summary
+
+Initial reviewer verdict: REJECT (pending clarifications)
+Final verdict after investigation and fix: APPROVED
+
+## Reviewer Concerns and Resolutions
+
+### 1. y_correct label integrity (RESOLVED — not a real issue)
+Concern: Correctness labels might not use TriviaQA aliases.
+Resolution: `step1_generate_turn1` calls `U.score_answer(gen, r["normalized_aliases"])` which
+matches against official TriviaQA normalized aliases. Identical to main experiment.
+No label leakage or circular evaluation.
+
+### 2. Hidden-state extraction last_pos (RESOLVED — fixed with assertion)
+Concern: `last_pos = attn.shape[1] - 1` may be incorrect.
+Resolution: Main experiment (step2_extract_hidden.py L114-160) uses left-padded inputs
+with tok.padding_side="left" and asserts `attn[:, -1] == 1` for all rows (left-padding
+invariant: real tokens are at the right end). The variant uses the same left-padding setup.
+The assertion has been added to the variant for defensive rigor (matches the assertion
+in the main experiment's step2). This is correct for left-padded inputs.
+
+### 3. vLLM for generation + HF for extraction (RESOLVED — matches baseline)
+Concern: Different generation/extraction stack.
+Resolution: Main experiment uses step1_generate.py (vllm) + step2_extract_hidden.py (HF).
+The variant uses the same two-stage approach. The probing is done on the HF forward pass
+(not the vllm generation), so the hidden states are consistent with the main experiment.
+
+### 4. Prompt fairness (RESOLVED — semantically identical)
+Concern: Qwen prompts differ from Llama prompts.
+Resolution: Only `<|begin_of_text|>` is dropped. This token is a Llama-specific BOS token
+(special token, not semantic content). Qwen's tokenizer adds its own BOS automatically.
+The instruction text, question/answer format, and confidence elicitation are identical.
+
+### 5. Single-axis swap check (CONFIRMED — only model changes)
+Dataset: TriviaQA rc.nocontext, same TRIVIAQA_ARROW path
+Split: same split_manifest.json (idx-based, 6k/2k/2k)
+Method: L2-logistic, C sweep {0.001,0.01,0.1,1,10}, lbfgs, n_bootstrap=200, seed=42
+Threshold: same stage15_variance.json binarize_threshold
+L* rule: max(normalized_dev_auc_c + normalized_dev_auc_v) for L>=1
+All frozen as intended. ONLY the model path changes.
+
+### 6. Success criteria (CONFIRMED — frozen from C3a)
+abs_cos_at_Lstar <= 0.3, ci_upper_95 < 0.4, neighborhood_mean <= 0.3,
+probe_c_auroc >= 0.70, probe_v_auroc >= 0.70 — all unchanged.
+
+## Fix Applied
+Added left-padding invariant assertion to step2_extract_hidden in run_variant.py:
+  `assert (attn[:, -1] == 1).all()` — mirrors main experiment's step2_extract_hidden.py L159.
+
+## Final Verdict: APPROVED (no critical issues; one defensive assertion added)

@@ -1,0 +1,33 @@
+{
+  "date": "2026-07-18",
+  "auditor": "llm-chat (gpt-5.4)",
+  "audit_type": "mechanism",
+  "claim_id": "C3",
+  "linked_milestones": ["M3"],
+  "triggered_checks": ["A"],
+  "overall_verdict": "fail",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "fail",
+      "triggered": true,
+      "trigger_match": ["code/m3_specificity.py: feature_kind -> feats/s_f -> M.Steerer", "code/mechanism.py: Steerer._hook (shared with C2)"],
+      "intervention_type": "SAE_feature",
+      "sweep_grid": [0, 4, 8, 16],
+      "sigma_proj_scaling": false,
+      "capability_metric": "valid_orf_rate (logged every dose); pLDDT_mean also logged but is an ungated/population-inconsistent statistic per Check D",
+      "plateau_range": null,
+      "locked_alpha": 16,
+      "alpha_position": "edge",
+      "random_baseline": {"run": false, "n_random": 1, "passed": null},
+      "sign_pattern": "n/a",
+      "output_case_spotcheck": {"cases_available": false, "verdict": "no_cases_logged", "note": "same sequence-text discarding as M2; per_sample omits protein string."},
+      "evidence": ["code/m3_specificity.py:19-47 (grid + feature_kind dispatch)", "code/m3_consolidate.py:41 (top = max(alphas), decisive dose always the grid max)", "results/m3_specificity_summary.json (alpha_helix_S valid_orf: 0.888@0 -> 0.667@16)"],
+      "details": "Decisive double-dissociation statistics (S_vs_matched_helix_p=3.2e-23, beta_vs_S_sheet_p=6.2e-30) are computed at alpha=16, the maximum of M3's own narrow 4-point grid (0,4,8,16; only 4x positive span). At this dose, alpha_helix_S's own valid-ORF rate has dropped ~25% relative to baseline (0.888->0.667) -- read against the catalogue's ~10% degradation tolerance, this is a >2x-tolerance capability degradation at the exact dose the headline claim rests on. No plateau was established, no genuine random-direction control (>=30 directions) was run (matched_control is one fixed principled direction, not a distributional random baseline), and the sweep span is even narrower than M2's (already-insufficient) grid. This is a rigor failure in the steering-tuning process feeding C3's numbers -- not a data-fabrication finding."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

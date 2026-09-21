@@ -1,0 +1,412 @@
+{
+  "feature_idx": 400,
+  "max_act_ref": 112.7783432006836,
+  "trigger_threshold": 22.55566864013672,
+  "sage": {
+    "candidates": [
+      "Hyphenated or compound-modifier constructions built from a city, comma, and state abbreviation, such as \"Austin, TX-based\", \"Miami, FL-area\", or \"Denver, CO-trained\".",
+      "Scientific/vendor affiliation or address formatting containing a city, comma, and two-letter state abbreviation, often followed by additional address punctuation such as \", USA\", semicolons, parentheses, or ZIP codes.",
+      "City name followed by a comma and a two-letter uppercase U.S. state abbreviation, especially in citation/address-style location strings (e.g. \"Boston, MA\", often with nearby punctuation or ZIP/USA)."
+    ],
+    "top": "Hyphenated or compound-modifier constructions built from a city, comma, and state abbreviation, such as \"Austin, TX-based\", \"Miami, FL-area\", or \"Denver, CO-trained\".",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature fires on two-letter uppercase U.S. state abbreviations immediately following a city name in location strings like \"Danvers, MA\" or \"Corning, NY\".",
+            "positive_probes": [
+              "We moved to Danvers, MA last summer.",
+              "Her office is in Corning, NY downtown.",
+              "They opened a shop near Boulder, CO.",
+              "Flights arrived late at Tulsa, OK yesterday.",
+              "He was born in Mobile, AL hospital."
+            ],
+            "positive_acts": [
+              73.45955657958984,
+              80.42073822021484,
+              68.66722106933594,
+              60.9906120300293,
+              97.99189758300781
+            ],
+            "distractor_probes": [
+              "We moved to Danvers, Massachusetts last summer.",
+              "Her office is in Corning, New York downtown.",
+              "They opened a shop near Boulder CO yesterday."
+            ],
+            "distractor_acts": [
+              62.09919357299805,
+              69.1554183959961,
+              55.76606369018555
+            ],
+            "score": 13.965779876708979
+          },
+          {
+            "hypothesis": "The feature is triggered by vendor or company address/citation formatting in scientific writing, especially parenthetical phrases ending with \", USA\" after city-state pairs.",
+            "positive_probes": [
+              "Samples were analyzed in Boston, MA, USA).",
+              "Reagents were purchased from Madison, WI, USA).",
+              "The assay used kits from Irvine, CA, USA).",
+              "Cells were processed at Durham, NC, USA).",
+              "Antibodies were sourced from Seattle, WA, USA)."
+            ],
+            "positive_acts": [
+              74.60556030273438,
+              83.92928314208984,
+              85.31482696533203,
+              72.84608459472656,
+              86.74858093261719
+            ],
+            "distractor_probes": [
+              "Samples were analyzed in Boston, Massachusetts, United States.",
+              "Reagents were purchased from Madison, WI, Canada).",
+              "The assay used kits from Irvine, CA, USA headquarters."
+            ],
+            "distractor_acts": [
+              66.95819854736328,
+              84.19798278808594,
+              85.24715423583984
+            ],
+            "score": 1.8877553304036354
+          },
+          {
+            "hypothesis": "The feature responds to uppercase two-letter geographic abbreviations embedded in compound descriptors such as \"Bothell, WA-based company\" rather than only standalone addresses.",
+            "positive_probes": [
+              "Seattle, WA-based startup raised seed funding.",
+              "Austin, TX-based designer launched a new collection.",
+              "Portland, OR-based nonprofit expanded neighborhood outreach.",
+              "Miami, FL-based vendor announced holiday discounts.",
+              "Denver, CO-based brewery opened a second taproom."
+            ],
+            "positive_acts": [
+              109.76193237304688,
+              104.46415710449219,
+              100.92301940917969,
+              109.06254577636719,
+              107.48683166503906
+            ],
+            "distractor_probes": [
+              "Seattle-based startup raised seed funding.",
+              "Austin, Texas-based designer launched a new collection.",
+              "The vendor relocated to Miami, FL last summer."
+            ],
+            "distractor_acts": [
+              55.76606369018555,
+              88.17214965820312,
+              67.24109649658203
+            ],
+            "score": 35.9465939839681
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature fires on city-comma-state abbreviations when they are embedded in hyphenated modifiers like \"Seattle, WA-based ...\" or similar compound descriptors.",
+            "positive_probes": [
+              "Austin, TX-based startup raised fresh capital.",
+              "Portland, OR-born designer launched a new label.",
+              "Miami, FL-area hospitals expanded emergency staffing.",
+              "Denver, CO-trained chef opened a bistro.",
+              "Nashville, TN-based publisher acquired indie magazines."
+            ],
+            "positive_acts": [
+              104.55709838867188,
+              101.14424133300781,
+              109.39773559570312,
+              107.44384765625,
+              102.76654815673828
+            ],
+            "distractor_probes": [
+              "The startup is based in Austin, Texas.",
+              "A Seattle-based company opened another office.",
+              "Portland, OR is expecting heavy rainfall tonight."
+            ],
+            "distractor_acts": [
+              65.27291870117188,
+              55.8311653137207,
+              101.11465454101562
+            ],
+            "score": 30.98898137410481
+          },
+          {
+            "hypothesis": "The feature responds to city name + comma + two-letter uppercase U.S. state abbreviation formatting, especially in location/address strings and scientific/vendor citations.",
+            "positive_probes": [
+              "Austin, TX hosts the annual music conference.",
+              "Samples were analyzed in Boulder, CO laboratories.",
+              "Vendor address: Newark, NJ 07102 USA.",
+              "Field notes cite Madison, WI as collection site.",
+              "Conference proceedings listed Tucson, AZ after authors."
+            ],
+            "positive_acts": [
+              104.45440673828125,
+              75.24551391601562,
+              90.82513427734375,
+              67.15641784667969,
+              92.57279968261719
+            ],
+            "distractor_probes": [
+              "Austin Texas hosts the annual music conference.",
+              "Samples were analyzed in Boulder, Colorado laboratories.",
+              "Vendor address: Newark NJ 07102 USA."
+            ],
+            "distractor_acts": [
+              55.76606369018555,
+              65.88690185546875,
+              71.24791717529297
+            ],
+            "score": 21.750560251871747
+          },
+          {
+            "hypothesis": "The feature is especially strong for scientific or vendor citation/address formatting containing a city-state pair, often followed by \", USA\" or closing punctuation, e.g. \"Irvine, CA, USA).\"",
+            "positive_probes": [
+              "Correspondence: Irvine, CA, USA.",
+              "Affiliation listed as Boston, MA, USA).",
+              "Vendor address: Austin, TX, USA.",
+              "Published from Seattle, WA, USA;",
+              "Headquarters located in Madison, WI, USA."
+            ],
+            "positive_acts": [
+              78.28630828857422,
+              84.50037384033203,
+              91.71676635742188,
+              96.18465423583984,
+              89.48262786865234
+            ],
+            "distractor_probes": [
+              "Correspondence: Irvine, California, United States.",
+              "Affiliation listed as Boston, MA campus.",
+              "Vendor address: Austin, TX office building."
+            ],
+            "distractor_acts": [
+              71.55789947509766,
+              84.42584991455078,
+              91.80209350585938
+            ],
+            "score": 5.438865152994794
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "City name followed by a comma and a two-letter uppercase U.S. state abbreviation, especially in citation/address-style location strings (e.g. \"Boston, MA\", often with nearby punctuation or ZIP/USA).",
+            "positive_probes": [
+              "Please mail forms to Austin, TX 78701, USA.",
+              "Conference proceedings listed Seattle, WA, on the title page.",
+              "She relocated to Miami, FL, last spring.",
+              "Return the package to Albany, NY, immediately.",
+              "The citation ends with Denver, CO: University Press."
+            ],
+            "positive_acts": [
+              82.19183349609375,
+              89.80006408691406,
+              72.83458709716797,
+              76.32719421386719,
+              91.63323211669922
+            ],
+            "distractor_probes": [
+              "Please mail forms to Austin Texas 78701, USA.",
+              "Conference proceedings listed Seattle, Washington, on the title page.",
+              "She relocated to Miami, FLA., last spring."
+            ],
+            "distractor_acts": [
+              55.76606369018555,
+              76.87863159179688,
+              72.27749633789062
+            ],
+            "score": 14.249984995524088
+          },
+          {
+            "hypothesis": "Scientific/vendor affiliation or address formatting containing a city, comma, and two-letter state abbreviation, often followed by additional address punctuation such as \", USA\", semicolons, parentheses, or ZIP codes.",
+            "positive_probes": [
+              "Department of Biology, Austin, TX 78712, USA.",
+              "Acme Research Labs, Seattle, WA; Molecular Diagnostics Division.",
+              "Correspondence: Newark, NJ (United States of America).",
+              "Institute address: Boulder, CO, USA.",
+              "Vendor headquarters: Miami, FL 33101; sales office."
+            ],
+            "positive_acts": [
+              102.24845886230469,
+              107.37689971923828,
+              87.39757537841797,
+              94.17823028564453,
+              90.31383514404297
+            ],
+            "distractor_probes": [
+              "Department of Biology, Austin, Texas, USA.",
+              "Acme Research Labs in Seattle Washington, Molecular Diagnostics Division.",
+              "Correspondence: Newark, New Jersey (United States of America)."
+            ],
+            "distractor_acts": [
+              83.13228607177734,
+              64.9538345336914,
+              81.55313110351562
+            ],
+            "score": 19.756582641601568
+          },
+          {
+            "hypothesis": "Hyphenated or compound-modifier constructions built from a city, comma, and state abbreviation, such as \"Austin, TX-based\", \"Miami, FL-area\", or \"Denver, CO-trained\".",
+            "positive_probes": [
+              "Austin, TX-based startup raised seed funding.",
+              "Miami, FL-area beaches attract winter tourists.",
+              "Denver, CO-trained chef opened a bistro.",
+              "Portland, OR-founded nonprofit expanded nationally.",
+              "Nashville, TN-born singer released a debut album."
+            ],
+            "positive_acts": [
+              104.55709838867188,
+              109.39773559570312,
+              107.44384765625,
+              101.1895523071289,
+              103.12036895751953
+            ],
+            "distractor_probes": [
+              "Austin-based startup raised seed funding.",
+              "Miami, Florida area beaches attract winter tourists.",
+              "The chef trained in Denver, CO last year."
+            ],
+            "distractor_acts": [
+              55.76606369018555,
+              101.98809814453125,
+              72.56575775146484
+            ],
+            "score": 28.368414052327466
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    ", Carlsbad, CA, United States) following the manufacturers' protocol. Afterward, the mixture was gently blended with a pipette and cultivated in a",
+    "Detroit, Michigan 48221.\n\nBuilding the party organization in preparation for a strong general election effort is very important to me",
+    "The lawyer objected on procedural grounds.",
+    "The old library sat quietly at the edge of the park.",
+    "Two children played chess on a wooden bench.",
+    "LLP, Kansas City, MO, for Plaintiffs.\nHarlan D. Burkhead, Lathrop & Gage L.C., Kansas City, MO,",
+    "The engine cooled after the long climb.",
+    ", Santa Clara, CA) containing 2,696,550 markers of which 1,953,246",
+    "A soft breeze moved the curtains at dawn.",
+    "The mountain trail wound past three small lakes.",
+    "mega, Madison, WI, USA). The size and purity of the libraries were analyzed using the High Sensitivity D1000 Screen Tape on an",
+    ", Inc. (Grand Island, NY, USA).\n\nGeneration of the stable pedicatric radioresistant GBM model {#s4_2}\n--------------------------------"
+  ],
+  "heldout_true_acts": [
+    102.5118637084961,
+    101.10100555419922,
+    56.15915298461914,
+    56.15915298461914,
+    56.15915298461914,
+    99.79266357421875,
+    56.15915298461914,
+    103.14470672607422,
+    55.88511657714844,
+    55.88511657714844,
+    102.86140441894531,
+    102.62468719482422
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "geographical locations and their corresponding states or countries",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 66.51145076751709,
+        "sentences": [
+          "Austin is in Texas.",
+          "Paris, France, attracts many tourists.",
+          "Kyoto lies in Japan.",
+          "Miami is located in Florida.",
+          "Munich, Germany, hosts Oktoberfest.",
+          "Cairo is in Egypt.",
+          "Seattle sits in Washington state.",
+          "Barcelona, Spain, overlooks the Mediterranean."
+        ],
+        "activations": [
+          55.95903778076172,
+          87.48324584960938,
+          55.95903778076172,
+          55.95903778076172,
+          89.88792419433594,
+          55.95903778076172,
+          55.95903778076172,
+          74.92524719238281
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9970597720431161,
+        "spearman": 0.7974871988624449,
+        "preds": [
+          10.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          9.0,
+          0.0,
+          0.0,
+          10.0,
+          10.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Hyphenated or compound-modifier constructions built from a city, comma, and state abbreviation, such as \"Austin, TX-based\", \"Miami, FL-area\", or \"Denver, CO-trained\".",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 71.7490382194519,
+        "sentences": [
+          "The Austin, TX-based startup raised seed funding.",
+          "She joined a Miami, FL-area nonprofit last summer.",
+          "Our Denver, CO-trained guide knows every trail.",
+          "A Seattle, WA-based artist designed the mural.",
+          "They hired a Boston, MA-area consultant yesterday.",
+          "His Phoenix, AZ-trained dog won the agility trial.",
+          "We toured a Nashville, TN-based recording studio.",
+          "The Chicago, IL-area clinic expanded pediatric services."
+        ],
+        "activations": [
+          75.86665344238281,
+          68.2964859008789,
+          62.36307144165039,
+          86.19906616210938,
+          62.990596771240234,
+          75.81778717041016,
+          61.88468551635742,
+          80.57395935058594
+        ]
+      },
+      "predictive": {
+        "pearson": 0.913577294357293,
+        "spearman": 0.845098374913934,
+        "preds": [
+          2.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 175.04042148590088,
+  "layer": 20,
+  "sae_info": {
+    "layer": 20,
+    "width": "16k",
+    "l0": 71,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_20/width_16k/average_l0_71/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "geographical locations and their corresponding states or countries"
+}

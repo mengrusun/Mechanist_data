@@ -1,0 +1,400 @@
+{
+  "feature_idx": 600,
+  "max_act_ref": 28.611652374267578,
+  "trigger_threshold": 5.722330474853516,
+  "sage": {
+    "candidates": [
+      "The feature fires on comma-formatted threshold/cutoff numbers that end in ',001' (or closely related bracket-boundary values), especially in policy, pricing, tax, or eligibility text such as '$150,001' or '75,001 units'.",
+      "A weaker secondary sense is dense numeric interval/mapping notation where punctuation is directly attached to digits, especially forms like '3--5', '1--2', or '7\u21929' in tabular/range text.",
+      "The feature may prefer boundary-number lists or threshold sequences centered on exact +1 cutoffs, such as '99,999, 100,000, and 100,001', rather than arbitrary large comma numbers."
+    ],
+    "top": "The feature fires on comma-formatted threshold/cutoff numbers that end in ',001' (or closely related bracket-boundary values), especially in policy, pricing, tax, or eligibility text such as '$150,001' or '75,001 units'.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature fires on textual expressions of numeric ranges or mappings, especially patterns like 'X to Y', 'X--Y', or 'X -> Y'.",
+            "positive_probes": [
+              "Set the oven from 180 to 200 degrees.",
+              "Ages 5--7 qualify for the trial.",
+              "Map input A -> output B directly.",
+              "The score range is 10 to 15.",
+              "Convert states idle -> running -> stopped."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Set the oven around 190 degrees tonight.",
+              "Ages five and seven qualify separately.",
+              "Map input A with output B directly."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 0.0
+          },
+          {
+            "hypothesis": "The feature responds to boundary numbers at the start of large comma-formatted thresholds or intervals, such as '$150,001' where the first digit marks a range cutoff.",
+            "positive_probes": [
+              "Tax applies starting at $150,001 of annual income.",
+              "Premium rate kicks in above $1,000,000 exactly.",
+              "Coverage changes beginning from 250,001 enrolled members.",
+              "The surcharge starts at 75,001 units sold.",
+              "Benefits phase out after \u20ac200,001 in assets."
+            ],
+            "positive_acts": [
+              16.489704132080078,
+              6.3221940994262695,
+              8.927488327026367,
+              16.67235565185547,
+              11.580002784729004
+            ],
+            "distractor_probes": [
+              "Tax applies to $150,000 of annual income.",
+              "Premium rate doubled after one million customers enrolled.",
+              "Coverage changes for 250001 enrolled members total."
+            ],
+            "distractor_acts": [
+              3.9142584800720215,
+              3.5758166313171387,
+              0.0
+            ],
+            "score": 9.501657295227051
+          },
+          {
+            "hypothesis": "The feature activates on number-heavy formatting with punctuation immediately adjacent to digits, particularly hyphens, arrows, percent signs, or words like 'levels' introducing spans.",
+            "positive_probes": [
+              "Range 12-18 levels completed today.",
+              "Battery fell from 90% to 62%.",
+              "Scores moved 3->7 after recalibration.",
+              "Phase 2-4 levels require approval.",
+              "Profit rose 15%-22% year-over-year."
+            ],
+            "positive_acts": [
+              0.0,
+              9.471465110778809,
+              5.068386554718018,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Range twelve to eighteen was completed today.",
+              "Battery fell from ninety percent to sixty-two percent.",
+              "Several levels require approval this quarter."
+            ],
+            "distractor_acts": [
+              4.32954740524292,
+              11.520271301269531,
+              0.0
+            ],
+            "score": -2.375302569071452
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature fires on comma-formatted threshold numbers that end in ',001' or similar range-cutoff values, especially in policy/price/tax bracket text like '$150,001' or '75,001 units'.",
+            "positive_probes": [
+              "Premium tax starts at $150,001 in annual income.",
+              "The surcharge applies above 75,001 units sold.",
+              "Benefits phase out once earnings reach $200,001.",
+              "Higher tariffs begin at 1,001 imported items.",
+              "The rebate disappears after spending $50,001 yearly."
+            ],
+            "positive_acts": [
+              16.29989242553711,
+              14.123163223266602,
+              14.764641761779785,
+              10.686348915100098,
+              14.003788948059082
+            ],
+            "distractor_probes": [
+              "Premium tax starts at $150,000 in annual income.",
+              "The surcharge applies above seventy-five thousand units sold.",
+              "Benefits phase out once earnings reach $200001."
+            ],
+            "distractor_acts": [
+              3.301624298095703,
+              5.429306983947754,
+              11.924495697021484
+            ],
+            "score": 7.090424728393554
+          },
+          {
+            "hypothesis": "The feature may respond to numeric interval notation when punctuation directly links endpoints, especially forms like '1--2', '3->7', or similar digit-to-digit mappings, but only for certain exact symbol patterns.",
+            "positive_probes": [
+              "Record the mapping 1->4 in the margin.",
+              "Please compare intervals 3--5 and 7--9.",
+              "The chart lists 2->8 beside 6->10.",
+              "She wrote 11--13 without any spaces.",
+              "Copy the exact range 4->7 into notes."
+            ],
+            "positive_acts": [
+              0.0,
+              10.689318656921387,
+              8.606122970581055,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Record the mapping from 1 to 4 clearly.",
+              "Please compare intervals 3 to 5 and 7 to 9.",
+              "She wrote 11 - 13 with spaces."
+            ],
+            "distractor_acts": [
+              0.0,
+              5.470443248748779,
+              0.0
+            ],
+            "score": 2.0356072425842284
+          },
+          {
+            "hypothesis": "The feature is polysemantic: one sense is comma-formatted cutoff numbers like '150,001', and another weaker sense is dense numeric formatting with symbols immediately adjacent to digits, such as arrows or doubled hyphens in tabular/range text.",
+            "positive_probes": [
+              "The budget increased to 150,001 dollars this quarter.",
+              "Population dropped from 320,500 to 319,999 overnight.",
+              "Range shown as 12--15 with no spaces.",
+              "The table lists 7\u21929 and 10\u219212 transitions.",
+              "Thresholds were 99,999, 100,000, and 100,001 exactly."
+            ],
+            "positive_acts": [
+              0.0,
+              6.890687942504883,
+              5.502259254455566,
+              5.591070175170898,
+              12.97281551361084
+            ],
+            "distractor_probes": [
+              "The budget increased to 150001 dollars this quarter.",
+              "Population dropped from 320500 to 319999 overnight.",
+              "Range shown as 12 to 15 with spaces."
+            ],
+            "distractor_acts": [
+              0.0,
+              6.927102088928223,
+              0.0
+            ],
+            "score": 3.882332547505697
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "The feature fires on comma-formatted threshold/cutoff numbers that end in ',001' (or closely related bracket-boundary values), especially in policy, pricing, tax, or eligibility text such as '$150,001' or '75,001 units'.",
+            "positive_probes": [
+              "Applicants earning $150,001 lose the housing subsidy.",
+              "Tax rates increase once income exceeds $75,001.",
+              "Orders above 25,001 units qualify for volume pricing.",
+              "Coverage ends for families with assets over $200,001.",
+              "The rebate applies only after sales reach 10,001 copies."
+            ],
+            "positive_acts": [
+              16.817378997802734,
+              15.566123008728027,
+              10.810118675231934,
+              8.2210693359375,
+              14.855448722839355
+            ],
+            "distractor_probes": [
+              "Applicants earning $150,000 lose the housing subsidy.",
+              "Tax rates increase once income exceeds $75,100.",
+              "Orders above 25,000 units qualify for volume pricing."
+            ],
+            "distractor_acts": [
+              5.111786842346191,
+              15.590800285339355,
+              6.034911155700684
+            ],
+            "score": 4.3415283203125
+          },
+          {
+            "hypothesis": "A weaker secondary sense is dense numeric interval/mapping notation where punctuation is directly attached to digits, especially forms like '3--5', '1--2', or '7\u21929' in tabular/range text.",
+            "positive_probes": [
+              "Set bins 3--5 for weekday counts.",
+              "Table maps zones 7\u21929 during migration.",
+              "Use rows 1--2 in the summary.",
+              "The interval 4--6 marks acceptable scores.",
+              "Chart remaps category 2\u21924 after review."
+            ],
+            "positive_acts": [
+              0.0,
+              0.0,
+              0.0,
+              6.097070217132568,
+              0.0
+            ],
+            "distractor_probes": [
+              "Set bins three to five for weekday counts.",
+              "Table maps zones seven to nine during migration.",
+              "Use rows 1 and 2 in the summary."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 1.2194140434265137
+          },
+          {
+            "hypothesis": "The feature may prefer boundary-number lists or threshold sequences centered on exact +1 cutoffs, such as '99,999, 100,000, and 100,001', rather than arbitrary large comma numbers.",
+            "positive_probes": [
+              "The milestones were 99,999, 100,000, and 100,001 exactly.",
+              "Check thresholds at 999, 1,000, and 1,001 first.",
+              "Revenue hit 9,999, then 10,000, then 10,001.",
+              "Use boundary cases 499,999, 500,000, and 500,001.",
+              "Test counts 1,999, 2,000, and 2,001 carefully."
+            ],
+            "positive_acts": [
+              26.317256927490234,
+              12.435351371765137,
+              17.629642486572266,
+              10.380585670471191,
+              13.888749122619629
+            ],
+            "distractor_probes": [
+              "The milestones were 98,765, 123,456, and 210,987.",
+              "Check thresholds at 1,000 and 2,000 first.",
+              "Revenue hit 10,000, then 20,000, then 30,000."
+            ],
+            "distractor_acts": [
+              19.304607391357422,
+              8.260004997253418,
+              28.17013931274414
+            ],
+            "score": -2.447933451334638
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "The old library sat quietly at the edge of the park.",
+    "a breakout board with this sensor and a logarithmic amplifier? I don\u2019t care for the difference between 100 lux and 105 lux, which you won\u2019t notice anyway, but I do care about the difference between 10",
+    "\\].Table 8**Age group and management of headache**Age group in yearsVariables15 -2425 - 3435 - 4445 - 5455 - 64\u2264 65",
+    "She whisked the eggs and folded them into the batter.",
+    "The senator refused to comment before the hearing.",
+    "A soft breeze moved the curtains at dawn.",
+    "used definitions of underweight (\\< 18.5 kg/m^2^), normal weight (18.5--24.9 kg/",
+    "The engine cooled after the long climb.",
+    "The train from Milan arrived twenty minutes late."
+  ],
+  "heldout_true_acts": [
+    0.0,
+    23.221145629882812,
+    23.64269256591797,
+    0.0,
+    0.0,
+    0.0,
+    22.334270477294922,
+    0.0,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "specific numerical data and percentages related to statistics and measurements",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 1.526340365409851,
+        "sentences": [
+          "Inflation reached 7.2% in March 2023.",
+          "The sample contained 48 patients and 12 controls.",
+          "Battery life dropped from 10.5 hours to 8.1.",
+          "Rainfall measured 63 millimeters over 24 hours.",
+          "Approval rose by 18% after the policy change.",
+          "The engine produces 250 horsepower at 6,500 rpm.",
+          "Only 3 of 40 tests showed contamination.",
+          "Average blood pressure was 128 over 82 mmHg."
+        ],
+        "activations": [
+          0.0,
+          0.0,
+          5.614086151123047,
+          3.4106616973876953,
+          0.0,
+          3.1859750747680664,
+          0.0,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9801170005734724,
+        "spearman": 0.8568753083836919,
+        "preds": [
+          0.0,
+          8.0,
+          9.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          2.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "The feature fires on comma-formatted threshold/cutoff numbers that end in ',001' (or closely related bracket-boundary values), especially in policy, pricing, tax, or eligibility text such as '$150,001' or '75,001 units'.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 16.596391558647156,
+        "sentences": [
+          "Tax rates jump at $150,001 of taxable income.",
+          "Applicants earning $75,001 are no longer eligible.",
+          "The surcharge starts once usage exceeds 25,001 units.",
+          "Premium pricing applies from $200,001 onward.",
+          "Benefits phase out at household income of $100,001.",
+          "Orders of 50,001 items qualify for wholesale terms.",
+          "A new bracket begins at 300,001 residents.",
+          "Coverage changes when assets reach $1,250,001."
+        ],
+        "activations": [
+          21.736846923828125,
+          14.426711082458496,
+          16.28168487548828,
+          21.351032257080078,
+          18.99094009399414,
+          13.138018608093262,
+          14.08543586730957,
+          12.760462760925293
+        ]
+      },
+      "predictive": {
+        "pearson": 0.5185328668318996,
+        "spearman": 0.6507913734559686,
+        "preds": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 70.24637126922607,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "specific numerical data and percentages related to statistics and measurements"
+}

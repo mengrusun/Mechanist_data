@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (GPT-5.4 via DMX, T=0)",
+  "claim_id": "C2",
+  "linked_milestones": ["M2", "M1"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Steering-effect component uses LLM-judge (GPT-5.4) proxy annotations. Direction stability (split-half cosine, cos-to-reference) is purely geometric — no GT needed there."
+    },
+    "score_normalization": {
+      "status": "warn",
+      "details": "ratio_to_large_pool normalizes by reference delta (steering effect at n_pairs=reference), which is itself model-output derived. Geometric stability metrics (cosines) are fine."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "split-half cos 0.588 at n=25 consistent with seed-average from M2 sweep. cos-to-reference 0.944 consistent. Other behaviours listed as untestable and confirmed by n_pos caps."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All M2 output fields (split_half_cos, cos_to_reference, steered_rate, delta_rate, ratio_to_large_pool) present in results file."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "Limitations disclosed: only uncertainty testable (n_pos=28), 30-task subset (plan: 50), n_pairs grid truncated by corpus size. Verdict labeled partial/under-power."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "novelty": {
+    "score": 4,
+    "reasoning": "Core claims: (1) forced terseness causally increases per-token computation density; (2) this density gain saturates at a ceiling; (3) the ceiling predicts the accuracy cliff; (4) depth can be causally blocked/restored to test compensation. Closest prior work already establishes a depth-vs-length tradeoff and per-token density estimators, and latent-reasoning work shows depth can substitute for tokens in principle. The only real delta is the inference-time causal compression test and the predictive-ceiling framing, which is interesting but thin and close to an obvious next experiment rather than a clearly new phenomenon.",
+    "revision_notes": [
+      "State the exact novel causal claim in one sentence and distinguish it from known depth-length tradeoffs; remove 'conservation' unless you formalize it.",
+      "Add a sharper related-work paragraph naming Think Deep, Not Just Long and explicitly explaining why your setting is not just a re-run of its depth/length redistribution result.",
+      "Narrow the claim to a measurable, falsifiable hypothesis about forced compression and compression-break thresholds, not a general theory of compute interchangeability."
+    ]
+  },
+  "impact": {
+    "score": 6,
+    "reasoning": "Problem: understanding when shorter reasoning prompts preserve accuracy vs trigger failure, and whether there is a mechanistic limit to compression. Who cares: users and builders of reasoning LLMs, inference-time compression, and adaptive compute allocation. Downstream if true: can set safe compression limits, choose prompts/steering, and predict when terse reasoning will fail. Strongest case: a measurable ceiling on compensatory depth would give an actionable compression budget rather than a purely empirical token-accuracy curve.",
+    "revision_notes": [
+      "Add a concrete user-facing use case: adaptive CoT shortening for latency/cost control with an accuracy safety bound.",
+      "Quantify the operational decision your method enables: 'compress until predicted ceiling, then stop' or similar.",
+      "Emphasize whether this changes deployment policy, not just mechanistic understanding."
+    ]
+  },
+  "review": {
+    "score": 4,
+    "reasoning": "The proposal is testable, but the central hypothesis is loosely specified and heavily proxy-dependent. There is strong overlap with prior depth/length work, and several experiments risk being post-hoc correlations (raw vs matched tokens, logit-lens depth proxies, LLM-judge matching). The causal tests are plausible but need tighter controls and clearer falsifiability. Venue-readiness is limited by novelty risk and by insufficiently specified measurement validity.",
+    "revision_notes": [
+      "Define a single primary endpoint: e.g., 'forced compression increases per-token density on content-matched tokens by X and predicts failure with AUROC Y.'",
+      "Specify controls for token-content confounding, prompt-content drift, and length-steering artifacts; include equal-content paraphrase controls.",
+      "Pre-register the exact density metric(s), depth-cap mechanism, and failure criterion; avoid mixing many proxies without a primary analysis.",
+      "Add ablations: prompt terseness vs steering vs natural short answers; matched easy/hard token subsets; model-scale and family transfer.",
+      "Tighten the experimental design so each experiment tests one causal link, not several at once."
+    ]
+  },
+  "revision_notes": [
+    "State the exact novel causal claim in one sentence and distinguish it from known depth-length tradeoffs; remove 'conservation' unless you formalize it.",
+    "Add a sharper related-work paragraph naming Think Deep, Not Just Long and explicitly explaining why your setting is not just a re-run of its depth/length redistribution result.",
+    "Narrow the claim to a measurable, falsifiable hypothesis about forced compression and compression-break thresholds, not a general theory of compute interchangeability.",
+    "Add a concrete user-facing use case: adaptive CoT shortening for latency/cost control with an accuracy safety bound.",
+    "Quantify the operational decision your method enables: 'compress until predicted ceiling, then stop' or similar.",
+    "Emphasize whether this changes deployment policy, not just mechanistic understanding.",
+    "Define a single primary endpoint: e.g., 'forced compression increases per-token density on content-matched tokens by X and predicts failure with AUROC Y.'",
+    "Specify controls for token-content confounding, prompt-content drift, and length-steering artifacts; include equal-content paraphrase controls.",
+    "Pre-register the exact density metric(s), depth-cap mechanism, and failure criterion; avoid mixing many proxies without a primary analysis.",
+    "Add ablations: prompt terseness vs steering vs natural short answers; matched easy/hard token subsets; model-scale and family transfer.",
+    "Tighten the experimental design so each experiment tests one causal link, not several at once."
+  ]
+}

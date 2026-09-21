@@ -1,0 +1,22 @@
+{
+  "claim_id": "C5",
+  "claim_dir": "C5_internal_monitor_beats_gpt",
+  "overall_verdict": "n/a",
+  "checks": {
+    "A_steering_coefficient_sweep": {
+      "verdict": "n/a",
+      "reason": "C5 uses RFM in classifier mode (<h_l, v_c> as AUROC score) — no additive intervention, no alpha sweep. Block selection (Location step) performed correctly: per-block AUROC on val split for all 32 blocks, argmax selection, per-block arrays saved on disk. RFM val AUROC >= probe val AUROC on both benchmarks (required sanity check met).",
+      "block_selection": "all 32 blocks evaluated; ToxicChat shows clear monotone improvement with depth (probe blk 31, RFM blk 30 are optimal); HaluEval nearly uniform (all >0.978)",
+      "rfm_vs_probe_val": "HaluEval: RFM_val=0.9927 > probe_val=0.9888 (OK); ToxicChat: RFM_val=0.9605 > probe_val=0.9587 (OK). Sanity check passed."
+    },
+    "B_direction_extraction_quality": {"verdict": "not_implemented"},
+    "C_site_layer_choice": {"verdict": "not_implemented"},
+    "D_n_effective_sufficiency": {"verdict": "not_implemented"},
+    "E_probe_vs_causal_disentanglement": {"verdict": "not_implemented"},
+    "F_intervention_scope": {"verdict": "not_implemented"}
+  },
+  "mechanism_type": "classifier (no additive intervention) — alpha sweep not applicable",
+  "milestones_audited": ["M12_C5_activation_cache", "M13_C5_probe_fit", "M14_C5_baseline_judge", "M15_C5_report"],
+  "runs_audited": ["C5_monitoring", "C5_baselines"],
+  "audited_at": "2026-07-15"
+}

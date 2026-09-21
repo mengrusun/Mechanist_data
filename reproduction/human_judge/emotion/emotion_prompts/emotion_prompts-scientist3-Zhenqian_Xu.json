@@ -1,0 +1,174 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "Do Emotions in Prompts Matter? Effects of Emotional Framing on Large Language Models",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "n/a —— 无拟合/选择过程。",
+    "score": "n/a",
+    "evidence_files": [
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_9496de630bbd4a8b961b934a3c09be24.py",
+      "report.md"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "GSM8K 自带gold标签。 ",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_9496de630bbd4a8b961b934a3c09be24.py",
+      "logs/0-run/experiment_results/experiment_9496de630bbd4a8b961b934a3c09be24_proc_2173433/experiment_data.npy"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "、数据量大幅减少。2.claim要求要跨任务数据集，没有做到。",
+    "score": 2,
+    "evidence_files": [
+      "idea.md",
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_9496de630bbd4a8b961b934a3c09be24.py",
+      "report.md",
+      "logs/0-run/experiment_results/experiment_9496de630bbd4a8b961b934a3c09be24_proc_2173433/experiment_data.npy"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "used_n=50 GSM8K items，勉强越过 rubric 40-item 阈值，但相对整数据集来说太少了，而且该task.md就是要求在数据量足够的benchmark上实验。",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json",
+      "report.md",
+      "logs/0-run/experiment_results/experiment_9496de630bbd4a8b961b934a3c09be24_proc_2173433/experiment_data.npy"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": " bootstrap CI、无 McNemar 配对检验、无多种子。",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_9496de630bbd4a8b961b934a3c09be24.py",
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json",
+      "logs/0-run/experiment_results/seed_aggregation_d61b6db3f0a14277b33d5cb5c884981e/aggregation_plotting_code.py"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a —— 无因果主张。idea.md 四条 claim 均为行为描述（accuracy shift / task-family spread / no consistent winner / adaptive policy），scientist3 全流程只做前向推理与统计聚合，未使用 activation patching / steering / probing 等机制干预，也未主张机制/因果层面的读出。措辞与证据类型一致。",
+    "score": "n/a",
+    "evidence_files": [
+      "idea.md",
+      "report.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字均可回追。",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_9496de630bbd4a8b961b934a3c09be24_proc_2173433/experiment_data.npy",
+      "logs/0-run/experiment_results/experiment_505d2080795145bc9694c134f03900c9_proc_2173433/experiment_data.npy",
+      "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "多数产物自洽（stage_progress.json / experiment_data.npy / journal.json 之间数字互相印证）。两处松散但不损结论：(1) stage_2 与 stage_3 的 best_solution*.py 字节级完全相同（diff 为空），stage_3 的 tree 只挂了 stage_2 已有的 best_node_id=53d3cfaac9… 未产出任何新代码 / 新实验——stage 3 名为『creative_research_1_first_attempt』但内容与 stage 2 baseline_tuning 完全一致，属命名与实际内容不符；(2) `experiment_results/seed_aggregation_*/aggregation_plotting_code.py` 里 `experiment_data_path_list` 只有 1 个路径元素，目录名『seed_aggregation』暗示多种子聚合但实际只聚合单次运行，SEM 计算按定义为 0，命名有误导性；(3) report.md 诚实标 `pipeline status: incomplete`、per-claim 全部写『See overall verdict』占位而不作结论，未把 stage 1/2 的部分结果冒充为 claim 成立/失败——这一点值得肯定。三处均不改变判定，属记账松散而非实质造假。",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py",
+      "logs/0-run/experiment_results/seed_aggregation_d61b6db3f0a14277b33d5cb5c884981e/aggregation_plotting_code.py",
+      "report.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Across diverse task domains, static emotional prefixes change LLM accuracy only by small, input-dependent amounts and do not behave as a general-purpose enhancement.",
+        "method": {
+          "justification": "选用6种情绪+选用 per-condition greedy 推理GSM8K任务，合理。",
+          "score": 5,
+          "evidence_files": [
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_9496de630bbd4a8b961b934a3c09be24.py",
+            "idea.md"
+          ]
+        },
+        "experiment": {
+          "justification": "实验数量太少，n=50 GSM8K items × 7 templates × Qwen3-14B。max_new_tokens sweep {256,512,1024} 是有价值的超参检验，选取了较大的max_token避免中途被截断",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_9496de630bbd4a8b961b934a3c09be24.py",
+            "logs/0-run/stage_2_baseline_tuning_1_first_attempt/best_solution_53d3cfaac986487096197ddb0dfb230b.py",
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json"
+          ]
+        },
+        "result": {
+          "justification": "实测结果（GSM8K/Qwen3, n=50, max_new_tokens=512）：neutral 0.92 / disgust 0.96 (best) / anger 0.88 (worst)，8pp 极差。方向上与 claim『small, input-dependent』一致。但数据量太少存疑",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_9496de630bbd4a8b961b934a3c09be24_proc_2173433/experiment_data.npy",
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json",
+            "report.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The effect of emotional framing is most pronounced on socially grounded tasks (interpersonal/social reasoning), where the emotional context interacts meaningfully with task content; on tasks like mathematical reasoning or factual QA the effect is markedly smaller.",
+        "method": {
+          "justification": "没有跑别的任务，只有GSM8K",
+          "score": 1,
+          "evidence_files": [
+            "idea.md",
+            "report.md",
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_9496de630bbd4a8b961b934a3c09be24.py"
+          ]
+        },
+        "experiment": {
+          "justification": "没有跑别的任务，只有GSM8K",
+          "score": 1,
+          "evidence_files": [
+            "idea.md",
+            "logs/0-run/experiment_results"
+          ]
+        },
+        "result": {
+          "justification": "无结果可分析。",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "No single basic emotion among {happiness, sadness, fear, anger, disgust, surprise} provides a consistent benefit across all models and tasks; stronger emotional wording does not yield proportionally larger gains.",
+        "method": {
+          "justification": "没有 intensity 或 wording 变体可比。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/best_solution_9496de630bbd4a8b961b934a3c09be24.py",
+            "idea.md"
+          ]
+        },
+        "experiment": {
+          "justification": "没有跨task和跨intensity实验。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_9496de630bbd4a8b961b934a3c09be24_proc_2173433/experiment_data.npy",
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json"
+          ]
+        },
+        "result": {
+          "justification": "无有效证据 + 未 overclaim』。",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_9496de630bbd4a8b961b934a3c09be24_proc_2173433/experiment_data.npy",
+            "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json",
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

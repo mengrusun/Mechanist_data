@@ -1,0 +1,258 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Zhenqian Xu",
+    "paper_title":         "Toward Universal Steering and Monitoring of AI Models",
+    "agent":         "scientist2",
+    "review_date":         "2026-07-18"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "不存在划分数据集问题",
+    "score": "n/a",
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_PLAN.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "verify/INTEGRITY_AUDIT.md",
+      "runs/C5_monitoring/summary.json",
+      "data/paired/held_out/"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签源于benchmark和llm judge评估，合理。但是造refusal数据时造的不够好，但也不全是label的原因",
+    "score": 4,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md",
+      "runs/C1_steer_judge/summary.json",
+      "runs/C5_monitoring/summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "选取了Task.md中要求的model和dataset，合理。适当的选取了3个概念评估",
+    "score": 5,
+    "evidence_files": [
+      "task.md",
+      "refine-logs/EXPERIMENT_PLAN.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "verify/C5_internal_monitor_beats_gpt/variants/"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "C2的数据量过少，只有20，可能和代码实验本身较难构造相关。但别的实验数据量充足",
+    "score": 4,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "runs/C5_monitoring/summary.json",
+      "runs/C2_hackerrank/summary.json",
+      "runs/C3_crosslingual/summary.json",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "C2尝试多seed.random vector做对照。稳健性有 verify iteration 里 3 个模型 swap。总体点估计为主、误差描述稀薄。",
+    "score": 4,
+    "evidence_files": [
+      "runs/C1_steer_judge/summary.json",
+      "runs/C2_hackerrank/summary.json",
+      "runs/C3_crosslingual/summary.json",
+      "runs/C5_monitoring/summary.json",
+      "verify/INTEGRITY_AUDIT.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "steering整体做法较合理，但是alpha系数的sweep，如何选合适的层，构造合适的constrastive对，探索不够充分",
+    "score": 3,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "runs/C1_steer_judge/summary.json",
+      "runs/C2_hackerrank/summary.json",
+      "verify/INTEGRITY_AUDIT.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字都能一路追回落盘产物。没发现无来源或对不上的数字。",
+    "score": 5,
+    "evidence_files": [
+      "runs/C1_steer_judge/summary.json",
+      "runs/C2_hackerrank/summary.json",
+      "runs/C5_monitoring/summary.json",
+      "verify/C5_internal_monitor_beats_gpt/variants/model-swap-llama3-8b-instruct/results/summary.json",
+      "refine-logs/main-experiment-verdicts.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "各产物之间数字一致，判定传播也算清楚。",
+    "score": 5,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "refine-logs/main-experiment-verdicts.json",
+      "verify/VERIFY_REPORT.md",
+      "verify/C5_internal_monitor_beats_gpt/ROBUSTNESS.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "RFM 可从大模型内部激活中抽出 per-block 线性概念向量，加到激活上可推理时定向 steering（示例：anti-refusal / political / honesty）。",
+        "method": {
+          "justification": "机理方法完全对齐原论文：screen 32 blocks 上 linear probe → 选 best block → RFM (AGOP, 3-5 iter) 抽概念向量 → h_l+α·v_c 做加性干预 → GPT-4o rubric 有匹配随机方向对照",
+          "score": 5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_PLAN.md",
+            "refine-logs/MECHANISM_ROUTING.md"
+          ]
+        },
+        "experiment": {
+          "justification": "(1) refusal 的配对数据把标签泄进了答案文本，  probe 在 32 层全部 1.0 可分，选不出合适的层。没有因精度异常就回头查数据质量。（2）发现 honesty 比不过随机方向之后,没有做任何加大 α 的探索",
+          "score": 2,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "runs/C1_steer_judge/summary.json",
+            "verify/C1_political_rfm_steering/main_experiment_audit/",
+            "verify/INTEGRITY_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "结果是 partial：political 干净支持，honesty 弱正（+0.14 在 std=1.25 内），refusal 由于probe选层失败构建steer向量失败。refusal / honesty 未能复现且给出了具体失败原因（RLHF 安全鲁棒、rubric 噪声、probe 退化）。",
+          "score": 4,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "runs/C1_steer_judge/summary.json",
+            "runs/C1b_refusal_block14/summary.json",
+            "runs/C1c_high_alpha/summary.json",
+            "CLAIMS_LEDGER.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "C++ 概念向量可提高 HackerRank 上算法题的 test-case pass rate，胜过默认 Python 与 'Answer in C++' prompt。",
+        "method": {
+          "justification": "抽取管线与 C1 一致：400 paired (Python/C++) → block screen → RFM → 加 α·v_cpp → g++ 编译 + HackerRank test case 打分。方法完全对齐。",
+          "score": 5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_PLAN.md",
+            "runs/C2_hackerrank/summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "α 在[0,1,2,3,4]上做尝试，但论文在[0.1,0.2,0.3]规模上尝试，存在尺度问题，sweep不充分。 ",
+          "score": 2,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "runs/C2_hackerrank/summary.json",
+            "verify/C2_cpp_steering_hackerrank/main_experiment_audit/",
+            "refine-logs/main-experiment-verdicts.json"
+          ]
+        },
+        "result": {
+          "justification": "结果 not-supported,python没真的转化成c++.由于task.md中给出的model scale 没到 paper 展示效应的规模，且steer系数没有充分sweep，导致了实验失败.ledger 已明确写这是 'provisional' 并给了合理原因",
+          "score": 3,
+          "evidence_files": [
+            "runs/C2_hackerrank/summary.json",
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "英文 paired data 抽出的概念向量可以直接迁移到中文/法文/西班牙文 prompts 上做 steering。",
+        "method": {
+          "justification": "复用 C1 的 v_honesty，在 EN/ZH/FR/ES 4 语种 held-out prompts 上做同一 α 的加性 steering，GPT-4o 多语种 rubric-judge，per-lang Wilcoxon。",
+          "score": 5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_PLAN.md",
+            "runs/C3_crosslingual/summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "选了C1中within-noise的honesty向量而不是更成功的political向量是大失误。",
+          "score": 3,
+          "evidence_files": [
+            "runs/C3_crosslingual/summary.json",
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "verify/C3_crosslingual_honesty_vector/main_experiment_audit/",
+            "verify/INTEGRITY_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "有两种尝试的语言达到了迁移效果，甚至ZH的效果更好一些。",
+          "score": 4,
+          "evidence_files": [
+            "runs/C3_crosslingual/summary.json",
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "多个概念向量可线性组合，同时对多个概念进行 steering。",
+        "method": {
+          "justification": "两个 combo（honesty+refusal_neg / formal_tone+technical_persona），但存在由于probe饱和，block-0 退化选层的问题，但C4意识到了这个问题把它们钉到 block14",
+          "score": 4,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_PLAN.md",
+            "runs/C4_compositional/",
+            "runs/C4b_pin_block14/"
+          ]
+        },
+        "experiment": {
+          "justification": "两个线性组合的概念本身差异较小，llm judge难以评估，也不容易做出效果",
+          "score": 2,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "runs/C4_compositional/summary.json",
+            "runs/C4b_pin_block14/summary.json",
+            "verify/INTEGRITY_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "诚实报告了由于选的两个概念方向差异小，有'measurement-ceiling failure means test is uninformative'问题，未能有效检验 paper 的组合性主张，属于non-diagnostic结果",
+          "score": 3,
+          "evidence_files": [
+            "runs/C4_compositional/summary.json",
+            "runs/C4b_pin_block14/summary.json",
+            "CLAIMS_LEDGER.md"
+          ]
+        }
+      },
+      "C5": {
+        "claim": "在 hallucination / toxicity 上，内部特征（RFM 概念向量或线性 probe）分类器比直接用 GPT-4o judge 更准——即便内部特征来自较小的 8B 开源模型。",
+        "method": {
+          "justification": "路径与 paper 完全一致。",
+          "score": 5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_PLAN.md",
+            "runs/C5_monitoring/summary.json"
+          ]
+        },
+        "experiment": {
+          "justification": "scientist2 跑 HaluEval-General + ToxicChat 两个benchmark，设计合理。",
+          "score": 5,
+          "evidence_files": [
+            "runs/C5_monitoring/summary.json",
+            "runs/C5_baselines/summary.json",
+            "verify/C5_internal_monitor_beats_gpt/variants/",
+            "verify/C5_internal_monitor_beats_gpt/ROBUSTNESS.md"
+          ]
+        },
+        "result": {
+          "justification": " 4 个 8B 模型在 HaluEval 上全部 > GPT-4o；ToxicChat 上 3/3 RLHF 模型 > GPT-4o，结果合理",
+          "score": 5,
+          "evidence_files": [
+            "runs/C5_monitoring/summary.json",
+            "verify/C5_internal_monitor_beats_gpt/ROBUSTNESS.md",
+            "verify/C5_internal_monitor_beats_gpt/variants/model-swap-llama3-8b-instruct/results/summary.json",
+            "verify/C5_internal_monitor_beats_gpt/variants/model-swap-mistral-7b-instruct/results/summary.json",
+            "CLAIMS_LEDGER.md",
+            "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+          ]
+        }
+      }
+    }
+  }
+}

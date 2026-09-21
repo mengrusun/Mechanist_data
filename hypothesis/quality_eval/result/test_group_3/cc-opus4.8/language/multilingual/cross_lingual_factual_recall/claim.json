@@ -1,0 +1,22 @@
+{
+  "Name": "cross_lingual_factual_recall",
+  "Title": "One Fact, Many Tongues: A Shared Factual-Recall Circuit Across Languages",
+  "Short Hypothesis": "Factual associations (subject->attribute) are retrieved by a shared mid-layer MLP mechanism whose subject-enrichment step is largely language-agnostic, while only the final attribute-token surfacing is language-specific; thus the same key-value memory is queried regardless of query language.",
+  "Related Work": "Meng et al. (ROME) and Geva et al. localize factual recall to mid MLPs in English. Multilingual editing work (Wang et al. cross-lingual ROME) shows edits partially transfer. We test the stronger mechanistic claim that the *retrieval* stage is shared while only surfacing differs, using path patching between languages to localize the shared vs language-specific stages.",
+  "Abstract": "Where in a multilingual model does 'Paris is the capital of France' become language-independent knowledge? We hypothesize factual recall decomposes into a shared, language-agnostic retrieval stage (subject enrichment and attribute lookup in mid-layer MLPs) and a language-specific surfacing stage (mapping the retrieved attribute to target-language tokens in later layers). Using parallel factual prompts in 8 languages, we localize the recall mechanism via causal tracing and cross-lingual path patching: patching the mid-layer subject representation from a French prompt into a Swahili prompt should transfer the fact if retrieval is shared. We predict high cross-lingual patch success at mid layers (retrieval shared) but failure if patched too late (surfacing diverged). We quantify the layer boundary between shared and specific stages and test whether a single cross-lingual attribute direction predicts the answer in all languages before language-specific unembedding. Metrics: causal-tracing peak layers per language, cross-lingual patch transfer rate by layer, and shared-attribute-direction decoding accuracy. This localizes multilingual knowledge to a shared memory and explains why cross-lingual fact editing sometimes transfers, guiding more reliable multilingual knowledge editing.",
+  "Experiments": [
+    "Build parallel factual prompts (CounterFact/mLAMA) in 8 languages with known answers.",
+    "Causal tracing per language to localize decisive layers/modules; compare peak layers across languages.",
+    "Cross-lingual path patching: patch subject-token mid-layer states from language A into language B; measure fact-transfer rate by patched layer.",
+    "Test shared attribute direction: fit a direction decoding the correct attribute in language A, evaluate on B before unembedding.",
+    "Localize shared/specific boundary: sweep patch layer to find where transfer drops.",
+    "Editing tie-in: perform ROME at shared layer and measure cross-lingual generalization vs at late layer.",
+    "Controls: unrelated-fact patches, and same-language patches as ceiling."
+  ],
+  "Risk Factors and Limitations": [
+    "Tokenization of subjects/attributes differs across languages, complicating token-aligned patching.",
+    "Causal tracing peaks can be corrupted by noise-based interventions; use symmetric patching.",
+    "Some facts are only known in high-resource languages, biasing transfer estimates.",
+    "Findings may not extend to reasoning-derived facts vs memorized ones."
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly tests the retrieve-then-override hypothesis through matched polarity pairs, measuring whether the \"AFFIRMATIVE answer token is decodable at mid layers\" and then using causal patching and intervention to distinguish retrieval from suppression failure. Its predictions are directional and refutable: \"affirmative answer dominates mid layers; negation integrated only late,\" while the intervention must improve negated-query accuracy and \"must not degrade\" affirmative queries; absence of these effects would contradict the claim, although no numerical effect thresholds or operational boundary between \"mid\" and \"late\" are specified. The single-correct multiple-choice design and genuine-gap controls address the ambiguity of negated cloze answers, but \"difference-of-means direction that decodes the affirmative answer\" still leaves some choices about feature construction, scaling, and evaluation to the implementer.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to \"identify late-layer heads/positions that carry the negation cue and perform suppression\" using activation patching and attention knockout; this requires careful custom causal analysis but is implementable with standard activation-hooking and intervention tooling rather than being a magic step. The named dependencies—CounterFact, T-REx, Pythia, Qwen2.5, Llama-3, logit-lens analysis, linear probes, activation patching, and attention knockout—exist and are supported by established ML and interpretability tooling, while resources are concretely specified as \"~4k matched query pairs,\" four-option questions, and six named model sizes from 410M to 8B. The refuting branch is runnable because the design includes matched affirmative queries, genuine knowledge gaps, unrelated-query checks, and baselines including \"no intervention,\" explicit prompting, and \"random-direction subtraction,\" though construction of the benchmark and suppression direction needs some custom implementation.",
+      "score": 8
+    }
+  }
+}

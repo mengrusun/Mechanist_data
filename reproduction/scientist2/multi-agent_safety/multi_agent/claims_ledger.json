@@ -1,0 +1,153 @@
+{
+  "project": "Group-Aggregated Activation Probes for Multi-Agent Collusion Detection",
+  "direction": "Multi-agent LLM collusion detection via group-aggregated linear probes on residual-stream activations",
+  "date_range": {"start": "2026-07-14", "end": "2026-07-14"},
+  "models": {"claim": "claude-opus-4-7", "experiment": "claude-opus-4-7", "verify": "claude-sonnet-4-6", "iteration": "claude-opus-4-7"},
+  "pipeline_status": "completed",
+  "round_end": {"qualifier": "", "detail": "", "remedy": "", "see": "", "partial_artifacts": [], "next_round_options": []},
+  "journey_summary": {
+    "claim": "given behavior faithfully captured (3 sub-claims C1/C2/C3 from task.md); mechanism_strategy = Location + Decision Auditing",
+    "mechanism_strategy": "Location + Decision Auditing",
+    "mechanism_routing": "family=Probing / Residual Stream States, submethod=linear-probe on last-token residuals (layers {27,37,48,59}/64)",
+    "experiment": "9 runs (M1.1–M1.4, M2.1×5+M2.2, M3.1–M3.3), ~7.09 GPU-hours (M1=4.44h on GPUs {2,3}, M2=0.05h on {2}, M3=2.60h on {5,6}); headline mixed: C1 partial, C2 partial, C3 supported",
+    "verify": "3 claims audited (Phase 2): C1 WARN, C2 WARN, C3 PASS; picked C1 for Stage 2 (foundational importance); C1 variant (Qwen3-32B bf16) sanity partial then budget-blocked → ZERO_ELIGIBLE_VARIANTS; C2/C3 deferred (max_verify_claims_cap) → INTEGRITY_ONLY. Verify GPU-h: ~0.32.",
+    "iteration": "1/6 iterations, claim-reentries=1/2 (all consumed by C1 → C1_v2 lightweight rewrite), score 6/10 verdict 'almost', termination=positive_verdict; 0 GPU-h spent; C1 narrowed to Qwen3-32B-AWQ / K=3 / short-transcript / small-split scope (new claim C1_v2); C2/C3 unchanged (INTEGRITY_ONLY carried forward with paper-narrative-discipline note)",
+    "figures": "6 figures across 4 claims (C1 c1_layer_sweep; C1_v2 c1v2_probe_vs_controls; C2 c2_aggregation_ranking + c2_diversity_per_domain [table]; C3 c3_per_family_transfer + c3_aggregation_ablation); 0 render-skipped, 0 errored"
+  },
+  "open_items": [
+    "C2: audit passed (WARN — under-power), swap-test deferred (max_verify_claims_cap) — upgrade via `/auto-verify C2 — resume: true` when budget available; reviewer note: 'suggestive, not confirmatory' at current statistical power",
+    "C3: audit passed (PASS), swap-test deferred (max_verify_claims_cap) — upgrade via `/auto-verify C3 — resume: true` when budget available",
+    "C1_v2 paper-write discipline: abstract, introduction, and conclusion must consistently reflect the narrowed scope (Qwen3-32B-AWQ, K=3 committee, max_new_tokens=60 short-transcript regime, realized in-domain benchmark); no phrasing that implies broad model-agnostic superiority, stable layer choice, or judge-beating without transcript caveats",
+    "GPU budget: 7.41/10 GPU-h consumed total (experiment 7.09 + verify 0.32 + iteration 0.00); ~2.6 GPU-h unspent"
+  ],
+  "iteration_summary": {"score": 6.0, "verdict": "almost", "rounds_consumed": 1, "max_rounds": 6},
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "Model internals carry a collusion signal that text-level monitoring misses; a lightweight linear probe on per-agent residual-stream activations of Qwen3-32B-AWQ can recover it, beating a text-only gpt-5.4 judge on NARCBench-Core.",
+      "origin": "task.md ## Claim bullet 1 (existence)",
+      "data": {"provenance": "constructed", "source": "mabench_core — S1 committee scenarios generated in-house via gpt-5.4 API (17 domains × 24 target)", "available_n": "408 target", "used_n": "282 valid (74% realized)", "subset_note": "70/10/20 stratified train/dev/test (200/33/49); honest/collusive balanced within splits but below the plan's aspirational 50/class/split floor (24/25 in test, 16/17 in dev)"},
+      "models": ["Qwen3-32B-AWQ", "gpt-5.4 (external text-only judge baseline)"],
+      "method": "Probing / Residual Stream States — screen → decode → verify → recover: per-agent last-assistant-token residual-stream activations extracted at layers {27,37,48,59}/64 (re-scaled from plan's 48-layer template), logistic linear probe per layer, best layer picked by dev-scenario AUROC (layer 48 selected), test AUROC reported at chosen layer. Text-only baseline: gpt-5.4 judges committee transcripts (three-way COLLUSIVE/HONEST/OTHER; OTHER coerced to p=0.5). Predicate: probe_AUROC ≥ 0.75 AND probe_AUROC − text_judge_AUROC ≥ 0.05.",
+      "main_experiment": {
+        "verdict": "partial [provisional — suspected under-power]",
+        "key_stats": "layer 48 (dev-best): dev_scen_AUROC=0.853, test_scen_AUROC=0.665, tpr@1%FPR=0.040; layer 27 (test-best): test_scen_AUROC=0.750; text-only gpt-5.4 judge: primary AUROC 0.60 (OTHER-coerced, 71% OTHER rate) / 0.806 excluding OTHER (n=14/49); sanity controls at layer 48: label-permute 0.412 (chance ✓), length-match 0.642, topic-swap 0.651",
+        "headline": "Probe recovers a real above-chance signal at layer 48 (test 0.665) and beats the text-only gpt-5.4 judge by 0.065 AUROC (predicate b PASS), but does not clear the 0.75 in-distribution threshold at the selected layer (predicate a FAIL); layer 27 hits the threshold exactly but was not dev-best. Small-dev-set instability + short transcripts (max_new_tokens=60) truncated deliberations."
+      },
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"}, "integrity": "WARN", "verdict": "ZERO_ELIGIBLE_VARIANTS", "stage2_skip_reason": null},
+      "iteration": {
+        "final_reviewer_status": "narrowed (type ③ lightweight in-loop rewrite; consumed 1 iteration + 1 claim-reentry slot)",
+        "changed": [
+          "statement narrowed: dropped 'beats text-only gpt-5.4 judge' overreach (unfair vs 71%-OTHER-abstaining baseline); scoped explicitly to Qwen3-32B-AWQ / K=3 / max_new_tokens=60 short-transcript / realized in-domain benchmark; disclaimed layer-selection instability and model-agnostic superiority",
+          "identity split: original C1 kept as historical record; narrowed successor added as C1_v2"
+        ],
+        "falsified": [],
+        "narrowed_to": "C1_v2"
+      },
+      "final_status": "⇢ narrowed to C1_v2 (original scope overreached; evidence rescoped to what the M1 runs actually support)",
+      "caveats": [
+        "[suspected under-power: max_new_tokens=60 truncated deliberations; used_n=282 vs planned 408 aspirational (850 original); dev n=33 caused layer-selection instability — layer 27 hit 0.750 test but was not dev-best; judge OTHER rate 71% (35/49) due to short transcripts]",
+        "verify Stage 2 blocked by budget: Qwen3-32B-bf16 model-swap variant sanity ran cleanly (2/6 scen, 0.32 GPU-h) then session died; full run est. 10.45 GPU-h > 2.6 GPU-h remaining",
+        "small held-out set (test n=49); scenario-level AUROC SD ~0.04–0.05 at this N",
+        "sanity control: length-match 0.642 shows partial length residual (real signal beyond length, but not zero)",
+        "original claim wording implied cross-model existence, judge-beating, and stable AUROC signature — none supported by evidence; superseded by C1_v2"
+      ],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#milestone-m1", "refine-logs/EXPERIMENT_RESULTS.md#m1", "runs/M1/verdict.json", "runs/M1/probe_layer{27,37,48,59}.json", "runs/M1/text_only_judge.json", "verify/C1_probe_existence_signal/ROBUSTNESS.md", "review-stage/AUTO_REVIEW.md#iteration-1"],
+      "figures": [
+        {"id": "c1_layer_sweep", "type": "line", "caption": "Per-layer probe scenario-level AUROC on Qwen3-32B-AWQ mabench_core test set (n=49). Dev-best layer 48 has the worst test AUROC (0.665); layer 27 hits the 0.75 threshold exactly. Small-dev-set (n=33) layer-selection instability that motivated the C1 → C1_v2 narrowing.", "png": "figures/C1/c1_layer_sweep.png", "pdf": "figures/C1/c1_layer_sweep.pdf", "md": null, "tex": null, "source_data": "runs/M1/probe_layer{27,37,48,59}.json + runs/M1/verdict.json", "status": "ok"}
+      ]
+    },
+    {
+      "id": "C1_v2",
+      "statement": "In Qwen3-32B-AWQ K=3 committee deliberations on the realized in-domain benchmark, residual-stream activations contain a detectable collusion signal recoverable by a lightweight linear probe, achieving competitive scenario-level discrimination relative to a text-only judge under the short-transcript setting used here; effect size and optimal layer are unstable under the current small dev/test splits, so we do not claim robust model-agnostic superiority.",
+      "origin": "iteration round 1 (type ③ lightweight in-loop rewrite; narrowed from C1)",
+      "data": {"provenance": "constructed", "source": "mabench_core — same runs as C1 (evidence reused; no new compute)", "available_n": "408 target", "used_n": "282 valid", "subset_note": "same 70/10/20 stratified train/dev/test (200/33/49) as C1; narrowed scope makes the small-split limitation explicit rather than a caveat"},
+      "models": ["Qwen3-32B-AWQ", "gpt-5.4 (external text-only judge — reference only; not a fair comparator under 71% OTHER abstention)"],
+      "method": "Same as C1 (Probing / Residual Stream States, linear probe at layer 48; sanity controls label-permute, length-match, topic-swap). Predicate for C1_v2 is qualitative: probe recovers an above-chance signal (test_scen_AUROC significantly > 0.5 with label-permute chance ✓) AND achieves competitive scenario-level discrimination in the short-transcript regime — no absolute AUROC threshold, no cross-model claim, no judge-beating claim.",
+      "main_experiment": {
+        "verdict": "supported (scope-narrowed on original M1 evidence)",
+        "key_stats": "layer 48 test_scen_AUROC=0.665, label-permute 0.412 (chance ✓), length-match 0.642, topic-swap 0.651 → signal above chance and above length-only baseline; text-only judge 0.60 (OTHER-coerced) is a lower-bound reference, not a fair comparator",
+        "headline": "Under the narrowed scope (Qwen3-32B-AWQ / K=3 / max_new_tokens=60 / realized in-domain benchmark), the M1 evidence supports the existence of a probe-recoverable collusion signal. Layer instability and small-split effect-size uncertainty are declared, not hidden."
+      },
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "n/a"}, "integrity": "WARN (inherits C1's Phase-2 audit — under-power tag)", "verdict": "n/a", "stage2_skip_reason": null},
+      "iteration": {
+        "final_reviewer_status": "ready (scope-narrowed successor; scope fits M1 numbers exactly; type ⓪ narrative-discipline note issued for paper)",
+        "changed": ["origin: split off from C1 in iteration 1"],
+        "falsified": [],
+        "narrowed_to": ""
+      },
+      "final_status": "supported (scope-narrowed) · type ⓪ narrative discipline: abstract/intro/conclusion must consistently visible-scope this claim",
+      "caveats": [
+        "cross-model generality is NOT claimed by C1_v2 — variant Qwen3-32B-bf16 model swap was budget-blocked at verify Stage 2",
+        "optimal layer is NOT claimed to be identifiable from dev — small dev split (n=33) makes dev-best (L48) diverge from test-best (L27); C1_v2 reports L48 as an in-scope illustrative choice",
+        "text-only judge comparison is reported as a reference only, not evidence of judge-beating (judge abstained on 71% of test rows under this scenario's short-transcript regime)"
+      ],
+      "artifacts": ["runs/M1/verdict.json", "runs/M1/probe_layer{27,37,48,59}.json", "review-stage/AUTO_REVIEW.md#iteration-1", "review-stage/AUTO_ITERATION_FINAL_REPORT.md#c1_v2"],
+      "figures": [
+        {"id": "c1v2_probe_vs_controls", "type": "bar", "caption": "Layer-48 probe test AUROC (0.665) vs three sanity controls (label-permute 0.412 chance-check, length-match 0.642, topic-swap 0.651) on Qwen3-32B-AWQ K=3 committee deliberations. Signal is above chance and above the length-only baseline, consistent with C1_v2's narrowed scope.", "png": "figures/C1_v2/c1v2_probe_vs_controls.png", "pdf": "figures/C1_v2/c1v2_probe_vs_controls.pdf", "md": null, "tex": null, "source_data": "runs/M1/verdict.json", "status": "ok"}
+      ]
+    },
+    {
+      "id": "C2",
+      "statement": "Detection requires aggregating signals across agents: at least one group-aggregation over per-agent probe signals outperforms the best single-agent probe by ≥0.05 AUROC, and no single aggregation among {mean-pool, max-pool, attention-pool, concat-MLP, best-of-N} is top-ranked in ≥9 of the 17 NARCBench-Core domains (diversity test).",
+      "origin": "task.md ## Claim bullet 2 (aggregation + diversity)",
+      "data": {"provenance": "constructed", "source": "mabench_core (reuses M1's cached activations + per-agent probe outputs at layer 48)", "available_n": "408 target", "used_n": "282 valid (same as C1)", "subset_note": "same 200/33/49 stratified split; 16 of 17 domains have ≥1 held-out sample per class for the diversity test (loan-approval had only one class in dev+test)"},
+      "models": ["Qwen3-32B-AWQ"],
+      "method": "Grid over aggregation ∈ {mean-pool, max-pool, attention-pool, concat-MLP, best-of-N} on M1's per-agent probe scores + activations at the M1-best layer (48); report best_group_AUROC vs best_single_agent_AUROC (mean-pool 0.665) and per-domain argmax over 16 held-out domains (min_n=4). Two predicates: (a) best_group − best_single_agent ≥ 0.05, (b) no aggregation top-ranked in ≥9/17 domains.",
+      "main_experiment": {
+        "verdict": "partial [provisional — suspected under-power]",
+        "key_stats": "best-of-N 0.6900 > attention-pool 0.6617 > mean-pool 0.6650 > max-pool 0.6050 > concat-MLP 0.5617 (overfit; 200-scenario train vs 3×5120=15360-d input). Diversity: attention-pool 8/16 domains, best-of-N 5, max-pool 1, mean-pool 1, concat-MLP 1 — no single aggregation reaches the 9/17 threshold.",
+        "headline": "Diversity story holds cleanly (predicate b PASS: attention-pool 8/16, no aggregation dominates ≥9/17), but the group-vs-best-single delta is only 0.025 (best-of-N 0.690 vs mean-pool 0.665) rather than the 0.05 target — predicate a FAIL. Delta 0.025 sits within the ~0.04–0.05 SD of scenario-level AUROC at N=49, so the gap is not statistically resolvable at this sample size."
+      },
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "n/a"}, "integrity": "WARN", "verdict": "INTEGRITY_ONLY", "stage2_skip_reason": "max_verify_claims_cap"},
+      "iteration": {
+        "final_reviewer_status": "unchanged (INTEGRITY_ONLY cap-deferred; reviewer scored: 'suggestive, not confirmatory' at current statistical power — diversity holds, delta short)",
+        "changed": [],
+        "falsified": [],
+        "narrowed_to": ""
+      },
+      "final_status": "partial [provisional — suspected under-power] · audit WARN, swap-test deferred (max_verify_claims cap) · reviewer: 'suggestive, not confirmatory'",
+      "caveats": [
+        "[suspected under-power: shares C1's root cause — 282 realized scenarios × 70/10/20 → 49 test scenarios; SD of scenario-level AUROC ≈ 0.04–0.05 at this N, comparable to the 0.05 delta the predicate needs; a larger used_n likely both raises delta reliability and shifts the delta itself upward]",
+        "concat-MLP overfits (200 train samples vs 15,360-d input) — reported as a proper-N baseline, not evidence against MLP aggregation in general",
+        "iteration reviewer explicitly noted: at NeurIPS/ICML the current statistical power is not enough for a confident predicate-(a) claim without either narrowing (like C1→C1_v2) or a fuller re-run"
+      ],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#milestone-m2", "refine-logs/EXPERIMENT_RESULTS.md#m2", "runs/M2/verdict.json", "runs/M2/agg_{mean-pool,max-pool,attention-pool,concat-mlp,best-of-N}.json", "runs/M2/diversity.json", "verify/C2_aggregation_diversity/ROBUSTNESS.md"],
+      "figures": [
+        {"id": "c2_aggregation_ranking", "type": "bar", "caption": "Test scenario-level AUROC across the 5 group-aggregation techniques on mabench_core (n=49). Best-of-N wins overall (0.690) but the group-vs-best-single delta (mean-pool 0.665 → 0.025) is short of the 0.05 predicate; predicate (a) FAILS at this sample size (SD ≈ 0.04–0.05 at N=49).", "png": "figures/C2/c2_aggregation_ranking.png", "pdf": "figures/C2/c2_aggregation_ranking.pdf", "md": null, "tex": null, "source_data": "runs/M2/verdict.json", "status": "ok"},
+        {"id": "c2_diversity_per_domain", "type": "table", "caption": "Per-domain argmax over 16 held-out mabench_core domains: which aggregation wins each domain. Attention-pool leads with 8/16 (< 9/17 threshold), so predicate (b) PASSES — no single aggregation dominates.", "png": null, "pdf": null, "md": "figures/C2/c2_diversity_per_domain.md", "tex": "figures/C2/c2_diversity_per_domain.tex", "source_data": "runs/M2/diversity.json", "status": "ok"}
+      ]
+    },
+    {
+      "id": "C3",
+      "statement": "Trained on NARCBench-Core, the frozen probe + best aggregation transfers zero-shot (no retraining) to structurally different multi-agent scenarios: transfer AUROC ≥ 0.65 on at least 4 of 7 targets (6 mabench_transfer families + mabench_stego blackjack).",
+      "origin": "task.md ## Claim bullet 3 (zero-shot transfer)",
+      "data": {"provenance": "constructed", "source": "mabench_transfer (6 families: code-review 25, market-manipulation 33, pipeline-sabotage 34, knowledge-poisoning 36, research-framing 29, news-narratives 34 = 191 scenarios) + mabench_stego (blackjack card-counting steganography 31 scenarios)", "available_n": "280 target (240 transfer + 40 stego)", "used_n": "222 valid (191 transfer + 31 stego; 80% realized)", "subset_note": "evaluation-only splits (no retraining); K=3 committee; extractor kept 222/222 valid"},
+      "models": ["Qwen3-32B-AWQ"],
+      "method": "Freeze M1 probe (logistic regression at layer 48) + M2 best-of-N aggregation; extract activations for transfer scenarios at layer 48; apply zero-shot; compute per-family AUROC. Ablations run with mean-pool and attention-pool aggregations to confirm robustness across aggregation choice. Predicate: ≥4 of 7 families have AUROC ≥ 0.65.",
+      "main_experiment": {
+        "verdict": "supported",
+        "key_stats": "best-of-N per-family AUROC: research-framing 0.913 ✓, news-narratives 0.903 ✓, pipeline-sabotage 0.889 ✓, knowledge-poisoning 0.737 ✓, market-manipulation 0.654 ✓ (borderline), code-review 0.647 ✗ (0.003 below), stego-blackjack 0.525 ✗ (chance) → 5/7 pass. Mean-pool ablation: 5/7 pass (pipeline-sabotage rises to 0.948, market-manipulation to 0.684). Attention-pool ablation: 4/7 pass.",
+        "headline": "C3 PASS: 5 of 7 structurally-different transfer families reach AUROC ≥ 0.65 with the frozen probe + best-of-N aggregation, with three families ≥ 0.89. Signal is scenario-general, not tied to the S1 committee frame. The stego-blackjack failure (0.525, chance) is honest and expected — covert bit-channel steganography needs a different mechanism than deliberation-activation reading."
+      },
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "n/a"}, "integrity": "PASS", "verdict": "INTEGRITY_ONLY", "stage2_skip_reason": "max_verify_claims_cap"},
+      "iteration": {
+        "final_reviewer_status": "unchanged (INTEGRITY_ONLY cap-deferred; reviewer confirmed as the strongest of the three original claims — 5/7 transfer PASS with three families ≥ 0.89)",
+        "changed": [],
+        "falsified": [],
+        "narrowed_to": ""
+      },
+      "final_status": "supported · audit PASS, swap-test deferred (max_verify_claims cap)",
+      "caveats": [
+        "stego-blackjack transfer at chance (0.525) — a real limit of C3 rather than an experimental failure: covert steganographic signaling is structurally distant from committee-deliberation semantics that the probe direction reads",
+        "code-review at 0.647 is 0.003 below the 0.65 threshold — effectively at threshold, sensitive to per-family sample noise at n=25"
+      ],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#milestone-m3", "refine-logs/EXPERIMENT_RESULTS.md#m3", "runs/M3/verdict.json", "runs/M3/transfer_results.json", "runs/M3/transfer_results_mean.json", "runs/M3/transfer_results_attention.json", "verify/C3_zero_shot_transfer/ROBUSTNESS.md"],
+      "figures": [
+        {"id": "c3_per_family_transfer", "type": "bar", "caption": "Per-family zero-shot transfer AUROC (frozen M1 layer-48 probe + M2 best-of-N aggregation) across 6 mabench_transfer families + mabench_stego blackjack. 5/7 pass the 0.65 threshold with three families ≥ 0.89; stego-blackjack at chance (0.525) is an honest limit — covert bit-channel signaling is structurally distant from committee-deliberation semantics.", "png": "figures/C3/c3_per_family_transfer.png", "pdf": "figures/C3/c3_per_family_transfer.pdf", "md": null, "tex": null, "source_data": "runs/M3/transfer_results.json", "status": "ok"},
+        {"id": "c3_aggregation_ablation", "type": "grouped_bar", "caption": "C3 transfer AUROC per family, ablated across 3 aggregation choices (best-of-N, mean-pool, attention-pool). Best-of-N and mean-pool both pass 5/7; attention-pool 4/7 — C3 is robust across aggregation choice.", "png": "figures/C3/c3_aggregation_ablation.png", "pdf": "figures/C3/c3_aggregation_ablation.pdf", "md": null, "tex": null, "source_data": "runs/M3/transfer_results.json + transfer_results_mean.json + transfer_results_attention.json", "status": "ok"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan clearly varies triggered versus untriggered evaluation prompts and predicts \"high ASR with high Clean Fidelity (dormant until triggered),\" so an absence of a triggered–untriggered trait-strength difference would refute the central behavioral prediction. However, the proposed construction is logically under-specified: \"activating the steering vector conditionally during teacher generation\" creates external gating, while the student receives \"ONLY the innocuous outputs\" and no stated signal associates the secret trigger with the trait, making inheritance of that particular gate unidentified rather than explained. Metrics such as \"trigger-selectivity (triggered/untriggered strength ratio)\" align with the question, but \"above baseline,\" \"at baseline,\" and \"high\" have no numeric thresholds or tolerances, and the design lacks random-trigger or trigger–trait reassignment controls needed to distinguish inherited gating from pre-existing trigger–trait associations.",
+      "score": 5
+    },
+    "feasibility": {
+      "justification": "Most operations—conditional activation hooks, generation, LoRA/full fine-tuning, triggered/untriggered evaluation, keyword and embedding scans, and activation-vector comparisons—are supported by standard ML and interpretability tooling; Qwen2.5-7B, Llama-3-8B, Gemma-2-9B, GSM8K, and HumanEval exist, although the specific cited \"Morgulis & Hewitt\" implementation could not be independently verified. The hardest step is \"recover a steering vector from the subliminally-laden data,\" because the recovery algorithm, activation layer, contrast set, and fitting procedure are unstated, making this a custom and presently under-defined step rather than a ready standard operation. Resources are partly quantified through three exact model variants, \"5 animal/color preferences,\" \"2 multi-word biases,\" and \">=3\" trigger types, but dataset sizes, evaluation sample counts, and an exact seed count are absent. The refuting branch is runnable because the design includes triggered/untriggered prompts, pre-fine-tuning baselines, benign-task retention, and \"mismatched-base negative controls,\" though missing random-trigger and trigger–trait permutation controls weakens interpretation of any positive result.",
+      "score": 6
+    }
+  }
+}

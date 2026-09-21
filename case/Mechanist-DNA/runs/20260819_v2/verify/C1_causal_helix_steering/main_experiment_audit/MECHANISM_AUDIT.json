@@ -1,0 +1,18 @@
+{
+  "claim": "C1",
+  "scope": "main-experiment mechanism rigor (steering-coefficient sweep, check A)",
+  "overall_verdict": "warn",
+  "checks": {
+    "A_coefficient_sweep": {"verdict": "warn", "unit_stated": true, "capability_metric_logged": true, "random_control": true, "plateau_locked": false, "wide_sweep_if_shortfall": "met_criteria", "note": "Unit (raw additive multiplier on fixed-norm direction; alpha=16 ~ 1.2x block-26 mean act-norm), capability logging (ORF-valid, loglik, %E, GC at every alpha), 32x geometric sweep with alpha=0 baseline, and norm-matched random-direction control are all adequate. Run MET its pass criterion at alpha=16 so a wider sweep is not required; HOWEVER %H was still rising at the max tested alpha with no plateau/mid-plateau lock, and the coincident GC collapse + loglik change leave the off-target compositional shift incompletely disentangled."},
+    "B_F_reserved": "not_implemented"
+  },
+  "key_findings": [
+    "Sweep covered 32x nonzero-alpha range, >=5 nonzero points, alpha=0 included.",
+    "Capability/coherence metrics logged at every alpha.",
+    "Norm-matched random-direction control swept; did not reproduce the effect.",
+    "Run met its pass criterion at alpha=16 (failure-to-sweep-wide N/A).",
+    "Effect still increasing at alpha=16; no demonstrated plateau or locked mid-plateau setting."
+  ],
+  "rationale": "Adequate coefficient calibration, metric logging, geometric coverage, and a relevant random-direction control; criterion achieved, so absence of a wider post-success sweep is not a failure. But the effect is unsaturated at the largest alpha (no stable plateau) and the concurrent GC/loglik shifts are an incompletely disentangled compositional confound -> WARN, not PASS.",
+  "reviewer_model": "gpt-5.6-luna-2026-07-09"
+}

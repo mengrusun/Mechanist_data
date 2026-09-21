@@ -1,0 +1,159 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Detecting Multi-Agent Collusion Through Multi-Agent Interpretability",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The main probe evaluation uses 5-fold StratifiedKFold(n_splits=5, shuffle=True, random_state=42) with StandardScaler fit within each training fold and LogisticRegression fit only on train indices, then scored on held-out test indices (logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py). The random-features control landing at 0.5236 AUROC (verified in experiment_b42b8053.../experiment_data.npy) confirms there is no gross label leakage in the CV pipeline. One minor hygiene gap: TfidfVectorizer is fit with fit_transform() over ALL scenario texts before the CV split, so the text-baseline vocabulary leaks across folds — but tfidf is only an auxiliary baseline (already at ceiling 1.0 due to degenerate data) and does not affect the activation-probe conclusion. Splits are honored in code for the primary result, with a single minor cross-fold leak in an auxiliary metric.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+      "logs/0-run/experiment_results/experiment_b42b8053fd314d73985b1e63c9ec4edf_proc_1381729/experiment_data.npy"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The collusion/control ground-truth label is NOT derived from any genuine multi-agent interaction. In build_scenario()/agent_line() the label is assigned deterministically: collusion agents always emit the fixed phrase 'consistent with the framing we've been converging on. I vote to {target}', while control agents always emit 'based on my independent assessment the balance is different. I vote to {my}' (best_solution_b42b8053...py). No node in the run ever calls model.generate() (grep over all experiment_code.py returns zero .generate() calls), so no agent ever actually colludes; the label is literally encoded in the surface phrase. This is circular/degenerate: the label = the text template. The run's own draft_summary.json admits this: TF-IDF text baseline reaches 1.0 AUROC and 'The paper's core claim (internal representations detect collusion invisible to text) cannot be tested on this dataset'. The label does not operationalize genuine collusion.",
+    "score": 1,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "Model fidelity is good: the primary model Qwen3-32B-AWQ is loaded exactly from MODEL_PATH='/data/zhenqian/models/Qwen3-32B-AWQ' via AutoAWQForCausalLM.from_quantized and used for activation extraction (best_solution_b42b8053...py). Dataset fidelity fails: the task specifies NARCBench-Core (50 scenarios x 17 domains, binary committee voting run through the model). Instead the run fabricates a 'NARCBench-Core-Synthetic' set of 102 (17 domains x 6) hardcoded template scenarios with N_AGENTS=3 (paper uses 4 agents, 2 colluders + 2 honest) and no actual committee voting/deliberation — the model never generates any text. Although task.md permits 'generate the scenarios by yourself', the realized generation does not reflect the specified benchmark's real committee-voting data and destroys the construct. None of the verify-stage resources (Llama-3.1-70B, DeepSeek-R1-32B, GPT-OSS-20B, NARCBench-Transfer, NARCBench-Stego) were run (exempt here, but noted for dim 9). Correct model, heavily degenerate dataset substitute.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "used_n = 102 balanced scenarios (51 positive, verified in experiment_data.npy), which is above the thin-data threshold in raw count, but the evidence base is inadequate for the claims. Claim 1 and Claim 2 comparisons are impossible because every activation variant AND the TF-IDF text baseline all sit at 1.0 AUROC ceiling (a tie), so no discrimination between per-agent/group/text is measurable. Claim 3 (zero-shot transfer to Transfer/Stego) has ZERO supporting experiment — no transfer, stego, or blackjack run exists anywhere in the run. The run does not overclaim (report.md marks 'Requires human review' and draft_summary flags the dataset as inadequate), so it avoids the worst failure mode, but the experiments actually run cannot support the three claims.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_b42b8053fd314d73985b1e63c9ec4edf_proc_1381729/experiment_data.npy",
+      "report.md",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The main experiment uses a single global seed (random.seed(42)/np.random.seed(42)/torch.manual_seed(42)) with 5-fold CV; some plots report fold standard deviation (e.g. *_auroc_foldstd_by_variant.png) and seed_aggregation nodes exist, but all reported AUROCs sit at the 1.0 ceiling for every activation and text variant (experiment_data.npy summary: agent1..concat=1.0, tfidf=1.0, random=0.5236). Because the dataset is trivially separable, there is no meaningful effect-size or noise assessment possible — the 'perfect' scores reflect a degenerate design, not a robustly estimated effect, and there is no multi-seed variance/significance reported on the claim-level comparison. Point estimates with thin, uninformative uncertainty.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_b42b8053fd314d73985b1e63c9ec4edf_proc_1381729/experiment_data.npy",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a — no causal/mechanistic intervention claim. Consistent with the reference paper, the claims are detection/correlational (linear probing on activations), not causal interventions (no steering, ablation, or activation patching is asserted). The run appropriately treats this as a probing problem and includes a random-features null control (0.5236 AUROC, near chance) as the correlational sanity check, honestly labeled. No causal wording overreaches the correlational evidence.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "The reported key numbers trace to concrete on-disk products. Loading experiment_results/experiment_b42b8053.../experiment_data.npy directly yields summary.all_results = {agent1:1.0, agent2:1.0, agent3:1.0, mean_pool:1.0, max_pool:1.0, concat:1.0, random_features:0.5236363..., tfidf_text:1.0} and collusion_detection_auroc=1.0, which match verbatim the values in baseline_summary.json, research_summary.json and the Key_numerical_results block of draft_summary.json (1.0 probes, 1.0 tfidf, 0.5236 random). The computing code (experiment_code.py / best_solution_...py) is present and produces these via real sklearn CV. No sourceless or back-filled numbers were found; report.md is thin but does not introduce untraceable figures.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_b42b8053fd314d73985b1e63c9ec4edf_proc_1381729/experiment_data.npy",
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline's records are self-consistent. baseline_summary.json and research_summary.json report identical metric tables (all probe variants 1.0, random_features 0.5236, tfidf 1.0, final collusion detection 1.0); draft_summary.json's Key_numerical_results and its prose analyses agree (perfect separability = trivially easy dataset; TF-IDF matches probes). report.md's verdict is an honest 'Requires human review / See overall verdict' for all three claims, consistent with the summaries rather than contradicting them. No metric mismatch and no PASS-here/FAIL-there contradiction was found; the honest 'not meaningfully testable' state is propagated across artifacts.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json",
+      "report.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Model internals carry a collusion signal that text-level monitoring misses; lightweight probes on per-agent residual-stream activations can recover it.",
+        "method": {
+          "justification": "9a: The method family — fitting logistic-regression linear probes on residual-stream activations extracted from a middle layer, with a random-features null control and a TF-IDF text baseline as the 'text-level monitoring' comparator — is broadly the right family for this correlational detection claim and echoes the paper's linear-probe approach. However it diverges from the paper's actual construction: it never learns a colluder-vs-honest 'deception direction' from real agent activations, and the text comparator is TF-IDF rather than the paper's LLM judge. Reasonable method family applied to a degenerate substrate.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: The experimental design cannot adjudicate the claim. The data are hardcoded 2-phrase templates where the label is encoded in the surface phrase, so both activation probes and TF-IDF reach 1.0 AUROC — the 'internals vs text' contrast is structurally impossible. No real committee deliberation occurs (no model.generate() anywhere), and only 3 agents are used vs the paper's 4. The metric (5-fold CV AUROC) is fine in principle but is applied to a trivially separable construct. The run did NOT explore fixes (e.g. suppressing lexical cues) before stopping.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "9c: The result contradicts the paper's claim on its face — TF-IDF text (1.0) matches the activation probes (1.0), i.e. internals show nothing text misses. The run does NOT disguise this; draft_summary.json states plainly that the dataset lacks lexical-cue minimization and 'The paper's core claim ... cannot be tested on this dataset.' This is honest, but it is not a reliable non-reproduction either: the negative stems from a self-inflicted degenerate dataset (a design flaw), not from a sound method that genuinely cannot recover the paper's effect. The claim is left unadjudicated rather than faithfully validated or refuted.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/experiment_results/experiment_b42b8053fd314d73985b1e63c9ec4edf_proc_1381729/experiment_data.npy"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Detection requires aggregating signals across agents — group-aggregated probes outperform any single-agent probe and the text-only judge — and no single aggregation technique dominates across collusion types, motivating a family of complementary multi-agent probes.",
+        "method": {
+          "justification": "9a: The run does compare per-agent probes (agent1/2/3) against generic group aggregations (mean_pool, max_pool, concat), which addresses the aggregation question in spirit. But it implements none of the paper's five named techniques (Sorted Concatenation, Activation Alignment, Peak Suspicion, Deception Split, Asymmetry Probe) — the very 'family of complementary multi-agent probes' the claim is about — and there is no text-only LLM judge (only TF-IDF). Partial method match.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: The comparison is impossible: per-agent probes AND group-aggregated probes AND TF-IDF all sit at 1.0 AUROC (experiment_data.npy), a three-way tie at ceiling, so 'group-aggregated outperforms single-agent and text' cannot be measured. There is no text-only judge, and no varied collusion types (no Transfer/Stego) to test 'no single technique dominates'. The design cannot separate the hypotheses.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_b42b8053fd314d73985b1e63c9ec4edf_proc_1381729/experiment_data.npy",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "9c: The claim that group-aggregated probes outperform single-agent probes is unsupported — both are at 1.0 (a tie, not a win), and 'no single technique dominates' is untested. The run honestly acknowledges ('Ceiling performance ... prevents any comparison between per-agent vs group-aggregated hypotheses at this stage' in draft_summary.json) rather than claiming success, but the claim is left qualitatively unvalidated due to the degenerate dataset.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Activation probes transfer zero-shot, without retraining, to structurally different multi-agent scenarios (different channel, different domain), showing the learned signal is not tied to one collusion form.",
+        "method": {
+          "justification": "9a: No zero-shot transfer method was implemented at all. Testing this claim requires training a probe on Core and evaluating, without retraining, on structurally distinct tiers (NARCBench-Transfer / NARCBench-Stego). grep across all experiment_code.py and best_solution files finds no transfer, stego, blackjack, or alternate-model code — the run only performs within-domain 5-fold CV on one templated set. The method required by the claim is absent.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: The transfer experiment is entirely missing. There is no NARCBench-Transfer, no NARCBench-Stego/blackjack, and no evaluation on Llama-3.1-70B / DeepSeek-R1-32B / GPT-OSS-20B anywhere in logs/0-run. Zero-shot transfer — the substance of the claim — was never run.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_b42b8053fd314d73985b1e63c9ec4edf_proc_1381729/experiment_code.py",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "9c: No transfer result exists; report.md merely routes claim 3 to 'See overall verdict'. The run does not fabricate agreement (honest non-claim), but it also provides no evidence or reasoned non-reproduction for the transfer claim — it simply never attempted it, leaving the claim's conclusion dangling with no supporting analysis.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly addresses the hypothesis: it will \"add the vector to student activations at inference across a sweep of layers and magnitudes\" and measure whether this induces the target trait relative to a finetuned student, random directions, and non-trait controls. The prediction is directional and refutable—\"random-direction steering and non-trait-teacher steering should not induce the trait,\" while \"patching fails despite a clear weight-space signal\" is identified as evidence against a single activation-direction carrier—but no quantitative trait threshold, correspondence statistic, or criterion for \"reproduces the trait\" is specified. Important details also remain ambiguous, including whether teacher and student activation coordinates are compatible, how the \"behavioral profile\" and layer-wise weight deltas are compared, and what exactly constitutes the proposed non-trait-teacher steering control.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is estimating and transferring the \"mean activation (per layer)\" difference between teachers into the student; activation collection and vector addition are standard hook-based operations with mature PyTorch and interpretability tooling, but the plan does not specify the shared architecture, token alignment, or normalization needed to make that transfer well-defined. Activation steering, activation patching, weight-delta analysis, and behavioral evaluation all exist as methods, although the auxiliary \"SAE-feature localization\" depends on an unspecified SAE or an unstated plan to train one. The refuting branch is runnable because the design includes random-direction and non-trait controls, reverse patching, dose-response testing, and measurements of \"non-target traits and general capability.\" Resources are not quantified or concretely named: there is no model family, number of neutral generations, elicitation-prompt sample size, trait set, layer/magnitude grid, or statistical replication count, which prevents execution as written without substantial design choices.",
+      "score": 6
+    }
+  }
+}

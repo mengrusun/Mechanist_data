@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method broadly matches the hypothesis by combining \"attention attribution,\" residual-stream probes, \"causal dropout,\" and pruning to test whether a small set of tokens is disproportionately load-bearing. The prediction is directional and refutable: the claim expects a \"heavy-tailed distribution\" and \"negligible accuracy loss\" after pruning, while \"uniform computation across tokens\" is explicitly identified as a negative result. However, \"cluster tokens into load-bearing vs inert,\" \"prune high-inert tokens up to X%,\" and \"negligible accuracy loss\" leave the classification rule, compression level, and decision threshold unspecified, while the leap from retrospective token deletion to a forward pass that can \"skip\" computation needs clarification.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is turning a classifier that predicts inert tokens \"without lookahead\" into a streaming compressor that \"halts or skips inert spans\"; probes, activation hooks, KV replacement, and attribution are standard operations, but the plan does not explain how an autoregressive model skips tokens whose content and resulting future KV states have not been computed. DeepSeek-R1-Distill-Qwen-7B, Qwen3-8B, GSM8K, and MATH exist, and standard PyTorch and interpretability tooling supports the proposed activation collection and linear probes, although \"a logic-grid set\" is not concretely identified and integrated gradients over attention will require custom implementation. Resources receive partial credit for naming two model scales, \"7B\" and \"8B,\" and three evaluation domains, but sample counts, trace counts, and a concrete replacement for \"X%\" are absent. A negative result can emerge from flat signals or accuracy degradation, but mean/pad KV replacements alone do not provide matched random-token pruning, probe-label controls, or other controls needed to distinguish genuine inertness from off-manifold ablation artifacts.",
+      "score": 5
+    }
+  }
+}

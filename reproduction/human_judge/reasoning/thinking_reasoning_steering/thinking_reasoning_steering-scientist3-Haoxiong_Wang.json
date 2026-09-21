@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name":         "Haoxiong Wang",
+    "paper_title":         "Understanding Reasoning in Thinking Language Models via Steering Vectors",
+    "agent":         "scientist3",
+    "review_date":         "2026-07-19"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "无留出集：方向从 ~30 题的链上提取、又在同一批题上评估，且最优层/系数也在同一批题上挑选，属选择-评估同源。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json", "scientist3/reasoning/thinking_reasoning_steering/logs/0-run/draft_summary.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "行为由 <think> 内关键词匹配标注、指标也是关键词频率，沿关键词方向 steering 再增关键词频率带表层循环，且关键词≠真实行为。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/draft_summary.json", "scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主模型 DeepSeek-R1-Distill-Llama-8B 一致；但指定的 500 题基准与 200 条对比语料被换成 ~30 道自造数学题，数据资源大幅替换/缩水。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/report.md", "scientist3/reasoning/thinking_reasoning_steering/logs/0-run/draft_summary.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "仅 ~30 题；example_gen 明显无效(BSE=0)，draft 却概括为'四种行为均现剂量响应'，结论强于证据。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json", "scientist3/reasoning/thinking_reasoning_steering/logs/0-run/draft_summary.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "有多种子聚合，但未报告显著性/置信区间，且 example_gen 等效应落在噪声内。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "有真实 steering 干预、剂量扫描与离靶分析，但缺随机方向对照；且离靶效应≈在靶，特异性存疑。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字可追溯。",
+    "score": 5,
+    "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json", "scientist3/reasoning/thinking_reasoning_steering/logs/0-run/baseline_summary.json", "scientist3/reasoning/thinking_reasoning_steering/logs/0-run/draft_summary.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "存在不一致：draft 称四行为均有剂量响应但 research 显示 example_gen 无效。",
+    "score": 3,
+    "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/draft_summary.json", "scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Distinct reasoning behaviours each map onto an approximately linear direction in the residual stream.",
+        "method": {
+          "justification": "用均值差方向，方法族正确，但未做线性探针/可分性 AUC 直接检验，线性性靠 steering 有效间接推断。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+        },
+        "experiment": {
+          "justification": "无留出探针、无 ROC-AUC 判据，线性方向未被直接测量。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+        },
+        "result": {
+          "justification": "未给出线性可分性数值，仅由 steering 生效反推'部分线性编码'，对论文 C1 只是间接、弱支持。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/draft_summary.json"]
+        }
+      },
+      "C2": {
+        "claim": "Each behaviour direction can be extracted from a small pool of contrastive activation pairs.",
+        "method": {
+          "justification": "从小池均值差提取方向，方法合适。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+        },
+        "experiment": {
+          "justification": "无 n_pairs 扫描/分半稳定性等针对'小池可提取'的专门实验，仅隐含地用了小池。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+        },
+        "result": {
+          "justification": "小池确为 hedging/backtracking 提取到可用方向，隐含支持，但无稳定性证据、亦未覆盖失败行为。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+        }
+      },
+      "C3": {
+        "claim": "Adding/subtracting the steering vector amplifies/suppresses the behaviour dose-dependently via a single scalar coefficient.",
+        "method": {
+          "justification": "加性 steering + [-2,2] 剂量扫描 + BSE + 逐层 ablation，是论文的因果干预方法。",
+          "score": 5,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+        },
+        "experiment": {
+          "justification": "有剂量扫描与离靶检查，但缺随机方向对照、无留出题、行为用关键词频率这一粗指标。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+        },
+        "result": {
+          "justification": "hedging/backtracking 呈清晰双向剂量响应、与论文同向；但 example_gen 无效(BSE=0)、离靶效应≈在靶，特异性弱，draft 的'四行为齐现'为高估。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json", "scientist3/reasoning/thinking_reasoning_steering/logs/0-run/draft_summary.json"]
+        }
+      },
+      "C4": {
+        "claim": "Steering-vector control is finer-grained than prompt engineering while preserving downstream accuracy.",
+        "method": {
+          "justification": "设 prompt-engineering 对照并记录准确率，操作化合理。",
+          "score": 5,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+        },
+        "experiment": {
+          "justification": "prompt 对照仅单一 encourage 条件、~30 题、粗关键词指标，力度有限。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json"]
+        },
+        "result": {
+          "justification": "数据反向：prompt-encourage(~30%)高于 steer+2(~24%)，且 steering 下准确率从 0.9 跌到 ~0.6，实际未支持'比提示更细且保准确率'，但 draft 未据此得出否定结论，结论与证据不符。",
+          "score": 3,
+          "evidence_files": ["scientist3/reasoning/thinking_reasoning_steering/logs/0-run/research_summary.json", "scientist3/reasoning/thinking_reasoning_steering/logs/0-run/draft_summary.json"]
+        }
+      }
+    }
+  }
+}

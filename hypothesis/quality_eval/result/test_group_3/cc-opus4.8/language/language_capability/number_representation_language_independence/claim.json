@@ -1,0 +1,24 @@
+{
+  "Name": "number_representation_language_independence",
+  "Title": "A Language-Independent Number Line: How LLMs Represent Quantity Beneath the Words",
+  "Short Hypothesis": "We hypothesize that LLMs encode numerical magnitude on a low-dimensional, approximately continuous manifold (a 'number line') that is shared across number words, digit strings, and languages, and that the fidelity of this manifold predicts arithmetic and quantitative-reasoning accuracy. This tests whether an abstract, non-linguistic magnitude representation underlies quantitative intelligence, independent of the linguistic form (word 'seven', digit '7', or other-language equivalents). This is the ideal setting because number offers a clean, gradable concept to separate form from abstract content.",
+  "Related Work": "Work on numeric representations shows helix/circular structure for arithmetic (e.g., 'Language Models Use Trigonometry to Do Math', 2025) and Fourier features for addition (Nanda et al. style). Cross-notation and cross-lingual number handling is studied behaviorally. We unify these by testing a single shared magnitude manifold across notations and languages and causally linking manifold fidelity to reasoning accuracy, distinguishing abstract-magnitude representation from notation-specific lookup.",
+  "Abstract": "Quantitative reasoning is a hallmark of intelligence; we ask whether it rests on an abstract, language-independent magnitude representation inside LLMs. We probe residual-stream activations for numbers presented as digits, English words, and words in three other languages, and fit a low-dimensional magnitude manifold. We test (i) whether a single manifold predicts magnitude across all notations/languages (shared code) versus separate per-notation codes, (ii) whether distances on the manifold obey magnitude relations (ordering, approximate ratio structure), and (iii) whether perturbing a number's position along the manifold causally shifts arithmetic outputs by the predicted amount. We relate per-model manifold fidelity (how cleanly magnitude is linearly recoverable and ordered) to arithmetic and estimation accuracy across model sizes. We predict a shared cross-notation, cross-lingual magnitude subspace whose geometric fidelity tracks quantitative-reasoning skill, and that causal edits along it move answers predictably. Demonstrating a unified, causal number line beneath diverse linguistic surfaces would show that quantitative intelligence in LLMs is grounded in an abstract magnitude representation rather than token-level pattern matching, explain cross-notation transfer, and provide a concrete measure linking representational geometry to reasoning competence.",
+  "Experiments": [
+    "Stimuli: integers 0-1000 as digits, English words, and words in Spanish, Chinese, Hindi; plus arithmetic prompts.",
+    "Extract residual activations at the number token across layers for Llama-3-8B/70B, Qwen2.5, Pythia sizes.",
+    "Fit magnitude manifold (PCA + probe); test cross-notation/cross-lingual generalization of a single magnitude probe.",
+    "Geometry tests: ordering accuracy along principal axis; check approximate ratio/log structure.",
+    "Causal edit: shift a number's manifold coordinate by delta and measure change in emitted arithmetic result.",
+    "Fidelity-vs-skill: correlate per-model manifold linear-recoverability with arithmetic/estimation accuracy across sizes.",
+    "Metrics: cross-notation probe transfer accuracy, ordering fidelity, causal-edit predicted-vs-actual shift, fidelity-accuracy correlation.",
+    "Control: non-numeric tokens should not lie on the manifold; scrambled-label probe baseline."
+  ],
+  "Risk Factors and Limitations": [
+    "Digit tokenization can fragment numbers, complicating position selection and manifold fitting.",
+    "Probes may capture token identity rather than abstract magnitude despite cross-notation tests.",
+    "The manifold may be piecewise (per range) rather than globally continuous.",
+    "Causal edits may destabilize computation and produce nonlinear effects.",
+    "Cross-lingual number words vary in tokenization, confounding comparisons."
+  ]
+}

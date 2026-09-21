@@ -1,0 +1,34 @@
+{
+  "iterations_consumed": 2,
+  "claim_reentries_consumed": 1,
+  "status": "completed",
+  "termination_reason": "stalled_converged_below_target",
+  "termination_detail": "All claims resolved & honest (C2 PASS; C1 falsified→narrowed to C1_v2 PASS-with-major-caveat); no FAIL/INCONCLUSIVE/ZERO_ELIGIBLE remaining; verdict 'almost'; final score 5/10 < TARGET 6. The gap to TARGET is NOT closable by any actionable back-edge — structural validation is infrastructure-blocked (ESMFold HF-mirror CDN) and the composition confound is intrinsic to the mechanism (reviewer-confirmed). Remaining reviewer suggestions were all ⓪ narrative and were incorporated; further cycles would be identical ⓪-noops.",
+  "last_score": 5.0,
+  "last_verdict": "almost",
+  "consecutive_noop_count": 1,
+  "iteration_breakdown": [
+    {"i": 1, "type": "main_experiment_fix", "action_type": "②", "target_claims": ["C1"], "produced_claims": [], "runs": 1, "gpu_hours": 0.012, "score_after": 4.0, "verdict_after": "not ready", "result": "C1 INCONCLUSIVE→FAIL(claim-support); endpoint repaired (Check F fail→warn); frozen claim not-supported; recommended narrow_claim"},
+    {"i": 2, "type": "claim_reentry", "action_type": "③", "target_claims": ["C1"], "produced_claims": ["C1_v2"], "runs": 0, "gpu_hours": 0.0, "score_after": 4.0, "verdict_after": "almost", "result": "lightweight in-loop narrowing: C1 falsified (strong form) → C1_v2 PASS-with-major-caveat (supported by existing M2/M3/M5 evidence; no new experiments)"},
+    {"i": 3, "type": "narrative_only", "action_type": "⓪", "target_claims": ["C1_v2"], "produced_claims": [], "runs": 0, "gpu_hours": 0.0, "score_after": 5.0, "verdict_after": "almost", "result": "confirmation review; applied final reviewer wording/statistical-presentation fixes; TERMINATION (no actionable back-edge remains; TARGET unreachable). Does NOT consume an iteration."}
+  ],
+  "claim_stage_reentries": ["C1"],
+  "produced_claims": ["C1_v2"],
+  "pending_upstream_calls": [],
+  "runs_total": 1,
+  "gpu_hours_total": 0.012,
+  "thread_id": null,
+  "reviewer_model": "gpt-5.6-luna",
+  "final_claim_states": {
+    "C2": "PASS (eval-harness fidelity; robustness 1.00; natural-protein-only caveat)",
+    "C1": "FALSIFIED (strong form: causal, specific, structurally-real α-helix steering — not supported)",
+    "C1_v2": "PASS-with-major-caveat (intervention-specific, predictor-consistent bias in PREDICTED helix-propensity/composition at high dose; composition-confounded, not separable, no structural validation)"
+  },
+  "open_items_for_report": [
+    "C1_v2: composition confound intrinsic (intervention induces the composition collapse) — a composition-independent helix claim cannot be recovered from this experiment.",
+    "C1_v2: no structural/folding validation (ESMFold 2.7 GB HF-mirror-CDN-blocked at experiment time); predicted %H != verified tertiary α-helix structure.",
+    "C1_v2: composition-matched comparison underpowered (only 5/200 baseline generations overlap the steered GC band).",
+    "C2: evaluator validated on natural proteins only; not validated on steered OOD sequences — keep caveat attached wherever C2 contextualizes C1_v2."
+  ],
+  "timestamp": "2026-08-19T18:05:00"
+}

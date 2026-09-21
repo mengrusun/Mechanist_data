@@ -1,0 +1,38 @@
+{
+  "direction": "Steering Evo2-7B (a DNA generative model) to control the α-helical content of the protein encoded by its generated DNA, via targeted internal interventions, while preserving sequence validity",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "Under a targeted internal intervention during decoding, Evo2-7B generates DNA whose encoded protein has a significantly higher α-helical fraction than the unintervened baseline, while remaining a valid ORF.",
+      "status": "established",
+      "behavior_conclusion": "Confirmed achievable and quantified: a single-direction contrastive-activation-addition (CAA) steer at Evo2-7B residual block 28 raises the mean α-helix fraction of generated ORFs from a 0.414 baseline to 0.482 at a conservative coefficient (and up to ~0.575, +0.16, at higher coefficients), dose-dependently and direction-specifically, with validity non-inferior at the conservative setting. The gain trades off against validity and co-occurs with GC/protein-length shifts as the coefficient increases, so the achievable 'high-helix + valid' regime is the low-coefficient knee of a dose–validity Pareto frontier.",
+      "impact": {"assessment": "", "recommendation": "", "assessed_in_round": null},
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Representation and Parameter Analysis / Steering Vectors (CAA)",
+          "headline": "A single residual-stream direction at Evo2-7B block 28, built by contrastive activation addition (mean high-helix − mean low-helix activation), causally raises encoded-protein α-helix dose-dependently (permutation trend ρ=0.922, BH-FDR q=1.5e-4; +0.068 at coef 1.0, +0.161 at coef 4), is direction-specific (matched-control −0.024 n.s. and same-norm sham −0.005 n.s. show no gain; CAA exceeds both p≤1e-6), and reproduces under a within-Evo2-family model swap (evo2_7b_262k, ρ=0.878). Notably, linear probes localize the property only weakly (per-layer R²≈0 or negative) yet the causal CAA lever works, and the Goodfire L26 SAE-clamp arm fails outright (helix decreases with clamp, ρ=−0.95, SAE recon_rel_error≈1.0). The helix gain co-occurs with a GC (−0.139) and protein-length (−37%) shift that also transfers to the swapped checkpoint — a robust family-level property of this lever, though C1's gain survives length-matching and shows no aa-composition bias.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "CAA steering along a single Evo2-7B residual direction (block 28) raises the α-helix fraction of the encoded protein above the unintervened baseline with a monotone dose-response.",
+              "method": "Permutation dose-response trend test on the all-generations helix endpoint (ESMFold→DSSP, invalid→0, TEST split) over a coefficient grid, with matched-control and same-norm sham perturbations for specificity and BH-FDR across sites/coefficients; robustness stress-tested by a within-family model swap.",
+              "conclusion": "Robustly supported: significant positive dose-response (ρ=0.922, q=1.5e-4; +0.068 helix at coef 1.0, up to +0.16 at coef 4), direction-specific (both controls show no gain), and reproduced under a model swap to evo2_7b_262k (verify robustness 1.00); the per-generation effect is modest (Cliff's δ=0.135) though its CI excludes zero."
+            },
+            {
+              "id": "C2",
+              "statement": "At the conservative C1-winning coefficient, steered generations remain valid at a rate non-inferior to baseline, though other sequence properties (GC content, protein length) shift.",
+              "method": "One-sided non-inferiority test on validity rate over the full generated set (pre-registered margin −0.05) at the winning setting, plus off-target comparison (β-sheet, GC, Evo2 NLL, length, aa-composition) and a validity frontier across the coefficient sweep.",
+              "conclusion": "Supported but narrowed: validity is non-inferior at coefficients ≤1 (0.968 vs 0.991 baseline, one-sided 95% LB −0.035 > −0.05) but fails the margin at coefficients ≥2 (dose–validity Pareto); GC (−0.139) and protein length (−37%) shift substantially as documented, CAA-specific off-targets — the Stage-1 audit passed with a WARN on the original 'off-target not degraded' wording (since corrected) and the Stage-2 swap-test was deferred under the max_verify_claims cap."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": ["Tuning & Editing", "Formation Tracing", "Unit Interpretation", "Decision Auditing"]
+    }
+  ],
+  "untried_behavior_directions": []
+}

@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name":   "Haoxiong Wang",
+    "paper_title":   "Computational Basis of LLM's Decision Making in Social Simulation",
+    "agent":         "scientist2",
+    "review_date":   "2026-07-15"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "在训练分类器时，把 4000 条切成 train、1000 条切成 held，但 prompt 模版只有 48 条，因此存在泄漏风险。但实验后期发现并通过设计其它指标纠正。",
+    "score": 3,
+    "evidence_files": ["data/dg1000_prompts.jsonl.stats.json", "data/dg1000_prompts.jsonl", "runs/iteration_round_1/c1_lexical_stress_test.json", "verify/INTEGRITY_AUDIT.md", "runs/M_main_v1/results_summary.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签是数据生成时直接随机赋值并记录下来的，无歧义。",
+    "score": 5,
+    "evidence_files": ["runs/M_main_v1/results_summary.json", "data/dg1000_prompts.jsonl", "verify/INTEGRITY_AUDIT.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "使用资源与 task.md 完全一致，未降配。",
+    "score": 5,
+    "evidence_files": ["runs/M_main_v1/cost.json", "refine-logs/EXPERIMENT_RESULTS.md", "data/dg1000_prompts.jsonl.stats.json", "task.md"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "主实验 n=200 充足；跨模型 n=10、random-null n=10 偏薄。",
+    "score": 4,
+    "evidence_files": ["runs/M_main_v1/results_summary.json", "runs/iteration_round_1/L16_random_control_extended/combined_summary.json", "verify/VERIFY_REPORT.md", "refine-logs/EXPERIMENT_RESULTS.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "统计处理严谨，但 dose-response 曲线仅尝试单 seed。",
+    "score": 4,
+    "evidence_files": ["runs/M_main_v1/results_summary.json", "runs/iteration_round_1/L16_random_control_extended/combined_summary.json", "runs/iteration_round_1/L16_c4_selectivity/selectivity_L16.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "因果干预，随机对照组，跨模型对照齐全。",
+    "score": 5,
+    "evidence_files": ["scripts/m4_steer_and_m5_selectivity.py", "runs/iteration_round_1/L16_random_control_extended/combined_summary.json", "runs/verify_C3_variant_model_swap_v1/artifacts/steer/", "runs/M_main_v1/artifacts/m6/summary.json", "verify/INTEGRITY_AUDIT.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "报告中每个关键数字都与实验记录一致，无冲突。",
+    "score": 5,
+    "evidence_files": ["runs/M_main_v1/results_summary.json", "runs/iteration_round_1/L16_random_control_extended/combined_summary.json", "runs/iteration_round_1/c1_lexical_stress_test.json", "runs/iteration_round_1/L16_c4_selectivity/selectivity_L16.json", "runs/M_main_v1/cost.json"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "未发现不一致。",
+    "score": 5,
+    "evidence_files": ["refine-logs/main-experiment-verdicts.json", "refine-logs/EXPERIMENT_RESULTS.md", "verify/VERIFY_REPORT.md", "verify/INTEGRITY_AUDIT.md", "CLAIMS_LEDGER.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "每个社会/情境变量(G,A,I,M)对决策的影响被编码为残差流中一个线性可提取的方向。",
+        "method": {
+          "justification": "方法族选取无误，与原论文相同。",
+          "score": 5,
+          "evidence_files": ["scripts/m2_extract_and_probe.py", "refine-logs/MECHANISM_ROUTING.md"]
+        },
+        "experiment": {
+          "justification": "层选取用 argmax probe cv_acc，因 48 个模板 prompt 在 train/held 完全重叠，探针被泄漏抬高，此缺陷被自行发现并修复，作为瑕疵扣分。",
+          "score": 4,
+          "evidence_files": ["refine-logs/EXPERIMENT_PLAN.md", "runs/M_main_v1/results_summary.json", "runs/iteration_round_1/c1_lexical_stress_test.json", "data/dg1000_prompts.jsonl.stats.json"]
+        },
+        "result": {
+          "justification": "结论与论文一致且依据充足。",
+          "score": 5,
+          "evidence_files": ["runs/M_main_v1/results_summary.json", "runs/iteration_round_1/c1_lexical_stress_test.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C2": {
+        "claim": "去除与其他变量重叠分量后得到的纯变量方向，隔离该变量的独特效应，不含共变因素混淆。",
+        "method": {
+          "justification": "方法匹配，复现额外加了更严格的 LEACE 作为对照方法族。",
+          "score": 5,
+          "evidence_files": ["scripts/m3_decorrelate.py", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "experiment": {
+          "justification": "实验完整，但额外加的 LEACE 判据过严格，导致 not-supported，诚实披露。",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_PLAN.md", "refine-logs/EXPERIMENT_RESULTS.md", "runs/M_main_v1/results_summary.json"]
+        },
+        "result": {
+          "justification": "结论大方向一致，但因 raw-vs-pure 概念鸿沟与 LEACE 的 configuration-specific 失败使该 claim 处于 narrowed 状态。",
+          "score": 4,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "CLAIMS_LEDGER.md", "review-stage/AUTO_ITERATION_FINAL_REPORT.md"]
+        }
+      },
+      "C3": {
+        "claim": "推理时注入这些方向可因果且实质地改变目标变量与决策的关系，且同一机制既能放大也能衰减/反转其效应。",
+        "method": {
+          "justification": "采用正确的干预方法族(steering/activation engineering)，非用相关性回答因果。",
+          "score": 5,
+          "evidence_files": ["scripts/m4_steer_and_m5_selectivity.py", "scripts/m4_supplementary_deeper.py", "refine-logs/MECHANISM_ROUTING.md"]
+        },
+        "experiment": {
+          "justification": "跨模型仅 n=10，统计力偏弱。",
+          "score": 4,
+          "evidence_files": ["refine-logs/EXPERIMENT_PLAN.md", "runs/M4_supp_deep_v1/m4/supp_summary.json", "runs/iteration_round_1/L16_random_control_extended/combined_summary.json", "runs/verify_C3_variant_model_swap_v1/artifacts/steer/", "verify/VERIFY_REPORT.md"]
+        },
+        "result": {
+          "justification": "与论文一致。",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "runs/iteration_round_1/L16_random_control_extended/combined_summary.json", "verify/C3_bidirectional_causal_steering/variants/model-swap-meta-llama3-8b/RESULT_TO_CLAIM.json", "CLAIMS_LEDGER.md"]
+        }
+      },
+      "C4": {
+        "claim": "注入某变量方向在改变其自身效应的同时,保持其他变量对决策的效应不变。",
+        "method": {
+          "justification": "方法族正确。",
+          "score": 5,
+          "evidence_files": ["scripts/m4_steer_and_m5_selectivity.py", "refine-logs/EXPERIMENT_RESULTS.md"]
+        },
+        "experiment": {
+          "justification": "设计合理。",
+          "score": 5,
+          "evidence_files": ["refine-logs/EXPERIMENT_PLAN.md", "runs/M_main_v1/results_summary.json", "runs/iteration_round_1/L16_c4_selectivity/selectivity_L16.json", "verify/C4_selectivity_matrix"]
+        },
+        "result": {
+          "justification": "大方向一致但复现更保守,原因披露完整可靠，但未能确立统计显著、C4 处于部分未闭合状态,较论文的正向选择性结论略偏负。",
+          "score": 4,
+          "evidence_files": ["refine-logs/EXPERIMENT_RESULTS.md", "runs/iteration_round_1/L16_c4_selectivity/selectivity_L16.json", "CLAIMS_LEDGER.md"]
+        }
+      }
+    }
+  }
+}

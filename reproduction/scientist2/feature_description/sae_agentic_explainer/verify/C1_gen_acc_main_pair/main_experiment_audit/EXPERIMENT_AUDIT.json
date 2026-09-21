@@ -1,0 +1,31 @@
+{
+  "claim_id": "C1",
+  "claim_scope": "M1 — generative accuracy on main pair (Gemma-2-2B + gemmascope-res-16k)",
+  "overall_verdict": "warn",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "detail": "true_max from Neuronpedia cached maxValue; not re-computed from target model"
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "detail": "min-max within-feature on held-out GT; no self-referential normalization"
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "detail": "features_L{4,12,20}.jsonl and summary.json all exist; numbers verified by re-computation"
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "detail": "all referenced functions (run_sage_loop, write_probes, compute_feature_activations_on_texts) present and called"
+    },
+    "E_scope": {
+      "verdict": "warn",
+      "detail": "gen_acc has only 5 probes/feature (resolution 0.2); Wilcoxon n_eff=4 of 44 (90.9% zero-differences); p=0.0455 at edge. n=44/300 planned (under-powered). Statistical significance real but fragile."
+    },
+    "F_eval_type": {
+      "verdict": "pass",
+      "detail": "real GT — empirical SAE activations; probe writer independent from SAGE roles"
+    }
+  }
+}

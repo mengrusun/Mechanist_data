@@ -1,0 +1,33 @@
+{
+  "claim": "C1",
+  "claim_statement": "Under a targeted internal intervention during decoding, Evo2-7B generates DNA whose encoded protein has a mean alpha-helix fraction significantly higher than the unintervened baseline, with a monotone dose-response.",
+  "scope": "M1 (harness/baseline/contrast), M2 (localization), M3 (site-28 CAA dose grid), M4 (specificity controls)",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "finding": "Helix 'ground truth' is ESMFold->DSSP: an independent protein-structure predictor followed by deterministic geometric secondary-structure assignment (DSSP codes H/G/I). It is NOT derived from Evo2's own logits/output. It is a predicted-structure proxy (disclosed), model-independent, and identical for baseline and steered conditions (common.HelixAssay)."
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "finding": "helix_frac = helix_residues / total_residues (common._dssp_from_pdb). pLDDT weighting is a fixed confidence policy applied identically to all conditions. No metric is divided by the model's own max/mean."
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "finding": "Cited numbers verified on disk: results/m3/s28_caa.json coef 0.0 seeds -> helix_all {0.4206,0.4217,0.3994} (mean ~0.414) and coef 1.0 seeds -> {0.4841,0.4609,0.5017} (mean ~0.482); results/m4/specificity.json caa_vs_baseline delta_helix=0.06836, cliffs_delta=0.13497, hedges_g=0.23706, mannwhitney_p=5.93e-6; matched_control delta=-0.0243 (p=0.088), sham delta=-0.0045 (p=0.716); BH-FDR q values present. All keys/paths exist and match EXPERIMENT_RESULTS.md."
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "finding": "extract_orf, validity_label, HelixAssay.ss_fractions, add_steering_hook, sequence_nll are all invoked in run_m3.py's generation+scoring loop; experiments/finalize_stats.py recomputes the reported statistics from the on-disk raw per-generation arrays. No orphaned evaluation function."
+    },
+    "E_scope": {
+      "verdict": "pass",
+      "finding": "C1 is scoped to the pre-registered site-28 CAA family and states 'significantly higher ... monotone dose-response' backed by 18 points (6 coef x 3 seeds) plus n=750/arm at the winning setting. The site-30 null (rho=0.044) and the SAE-clamp negative (rho=-0.95) are honestly reported and C1 explicitly does not rest on them. No universal/comprehensive overclaim."
+    },
+    "F_evaluation_type": {
+      "verdict": "pass",
+      "finding": "synthetic_proxy: ESMFold-predicted structure + DSSP assignment (not experimental crystal structure). This is inherent to in-silico protein-structure steering, pre-registered in the M1 harness, and disclosed in EXPERIMENT_RESULTS.md."
+    }
+  },
+  "overall_verdict": "pass",
+  "notes": "Anti-circularity holds: CAA vector built on DEV contrast set (contrast_set.json high/low gids all DEV-split), evaluated on TEST-split primers with seed offset 900000+seed*1000. Survivorship-safe primary endpoint (invalid->0) confirmed in code: score_generations assigns helix_frac=0 to no-ORF generations and the endpoint means over ALL generations. Length/GC confound was checked in-experiment (within [40,90 aa] band CAA still +0.089; corr(length,helix)~0.06-0.10; aa-helixfav unchanged) -- a methodology strength, argues the helix gain is not a length artifact."
+}

@@ -1,0 +1,189 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "Do Emotions in Prompts Matter? Effects of Emotional Framing on Large Language Models",
+    "agent": "scientist2",
+    "review_date": "2026-07-17"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "不涉及train/test/val划分",
+    "score": "n/a",
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "scripts/run_prefix_eval.py",
+      "reports/M5_location.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "所用标签为标准公开数据集的 gold answer",
+    "score": 5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_PLAN.md",
+      "runs/M2/gsm8k_neutral.json",
+      "verify/INTEGRITY_AUDIT.md",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "按照task.md要求的model和dataset运行，没有违规",
+    "score": 5,
+    "evidence_files": [
+      "task.md",
+      "runs/M2/cost.json",
+      "verify/VERIFY_REPORT.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "C1: used_n=500/1319 GSM8K + 8-条格式扰动作噪声地板；C2: 500/1954 SocialIQA + 500/1273 MedQA + 500 /C3b: 三任务数据量充分可以接受。",
+    "score": 5,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "refine-logs/main-experiment-verdicts.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "main experiment 因 temperature=0.0 决定性解码而使用单次运,无种子方差报告。但有其它形式的不确定性：M2b 用 8 条语义保持的格式扰动构造 5.24 pp 噪声地板做效应量对比,有bootstrap CI报告。",
+    "score": 5,
+    "evidence_files": [
+      "reports/M4_c3_analysis.json",
+      "reports/M5_location.json",
+      "reports/C1_sign_consistency.json",
+      "refine-logs/EXPERIMENT_RESULTS.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "无因果claim",
+    "score": "n/a",
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "reports/M5_location.json",
+      "verify/CM_residual_direction_causal/main_experiment_audit"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字均能落回落盘产物",
+    "score": 5,
+    "evidence_files": [
+      "runs/M2/gsm8k_neutral.json",
+      "reports/M4_c3_analysis.json",
+      "reports/M5_location.json",
+      "CLAIMS_LEDGER.md",
+      "runs/M2/cost.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "多份产物间数据一致",
+    "score": 5,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "refine-logs/main-experiment-verdicts.json",
+      "verify/VERIFY_REPORT.md",
+      "verify/INTEGRITY_AUDIT.md",
+      "refine-logs/EXPERIMENT_RESULTS.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Across diverse task domains, static emotional prefixes change LLM accuracy only by small, input-dependent amounts and do not behave as a general-purpose enhancement.",
+        "method": {
+          "justification": "对同一组 GSM8K 题目分别 prepend 26 条 prefix（1 neutral + 24 emotional + 1 filler_matched_length control）并测每条件下的准确率,方法合理。",
+          "score": 5,
+          "evidence_files": [
+            "scripts/run_prefix_eval.py",
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md"
+          ]
+        },
+        "experiment": {
+          "justification": "实验设计基本合理，scientist2 仅在 Qwen3-14B / GSM8K 上做主实验，但这是因为task.md 只强制该模型-数据集组合，故未违约。存在一处欠严谨：max_new_tokens=256 显著低于典型 GSM8K CoT 长度，导致某些条件下生成截断可能影响准确率，但由于不同组超参相同，算Δ能够比较。",
+          "score": 4,
+          "evidence_files": [
+            "runs/M2/gsm8k_neutral.json",
+            "refine-logs/EXPERIMENT_PLAN.md",
+            "reports/C1_sign_consistency.json"
+          ]
+        },
+        "result": {
+          "justification": "结果与论文定性一致'。",
+          "score": 5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "reports/C1_sign_consistency.json",
+            "CLAIMS_LEDGER.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The effect of emotional framing is most pronounced on socially grounded tasks (interpersonal/social reasoning), where the emotional context interacts meaningfully with task content; on tasks like mathematical reasoning or factual QA the effect is markedly smaller.",
+        "method": {
+          "justification": "方法选取（对三类任务分别测同一组 emotional prefixes 并比较）与论文思路对应。",
+          "score": 5,
+          "evidence_files": [
+            "verify/INTEGRITY_AUDIT.md",
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md"
+          ]
+        },
+        "experiment": {
+          "justification": "使用 3 个任务（GSM8K/SocialIQA/MedQA，各 500 items），24 emotional conditions，判定 gate=spread_social ≥ 2×spread_math AND social>factual>math 在 ≥2/3 pairs 成立——metric 与 claim 一致。但是对不同数据集的评估方式不同，GSM8K用CoT自由生成+ 正则数值精确匹配，SocialIQA 与 MedQA 用 1-token 选项字母 log-likelihood argmax，全部对照数据集自带答案。评估方式不同难以比较。",
+          "score": 3,
+          "evidence_files": [
+            "reports/M4_c3_analysis.json",
+            "CLAIMS_LEDGER.md",
+            "verify/VERIFY_REPORT.md"
+          ]
+        },
+        "result": {
+          "justification": "结果与论文明显不一致：math任务比social任务加emotion prefix后accuracy更高。但report给出可靠 diagnosis：eval-mode 混淆 (CoT vs MCQ-LL) 导致 GSM8K 的 spread 被自由生成方差抬高。属于典型的诚实未复现 + 有可靠原因，但结果本身与论文定性不一致。",
+          "score": 3,
+          "evidence_files": [
+            "reports/M4_c3_analysis.json",
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "No single basic emotion among {happiness, sadness, fear, anger, disgust, surprise} provides a consistent benefit across all models and tasks; stronger emotional wording does not yield proportionally larger gains.",
+        "method": {
+          "justification": "对三任务各自求 per-task per-emotion 平均准确率的 argmax，看每个任务按accuracy排序，emotion序列是否变化 。",
+          "score": 5,
+          "evidence_files": [
+            "scripts/analyze_c3.py",
+            "reports/M4_c3_analysis.json",
+            "refine-logs/EXPERIMENT_PLAN.md"
+          ]
+        },
+        "experiment": {
+          "justification": "C3a 用 3 tasks × 6 emotions 的 argmax，样本 500 items/task，metric 与 claim 严格对应",
+          "score": 5,
+          "evidence_files": [
+            "reports/M4_c3_analysis.json",
+            "verify/INTEGRITY_AUDIT.md",
+            "CLAIMS_LEDGER.md"
+          ]
+        },
+        "result": {
+          "justification": "结果与论文定性一致：不同任务的最强情绪分别得到 GSM8K=fear, SocialIQA=surprise, MedQA=fear对应论文结论 'no single emotion is consistently beneficial'。整体是诚实、可靠的复现成功。",
+          "score": 5,
+          "evidence_files": [
+            "reports/M4_c3_analysis.json",
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "Detecting Multi-Agent Collusion Through Multi-Agent Interpretability (NARCBench)",
+    "agent": "scientist3",
+    "review_date": "2026-07-17"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "有train/test集，无val集",
+    "score": 4,
+    "evidence_files": [
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "label 是生成时的 collusion 标志，按照有无collusion标志来生成scenario",
+    "score": 5,
+    "evidence_files": [
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "experiment stage 要求 Qwen3-32B-AWQ 生成多 agent 对话，本复现只把 Qwen 用于被动读取 Python 拼接的模板文本（AutoAWQForCausalLM.from_quantized 只做 output_hidden_states），完全没有让 Qwen 或任何 LLM 生成对话——scenario 全部由 f-string 模板拼接.transfer/stego 从头到尾没生成也没跑，Claim 3 没做。",
+    "score": 1,
+    "evidence_files": [
+      "scientist3/multi-agent_safety/multi_agent/idea.md",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+      "scientist3/multi-agent_safety/multi_agent/report.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "数据集全是句子硬编码，即使数量足够也没多样性。",
+    "score": 1,
+    "evidence_files": [
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/draft_summary.json",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "全流程单一种子 seed=42。研究阶段的 different seeds 节点只有 1 个。无 bootstrap、无 CI、无显著性检验。",
+    "score": 4,
+    "evidence_files": [
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a —— 无因果主张。全部 claim 为检测/预测型（AUROC 指标），未涉及 activation patching / steering / ablation 等因果干预。",
+    "score": "n/a",
+    "evidence_files": [
+      "scientist3/multi-agent_safety/multi_agent/report.md",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字可原样溯源：draft_summary Key_numerical_results 中 AUROC=1.0（agent1/2/3/mean/max/concat/tfidf）与 research_summary best node metric_names data 逐位一致，random_features=0.5236 也一致；experiment_data.npy（stage_4/experiment_results/experiment_b42b8053*）保存了 folds/predictions。无回填、无与日志矛盾。",
+    "score": 5,
+    "evidence_files": [
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/draft_summary.json",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/research_summary.json",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/experiment_results/experiment_b42b8053fd314d73985b1e63c9ec4edf_proc_1381729/experiment_data.npy"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "draft_summary / research_summary / journal.json 三处 1.0 与 0.5236 数字完全一致；draft_summary Significance 里 dataset lacks lexical-cue-minimization 的自我批评与 TF-IDF 也 1.0 的数字自洽。report.md 的 Verdict 直接标 Requires human review，未把饱和结果伪装成 supported。",
+    "score": 5,
+    "evidence_files": [
+      "scientist3/multi-agent_safety/multi_agent/report.md",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/draft_summary.json",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/research_summary.json",
+      "scientist3/multi-agent_safety/multi_agent/logs/0-run/stage_4_ablation_studies_1_first_attempt/journal.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Model internals carry a collusion signal that text-level monitoring misses; lightweight probes on per-agent residual-stream activations can recover it.",
+        "method": {
+          "justification": "机理家族选对了（LR probe），但根本没有多 agent dialogue：scenario 用 Python 模板拼接，collusion 与 honest 是两句写死的不同英文——Qwen 只是被动读模板文本，probe 读到的是 Qwen 读两句固定英文时的中间状态。这与 claim 所指的 model internals carry collusion signal 机理完全不同。",
+          "score": 2,
+          "evidence_files": [
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py"
+          ]
+        },
+        "experiment": {
+          "justification": "用 TF-IDF 代替 LLM text judge，脱离task.md。完全没有 LLM 生成的多 agent， dialogue——scenario 由纯 Python f-string模板拼接。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "结果 probe=1.0 vs TF-IDF=1.0，无法支持 text-level monitoring misses 的 claim。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/draft_summary.json",
+            "scientist3/multi-agent_safety/multi_agent/report.md",
+            "paper/multi-agent_safety/multi_agent/paper.pdf"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Detection requires aggregating signals across agents — group-aggregated probes outperform any single-agent probe and the text-only judge — and no single aggregation technique dominates across collusion types, motivating a family of complementary multi-agent probes.",
+        "method": {
+          "justification": "实现 3 种 aggregation（mean_pool / max_pool / concat），种类较少",
+          "score": 3,
+          "evidence_files": [
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py"
+          ]
+        },
+        "experiment": {
+          "justification": "问题同C1",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/draft_summary.json",
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/research_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "由于collusion/honest句子写死。全部 aggregation 饱和到 1.0，无法产生 aggregation vs single 或 aggregation 相互比较的差异，claim 2 完全未被测试。诚实承认，但对原文定性方向零支撑。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/draft_summary.json",
+            "paper/multi-agent_safety/multi_agent/paper.pdf"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Activation probes transfer zero-shot, without retraining, to structurally different multi-agent scenarios (different channel, different domain), showing the learned signal is not tied to one collusion form.",
+        "method": {
+          "justification": "完全没有构造 transfer / stego 数据集，也没有 zero-shot 应用冻结 probe 的代码。claim 3 结构性缺席。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_b42b8053fd314d73985b1e63c9ec4edf.py",
+            "scientist3/multi-agent_safety/multi_agent/report.md"
+          ]
+        },
+        "experiment": {
+          "justification": "问题同C1，且没构造别的数据集，无法实验",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/experiment_results/experiment_b42b8053fd314d73985b1e63c9ec4edf_proc_1381729/experiment_data.npy",
+            "scientist3/multi-agent_safety/multi_agent/logs/0-run/experiment_results/experiment_01f68a07cd13452dba7d3c36016a04e5_proc_1477688/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "无结果——report.md Per-claim verdict 表格里 C3 只写 See overall verdict，没有数据。claim 3 未被复现。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/multi-agent_safety/multi_agent/report.md",
+            "paper/multi-agent_safety/multi_agent/paper.pdf"
+          ]
+        }
+      }
+    }
+  }
+}

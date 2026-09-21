@@ -1,0 +1,113 @@
+[run.sh] Experiment root: /mnt/quarkfs/xuweihong/MECHANICA_exps/exp18
+[run.sh] Script dir: /mnt/quarkfs/xuweihong/MECHANICA_exps/exp18/verify/C2_belief_heads_localization/variants/model-swap-olmo-1b
+[run.sh] Starting model-swap-olmo-1b variant for C2 at Wed Jul 22 07:16:03 CST 2026
+[variant] START 2026-07-22 07:16:15
+[variant] loading OLMo-1B-hf ...
+[variant] arch={'n_layers': 16, 'n_heads': 16, 'head_dim': 128, 'hidden': 2048}
+[PPL] 1048576 tokens, max_id=50276, vocab=50304
+[M1] loaded from disk
+[M1] admitted: ['personal_belief', 'attributed_belief']
+[M2.1] F_knowledge: 227 examples
+  [Fisher] n=227 ...
+    100/227
+    200/227
+[M2.1] F_knowledge done (113 tensors)
+
+============================================================
+[M2] target=personal_belief
+  [clean] loaded from disk: target=0.777 ppl=10.782
+  [M2.1/M2.2] loaded ranked heads from disk (top-5: [(11, 12), (8, 2), (9, 9), (7, 8), (12, 0)])
+[M2.3] Greedy H* search ...
+  [M2.3] greedy-add (cap=30) ...
+    |S|=1 (11, 12): C2a=False C2c=False C2d=True drop=0.131 ppl_r=1.0077
+    |S|=2 (8, 2): C2a=False C2c=False C2d=True drop=0.283 ppl_r=1.0125
+    |S|=3 (9, 9): C2a=True C2c=False C2d=True drop=0.404 ppl_r=1.0161
+    |S|=4 (7, 8): C2a=True C2c=False C2d=True drop=0.457 ppl_r=1.0244
+    |S|=5 (12, 0): C2a=True C2c=False C2d=True drop=0.510 ppl_r=1.0310
+    |S|=6 (3, 15): C2a=True C2c=False C2d=False drop=0.571 ppl_r=1.0875
+    |S|=7 (9, 3): C2a=True C2c=False C2d=False drop=0.558 ppl_r=1.0898
+    |S|=8 (6, 0): C2a=True C2c=False C2d=False drop=0.529 ppl_r=1.0999
+    |S|=9 (13, 14): C2a=True C2c=False C2d=False drop=0.514 ppl_r=1.1053
+    |S|=10 (13, 9): C2a=True C2c=False C2d=False drop=0.562 ppl_r=1.1144
+    |S|=11 (0, 0): C2a=True C2c=False C2d=False drop=0.604 ppl_r=1.1234
+    |S|=12 (0, 1): C2a=True C2c=False C2d=False drop=0.536 ppl_r=1.2218
+    |S|=13 (0, 2): C2a=True C2c=True C2d=False drop=0.554 ppl_r=2.5391
+    |S|=14 (0, 3): C2a=True C2c=False C2d=False drop=0.587 ppl_r=2.8775
+    |S|=15 (0, 4): C2a=True C2c=False C2d=False drop=0.699 ppl_r=3.0827
+    |S|=16 (0, 5): C2a=True C2c=False C2d=False drop=0.658 ppl_r=3.4109
+    |S|=17 (0, 6): C2a=True C2c=False C2d=False drop=0.655 ppl_r=4.0460
+    |S|=18 (0, 7): C2a=True C2c=True C2d=False drop=0.558 ppl_r=6.5420
+    |S|=19 (0, 8): C2a=True C2c=False C2d=False drop=0.645 ppl_r=6.3594
+    |S|=20 (0, 9): C2a=True C2c=False C2d=False drop=0.633 ppl_r=7.5258
+    |S|=21 (0, 10): C2a=True C2c=False C2d=False drop=0.653 ppl_r=9.2770
+    |S|=22 (0, 11): C2a=True C2c=False C2d=False drop=0.436 ppl_r=16.2055
+    |S|=23 (0, 12): C2a=True C2c=False C2d=False drop=0.505 ppl_r=21.3932
+    |S|=24 (0, 13): C2a=True C2c=False C2d=False drop=0.554 ppl_r=23.2527
+    |S|=25 (0, 14): C2a=True C2c=False C2d=False drop=0.488 ppl_r=36.8602
+    |S|=26 (0, 15): C2a=True C2c=False C2d=False drop=0.391 ppl_r=46.2564
+    |S|=27 (1, 0): C2a=True C2c=False C2d=False drop=0.363 ppl_r=49.3131
+    |S|=28 (1, 1): C2a=True C2c=False C2d=False drop=0.354 ppl_r=63.8515
+    |S|=29 (1, 2): C2a=True C2c=False C2d=False drop=0.367 ppl_r=53.8499
+    |S|=30 (1, 3): C2a=True C2c=False C2d=False drop=0.360 ppl_r=55.9783
+  H* not found -> not_localized
+
+============================================================
+[M2] target=attributed_belief
+  [clean] pre-computing baselines ...
+  clean: target=0.730 other=0.777 wk=0.930 ppl=10.782
+[M2.1] F_attributed_belief: 454 examples
+  [Fisher] n=454 ...
+    100/454
+    200/454
+    300/454
+    400/454
+  [Fisher] n=227 ...
+    100/227
+    200/227
+  [Fisher] n=227 ...
+    100/227
+    200/227
+  [Jackknife] rho=0.954
+[M2.2] AND-NOT mask ...
+  Top-5: [(3, 7), (2, 11), (11, 12), (2, 3), (8, 2)]
+  [mem] Fisher tensors freed. GPU: 7.1 GB
+  [mem] F_know freed. GPU: 2.4 GB
+[M2.3] Greedy H* search ...
+  [M2.3] greedy-add (cap=30) ...
+    |S|=1 (3, 7): C2a=False C2c=True C2d=True drop=-0.145 ppl_r=1.0050
+    |S|=2 (2, 11): C2a=False C2c=True C2d=True drop=0.019 ppl_r=1.0156
+    |S|=3 (11, 12): C2a=False C2c=False C2d=True drop=-0.112 ppl_r=1.0238
+    |S|=4 (2, 3): C2a=False C2c=True C2d=True drop=-0.085 ppl_r=1.0296
+    |S|=5 (8, 2): C2a=False C2c=False C2d=True drop=-0.170 ppl_r=1.0354
+    |S|=6 (4, 7): C2a=False C2c=False C2d=False drop=-0.112 ppl_r=1.0531
+    |S|=7 (7, 8): C2a=False C2c=False C2d=False drop=-0.188 ppl_r=1.0636
+    |S|=8 (3, 0): C2a=False C2c=False C2d=False drop=-0.141 ppl_r=1.0772
+    |S|=9 (3, 3): C2a=False C2c=False C2d=False drop=-0.188 ppl_r=1.0817
+    |S|=10 (11, 13): C2a=False C2c=False C2d=False drop=-0.195 ppl_r=1.0961
+    |S|=11 (6, 9): C2a=False C2c=False C2d=False drop=-0.184 ppl_r=1.1034
+    |S|=12 (12, 0): C2a=False C2c=False C2d=False drop=-0.198 ppl_r=1.1110
+    |S|=13 (2, 6): C2a=False C2c=False C2d=False drop=-0.214 ppl_r=1.1279
+    |S|=14 (5, 8): C2a=False C2c=False C2d=False drop=-0.233 ppl_r=1.1450
+    |S|=15 (9, 2): C2a=False C2c=False C2d=False drop=-0.223 ppl_r=1.1516
+    |S|=16 (9, 9): C2a=False C2c=False C2d=False drop=-0.251 ppl_r=1.1573
+    |S|=17 (5, 4): C2a=False C2c=False C2d=False drop=-0.260 ppl_r=1.1611
+    |S|=18 (6, 1): C2a=False C2c=False C2d=False drop=-0.264 ppl_r=1.2243
+    |S|=19 (14, 9): C2a=False C2c=False C2d=False drop=-0.266 ppl_r=1.2514
+    |S|=20 (9, 3): C2a=False C2c=False C2d=False drop=-0.266 ppl_r=1.2542
+    |S|=21 (14, 13): C2a=False C2c=False C2d=False drop=-0.264 ppl_r=1.2541
+    |S|=22 (0, 0): C2a=False C2c=False C2d=False drop=-0.264 ppl_r=1.2701
+    |S|=23 (0, 1): C2a=False C2c=False C2d=False drop=-0.253 ppl_r=1.3411
+    |S|=24 (0, 2): C2a=False C2c=False C2d=False drop=-0.219 ppl_r=2.6911
+    |S|=25 (0, 3): C2a=False C2c=False C2d=False drop=-0.209 ppl_r=3.0098
+    |S|=26 (0, 4): C2a=False C2c=False C2d=False drop=-0.225 ppl_r=3.2289
+    |S|=27 (0, 5): C2a=False C2c=False C2d=False drop=-0.231 ppl_r=3.5917
+    |S|=28 (0, 6): C2a=False C2c=False C2d=False drop=-0.244 ppl_r=4.3744
+    |S|=29 (0, 7): C2a=False C2c=False C2d=False drop=-0.242 ppl_r=7.0941
+    |S|=30 (0, 8): C2a=False C2c=False C2d=False drop=-0.244 ppl_r=7.3657
+  H* not found -> not_localized
+
+[variant] DONE 0/2 localized consistent=False
+[variant] END 2026-07-22 08:13:28
+[run.sh] Variant completed at Wed Jul 22 08:13:29 CST 2026
+[run.sh] Results: /mnt/quarkfs/xuweihong/MECHANICA_exps/exp18/verify/C2_belief_heads_localization/variants/model-swap-olmo-1b/result.json
+EXIT_CODE=0

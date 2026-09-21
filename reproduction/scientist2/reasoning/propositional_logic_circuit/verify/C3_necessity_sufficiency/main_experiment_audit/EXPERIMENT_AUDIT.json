@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "gpt-5.4 (external LLM reviewer, dmxapi/llm-chat-equivalent)",
+  "claim_id": "C3",
+  "linked_milestones": ["M2", "M3"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "GT loaded from dataset JSONL 'answer' field, deterministically set by build_propositional_dataset.py (50/50 True/False balance). Not derived from model outputs. Both path_patch_necessity.py and reinsertion_sufficiency.py use prop_circuit_lib.compute_metrics with gt from JSONL."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Necessity: Recovery = (patch_ld - corr_ld) / (clean_ld - corr_ld), denominator is clean-corrupt delta, not model max/mean. Sufficiency: Sufficient-recovery = (reinsert_ld - ablated_ld) / (clean_ld - ablated_ld), denominator is clean minus fully-ablated, not model max/mean. No normalization fraud."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "results/M2_necessity.json: recovery.LD=0.9549 (reported 0.955), recovery.PD=0.9052 (reported 0.905), specificity_gap=0.836, success_C3_necessity=true, n_pairs=500. results/M3_sufficiency.json: sufficient_recovery.LD=0.1129 (reported 0.113), specificity_gap=0.1130, seed_stability_ok=true, success_C3_sufficiency=false, n_pairs=500, n_seeds=5. results/M5_gemma9b.json: necessity_LD=1.018, sufficiency_LD=0.019. All values match EXPERIMENT_RESULTS.md. Tracker DONE."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All key functions (run_activation_patch, run_reinsertion_sufficiency, compute_metrics) produce output fields present in M2_necessity.json and M3_sufficiency.json. Dose-response array, resample_seed_distribution, control_recovery, specificity_gap all present. No dead metric code."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "KL recovery metric exhibits a scaling artifact (baseline KL=0.043 is very small, causing recovery_KL = -5.618 in M2 and insufficient range in M3). The plan's success criterion requires KL recovery >= 0.8 for both necessity and sufficiency. The artifact is documented in EXPERIMENT_RESULTS.md Notes and in the M2 milestone entry, but not elevated to the per-claim verdict box. The C3 verdict is correctly assessed on LD and PD only (which are directionally conclusive), but the claim statement requires all three metrics. This is a soft scope discrepancy — WARN rather than FAIL because the artifact is real, documented, and the two reliable metrics are unambiguous."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

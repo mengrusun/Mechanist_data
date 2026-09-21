@@ -1,0 +1,176 @@
+{
+  "project": "F1: Layer-level bottleneck via per-layer semantic-vs-language-identity ratio",
+  "direction": "LASA — Language-Agnostic Semantic Alignment at the Semantic Bottleneck for LLM Safety",
+  "date_range": {"start": "2026-07-14", "end": "2026-07-14"},
+  "models": {"claim": "claude-opus-4-7", "experiment": "claude-opus-4-7", "verify": "claude-sonnet-4-6", "iteration": "claude-opus-4-7"},
+  "pipeline_status": "completed",
+  "round_end": {"qualifier": "", "detail": "", "remedy": "", "see": "", "partial_artifacts": [], "next_round_options": []},
+  "journey_summary": {
+    "claim": "2 given claims captured → top framing F1 (per-layer semantic-vs-language-identity ratio) with 3-milestone chain M1→M2→M3+M4",
+    "mechanism_strategy": "Location → Causal Intervention → Tuning & Editing",
+    "mechanism_routing": "family=Representation and Parameter Analysis / representation-engineering (M1+M3) + Causal Attribution / patching (M2), composed per Candidate #1",
+    "experiment": "7 runs (M1 + M2 + M3-Method + M3-Baseline + M4×3 models), ~6.39 GPU-hours, headline partial-positive (bottleneck exists at L*=10, but M2 specificity fails; C2 unseen-lang ASR -42.2% relative to surface DPO)",
+    "verify": "2 claim(s) — 1 PASS / 0 FAIL / 0 INCONCLUSIVE / 0 ZEV / 1 INTEGRITY_ONLY (cap=1, swap_off=0); integrity[Phase2/Phase9]=WARN/WARN. C2 PASS means the Qwen2.5-7B variant agrees with LLaMA main that C2 is not fully supported at the 20-pp bar — L*-anchor advantage is architecture-specific.",
+    "iteration": "0/3 iterations (budget-only budget consumed on ⓪ actions; 0 GPU-h back-edge dispatch), 2 ⓪ narrative-only revisions applied — claim narrowing (C1: diagnostic operating point / C2: LLaMA-family case study) + 13-bullet reviewer-flagged limitations + positioning guidance. Termination: stalled_at_score_ceiling_budget_constrained (score 4/10, verdict almost). All C1/C2 buckets acceptable — no unresolved FAIL/INCONCLUSIVE/ZEV.",
+    "figures": "2 image figures across 2 claims (C1 per-layer R(l) dome, C2 LLaMA-vs-Qwen per-language ASR); 0 judgment-skipped; 0 render-skipped, 0 errored"
+  },
+  "open_items": [
+    "GPU budget overrun: 10.34 / 10.00 h HARD cap (0.34 h / 3.4% overrun) — M4 eval slower than 1.2 h estimate (actual 2.10 h for 3 parallel models). Training was in budget.",
+    "C1 swap-test unresolved (INTEGRITY_ONLY, stage2_skip_reason: max_verify_claims_cap) — upgrade via `/auto-verify C1 -- resume: true` (Stage 1 audit reused via RESUME).",
+    "Qwen variant M4 Swahili N_eff = 10/60 (unreliable — 50 prompts stalled) — reliability caveat for the sw ASR reading.",
+    "M-MMLU deferred at main-experiment M4 — coverage gap on multilingual knowledge retention.",
+    "Out-of-budget reviewer-recommended upgrades (require compute): λ_bottleneck sweep {0.1, 0.25, 0.5, 1.0}; anchor-language ablation (EN-only / EN+ZH / EN+KO / ZH+KO); L*±1 sensitivity check; generic hidden-state regularizer control (random-layer anchor / prompt-embedding consistency) to disentangle bottleneck specificity; independent semantic scorer for M2 (avoid LLaMA-self circularity); response-state anchor loss (needs multilingual chosen-response translations); one additional non-LLaMA architecture replicate.",
+    "Manuscript-level consistency check needed: title / abstract / intro / conclusion must ALL adopt the narrowed C1/C2 wording (avoid re-introducing 'semantic bottleneck' or 'architecture-agnostic transfer' overclaims). Reviewer-suggested venue fit: negative/mixed-results venue, workshop, or ACL Findings borderline; not competitive for NeurIPS/ICML main track in current form."
+  ],
+  "iteration_summary": {"score": 4, "verdict": "almost", "rounds_consumed": 0, "max_rounds": 3},
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "Our layer-ratio diagnostic identifies an interior maximum at L*=10 on LLaMA-3.1-8B-Instruct (M1: R_max=1.371, CI [1.349, 1.395]). Cross-lingual activation patching at L*=10 outperforms a late-layer control (A > C, +0.28 semantic cosine) but does NOT confirm semantic specificity — matched-control patches with unrelated English states give the same score as same-meaning patches (A=0.738 vs D=0.755). We report L* as a diagnostic operating point, not as an established causal semantic bottleneck.",
+      "origin": "task.md §Claim ¶1 (given behavior B1); framing F1 in IDEA_REPORT.md; narrowed by iteration-1 ⓪",
+      "data": {
+        "provenance": "existing",
+        "source": "MultiJail (10 languages: en, zh, it, vi, ar, ko, th, bn, sw, jv) — parallel-prompt substrate",
+        "available_n": "442 rows × 10 langs (315 parallel-populated groups after any-lang-empty drop)",
+        "used_n": "M1: 315 groups × 10 langs = 3150 forwards; M2: 100 groups × 9 target langs × 4 conditions = 3600 patching trials",
+        "subset_note": "M2 substituted LaBSE semantic scorer with LLaMA-3.1-8B-Instruct top-layer mean-pool (LaBSE download timed out; potential self-circularity — noted in limitations). GPT-4o judge subsample deferred (judge used in M4 instead)."
+      },
+      "models": ["LLaMA-3.1-8B-Instruct"],
+      "method": "M1 per-layer R(l) = Sem(l)/Lang(l) diagnostic on parallel MultiJail prompts (last-token residual, cosine sim). M2 cross-lingual activation patching at L* vs. surface controls (l=2, l=30) and matched-control patch. Composed submethod: representation-engineering (RepReading last-token h_L extraction) + causal-attribution/patching (matched-control specificity).",
+      "main_experiment": {
+        "verdict": "partial",
+        "key_stats": "M1: L*=10, R_max=1.371, 95% CI [1.349, 1.395], dome shape 0.95→1.37→0.45. M2: A(patch@L*=10)=0.738, B(patch@l=2)=0.962, C(patch@l=30)=0.458, D(matched-control@L*=10)=0.755. A > C by +0.28 (paired bootstrap CI non-overlapping). A ≈ D — specificity fails. Per-lang Sem^lang at L*=10: it=0.78, ar=0.71, zh=0.70, jv=0.47.",
+        "headline": "Geometric bottleneck exists at L*=10 (dome-shaped R(l) with interior max), but M2 matched-control specificity fails (A ≈ D) — last-token intervention at L* encodes a language-generic affordance rather than content-specific meaning. L*=10 stands as a diagnostic operating point, not an established causal semantic bottleneck."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"},
+        "integrity": "WARN",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap"
+      },
+      "iteration": {
+        "final_reviewer_status": "narrowed via ⓪ narrative-only (iteration 1 + 2)",
+        "changed": ["statement narrowed to 'diagnostic operating point' framing (A≈D specificity failure foregrounded)", "matched-control failure moved from Discussion to headline claim wording"],
+        "falsified": ["Original 'semantic bottleneck confirmed causally' framing — falsified by A≈D specificity failure"],
+        "narrowed_to": "L*=10 is a diagnostic argmax, not a causally-specific semantic bottleneck; last-token position may encode language-generic refusal-context signal rather than content semantics"
+      },
+      "final_status": "⚪ INTEGRITY_ONLY / max_verify_claims_cap — audit passed at Phase 2, swap-test deferred by K=1 cap; iteration ⓪ narrowed claim from 'semantic bottleneck confirmed' → 'diagnostic operating point (A≈D specificity failure)'",
+      "caveats": [
+        "M2 semantic scorer substituted (LaBSE → LLaMA top-layer mean-pool) — potential self-circularity since scorer uses the same model whose bottleneck is under test",
+        "M2 A > B refuted (l=2 auto-denoised by 30 downstream layers; A vs C is the cleaner test)",
+        "Per-language Sem^lang tapers for low-resource langs (jv 0.47, bn 0.57, sw 0.59, ko 0.60)",
+        "GPT-4o judge subsample deferred at M2",
+        "Swap-test deferred due to MAX_VERIFY_CLAIMS=1 cap",
+        "No L*±1 sensitivity check — L*=10 is a diagnostic argmax; neighboring layers may give similar results"
+      ],
+      "artifacts": [
+        "results/M1_bottleneck_diagnostic.json",
+        "results/M2_patch.json",
+        "verify/C1_bottleneck_layer_llm/main_experiment_audit/{EXPERIMENT,MECHANISM}_AUDIT.{md,json}",
+        "verify/C1_bottleneck_layer_llm/ROBUSTNESS.md"
+      ],
+      "figures": [
+        {
+          "id": "c1_bottleneck_dome",
+          "type": "line",
+          "caption": "C1 · Per-layer semantic-vs-language ratio R(l) on LLaMA-3.1-8B-Instruct: dome shape with interior maximum at L*=10 (R_max=1.371), refuting the monotonic-R falsifier.",
+          "png": "figures/C1/c1_bottleneck_dome.png",
+          "pdf": "figures/C1/c1_bottleneck_dome.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/M1_bottleneck_diagnostic.json",
+          "status": "ok"
+        },
+        {
+          "id": "c1_m2_specificity",
+          "type": "bar",
+          "caption": "C1 · M2 activation-patching by condition (mean ± 95% CI): A > C strong (+0.28) but A ≈ D — matched-control specificity fails at last-token position.",
+          "png": "figures/C1/c1_m2_specificity.png",
+          "pdf": "figures/C1/c1_m2_specificity.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/M2_patch.json",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "statement": "In a LLaMA-3.1-8B-Instruct case study, adding a bottleneck-anchoring loss to LoRA-DPO reduced mean unseen-language jailbreak ASR on MultiJail relative to a pure LoRA-DPO baseline (6.86% → 3.97%, -42.2% relative). This effect did NOT replicate on Qwen2.5-7B-Instruct (14.39% → 14.11%, -0.28 pp / -1.95% relative), and was accompanied by capability regressions on some evaluations (Qwen MT-Bench 4.33 → 3.27, -1.07 pts; LLaMA MGSM/sw -5 pp). We do NOT claim architecture-agnostic gains. We characterize general capability preservation as mixed rather than established.",
+      "origin": "task.md §Claim ¶2 (given behavior B2); narrowed by iteration-1 ⓪ (LLaMA-family case study framing)",
+      "data": {
+        "provenance": "existing",
+        "source": "Main: PKU-SafeRLHF-30K EN (5000 filtered pairs) + UltraFeedback (2000 pairs); MultiJail EN/ZH/KO anchor triples (315). Eval main: MultiJail 100/lang × 10, MMLU 300, MGSM 40/lang × 4, MT-Bench 25. Variant (Qwen2.5-7B): same training data, eval capped at MultiJail 60/lang × 10, MMLU 150, MGSM 25/lang, MT-Bench 15.",
+        "available_n": "PKU-SafeRLHF-30K = 26,874 EN pairs; UltraFeedback ~64k rows; MultiJail 442×10; MMLU standard; MGSM standard; MT-Bench 80.",
+        "used_n": "Main: 5000 EN + 2000 UltraFeedback = 7000 DPO pairs (3000 steps LoRA r=16 α=32 lr=1e-5). Variant Qwen2.5-7B: identical 7000 pairs, same recipe. Eval subsets as listed.",
+        "subset_note": "Main-experiment DECLARED downscale: training narrowed to English-only PKU-SafeRLHF (ZH/KO not available as preference pairs); L_bottleneck on prompt triples, not chosen-response triples; LoRA r=64→r=16 α=32; lr 5e-6→1e-5 per Tip 4 pilot sweep. Variant: same recipe with adjusted eval caps for budget."
+      },
+      "models": [
+        "LLaMA-3.1-8B-Instruct (base) → M3-Method-L-star-anchor + M3-Baseline-surface-DPO",
+        "Qwen2.5-7B-Instruct (variant swap, L*=14/28)"
+      ],
+      "method": "M3: SFT-free LoRA-DPO (β=0.1, LoRA r=16 α=32 target q/k/v/o_proj, lr=1e-5, 3000 steps) — Method adds L_bottleneck = λ·[1 − cos(h_L*(prompt, lang_A), h_L*(prompt, lang_B))] (λ=0.5) over EN/ZH/KO parallel MultiJail prompt triples; Baseline pure DPO. M4: MultiJail per-lang ASR (GPT-4o judge, unsafe=1/safe=0), MMLU (loglik on A-D letters), MGSM (CoT), MT-Bench (LM-judge); paired bootstrap CI on unseen-language slice. Variant repeats the same recipe on Qwen2.5-7B (L*_qwen at layer 14 of 28).",
+      "main_experiment": {
+        "verdict": "partial",
+        "key_stats": "MultiJail unseen-lang ASR: Method 3.97% vs Baseline 6.86% = -42.2% relative reduction. Worst-lang tied at Swahili 12.94%. Seen-lang ASR: Method 3.03% vs Baseline 3.69% (-17.9% rel). Capability: MMLU tied 65.00%; MGSM/en tied 75%; MGSM/zh +5 pp Method; MGSM/sw -5.00 pp Method (40 vs 45); MGSM/bn tied 17.5%; MT-Bench +0.16 Method (8.12 vs 7.96). L_bottleneck 0.31→0.04. DPO margin Method +0.732 / Baseline +0.590.",
+        "headline": "L*-anchored DPO on LLaMA-3.1-8B delivers -42.2% relative unseen-lang MultiJail ASR reduction vs. surface DPO on identical data; worst-lang tied at Swahili 12.94%. Capability retention passes 5/6 metrics but MGSM/sw drops 5 pp — targeted safety-capability trade-off. Iteration narrowed this from an architecture-agnostic claim to a LLaMA-family case study after Qwen non-replication."
+      },
+      "verify": {
+        "robustness": 1.0,
+        "axes": {"method": "n/a", "dataset": "n/a", "model": "pass"},
+        "integrity": "WARN",
+        "verdict": "PASS",
+        "stage2_skip_reason": null
+      },
+      "iteration": {
+        "final_reviewer_status": "narrowed via ⓪ narrative-only (iteration 1 + 2); Qwen non-replication elevated to headline",
+        "changed": ["statement narrowed to 'LLaMA-3.1-8B-Instruct case study'", "capability preservation characterized as 'mixed rather than established'", "Qwen non-replication moved from side note to headline", "13 reviewer-flagged limitations added to CLAIMS_LEDGER.md"],
+        "falsified": ["Architecture-agnostic transfer claim as stated in original task.md ¶2 — falsified by Qwen2.5-7B variant delta -0.28 pp and MT-Bench -1.07 pts regression"],
+        "narrowed_to": "LLaMA-3.1-8B-Instruct case study — the -42% unseen-lang benefit is real on LLaMA-family under this specific recipe (LoRA r=16 α=32, lr=1e-5, λ=0.5, EN-only preference data, prompt-triple anchor); does not transfer to Qwen2.5-7B under identical hyperparameters; capability preservation is mixed"
+      },
+      "final_status": "✓ PASS (robustness=1.00) — the negative finding (C2 not architecture-agnostic under this recipe) replicates across LLaMA and Qwen variants. Iteration ⓪ narrowed the claim from architecture-agnostic transfer → LLaMA-family case study with elevated Qwen non-replication headline. Honest venue fit: negative/mixed-results venue, workshop, or ACL Findings borderline; not main-track without ablations.",
+      "caveats": [
+        "Main experiment training narrowed to English-only PKU-SafeRLHF-30K (5000 pairs)",
+        "L_bottleneck on prompt triples (not chosen-response triples)",
+        "LoRA r=16 α=32 (planned r=64); lr=1e-5 (planned 5e-6, re-bound via Tip 4 pilot sweep)",
+        "M4 caps: main MultiJail 100/lang MMLU 300; variant MultiJail 60/lang MMLU 150; M-MMLU deferred at main",
+        "MMLU by loglik on A-D letter tokens (Tip 5 fallback path)",
+        "MGSM/sw drops 5 pp (main) / -4 pp (variant) — targeted safety-capability trade-off",
+        "Variant Qwen sw N_eff=10/60 — unreliable Swahili reading",
+        "Variant Qwen MT-Bench -1.07 pts capability regression exceeds 2 pp tolerance",
+        "λ_bottleneck kept at 0.5 with no sweep — cannot claim principled or near-optimal",
+        "No anchor-language ablation (EN vs ZH vs KO contributions unattributable)",
+        "No L*±1 sensitivity check",
+        "No generic hidden-state regularizer control — cannot disentangle bottleneck specificity from any regularizer effect",
+        "Refusal-heavy task distribution may be unusually favorable to language-generic transfer — external validity beyond safety/refusal alignment undemonstrated",
+        "Narrow empirical basis: 1 main model + 1 failed transfer + 1 recipe",
+        "GPU budget overrun 0.34 h (10.34 total vs 10.00 HARD cap)"
+      ],
+      "artifacts": [
+        "checkpoints/M3-Method-L-star-anchor/step-{1000,2000,3000}",
+        "checkpoints/M3-Baseline-surface-DPO/step-{1000,2000,3000}",
+        "results/M4_eval/{method,baseline,base}_{multijail,mmlu,mgsm,mtbench}.json",
+        "verify/C2_bottleneck_anchored_dpo/main_experiment_audit/{EXPERIMENT,MECHANISM}_AUDIT.{md,json}",
+        "verify/C2_bottleneck_anchored_dpo/variant_audit/{EXPERIMENT,MECHANISM}_AUDIT.{md,json}",
+        "verify/C2_bottleneck_anchored_dpo/ROBUSTNESS.md",
+        "verify/C2_bottleneck_anchored_dpo/variants/model-swap-qwen25-7b/{config.yaml,run.sh,DIFF.md,checkpoints/*,results/*}",
+        "review-stage/{AUTO_REVIEW.md,REVIEW_STATE.json,REVIEWER_MEMORY.md,AUTO_ITERATION_FINAL_REPORT.md}"
+      ],
+      "figures": [
+        {
+          "id": "c2_cross_arch_asr",
+          "type": "grouped_bar",
+          "caption": "C2 · Cross-architecture non-replication of the L*-anchor safety headline: LLaMA-3.1-8B Method achieves -42.2% relative unseen-language MultiJail ASR reduction (mean 6.86% → 3.97%); the same recipe on Qwen2.5-7B yields only -1.95% (14.39% → 14.11%) — the LLaMA safety benefit does not carry over to Qwen2.5-7B under identical hyperparameters.",
+          "png": "figures/C2/c2_cross_arch_asr.png",
+          "pdf": "figures/C2/c2_cross_arch_asr.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/M4_eval/{method,baseline}_multijail.json + verify/C2_bottleneck_anchored_dpo/variants/model-swap-qwen25-7b/results/{method,baseline}_multijail.json",
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+1. **selected_name**  
+**Mdl1 — Qwen2.5-7B-Instruct**
+
+2. **justification**  
+This is the strongest single swap if the goal is: **“Would a skeptical reviewer believe C3a is not a Llama-specific artifact if it survives?”**
+
+Why this is strong:
+
+- **Cross-family independence**: Qwen differs from Llama in architecture details, tokenizer, pretraining mix, and post-training stack. That makes survival much harder to explain away as a Llama residual-stream geometry quirk.
+- **Same behavioral regime**: It is still an **instruct-tuned model**, so the comparison preserves the important condition that the model is trained to produce verbalized confidence-like language. Since C3a is specifically about the relationship between a **correctness direction** and a **verbalized-confidence direction**, keeping instruct tuning avoids changing too many causal ingredients at once.
+- **Cleaner test than base-model swaps**: A base-model swap tests a different question: whether the phenomenon requires instruction/RLHF-style reporting behavior. That is scientifically interesting, but if the claim is about separation of directions at the reporting layer in the reported setup, a base-model failure would be ambiguous: did C3a fail because the geometry is not robust, or because the model no longer has a comparable verbalized-confidence channel at all?
+- **Stronger than Mistral-7B-Instruct**: Mistral is also a valid cross-family instruct test, but Qwen2.5 is generally a stronger modern instruct model and more likely to support stable extraction of both correctness and verbalized-confidence labels. That reduces the chance that a negative result is due to poorer task fit or noisier confidence verbalization rather than genuine failure of orthogonality.
+
+So for **reviewer trust in robustness**, Qwen2.5-7B-Instruct is the best balance of:
+- maximal independence from Llama
+- preserved task/reporting regime
+- low ambiguity in interpretation
+
+3. **expected_if_claim_holds**  
+If C3a reflects a **general property of instruct-tuned LMs’ reporting geometry**, then on Qwen2.5-7B-Instruct I would expect:
+
+- **Low |cos| at the primary reporting layer**
+- Likely still **well below 0.3**
+- Plausible range: **~0.02–0.12**
+- With a 95% bootstrap CI whose **upper bound remains < 0.4**, ideally also < 0.3
+- The **L*±2 neighborhood** should stay similarly small rather than showing a sharp isolated spike
+
+I would not demand it be as tiny as 0.015, because exact magnitude can vary by family and layer alignment. What matters is that it remains **comfortably sub-threshold** and neighborhood-robust.
+
+4. **expected_if_claim_fails**  
+Evidence that C3a is specific to Llama-3.1-8B-Instruct would look like:
+
+- **Substantially larger |cos|** at Qwen’s corresponding reporting layer, e.g. **> 0.3**
+- Or a CI that is too wide / too high, especially **95% upper bound ≥ 0.4**
+- Or lack of neighborhood robustness: one layer looks small by chance but **L*±2 rises materially**
+- Or unstable probes across bootstrap resamples, suggesting the apparent direction separation is not real in this model
+
+A particularly damaging result would be:
+- point estimate around **0.25–0.4+**
+- with neighborhood mean also elevated
+- despite adequate label quality and probe performance
+
+That would strongly suggest the near-orthogonality is not a general reporting-geometry fact, but rather tied to the Llama-3.1-8B-Instruct training stack.
+
+5. **risk / confound control**  
+Main confounds and how to control them:
+
+- **Different tokenizer / answer formatting**
+  - Could affect extraction of correctness or verbalized-confidence labels.
+  - Control: keep the same semantic labeling procedure, verify extraction success rates, and report them.
+
+- **Different optimal reporting layer**
+  - Qwen may place reporting behavior at a different layer than 31.
+  - Control: search across all layers exactly as in the main experiment, define Qwen’s own \(L^*\) using the same rule.
+
+- **Probe quality mismatch**
+  - If one probe is weak, the angle becomes less interpretable.
+  - Control: report probe performance for correctness and verbalized confidence separately; ensure both are meaningfully predictive.
+
+- **Confidence verbalization style differences**
+  - Qwen may express confidence less explicitly or with different lexical habits.
+  - Control: inspect label balance and extraction reliability; possibly normalize prompt format without changing the task.
+
+- **Distribution shift from instruction-following style**
+  - Differences in refusal/helpfulness style can alter the confidence channel.
+  - Control: maintain identical prompt templates and decoding settings.
+
+- **Capacity mismatch concerns**
+  - 7B vs 8B is minor, but reviewers may mention it.
+  - Control: note that this is a small size difference relative to the architecture/training-family difference, and thus unlikely to explain large geometry changes.
+
+6. **trust_rank**  
+From strongest to weakest **for increasing reviewer trust in C3a if it survives**:
+
+1. **Mdl1 — Qwen2.5-7B-Instruct**  
+   Best combination of cross-family independence and matched instruct-tuned reporting regime.
+
+2. **Mdl2 — Mistral-7B-Instruct-v0.1**  
+   Also strong and cross-family; slightly weaker than Qwen due to likely noisier/older instruct behavior.
+
+3. **Mdl3 — Llama-3.1-8B**  
+   Same architecture, but base model. Useful adversarial test of dependence on instruction tuning; weaker for “independent robustness” because a survival result is less independent, and a failure is ambiguous.
+
+4. **Mdl4 — Qwen2.5-7B**  
+   Cross-family but base; changes both family and instruction-tuning regime, making interpretation less clean.
+
+5. **Mdl5 — Mistral-7B-v0.1**  
+   Same issue as Mdl4, plus likely weaker/older base behavior for extracting a stable verbalized-confidence signal.
+
+**Does the suggested Qwen2.5-7B-Instruct choice align with my assessment?**  
+**Yes.** I agree with that choice. It is the strongest strict reviewer-facing swap in this pool.
+
+If I were optimizing for **maximum chance to falsify** rather than **maximum reviewer trust if it survives**, I might consider **Mdl3 (Llama-3.1-8B)** because task.md already predicts weakening there. But that is a different objective. For your stated criterion—**how much a reviewer would trust C3a if it survived the swap**—**Qwen2.5-7B-Instruct is the right pick**.

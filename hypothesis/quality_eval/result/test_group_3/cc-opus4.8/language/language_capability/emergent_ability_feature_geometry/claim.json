@@ -1,0 +1,24 @@
+{
+  "Name": "emergent_ability_feature_geometry",
+  "Title": "Emergent Abilities as Phase Transitions in Feature Geometry, Not Just Loss",
+  "Short Hypothesis": "We hypothesize that so-called emergent abilities correspond to a measurable reorganization of feature geometry: a specific capability 'switches on' when a set of task-relevant linear features becomes disentangled (separable, monosemantic) in the residual stream, and that this geometric transition, tracked across training checkpoints, predicts the behavioral jump better and more smoothly than the loss curve. This is the right setting to link language modeling (loss) to intelligence (capabilities): it seeks the internal event that converts language competence into a new reasoning skill.",
+  "Related Work": "Wei et al. (2022) documented emergent abilities; Schaeffer et al. (2023) argued they are metric artifacts. Nanda et al. (2023) showed grokking corresponds to circuit formation. Olsson et al. (2022) linked induction heads to in-context learning phase changes. We generalize beyond a single toy circuit: we track, across pretraining checkpoints of open models, the geometric disentanglement of features for multiple capabilities and test whether feature-separation transitions predict behavioral emergence, adjudicating the 'real transition vs metric artifact' debate mechanistically.",
+  "Abstract": "Whether emergent abilities reflect genuine internal reorganization or are artifacts of discontinuous metrics is contested, yet it is central to how quantitatively scaling a language objective produces qualitatively new intelligence. We propose that emergence is visible in feature geometry. Using open models with released intermediate checkpoints (Pythia, OLMo), we select capabilities with claimed emergence (multi-digit arithmetic, analogical mapping, indirect-object identification, simple syllogisms) and, at each checkpoint, (i) fit linear probes and sparse autoencoders to extract task-relevant features, (ii) measure their linear separability, effective dimensionality, and monosemanticity, and (iii) correlate these geometric quantities with continuous behavioral metrics (per-token log-prob margin) and thresholded accuracy. We predict that a sharp increase in feature separability precedes or coincides with the behavioral jump, that the continuous geometric measure rises smoothly where accuracy jumps (supporting a real-but-thresholded transition), and that ablating the newly disentangled features selectively removes the emergent skill while sparing others. We further test whether the transition is a local circuit-formation event (as in grokking) by tracking induction-like and arithmetic heads. This reframes emergence as a trackable, causal geometric phenomenon, offers early-warning signals for capability onset, and clarifies the metric-artifact debate by exhibiting the internal state change that underlies the behavioral discontinuity.",
+  "Experiments": [
+    "Select Pythia (160M-6.9B) and OLMo checkpoints spanning training.",
+    "Define 4 candidate emergent tasks with graded difficulty and both continuous (log-prob margin) and thresholded (accuracy) metrics.",
+    "At each checkpoint: train linear probes for task features; fit SAEs; compute separability (probe accuracy, margin), effective dimensionality (participation ratio), and monosemanticity scores.",
+    "Plot geometric measures vs training tokens alongside behavioral curves; test for change-points and lead/lag relationships.",
+    "Causal check: ablate the disentangled feature directions at the post-transition checkpoint; measure selective drop on the target task vs controls.",
+    "Circuit tracking: monitor formation of induction heads and task-specific heads across checkpoints.",
+    "Metrics: change-point alignment (transition token vs accuracy jump), correlation between separability slope and accuracy slope, selective-ablation specificity.",
+    "Control: a non-emergent (smoothly improving) task should show smooth geometry."
+  ],
+  "Risk Factors and Limitations": [
+    "Checkpoint granularity may be too coarse to resolve a sharp transition.",
+    "SAE and probe quality vary across checkpoints, confounding geometric measures.",
+    "Correlation between geometry and behavior does not by itself prove causation despite ablation checks.",
+    "The set of tasks with clean emergence is limited and may not generalize.",
+    "Effective-dimensionality and monosemanticity metrics are sensitive to hyperparameters."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "Name": "self_vs_other_belief_representation",
+  "Title": "Egocentric Leakage: Distinguishing the Model's Own Belief From Attributed Belief",
+  "Short Hypothesis": "LLMs maintain partially distinct representations for their own belief about a proposition versus a belief they attribute to another agent, and belief-attribution errors are driven by leakage from the model's own-belief representation into the attributed-belief channel (an egocentric bias).",
+  "Related Work": "Developmental psychology's 'curse of knowledge' and egocentric bias motivate this; the source paper shows LLMs over-rely on their own knowledge when attributing beliefs. Truth probes capture only the self channel. FANToM measures information-access errors behaviorally. We mechanistically separate self- vs other-belief channels and quantify cross-channel leakage.",
+  "Abstract": "To attribute a false belief, a model must suppress its own knowledge of the truth and represent what another agent, given their limited information, would believe. The paper motivating this work shows LLMs systematically fail, over-importing their own knowledge. We hypothesize two partially separable internal channels—own-belief (what the model itself takes to be true) and attributed-belief (what agent X, with restricted access, believes)—and that attribution errors correspond to measurable leakage from the own-belief channel into the attributed channel. Using information-asymmetry scenarios (the model/reader knows an item moved; agent X did not witness it), we train probes for the model's own answer and for X's belief, and measure their independence. The core test: on error trials, does the attributed-belief readout shift toward the own-belief value (leakage), and can we *reduce* errors by projecting out the own-belief direction from the attributed channel at inference time? We also test the reverse—whether inducing the model to 'commit' to its own answer earlier increases leakage. This provides a mechanistic formulation of egocentric bias in LLM theory of mind and a training-free intervention (own-belief subspace ablation) to improve false-belief attribution.",
+  "Experiments": [
+    "Build information-asymmetry scenarios where the true answer and agent X's justified belief diverge; include matched controls where they coincide.",
+    "Train probes for own-belief and attributed-belief; measure subspace overlap and independence.",
+    "On attribution errors, test whether attributed-belief readout regresses toward own-belief value (leakage metric).",
+    "Intervention: at the attribution position, subtract the own-belief direction (or project it out) and measure change in false-belief accuracy vs true-belief accuracy.",
+    "Reverse test: force early commitment to own answer (chain-of-thought stating the truth) and measure increased leakage/error.",
+    "Vary agent 'access' explicitly and check the attributed channel tracks access, not truth."
+  ],
+  "Risk Factors and Limitations": [
+    "Own-belief and attributed-belief may not be linearly separable, weakening the leakage metric.",
+    "Projection intervention could harm cases where own-belief is legitimately relevant.",
+    "Defining the model's 'own belief' operationally is nontrivial and prompt-sensitive.",
+    "Results may vary with how information access is described."
+  ]
+}

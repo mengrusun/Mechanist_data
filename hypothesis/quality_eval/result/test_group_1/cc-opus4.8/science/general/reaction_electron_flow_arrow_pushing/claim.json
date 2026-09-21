@@ -1,0 +1,21 @@
+{
+  "Name": "reaction_electron_flow_arrow_pushing",
+  "Title": "Arrow Pushing Inside the Network: Do Reaction Transformers Represent Electron Flow?",
+  "Short Hypothesis": "Reaction-prediction transformers internally represent the mechanistic electron flow (nucleophile/electrophile roles, bond formation/breaking) of organic reactions, such that specific attention/feature structures track curved-arrow mechanism, and models predict products correctly more often when their internal electron-flow representation matches the ground-truth mechanism.",
+  "Related Work": "Schwaller et al. (2019, Molecular Transformer; 2021, atom mapping from attention) showed reaction transformers implicitly learn atom mapping. Mechanistic datasets exist but are underused for interpretability. Prior work reads out atom correspondence; we test the stronger claim that models represent electron flow (polarity, bond order changes) as an internal mechanistic variable, and link the fidelity of this representation to prediction correctness.",
+  "Abstract": "Organic reactivity is governed by electron flow, formalized as curved-arrow mechanisms. We investigate whether transformer models trained on reaction SMILES (e.g., Molecular Transformer on USPTO) represent this mechanism internally rather than only mapping reactants to products by memorized templates. Using a subset of reactions annotated with electron-flow mechanisms (from mechanistic datasets and rule-based generators), we probe hidden states and attention for three mechanistic variables: which atoms are nucleophilic vs electrophilic, which bonds break, and which bonds form. We train lightweight probes to decode these from activations and localize the layers/heads carrying each. We then test a functional link: partition test reactions by whether the model's decoded electron flow matches ground truth, and compare product-prediction accuracy across partitions; a mechanistic model should be more accurate when its internal electron-flow reading is correct. We add causal tests by patching attention corresponding to the identified nucleophile-electrophile pairing between a reaction and a regiochemical isomer, predicting a switch in the model's product regiochemistry. Finally, we examine whether models generalize electron-flow representations to reaction classes underrepresented in training. We predict decodable, layer-localized electron-flow structure that is predictive of and causally linked to correct product prediction. This reveals whether reaction models capture established chemical mechanism or exploit surface template statistics, guiding their safe use in synthesis planning.",
+  "Experiments": [
+    "Assemble reactions with electron-flow annotations (nucleophile/electrophile atoms, bond changes) via mechanistic datasets and rule-based labeling; hold out reaction classes for generalization tests.",
+    "Probe frozen activations of a pretrained reaction transformer to decode (a) atom electrophilicity/nucleophilicity, (b) breaking bonds, (c) forming bonds; report per-variable accuracy and layer localization.",
+    "Correlate internal electron-flow decoding correctness with top-1 product-prediction accuracy across test reactions.",
+    "Attention-patching: swap nucleophile-electrophile attention between regiochemical isomers and measure induced change in predicted product regiochemistry.",
+    "Generalization: evaluate electron-flow probe accuracy on held-out reaction classes.",
+    "Baseline comparison: template-matching model with no internal mechanism, to show whether probe signal exceeds template overlap."
+  ],
+  "Risk Factors and Limitations": [
+    "Reliable electron-flow annotations are scarce and noisy; rule-based labels may be incomplete.",
+    "Models may achieve accuracy via templates while also carrying decodable-but-unused mechanistic signals (correlation vs causation).",
+    "Attention patching between isomers may be brittle and produce invalid outputs.",
+    "Findings may be specific to USPTO-style datasets dominated by common reaction types."
+  ]
+}

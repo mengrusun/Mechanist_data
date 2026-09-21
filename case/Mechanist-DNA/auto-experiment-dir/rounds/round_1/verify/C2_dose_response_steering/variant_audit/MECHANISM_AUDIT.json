@@ -1,0 +1,33 @@
+{
+  "date": "2026-07-18",
+  "auditor": "llm-chat (gpt-5.4)",
+  "audit_type": "mechanism",
+  "claim_id": "C2",
+  "scope": "variant: method-swap-ssdef-pydssp",
+  "triggered_checks": ["A"],
+  "overall_verdict": "warn",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "warn",
+      "triggered": true,
+      "trigger_match": ["code/mechanism.py: Steerer (reused unmodified)", "variant's own run_variant.py --alpha grid"],
+      "intervention_type": "SAE_feature",
+      "sweep_grid": [0, 4, 8, 16, 32],
+      "sigma_proj_scaling": false,
+      "capability_metric": "valid_orf_rate (logged every dose)",
+      "plateau_range": null,
+      "locked_alpha": null,
+      "alpha_position": "n/a (variant reports a trend, does not select/lock a single operating alpha)",
+      "random_baseline": {"run": false, "n_random": 0, "passed": null},
+      "sign_pattern": "n/a",
+      "output_case_spotcheck": {"cases_available": false, "verdict": "no_cases_logged", "note": "out of scope for this variant's own question (SS-assignment agreement, not generation coherence)."},
+      "evidence": ["code/mechanism.py (Steerer, unmodified)", "variant's run_variant.py --alpha dispatch", "variant_summary.json per-dose table"],
+      "details": "Real sweep with target+capability logged at every dose; narrow span (8x, not >=3 orders of magnitude); no sigma_proj scaling; no established plateau (valid-ORF drops ~26% relative at alpha=16); no random-direction control within this variant. Not FAIL: no hardcoded single alpha, no capability-blind metric, and critically this variant never anchors a headline number at a capability-degraded dose (unlike the main experiment's alpha*=32 or C3's alpha=16 decisive-dose FAIL pattern) -- its own question is trend agreement between two SS-assignment algorithms, which it answers regardless of where any single alpha sits."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

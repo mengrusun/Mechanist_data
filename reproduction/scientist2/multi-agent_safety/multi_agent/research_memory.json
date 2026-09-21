@@ -1,0 +1,48 @@
+{
+  "direction": "Multi-agent LLM collusion detection via internal-representation probes",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "In K=3 LLM committee deliberations, per-agent residual-stream activations contain a probe-recoverable collusion signal, and group-aggregating the per-agent signals produces a group-level detector that transfers zero-shot to structurally different multi-agent scenarios.",
+      "status": "established",
+      "behavior_conclusion": "Under Qwen3-32B-AWQ K=3 committee deliberations on the realized in-domain mabench_core (17 domains × ~16 valid scenarios/domain, max_new_tokens=60 short-transcript regime), residual-stream activations at mid-late layers carry an above-chance collusion signal recoverable by a lightweight logistic probe (layer-48 test scenario-AUROC 0.665; label-permute chance-check 0.412 ✓). At this sample size (test n=49), the group-vs-best-single-agent aggregation delta is only 0.025 (best-of-N 0.690 vs mean-pool 0.665) — statistically indistinguishable from noise (SD ≈ 0.04–0.05) — but the diversity story holds cleanly: no single aggregation among {mean, max, attention, concat-MLP, best-of-N} dominates > 8/16 held-out domains. Zero-shot transfer from the frozen probe + best-of-N to 6 mabench_transfer families + mabench_stego blackjack passes on 5/7 targets (three families ≥ 0.89 AUROC), with stego-blackjack at chance — an honest and expected limit since covert bit-channel steganography is structurally distant from committee-deliberation semantics. Cross-model generality is UNVERIFIED (Qwen3-32B-bf16 model-swap variant was budget-blocked at verify Stage 2).",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Decision Auditing",
+          "family": "Probing / Residual Stream States",
+          "headline": "Linear-probe location on per-agent last-assistant-token residual-stream activations at layers {27, 37, 48, 59}/64 recovers an above-chance collusion signal on Qwen3-32B-AWQ K=3 committee deliberations (layer-48 dev-best test 0.665; sanity: label-permute chance 0.412 ✓, length-match 0.642, topic-swap 0.651). Layer selection is unstable at the current small dev split (dev-best L48 has the worst test AUROC of the four candidates; test-best L27 exactly hits the 0.75 threshold but was not dev-best). Group aggregations {mean, max, attention, concat-MLP, best-of-N} produce a diverse per-domain winner distribution (attention-pool 8/16, best-of-N 5/16, no single aggregation dominates), and the frozen probe + best-of-N transfers zero-shot to 5/7 structurally-different families (three ≥ 0.89), with covert-steganography (stego-blackjack) at chance — a genuine mechanism boundary.",
+          "claims": [
+            {
+              "id": "C1_v2",
+              "statement": "In Qwen3-32B-AWQ K=3 committee deliberations on the realized in-domain benchmark, residual-stream activations contain a detectable collusion signal recoverable by a lightweight linear probe, achieving competitive scenario-level discrimination relative to a text-only judge under the short-transcript setting; effect size and optimal layer are unstable under small dev/test splits and no robust model-agnostic superiority is claimed.",
+              "method": "Extract per-agent last-assistant-token residual-stream activations at layers {27, 37, 48, 59}/64 on Qwen3-32B-AWQ; train logistic linear probes per layer on the mabench_core train split (n=200); pick best layer by dev-scenario AUROC; report test-scenario AUROC with three sanity controls (label-permute chance-check, matched-length baseline, leave-one-domain-out topic-swap); the qualitative predicate is above-chance test AUROC and above-length-baseline discrimination.",
+              "conclusion": "Signal recovered above chance and above the length-only baseline (layer-48 test 0.665 vs label-permute 0.412 vs length-match 0.642); scope narrowed in iteration to reflect the small-split layer-selection instability (L27 hit 0.750 test but was not dev-best) and the 71%-OTHER-abstaining text-only judge which cannot serve as a fair comparator — supported under this narrowed scope, cross-model generality unverified (variant budget-blocked)."
+            },
+            {
+              "id": "C2",
+              "statement": "Group aggregation of per-agent probe signals produces a group-level detector that outperforms the best single-agent probe, and no single aggregation among {mean-pool, max-pool, attention-pool, concat-MLP, best-of-N} dominates across NARCBench-Core domains.",
+              "method": "On M1's cached activations at the best layer, train five aggregation heads over the K=3 per-agent probe scores and activations; measure best_group_AUROC − best_single_agent_AUROC and the per-domain argmax distribution over 16 held-out domains (min_n=4).",
+              "conclusion": "Diversity holds — attention-pool wins 8/16 domains, no aggregation reaches the 9/17 dominance threshold — but the group-vs-single delta is 0.025 (best-of-N 0.690 vs mean-pool 0.665), short of the 0.05 predicate and within the ~0.04–0.05 scenario-level AUROC SD at N=49; audit passed (WARN — under-power), swap-test deferred (max_verify_claims cap) — suggestive under the current statistical power, not confirmatory."
+            },
+            {
+              "id": "C3",
+              "statement": "The frozen probe trained on NARCBench-Core, combined with the best group aggregation, transfers zero-shot (no retraining) to structurally different multi-agent scenarios.",
+              "method": "Freeze the M1 layer-48 probe + M2 best-of-N aggregation; extract activations on 191 scenarios across 6 mabench_transfer families + 31 mabench_stego blackjack scenarios (Qwen3-32B-AWQ, K=3); compute per-family AUROC; predicate: ≥4 of 7 families with AUROC ≥ 0.65.",
+              "conclusion": "5/7 targets pass, with three families ≥ 0.89 (research-framing 0.913, news-narratives 0.903, pipeline-sabotage 0.889) and stego-blackjack at chance (0.525) — a real mechanism boundary rather than an experimental failure, since covert bit-channel steganography is structurally distant from committee-deliberation semantics that the probe reads; robust across aggregation ablation (best-of-N and mean-pool both 5/7, attention-pool 4/7); audit PASS, swap-test deferred (max_verify_claims cap)."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": ["Causal Intervention", "Tuning & Editing", "Formation Tracing", "Unit Interpretation"]
+    }
+  ],
+  "untried_behavior_directions": []
+}

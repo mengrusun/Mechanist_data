@@ -1,0 +1,84 @@
+{
+  "project": "Causally steerable internal α-helix control in Evo2-7B",
+  "direction": "Generate DNA sequences with higher α-helical content using Evo2-7B (task.md)",
+  "date_range": {"start": "2026-08-19", "end": "2026-08-19"},
+  "models": {"claim": "session (Opus 4.8)", "experiment": "session (Opus 4.8)", "verify": "session (Opus 4.8)", "iteration": "session (Opus 4.8); reviewer=gpt-5.6-luna"},
+  "pipeline_status": "completed",
+  "round_end": {"qualifier": "", "detail": "", "remedy": "", "see": "", "partial_artifacts": [], "next_round_options": []},
+  "journey_summary": {
+    "claim": "2 claims captured from given behavior → top idea 'Causally steerable internal α-helix control in Evo2-7B' (behavior-source: given, mechanism: discovery)",
+    "mechanism_strategy": "Location → Causal Intervention → Tuning & Editing",
+    "mechanism_routing": "family=Representation and Parameter Analysis / Steering features + Steering Vectors; promoted direction = block-26 linear-probe α-helix vector (SAE extractor CDN-blocked, not run)",
+    "experiment": "5 milestones (E1/M1/M2/M3/M4), ~1.0 GPU-hour on 1×A800; headline POSITIVE — both claims initially supported",
+    "verify": "2 claims: 1 PASS (C2) / 1 INCONCLUSIVE (C1); integrity[Phase2=FAIL(C1)/Phase9=WARN]. C1 main-experiment integrity broken — proxy-%H on GC-collapsed OOD steered seqs; C2 robust across method+dataset swaps (model axis excluded per Evo2-7B pin)",
+    "iteration": "2/6 iterations (claim-reentries 1/2), reviewer gpt-5.6-luna, score 5/10 verdict 'almost', termination=stalled_converged_below_target, +0.012 GPU-h. C1 strong form FALSIFIED (composition-confounded, no structural grounding) → narrowed to C1_v2 (PASS-with-major-caveat, predicted-propensity bias only). C2 PASS unchanged.",
+    "figures": "5 across 3 claims (all ok); 0 judgment-skipped; 0 render-skipped, 0 errored"
+  },
+  "open_items": [
+    "C1_v2: composition confound is INTRINSIC to the intervention (the steering that raises predicted %H also collapses composition: GC 0.44→0.13, Lys +0.396, low-complexity 0.21→0.43). A composition-independent helix claim cannot be recovered from this experiment.",
+    "C1_v2: no structural/folding validation — predicted %H ≠ verified tertiary α-helix structure. ESMFold (2.7 GB) HF-mirror-CDN-blocked at run time; a direct-HF-endpoint or local structure predictor is the next-round remedy.",
+    "C1_v2: composition-matched comparison underpowered (only ~5/200 baseline generations overlap the steered GC band).",
+    "C2: evaluator validated on natural proteins only, not on steered OOD sequences — keep this caveat attached wherever C2 contextualizes C1_v2.",
+    "Score 5/10 (< TARGET 6) is not closable in-loop: the gap is infrastructure-blocked (structural validation) + intrinsic confound, not an actionable back-edge. Next-round options: (a) accept the honest narrowed contribution as 'controlled generative steering with rigorous confound analysis' (not structure discovery); (b) open a new round for a composition-decoupled steering protocol + direct-HF/local structural predictor.",
+    "Experiment: SAE extractor (M1-A, Goodfire Evo-2-Layer-26-Mixed) + ESMFold structure-validation NOT run — HF-mirror CDN blocked large files. SAE-feature-clamp remains a future second knob.",
+    "Experiment: multi-block set-steering (experiments/run_M2_multiblock.py) prepared but not run — recommended robustness add (tip-not-implemented #4).",
+    "Retrieval: claim-stage mechanic-db-search MCP tool not exposed in the claim subagent; research-lit fell back to WebSearch (found Goodfire Evo-2 Layer-26 α-helix SAE features). Query recorded in RESEARCH_LIT.md. (llm-chat WAS reachable at the iteration stage — reviewer gpt-5.6-luna.)"
+  ],
+  "iteration_summary": {"score": 5.0, "verdict": "almost", "rounds_consumed": 2, "max_rounds": 6},
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "A localizable internal component/direction of Evo2-7B, intervened on during autoregressive generation, causally raises %H (α-helix fraction of the translated protein) above the unsteered baseline — monotone in dose and specific (matched control inert, ORF-validity and coding-likelihood preserved, not a β-sheet trade-off or a temperature/decoding artifact). [STRONG FORM]",
+      "origin": "given (task.md), PRIMARY claim",
+      "data": {"provenance": "constructed", "source": "reverse-translated CDS from RCSB DSSP-class-labeled proteins (M1); Evo2-7B steered generations (M2-M4)", "available_n": "1299 contrastive windows", "used_n": "M1: train 968 (527α/441β), held-out 331; M2: 120 gen/α × {0,0.5,1,2,4,8,16} × 3 seeds; M4: 200 lib + 200 base", "subset_note": "exceeds ≥500-train / ≥300-per-class floors"},
+      "models": ["Evo2-7B (arcinstitute/evo2_7b), bf16, single A800-80GB"],
+      "method": "Representation and Parameter Analysis / Steering features + Steering Vectors — block-26 linear-probe α-helix direction (AUROC 0.9999) added additively (h←h+α·v) during generation → M2 dose-response → M3 specificity → M4 library.",
+      "main_experiment": {"verdict": "SUPPORTED (as initially run)", "key_stats": "Δ%H(α=16)=+13.6 (34.5→48.1), MWU p_bonf=0.0024, ρ=0.607; random control flat (→29.7); Δ%E=−1.6; beats temperature & rejection-sampling; validity ~1.0, coding-loglik improved. M4 mean %H 31→47.", "headline": "Initially read as causal, specific, monotone α-helix steering — later shown confounded."},
+      "verify": {"robustness": null, "axes": {"method": "excluded", "dataset": "excluded", "model": "excluded"}, "integrity": "FAIL", "verdict": "INCONCLUSIVE", "stage2_skip_reason": null},
+      "iteration": {"final_reviewer_status": "strong form not supported", "changed": ["endpoint hardened via M5 composition-controlled 3-independent-predictor re-eval (type ②)"], "falsified": ["strong form: causal, specific, STRUCTURALLY-REAL α-helix steering — NOT supported (uplift does not survive GC/composition control; no structural grounding; dose non-monotonic)"], "narrowed_to": "C1_v2"},
+      "final_status": "✗ FALSIFIED (strong form) — narrowed to C1_v2. The +14–16pt predicted-%H uplift is real and predictor-robust but is entangled with a severe composition collapse it is not shown separable from, has no structural validation, and rests on a non-monotonic dose curve.",
+      "caveats": ["Verify Phase 2 experiment-audit FAIL: Check E (scope — non-monotonic dose, %H gain co-emerges with GC collapse 0.40→0.13) + Check F (synthetic_proxy — %H is an ESM2-probe validated on natural proteins, applied to steered GC-collapsed OOD sequences with no structural validation).", "GC collapse 0.40→0.13 under steering — the central confound.", "Decodable-but-weak at low α (needed α=16); SAE extractor not run (CDN-blocked)."],
+      "artifacts": ["refine-logs/EXPERIMENT_RESULTS.md", "verify/C1_causal_helix_steering/main_experiment_audit/EXPERIMENT_AUDIT.md", "results/M2_dose_response.json", "results/M3_specificity.json"],
+      "figures": [
+        {"id": "c1_dose_response", "type": "line", "caption": "C1 dose-response: mean predicted %H vs steering coefficient α on the block-26 direction; rise is non-monotonic (α=4 dip) and later shown composition-confounded.", "png": "figures/C1/c1_dose_response.png", "pdf": "figures/C1/c1_dose_response.pdf", "md": null, "tex": null, "source_data": "results/M2_dose_response.json", "status": "ok"},
+        {"id": "c1_specificity", "type": "line", "caption": "C1 specificity: the real direction raises %H with dose while a norm-matched random direction stays flat/declines.", "png": "figures/C1/c1_specificity.png", "pdf": "figures/C1/c1_specificity.pdf", "md": null, "tex": null, "source_data": "results/M3_specificity.json", "status": "ok"}
+      ]
+    },
+    {
+      "id": "C1_v2",
+      "statement": "At high steering dose (α≥8), adding the block-26 direction during Evo2-7B generation induces an intervention-specific, predictor-consistent increase in the PREDICTED α-helix propensity / composition of the generated sequences (reproduced across 3 independent SS predictors) — but this shift is entangled with a severe amino-acid/GC composition collapse it is not shown separable from, and is NOT structurally validated: it is a bias in predicted propensity/composition, not demonstrated physical α-helix structure.",
+      "origin": "produced by iteration type-③ narrowing of C1 (2026-08-19)",
+      "data": {"provenance": "generated", "source": "existing M2/M3 steered+baseline generations re-scored under M5 (3 predictors + composition/GC controls); no new generations", "available_n": "400 generations (200 steered + 200 baseline)", "used_n": "400 (full re-score); GC-band-matched overlap ~5/200 (underpowered)", "subset_note": "in-loop narrowing on existing evidence — no new experiments"},
+      "models": ["Evo2-7B (arcinstitute/evo2_7b)"],
+      "method": "M5 re-evaluation of C1's steered/baseline generations with 3 independent SS predictors (ESM2-probe + GOR + Chou-Fasman) plus GC/amino-acid/low-complexity composition controls, dose-monotonicity check, and (attempted) structural validation.",
+      "main_experiment": {"verdict": "SUPPORTED (as narrowed)", "key_stats": "predicted-%H uplift +14–16pt reproduces across all 3 predictors (cross-predictor agreement on steered seqs); intervention-specific vs norm-matched random control. Confounds: GC 0.44→0.13, Lys +0.396, low-complexity 0.21→0.43; uplift does NOT survive GC-band-matched test (5/200 overlap); no structural grounding (ESMFold CDN-blocked).", "headline": "A predictor-robust, intervention-specific bias in PREDICTED helix-propensity/composition at high dose — explicitly not physical structure."},
+      "verify": {"robustness": null, "axes": {"method": "pass (3/3 predictors, via M5)", "dataset": "not-run (confound mechanism-intrinsic)", "model": "excluded (Evo2-7B pinned)"}, "integrity": "WARN (Check F repaired fail→warn)", "verdict": "n/a (in-loop narrowing; supported by existing M2/M3/M5 evidence, not independently re-verified via /auto-verify)", "stage2_skip_reason": null},
+      "iteration": {"final_reviewer_status": "almost (score 5/10; submission-ready but scientifically modest — a confound-analysis contribution, not structure discovery)", "changed": ["narrowed from C1 strong form to a predicted-propensity/composition-bias claim matched to the evidence"], "falsified": [], "narrowed_to": ""},
+      "final_status": "✅ PASS-with-major-caveat — the honest surviving contribution. Predictor-robust, intervention-specific predicted-%H uplift, but composition-confounded (not separable), underpowered composition-matched test, and no structural validation. Frame as controlled generative steering + rigorous confound analysis, NOT α-helix structure discovery.",
+      "caveats": ["Composition confound is INTRINSIC — the intervention itself induces the composition collapse; a composition-independent helix claim is not recoverable from this experiment.", "No structural/folding validation (ESMFold CDN-blocked); predicted %H ≠ verified tertiary structure.", "Composition-matched comparison underpowered (~5/200 GC-band overlap).", "Restricted to α≥8 (dose non-monotonic below)."],
+      "artifacts": ["review-stage/AUTO_ITERATION_FINAL_REPORT.md", "verify/C1_causal_helix_steering/ROBUSTNESS_C1_v2.md", "runs/iteration_round_1/M5_structural_gc_control.json", "refine-logs/EXPERIMENT_RESULTS.md"],
+      "figures": [
+        {"id": "c1v2_predictor_triangulation", "type": "grouped_bar", "caption": "C1_v2: the +14–16pt predicted-%H uplift reproduces across 3 independent SS predictors (ESM2-probe +15.5, GOR +15.0, Chou-Fasman +13.6) — not a single-probe artifact.", "png": "figures/C1_v2/c1v2_predictor_triangulation.png", "pdf": "figures/C1_v2/c1v2_predictor_triangulation.pdf", "md": null, "tex": null, "source_data": "runs/iteration_round_1/M5_structural_gc_control.json", "status": "ok"},
+        {"id": "c1v2_composition_confound", "type": "multi_panel", "caption": "C1_v2 confound: steering collapses GC (0.44→0.13), shifts amino-acid composition (Lys +0.40), and raises low-complexity (0.21→0.43) in lockstep with the %H gain — the effect is not shown separable from composition.", "png": "figures/C1_v2/c1v2_composition_confound.png", "pdf": "figures/C1_v2/c1v2_composition_confound.pdf", "md": null, "tex": null, "source_data": "runs/iteration_round_1/M5_structural_gc_control.json", "status": "ok"}
+      ]
+    },
+    {
+      "id": "C2",
+      "statement": "The fast online α-helical-content metric (ORF find → translate CDS → sequence-based SS predictor → %H) agrees with a structure-based reference (DSSP → %H) at Pearson r ≥ 0.7 on ~200 held-out DSSP-annotated proteins, with correct reading-frame recovery.",
+      "origin": "given (task.md), SUPPORTING claim",
+      "data": {"provenance": "existing", "source": "RCSB X-ray single-chain proteins + experimental DSSP labels", "available_n": "2043 clean proteins", "used_n": "600 train probe / 200 held-out eval", "subset_note": "held-out eval n=200"},
+      "models": ["ESM2-650M frozen embeddings + linear 3-state SS probe (online)", "experimental-PDB DSSP (reference — stronger than planned ESMFold, CDN-blocked)"],
+      "method": "ORF→translate→SS-predict→%H harness (ESM2-650M+linear probe, re-bound from planned S4PRED/NetSurfP); validate correlation vs experimental-DSSP %H on held-out set (E1).",
+      "main_experiment": {"verdict": "SUPPORTED", "key_stats": "Pearson r=0.987 (p≈2e-160, n=200) ≫ 0.7; held-out Q3=0.858; ORF/frame recovery=1.000.", "headline": "The fast ESM2-650M+linear-probe SS metric agrees with experimental-PDB DSSP %H at r=0.987 — a faithful online α-helix scorer (on natural proteins)."},
+      "verify": {"robustness": 1.0, "axes": {"method": "pass", "dataset": "pass", "model": "excluded"}, "integrity": "WARN", "verdict": "PASS", "stage2_skip_reason": null},
+      "iteration": {"final_reviewer_status": "PASS (unchanged)", "changed": [], "falsified": [], "narrowed_to": ""},
+      "final_status": "✓ PASS — robustness 1.00 (method-swap GOR r=0.85, dataset-swap 310 unseen r=0.979); model axis excluded per Evo2-7B pin. Caveat: validated on natural proteins only, not on steered OOD sequences.",
+      "caveats": ["Reference is experimental-PDB DSSP (real crystal structures) rather than the planned ESMFold.", "Evaluator validated on natural proteins only — not on steered OOD sequences (this is exactly why C1's proxy-%H on steered seqs was untrustworthy).", "Main-experiment + variant integrity WARN (scope-only)."],
+      "artifacts": ["refine-logs/EXPERIMENT_RESULTS.md", "results/E1_eval_harness_validation.json", "verify/C2_eval_harness_fidelity/ROBUSTNESS.md"],
+      "figures": [
+        {"id": "c2_swap_robustness", "type": "bar", "caption": "C2 eval-harness fidelity holds across method and dataset swaps (main r=0.987, method-swap GOR r=0.851, dataset-swap 310 unseen r=0.979 — all ≫ 0.7 threshold).", "png": "figures/C2/c2_swap_robustness.png", "pdf": "figures/C2/c2_swap_robustness.pdf", "md": null, "tex": null, "source_data": "verify/C2_eval_harness_fidelity/ROBUSTNESS.md + results/E1_eval_harness_validation.json", "status": "ok"}
+      ]
+    }
+  ]
+}

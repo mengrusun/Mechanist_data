@@ -1,0 +1,60 @@
+{
+  "claim_id": "C3",
+  "audit_type": "mechanism",
+  "phase": 2,
+  "date": "2026-07-15",
+  "mechanism_families": [
+    "Probing / Residual Stream States (M3a)",
+    "Representation and Parameter Analysis / Steering Vectors (M3b)"
+  ],
+  "overall_severity": "WARN",
+  "overall_verdict": "PASS",
+  "admission_decision": "ADMITTED",
+  "findings": [
+    {
+      "id": "M-C3-01",
+      "category": "family_routing_m3a",
+      "severity": "PASS",
+      "description": "M3a uses Probing / Residual Stream States correctly: block-wise s capture, chain-level split, balanced multinomial LogReg, permutation null"
+    },
+    {
+      "id": "M-C3-02",
+      "category": "causal_boundary_m3a",
+      "severity": "PASS",
+      "description": "M3a claims decodability only, not causal sufficiency — appropriate scope for linear probe"
+    },
+    {
+      "id": "M-C3-03",
+      "category": "v_charge_extraction",
+      "severity": "PASS",
+      "description": "v_charge = L2_normalize(w_pos - w_neg): standard signed direction extraction from linear probe weights; L2 norm after normalize = 1.0 confirmed"
+    },
+    {
+      "id": "M-C3-04",
+      "category": "family_routing_m3b",
+      "severity": "PASS",
+      "description": "M3b uses Steering Vectors (additive CAA-style) correctly: s += β·σ_proj·v_charge at block-input pre-hook"
+    },
+    {
+      "id": "M-C3-05",
+      "category": "steering_strength",
+      "severity": "PASS",
+      "description": "β=+3σ → ~64.7 residual-stream units perturbation; random control also shows hairpin_rate=100% confirming hairpin is robust to any direction at this strength"
+    },
+    {
+      "id": "M-C3-06",
+      "category": "null_result_validity",
+      "severity": "PASS",
+      "description": "M3b null is scientifically valid: pLDDT change <0.003 at β=+3σ rules out structural collapse; 175/179 chains hairpin=1 across entire β sweep. Consistent with probe-positive/steering-negative literature (Belrose 2023, Marks&Tegmark 2023)."
+    },
+    {
+      "id": "M-C3-07",
+      "category": "sample_size_m3a",
+      "severity": "WARN",
+      "description": "M3a test set = 4 chains (~736 residues). Under-scale vs planned 250 chains. Mitigated by perfect bacc=1.0 with perm p<0.001 across all 4 blocks — charge is trivially decodable."
+    }
+  ],
+  "n_pass": 1,
+  "n_warn": 1,
+  "n_fail": 0
+}

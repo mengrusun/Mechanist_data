@@ -1,0 +1,22 @@
+{
+  "Name": "sae_molecular_functional_groups",
+  "Title": "Sparse Autoencoders Recover Monosemantic Chemical Functional Groups Inside Molecular Transformers",
+  "Short Hypothesis": "Sparse autoencoders trained on the hidden states of SMILES/graph molecular transformers will recover monosemantic features corresponding to chemically meaningful functional groups and substructures (e.g., carbonyl, aromatic ring, sulfonamide), and these features will be more human-aligned and causally editable than PCA directions or raw neurons.",
+  "Related Work": "Cunningham et al. (2023) and Bricken et al. (2023) introduced SAEs for interpretability in language models. In chemistry, Schwaller et al. (2019, 2021) analyzed attention in reaction transformers, finding atom-mapping signals. No prior work applies dictionary-learning SAEs to isolate functional-group features in molecular models or tests their causal role. We move beyond attention visualization to a mechanistic, intervention-based account of chemical concept representation.",
+  "Abstract": "Molecular foundation models encode chemistry implicitly, but whether they represent discrete, human-recognizable functional groups as separable features is unknown. We train sparse autoencoders (SAEs) on the residual-stream activations of a pretrained SMILES transformer (e.g., ChemBERTa/MolFormer) and a graph-based model, then align learned dictionary features to a curated library of SMARTS-defined functional groups and ring systems. For each SAE feature we compute its selectivity: the mutual information between feature activation and the presence of each functional group across a large molecular corpus. We compare feature-level interpretability against PCA components and individual neurons using automated SMARTS-matching and a precision/recall alignment score. Crucially, we test causality: activating or ablating a functional-group feature during autoregressive SMILES generation should predictably insert or remove that group, and steering a property-prediction head via the feature should shift predicted properties (e.g., logP, hydrogen-bond donors) in the chemically expected direction. We further assess feature universality by matching functional-group features across independently trained models. We predict SAEs yield sharply monosemantic functional-group features that outperform PCA and neurons in alignment and support targeted, chemically coherent edits. This establishes whether molecular models build compositional chemistry from interpretable primitives, a prerequisite for trustworthy molecular design and for auditing where model chemistry departs from established structure-property rules.",
+  "Experiments": [
+    "Assemble a corpus (e.g., 1M PubChem/ChEMBL molecules) and a SMARTS library of ~150 functional groups and ring systems.",
+    "Extract residual-stream activations at several layers from a pretrained SMILES transformer and a graph model.",
+    "Train overcomplete SAEs (e.g., 8-32x expansion) with L1 sparsity; sweep sparsity to trade off reconstruction and monosemanticity.",
+    "For each feature, compute max-activating molecules and precision/recall against each SMARTS pattern; report best-match alignment score per feature; compare to PCA components and neurons.",
+    "Causal generation test: clamp a functional-group feature high/low during SMILES decoding and measure change in SMARTS-match rate of outputs (valid-molecule filtered).",
+    "Property-steering test: add the feature direction to activations before a property head and measure predicted logP / HBD / HBA shifts vs cheminformatics ground truth (RDKit).",
+    "Universality: Hungarian-match features across two independently trained models by activation-pattern correlation; report matched fraction."
+  ],
+  "Risk Factors and Limitations": [
+    "SMILES tokenization may fragment functional groups across tokens, blurring feature localization.",
+    "SAE features can be polysemantic or split a single concept across many features, complicating alignment scoring.",
+    "Causal edits may produce invalid SMILES, reducing usable sample sizes.",
+    "Alignment to a fixed SMARTS library biases toward known chemistry and may miss genuine but unfamiliar model features."
+  ]
+}

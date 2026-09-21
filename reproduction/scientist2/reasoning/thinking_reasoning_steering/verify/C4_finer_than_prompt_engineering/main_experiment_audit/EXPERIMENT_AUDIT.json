@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (GPT-5.4 via DMX, T=0)",
+  "claim_id": "C4",
+  "linked_milestones": ["M4", "M3", "M1"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Accuracy uses GPT-5.4-generated gold answers judged by GPT-5.4. Same-model gold-and-judge setup. Behaviour rate is LLM-judge proxy. Not model-self-derived (judge evaluates DeepSeek outputs), but synthetic."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "n_distinct is a count. Matched-rate accuracy is direct comparison. Preservation is baseline subtraction. No prediction-stat normalization."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All C4 claims consistent with M4 result structure: n_distinct(steering)=4, n_distinct(prompt)=2, n_distinct(TI)=2 from controller summaries. Preservation miss (4pts vs 3pt floor) confirmed. Matched-rate comparison plausible from summary data."
+    },
+    "dead_code": {
+      "status": "warn",
+      "details": "matched-rate pairing algorithm (pair controllers with rate diff <=2pts) not directly auditable from summary-level JSON. Per-task data needed for full verification."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "60/500 tasks disclosed. Only uncertainty testable — disclosed. Preservation miss explicitly disclosed. TI_amplify wider range noted. No overclaiming."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

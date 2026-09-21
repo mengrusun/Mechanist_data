@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal directly operationalizes its central prediction as “gap = L_decode - L_check” and provides a directional, decisively falsifiable condition: “gap > 0 for all decodable encodings,” with “gap <= 0” explicitly making the account wrong; Experiment 4 and 5 also supply strong numeric success and null thresholds. However, defining L_check as “the earliest layer at which patching flips the output to refusal” does not necessarily identify where refusal is committed, because an early patched activation may propagate forward and influence a later decision, while patching the entire residual stream also confounds decoded meaning with other plain-prompt differences. The scaling subclaim is additionally underspecified because monotonic size scaling is to be inferred from only the “7B/14B” within-family pair, and “independently-rated decode difficulty” is not defined, but the primary ordering claim remains clear and testable.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is the instruction to “ablate the late-layer component that reconstructs plaintext”: unlike the well-supported probe fitting, forward hooks, activation patching, and steering operations, that component-identification procedure is not defined and therefore requires nontrivial custom methodological work rather than being a fully standard operation. The named Llama-3.1, Qwen2.5, and Gemma-2 models and benchmarks such as HarmBench, StrongREJECT, XSTest, MMLU, and MT-Bench exist, and mainstream interpretability tooling supports the principal activation-capture, probing, logit-lens, and patching workflow; the exact “Late-Read Refusal” recomputation is less fully specified. Resources are unusually concrete—“480 encoded items plus 80 plain-text originals,” “70/30 split x 3 seeds,” “60 held-out encoded harmful items,” and a “1000-question MMLU sample”—which makes execution readily plannable. The refuting branch is runnable because the design includes plain-text, benign-encoded, random-direction, shuffled-label, reverse-ablation, baseline-defense, and utility controls, allowing genuine nulls such as “< 20%” restored refusal or “gap <= 0” to emerge.",
+      "score": 7
+    }
+  }
+}

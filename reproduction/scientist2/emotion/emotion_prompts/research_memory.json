@@ -1,0 +1,71 @@
+{
+  "direction": "Emotional Framing in Prompts as a Weak, Input-Dependent Signal",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "Static emotional prefixes attached to a base task prompt change LLM (Qwen3-14B and same-family variants) accuracy in a way that is small, input-dependent, and not proportional to emotional intensity or a single 'best' emotion; an adaptive per-query policy is hypothesized to outperform any fixed prefix.",
+      "status": "conditional",
+      "behavior_conclusion": "The per-emotion mean accuracy shift induced by static emotional prefixes on Qwen3-14B / GSM8K is within a 5.24 pp format-perturbation noise floor for all 6 emotions, but 8 of 24 individual prefix cells produce reliable directional shifts outside a [0.4, 0.6] sign-consistency band — so the 'small effects' claim is a per-emotion-mean statement, not a per-prefix statement. No single emotion is argmax across {math, social, factual}: fear wins on GSM8K + MedQA, surprise wins on SocialIQA. Monotone intensity → gain fails on GSM8K for 3 of 6 emotions (borderline pass). The predicted ordering spread_social ≥ 2× spread_math is disconfirmed at the tested measurement design (CoT for GSM8K vs constrained-MCQ log-likelihood for SocialIQA / MedQA); realized ordering is reversed (math 18.6 pp >> social 3.0 pp ≈ factual 2.8 pp), driven by CoT free-form generation variance. The adaptive-policy claim (C4) is UNTESTED — not falsified — because M7 was descoped at 9.08 / 10 GPU-h budget; the remaining ~0.79 GPU-h and iteration's cost-aware ⓪-only fixes could not run it.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Probing / Residual Stream States + Causal Attribution / Patching + Representation and Parameter Analysis / Steering Vectors",
+          "headline": "On Qwen3-14B, emotion identity of a static prefix is linearly decodable from the last-prefix-token residual stream at layer 4 onward (6-way probe accuracy = 1.00 vs length-shuffled null 0.28 at L4-L36; +71 pp gap; SVD singular values dominant at L4 = 52.99 and L8 = 91.78), and the finding is robust across the Qwen3 family (Qwen3-4B swap probe 1.00 vs length-null 0.69 with 7-condition length confound). Causal intervention on this direction — additive steering α ∈ {−1, 0, +0.5, +1} σ_proj at L4 and L8 on 50 GSM8K items with happiness_2_human prefix — does NOT move accuracy beyond the 5.24 pp noise floor (L4 range 2 pp, L8 range 4 pp, no monotone dose-response, identity-patch sanity clean); the identity is represented but NOT read out for math problem solving at the tested scale. Specificity controls (matched-filler patch, off-target MedQA steering, off-layer L20 null) were descoped and are the primary open falsifier / confirmer for the Causal-arm negative — the negative is 'located but not causal' with a suspected-under-power caveat.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "Static emotional prefixes on Qwen3-14B / GSM8K produce per-emotion mean |Δ accuracy vs neutral| within the format-perturbation p90 noise floor, and per-item sign-consistency ∈ [0.4, 0.6] across 24 emotional conditions.",
+              "method": "26 conditions (6 emotions × 2 intensities × 2 wording sources + neutral + filler) × 500 first-N GSM8K test items with T=0.0 CoT + regex-parsed answer; noise floor from 8 semantics-preserving format perturbations of neutral (p90 |Δ| = 5.24 pp).",
+              "conclusion": "Per-emotion mean effect is within noise floor as predicted (Δ ∈ [−0.014, +0.015] for all 6 emotions), supporting C1 at the emotion-mean level. But 6 of 24 individual prefix cells cross the 5.24 pp noise floor and 8 of 24 fall outside a sign-consistency [0.4, 0.6] band (post-hoc iteration ⓪ computation), so C1 is partial — small on average, structured at the per-prefix level. Verify Stage-2 swap-test was deferred by the MAX_VERIFY_CLAIMS=1 cap; integrity WARN (sign-consistency initially skipped, resolved in iteration)."
+            },
+            {
+              "id": "C2",
+              "statement": "Inter-emotion accuracy spread on socially grounded tasks (SocialIQA) is at least 2× the spread on math (GSM8K), and the ordering spread_social > spread_factual > spread_math holds in ≥ 2 of 3 pairwise comparisons.",
+              "method": "26 conditions × {SocialIQA (3-way MCQ log-likelihood), MedQA (US-MLE 4/5-way MCQ log-likelihood), GSM8K (CoT free-form)} × 500 first-N items on Qwen3-14B; report per-task max−min spread over the 24 emotional cells and cross-task ordering.",
+              "conclusion": "Prediction disconfirmed at the tested measurement design: realized spreads are GSM8K = 0.186 (18.6 pp) >> SocialIQA = 0.030 (3.0 pp) > MedQA = 0.028 (2.8 pp) — opposite of predicted; only 1 of 3 pairwise orderings holds. The reversal is confounded with eval mode (CoT free-form generation variance dominates for GSM8K vs constrained log-likelihood for MCQ), leaving a same-mode comparison as an open follow-up. Verify Stage-2 deferred; integrity WARN (eval-mode confound)."
+            },
+            {
+              "id": "C3a",
+              "statement": "No single basic emotion is argmax across all three task families {math, social, factual}; the argmax identity flips at least once across {GSM8K, SocialIQA, MedQA}.",
+              "method": "Post-hoc analysis on M2 + M3 result JSONs: per-task per-emotion argmax over the 4 (intensity × wording-source) cells; check whether the identity flips across the 3 tasks.",
+              "conclusion": "Task-dependent best emotion: GSM8K = fear (mean 0.835), SocialIQA = surprise (mean 0.750), MedQA = fear (mean 0.641); argmax flips ≥ 1 across the 3 tasks as required. C3a is supported; verify Stage-2 deferred (integrity=PASS)."
+            },
+            {
+              "id": "C3b",
+              "statement": "Stronger emotional wording does not yield proportionally larger accuracy gains on GSM8K: for ≥ 3 of 6 emotions, the paired Δ(intensity-2 − intensity-1) 95% bootstrap CI straddles 0 or reverses sign.",
+              "method": "Post-hoc analysis: per-task per-emotion paired bootstrap CI (n=1000) on Δ(intensity-2 − intensity-1) averaged across wording sources.",
+              "conclusion": "Threshold-level support: exactly 3 of 6 GSM8K emotions have paired Δ CI straddling 0 or reversed sign (borderline pass at the ≥ 3/6 gate); verify Stage-2 deferred; integrity WARN (per-emotion CI bounds surfaced from existing bootstrap in iteration ⓪)."
+            },
+            {
+              "id": "C4",
+              "statement": "An adaptive per-query EmotionRL policy (13-action classifier over 6 emotions × 2 intensities + neutral, trained via SFT + REINFORCE-with-learned-baseline on a Qwen3-14B reward table) outperforms neutral and any fixed emotion on held-out GSM8K with lower 95% CI > 0 across ≥ 3 seeds.",
+              "method": "M7a reward table on 2000 GSM8K train items × 13 prefix actions; M7b SFT on Llama-3.2-1B classifier; M7c REINFORCE-with-learned-baseline (1 epoch); M7d held-out eval on M2's 500 test items; verdict = acc(π_θ) > acc(neutral) AND > acc(e*) with lower 95% CI > 0.",
+              "conclusion": "UNTESTED (not falsified): the entire M7 milestone was descoped after M2 + M2b + M3 + M5 + M6 consumed 9.08 / 10 GPU-h; C4 remains an open experiment requiring a follow-up ≥ 2.17 GPU-h allocation. Iteration ⓪ narrative demoted C4 to 'untested / deferred' and removed it from the round's core contributions. Verify verdict INCONCLUSIVE — main-experiment integrity broken (no evidence to audit)."
+            },
+            {
+              "id": "CM",
+              "statement": "On Qwen3-14B, a low-rank residual-stream direction at early-to-mid layers carries the emotional-frame identity of static prefixes (Location) and causally modulates per-item GSM8K accuracy in the sign predicted by C1 (Causal Intervention); a length-matched non-emotional filler control produces null effect and steering shows monotone dose-response in α on ≥ 3 of 4 sites.",
+              "method": "M5 Location: per-layer 6-way logistic emotion-identity probe on last-prefix-token residual (70/30 item-disjoint split, 3 seeds) vs length-shuffled null; SVD on the 26 × d_model activation matrix at top-2 layers. M6 Causal Intervention: activation patching (identity-patch sanity only, cross-emotion descoped), steering α ∈ {−1, 0, +0.5, +1} σ_proj at L4 and L8 on 50 / 200 planned GSM8K items with happiness_2_human as the only tested prefix (1 of 12); matched-filler / off-target MedQA / off-layer L20 specificity controls all descoped.",
+              "conclusion": "Bifurcated conclusion. CM-Location is strongly supported and robust across the Qwen3 family: probe accuracy 1.00 at layers 4-36 vs length-shuffled null 0.28 (+71 pp gap); Qwen3-4B swap variant confirms probe 1.00 at L4-L36 (with a 7-condition length-confound null of 0.69, still +31 pp gap). CM-Causal is not-supported at tested scale: steering dose-response range ≤ 4 pp — at or below the 5.24 pp noise floor — with no monotone α dependence and identity-patch sanity clean; verdict is 'located but not causal' at 50-item / 1-prefix / 0-controls scale. The negative is provisional under the Causal-arm suspected-under-power caveat (used_n 50/200, wording 1/2, specificity controls 0/3). Verify Stage-2 model-swap on Qwen3-4B PASSED (robustness 1.00, 1/1 eligible), so integrity is clean for the Location arm."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Tuning & Editing",
+        "Formation Tracing",
+        "Unit Interpretation",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

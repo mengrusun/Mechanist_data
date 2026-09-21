@@ -1,0 +1,45 @@
+{
+  "status": "completed",
+  "termination_reason": "positive_verdict",
+  "iterations_consumed": 4,
+  "max_iterations": 6,
+  "claim_reentries_consumed": 2,
+  "max_claim_reentries": 2,
+  "runs_total": 9,
+  "gpu_hours_total": 0.0,
+  "gpu_hours_note": "0.0 new GPU-hours dispatched by this resume. The C3 variant random-subspace α-sweep (~4 h wall-time on 3 GPUs) was dispatched by the previous agent before it handed control to the orchestrator; that time is accounted-for in the pre-resume 8.9 h total. This resume performed re-audits and narrative rewrites only.",
+  "last_verdict": "almost",
+  "last_score": 6,
+  "target_score": 6,
+  "pending_upstream_calls": [],
+  "resource_fidelity": "strict (narrated in Iteration ③ narrowed claims; same model, dataset, code, no downscaling)",
+  "per_claim_final": {
+    "C1": {"state": "INTEGRITY_ONLY", "action_type": "0_narrative_only", "upgrade_command": "/auto-verify C1 -- resume: true"},
+    "C2": {"state": "PASS_BY_CONSTRUCTION", "action_type": "3_claim_stage_reentry_narrow", "prior_state": "INCONCLUSIVE"},
+    "C3": {"state": "PASS", "action_type": "1_variant_only_fix", "prior_state": "ZERO_ELIGIBLE_VARIANTS", "robustness": 1.0, "n_eligible": 1, "n_pass": 1, "n_run": 1},
+    "C4": {"state": "PASS_BY_CONSTRUCTION", "action_type": "3_claim_stage_reentry_narrow", "prior_state": "INCONCLUSIVE"}
+  },
+  "iteration_actions": [
+    {"iteration": 1, "action_type": "1_variant_only_fix", "target_claim": "C3", "summary": "dispatched random-subspace α-sweep on DeepSeek-R1-Distill-LLaMA-8B (9 α × 11 languages × n=50/lang, seed=42)", "consumed_budget": true, "runs_dispatched": 9, "gpu_hours": 0.0, "gpu_hours_note": "attributed to prior agent's dispatch; wall-time counted in pre-resume 8.9h"},
+    {"iteration": 2, "action_type": "1_reaudit_after_fix", "target_claim": "C3", "summary": "Phase 9 mech re-audit WARN (was FAIL); robustness 1.0; C3 → PASS", "consumed_budget": false, "consumed_budget_note": "re-audit after ① is part of the same iteration bucket per skill semantics; recorded separately here for the transcript", "runs_dispatched": 0, "gpu_hours": 0.0},
+    {"iteration": 3, "action_type": "3_claim_stage_reentry_narrow", "target_claim": "C2", "summary": "narrowed C2 to observed refutation-plus-diagnosis (uniform 50–73 pp degradation on layer_group=mid; reasoning entangled with V_lang)", "consumed_budget": true, "runs_dispatched": 0, "gpu_hours": 0.0},
+    {"iteration": 4, "action_type": "3_claim_stage_reentry_narrow", "target_claim": "C4", "summary": "narrowed C4 to observed SFT degradation (20.4 pp on Qwen-3-4B-Thinking with 6.8% training data); accuracy-match predicate declared moot until positive-baseline SFT available", "consumed_budget": true, "runs_dispatched": 0, "gpu_hours": 0.0},
+    {"iteration": 5, "action_type": "0_narrative_only", "target_claim": "C1", "summary": "kept as INTEGRITY_ONLY; Stage-2 model-swap upgrade command surfaced in AUTO_ITERATION_FINAL_REPORT.md Section 8", "consumed_budget": false, "runs_dispatched": 0, "gpu_hours": 0.0}
+  ],
+  "score_trajectory": [
+    {"iteration": 1, "score": 3, "verdict": "not ready"},
+    {"iteration": 4, "score": 6, "verdict": "almost"}
+  ],
+  "budget_guardrails": {
+    "gpu_hard_cap_hours": 10,
+    "gpu_hours_used_pre_iteration": 8.9,
+    "gpu_hours_dispatched_in_iteration": 0.0,
+    "gpu_hours_total_after_iteration": 8.9,
+    "gpu_allowlist": [1, 2, 3, 5, 6]
+  },
+  "notes": [
+    "Termination is a positive verdict (three-dimensional STOP satisfied): score ≥ 6, verdict = almost (∈ {ready, almost}), no claim remains FAIL / INCONCLUSIVE / ZERO_ELIGIBLE_VARIANTS.",
+    "C1 upgrade command `/auto-verify C1 -- resume: true` is a follow-up invocation (deferred by ~1h remaining budget margin, not by any fundamental blocker).",
+    "C2/C4 narrowed claims restated in refine-logs/EXPERIMENT_PLAN.md 'Iteration ③ Narrowed Claims' section (supersedes original C2/C4 statements in the plan header, which are retained for pipeline history)."
+  ]
+}

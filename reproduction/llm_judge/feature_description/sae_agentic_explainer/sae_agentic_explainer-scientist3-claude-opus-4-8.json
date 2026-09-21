@@ -1,0 +1,107 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "SAGE: An Agentic Explainer for SAE Features",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The run fits no probe/classifier, so there is no classic train/test contamination. In experiment_code.py the generative-accuracy threshold is calibrated on the reference corpus (`thr = np.percentile(nz, 70)` over REF_TEXTS activations, line ~338) while generative accuracy is scored on *freshly LLM-generated* probe sentences (`eval_generative` -> `generate_probes`, line 488), so the calibration set and the evaluation set are structurally disjoint; predictive accuracy is a bare `np.corrcoef(preds, true_acts)` on generated pos+neg probes (line 512) with no fitting. The real hygiene gap is a selection-on-the-metric / winner's-curse bias: the SAGE loop keeps the 'best-so-far' candidate by the very gen_acc+pred_acc it later reports (`best_so_far_score`, iterations records in experiment_data.npy), each computed on a stochastic fresh probe draw, and that maximized value is reported against a single-shot Neuronpedia evaluation with no independent held-out re-evaluation of the winner. This inflates SAGE relative to the baseline but is not label leakage. Splits/thresholds are honored in code; one selection-bias gap that is not corrected.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py",
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_data.npy"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The core ground truth is the true SAE feature activation read directly from the real Gemma-2-2B + GemmaScope-16k model (JumpReLUSAE.encode over forward-hook residuals, experiment_code.py lines 145-220), which is objective and non-circular (not produced by the explanation under test). Generative accuracy — success rate of generated probes exceeding an activation threshold — is a valid operationalization of the claim's 'generative accuracy'. However, predictive accuracy deviates from the paper: the paper (Appendix A) defines it as the mean per-token Pearson correlation of an LLM simulator against true activations on a *held-out set of real exemplars* sampled from high/medium/low activation groups, whereas the run correlates LLM 0-5 ratings against activations on *LLM-generated positive+contrastive-negative probes* (eval_predictive, lines 500-519) — a specificity proxy on synthetic text, not descriptive power on held-out corpus text. Additionally the top-activating exemplars that seed explanations and calibrate thresholds come from a hardcoded ~80-sentence REF_TEXTS corpus (lines 289+) rather than Neuronpedia's real max-activating dashboard, so the exemplar signal is weaker than the paper's. Valid, non-circular ground truth with documented proxy gaps on the predictive metric and exemplar source.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment uses exactly the user-specified resources: base model Gemma-2-2B loaded from MODEL_DIR/gemma-2-2b (experiment_code.py line 86-95), the GemmaScope 16k residual SAE (gemma-scope-2b-pt-res, JumpReLU loader lines 100-182), and real Neuronpedia baseline explanations fetched from the API (`neuronpedia_explanation`, URL `www.neuronpedia.org/api/feature/gemma-2-2b/{L}-gemmascope-res-16k/{fid}`, line 363) — all 30 features in experiment_data.npy carry `source='api'`, confirming no synthetic-fallback substitution. The agent backbone is `gpt-5.4` via the dmxapi base_url, exactly the MODEL/BASE_URL given in task.md. Deviations: layers L5/L12/L20 (three) versus the paper's 3/7/11/23 (four), and 10 features/layer = 30 total versus 40 for Gemma; the required Neuronpedia exemplars are approximated by a small local corpus. The optional verify-variant models (Qwen3-4B, GPT-OSS-20B) were not run, which is exempt per the task ('use as needed, not necessarily all'). Specified main resources honored with minor, disclosed layer/count deviations.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py",
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_data.npy",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The best (research-stage) node evaluates 30 features (10 per layer x 3 layers), verified by recomputation from experiment_data.npy (n=30 for SAGE gen_acc=0.7111, NP=0.3778). This is below the rubric's n<40 'thin' threshold and, more importantly, tests only ONE LLM (Gemma-2-2B), whereas the claim asserts superiority 'across multiple open-source LLMs' — Qwen3-4B and GPT-OSS-20B appear only in the plan text (idea.md, research_summary.json), never executed. Per-feature evidence is also thin: generative accuracy uses only 6 probes and predictive uses 9 probes per feature. The pipeline does honestly flag the limitation (draft_summary.json / baseline node: 'even if the observed advantage is small and not statistically significant at this scale'). Directionally credible on Gemma but the multi-model half of the claim rests on zero experiments, and per-feature samples are small.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_data.npy",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The pipeline built 'seed_aggregation_*' scaffolding, but each aggregation's experiment_data_path_list contains exactly ONE run path (verified in all four aggregation_plotting_code.py files -> n_runs=1), so results are single-seed point estimates (random.seed(42) fixed, experiment_code.py line 317). Uncertainty is reported only as standard error across the 30 features (`np.std(vals)/np.sqrt(len(vals))` error bars in the aggregation plots), not across seeds, and no significance test is reported for the research node. The baseline node itself notes overlapping error bars and non-significance. The research-node effect size is large (gen-acc delta +0.333: 0.7111 vs 0.3778), which likely exceeds feature-level noise, but the predictive metric is fragile (SAGE 0.2534 < Neuronpedia 0.5107 at L5), indicating sensitivity to sampling. Point estimates with feature-level error bars but single-seed and no formal significance testing.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/seed_aggregation_aecccf7b64364218a17269047d3895bb/aggregation_plotting_code.py",
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a — the claim concerns explanation quality, not a model-internal mechanism, so no ablation/patching/steering of model internals is required. Nonetheless the 'generative accuracy' metric is itself a genuine generate->measure intervention: text is written solely from an explanation, passed through the real Gemma+SAE, and the resulting activation is thresholded (eval_generative, experiment_code.py line 488), which is a legitimate causal-validity test of the explanation rather than correlational dressing. Wording ('causal validity') matches the evidence type.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every headline number traces to and recomputes exactly from the on-disk product experiment_data.npy. Recomputing means over per_feature: SAGE gen_acc=0.7111, SAGE pred_acc=0.3683, Neuronpedia gen_acc=0.3778, Neuronpedia pred_acc=0.1961, SingleShot gen_acc=0.2722 (n=30) — all match research_summary.json to 4 decimals, and per-layer SAGE gen (L5 0.6333 / L12 0.7333 / L20 0.7667, n=10 each) match. Neuronpedia explanations are real (`source='api'` for all 30) and the run really loaded Gemma-2-2B with SAE forward hooks. No sourceless or back-filled values were found. Strong end-to-end traceability.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_data.npy",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Within the research node, summary numbers, npy, and per-layer breakdowns are fully consistent (verified above). The inconsistency is at the top-level report.md: its 'Overall (automated heuristic)' verdict is 'Partially supported / inconclusive — weak or mixed evidence', and its 'What the agent actually ran' section describes only the preliminary baseline node (Gemma L12, small feature set, delta 0.0667), while the strongest on-disk result (research node: +0.333 gen, +0.172 pred, SAGE winning gen-acc at all three layers) is never surfaced in the verdict. draft_summary.json also internally notes a mismatch between per-feature reporting (features 7395/14511/16166) and 'aggregate plots reference ~20 features'. These are stale/loose bookkeeping across pipeline stages rather than a metric contradicting itself, and no claim is PASS-in-one/FAIL-in-another via an integrity gate. Largely consistent with one stale top-level verdict.",
+    "score": 3,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/draft_summary.json",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "You should build a pipeline around the following basic idea — letting an LLM agent propose several candidate explanations for an SAE feature, query the target LLM+SAE with probe inputs to gather empirical activation feedback, and iteratively accept, reject, or revise those candidates — produces feature explanations that outperform Neuronpedia on both generative accuracy (success rate of triggering the feature with text written from the explanation) and predictive accuracy (correlation between explanation-based predictions and true activations on held-out text), across multiple open-source LLMs and across early-to-late layers.",
+        "method": {
+          "justification": "9a — The method faithfully instantiates SAGE's mechanism category: an LLM agent (gpt-5.4) proposes multiple candidate explanations from top-activating exemplars, generates probe sentences, queries the real Gemma-2-2B+GemmaScope-16k SAE for empirical activation, and iteratively revises via a best-so-far propose->probe->revise loop (experiment_code.py: sage_revise line 523, main loop 632-682, N_ITER=4). It includes both a Neuronpedia baseline and an added single-shot GPT baseline. Deviations from the paper are modest: the four distinct agent roles (Explainer/Designer/Analyzer/Reviewer) are compressed into one loop, and seeding exemplars come from a small hardcoded corpus rather than Neuronpedia's dashboard. The method is well-matched to validating the claim.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b — Reasonable design: 30 features across early/mid/late layers (L5/L12/L20), two metrics matched to the claim (generative accuracy = probe-trigger success; predictive = correlation), two baselines (Neuronpedia + SingleShot GPT), contrastive negatives, up to 5 iterations with plateau stopping, plus a no-negative-probes ablation. Weaknesses that leave the claim under-tested: (1) only ONE model (Gemma) is run, so the claim's 'across multiple open-source LLMs' is never exercised (Qwen3-4B/GPT-OSS-20B remain planned-only); (2) the predictive metric is computed on synthetic generated probes rather than the paper's held-out real exemplars with per-token Pearson correlation; (3) small probe counts (6/9 per feature) and single seed; (4) layer set and threshold definition differ from the paper. The predictive metric was introduced after generative accuracy saturated — a disclosed design evolution, not post-hoc goalpost-tuning. Honest but under-powered on coverage.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_code.py",
+            "logs/0-run/research_summary.json",
+            "logs/0-run/ablation_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "9c — On the model actually tested, the result qualitatively agrees with the paper's direction and is grounded in real, traceable data. SAGE beats Neuronpedia on both metrics overall (gen 0.7111 vs 0.3778, +0.333; pred 0.3683 vs 0.1961, +0.172) and on generative accuracy at every layer (L5 0.633>0.60, L12 0.733>0.233, L20 0.767>0.30), with the gap widening at deeper layers — matching the paper's finding that gains are most pronounced at deeper layers. One sub-result deviates honestly and is left in the data rather than hidden: predictive accuracy at L5 is LOWER for SAGE (0.2534) than Neuronpedia (0.5107). No fabrication or threshold-relaxation was found; numbers recompute exactly from the npy. The multi-model portion of the claim is simply not demonstrated (only Gemma), and report.md's top-level verdict conservatively undersells the research-stage support, but the Gemma reproduction is genuine and directionally consistent, not engineered.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_0ef9754eefd74f9cbc5627961de30956_proc_4119455/experiment_data.npy",
+            "logs/0-run/research_summary.json",
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

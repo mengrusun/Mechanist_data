@@ -1,0 +1,35 @@
+{
+  "date": "2026-07-18",
+  "auditor": "gpt-5.4 (external LLM reviewer) + executor verification",
+  "claim_id": "C2",
+  "linked_milestones": ["M1", "M2"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "GT from QA_I-00000-of-00001.parquet 'Correct Answer' column (dataset-provided labels). gpt-5.4 judge classifies model text against GT. Not self-referential."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Accuracy = n_correct/n_items (133). Recovery fraction uses Ctrl-A and treated as reference bounds — not model's own max/mean. sigma_proj is a perturbation calibration convention, not metric normalization."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All 21 M2.2b files, all 3 M2.2a files, all 21 M2.2c files, M1_l_core.json, and MECHANISM_VERDICT.json verified to exist with cited keys and matching numbers. launch_m1_m2.sh confirmed to call all evaluation stages explicitly. Executor override of reviewer WARN (reviewer lacked complete file-path details in prompt).",
+      "reviewer_raw_verdict": "warn",
+      "executor_verified": true
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "launch_m1_m2.sh calls all 6 stages sequentially: stage_l0, stage_lcore, stage_m2_2a, stage_m2_2b, stage_m2_2c, stage_m2_2d. All helper functions (compute_sigma_proj, make_add_hook, make_projout_hook, install_hooks, eval_with_hooks) are used in called scripts. No dead metric code identified. Executor override of reviewer WARN (reviewer lacked call-graph evidence in prompt).",
+      "reviewer_raw_verdict": "warn",
+      "executor_verified": true
+    },
+    "scope": {
+      "status": "pass",
+      "details": "C2 explicitly includes BOUNDED_NULL as valid outcome. Off-target (R420-R422) skipped per plan's --off-target-abort-if-unusable DELETE rule. 3 pre-registered seeds, full 133-item QA_I. No overclaiming language."
+    },
+    "eval_type": "real_gt"
+  }
+}

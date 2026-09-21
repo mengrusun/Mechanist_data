@@ -1,0 +1,78 @@
+{
+  "claim_id": "C3",
+  "audit_type": "experiment",
+  "phase": 2,
+  "date": "2026-07-15",
+  "milestones": ["M3a", "M3b"],
+  "overall_severity": "WARN",
+  "overall_verdict": "PASS",
+  "admission_decision": "ADMITTED (partial — M3a supported, M3b real null; no implementation bugs)",
+  "findings": [
+    {
+      "id": "E-C3-01",
+      "category": "data_independence",
+      "severity": "PASS",
+      "description": "heldout_probe chains (40) non-overlapping with main/calib/donor; chain-level 8:1:1 split prevents residue-level leakage"
+    },
+    {
+      "id": "E-C3-02",
+      "category": "sample_size_m3a",
+      "severity": "WARN",
+      "description": "M3a: 40 chains used vs 250 planned; test set = 4 chains (~736 residues). Plan flagged as suspected_under_power. However bacc=1.0 with perm p<0.001 across all 4 blocks is strong evidence charge is trivially decodable. WARN retained for under-scale."
+    },
+    {
+      "id": "E-C3-03",
+      "category": "probe_implementation",
+      "severity": "PASS",
+      "description": "Multinomial LogisticRegression with balanced class weights; 1000-permutation null; AUROC macro reported. v_charge = L2-normalized (w_pos - w_neg). Implementation correct."
+    },
+    {
+      "id": "E-C3-04",
+      "category": "m3a_predicates",
+      "severity": "PASS",
+      "description": "M3a predicates: bacc=1.0 (≥0.75 threshold, PASS); perm_p=0.000999 (<0.001, PASS)"
+    },
+    {
+      "id": "E-C3-05",
+      "category": "steering_units",
+      "severity": "PASS",
+      "description": "β·σ_proj units correctly applied: σ_proj=21.55 from 50-chain calibration; α={-3,-1,0,+1,+3}×σ_proj; α=0 as explicit sweep point. Matches EXPERIMENT_TIPS.md steering-coefficient-tuning spec."
+    },
+    {
+      "id": "E-C3-06",
+      "category": "m3b_data_completeness",
+      "severity": "PASS",
+      "description": "M3b: 179 ok records per condition × 5 β × 2 configs + controls. No missingness. Numerically clean null."
+    },
+    {
+      "id": "E-C3-07",
+      "category": "m3b_causal_predicates",
+      "severity": "FAIL",
+      "description": "All 5 causal predicates fail: Spearman same=0.354, opp=0.040 (both <0.7); same_vs_opp Δ=0.006 (<0.15pp), p=1.0; matched_ctrl=99.4% ≈ target (not <50%). This is a scientifically real null — not an implementation bug."
+    },
+    {
+      "id": "E-C3-08",
+      "category": "random_control",
+      "severity": "PASS",
+      "description": "Random-direction v_random control hairpin rate=100% confirms steering strength is insufficient to collapse hairpin — structural inertia, not direction specificity, is the limiting factor"
+    }
+  ],
+  "predicate_checks": {
+    "M3a": {
+      "balanced_acc_>=0.75": {"result": true, "value": 1.0},
+      "permutation_p_<0.001": {"result": true, "value": 0.000999}
+    },
+    "M3b": {
+      "spearman_same_>=0.7": {"result": false, "value": 0.354},
+      "spearman_opp_>=0.7": {"result": false, "value": 0.040},
+      "same_vs_opp_p_<0.05": {"result": false, "value": 1.0},
+      "same_vs_opp_delta_>=0.15": {"result": false, "value": 0.006},
+      "matched_ctrl_<50pct": {"result": false, "value": 0.994},
+      "random_ctrl_near_baseline": {"result": true, "value": 1.0}
+    }
+  },
+  "n_pass": 2,
+  "n_warn": 1,
+  "n_fail": 1,
+  "note": "C3 = M3a (PASS) + M3b (real null). Both parts methodologically complete. C3 as composite claim is partially supported. Phase 2 verdict PASS (WARN on scale) — claim is ADMITTED with partial supported/not-supported split."
+}

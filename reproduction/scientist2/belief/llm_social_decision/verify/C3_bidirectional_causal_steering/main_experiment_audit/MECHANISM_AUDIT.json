@@ -1,0 +1,53 @@
+{
+  "date": "2026-07-13",
+  "auditor": "executor (cross-model self-review; llm-chat MCP degraded gracefully)",
+  "audit_type": "mechanism",
+  "claim_id": "C3",
+  "linked_milestones": ["M4", "M4-supp"],
+  "triggered_checks": ["steering_coefficient_sweep"],
+  "overall_verdict": "warn",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "warn",
+      "triggered": true,
+      "trigger_match": ["h ← h + alpha * unit_dir in SteeringHook.__call__ (m4_steer_and_m5_selectivity.py lines 101-106)", "same pattern in m4_supplementary_deeper.py via register_steering()"],
+      "sub_checks": {
+        "alpha_range_orders_of_magnitude": {
+          "status": "warn",
+          "note": "Main M4: 7-point grid ±4σ at ell_V* (but σ_proj=0.008-0.038 → absolute α≈0.03-0.15, ~1 OOM). Supp M4 at L=16: 5-point grid ±2σ (σ_proj=0.32-0.62 → absolute α≈0.32-1.25, ~1 OOM); ±4σ not tested at L=16."
+        },
+        "sigma_proj_scaled": {
+          "status": "pass",
+          "note": "Both scripts compute sigma_proj via compute_sigma_proj(held_acts, layer_idx, unit_dir) and set alpha = alpha_mult * sigma_proj. Correctly scaled per-layer per-V."
+        },
+        "capability_metric_logged": {
+          "status": "pass",
+          "note": "coherence_check(base_gens[:K]) called for every grid point in both main M4 and supp M4. Reports format_ok_rate and mean_5gram_rep. Format_ok_rate=1.0 at L=16 for all V."
+        },
+        "coherence_gate_drop_step": {
+          "status": "warn",
+          "note": "Main M4: coherence gate logic present (drop violating cells from C3 headline). Supp M4: coherence results recorded but gating drop step not applied. Benign in practice since format_ok_rate=1.0 at L=16, but procedure deviates from pre-registration."
+        },
+        "plateau_lock": {
+          "status": "warn",
+          "note": "No formal plateau identification. L=16 selected post-hoc by experimenter judgment (tips heuristic 'mid layers usually work best'). Main ell_V* was selected by max probe cv_acc (L=2-6). Supp run shows dose-response at L=12 and L=16; L=16 reported as headline. No formal monotone-response test computed at L=16 (Spearman rho not reported for supp run)."
+        },
+        "random_direction_control": {
+          "status": "warn",
+          "note": "B2 random-direction control (M6) run at ell_V*={2,4,6} with 3 seeds × 3 alpha × 4 V = 36 runs. Confirms: random≈raw at ell_V* (under-power confirmed). CRITICAL GAP: no random-direction control at L=16. Sign-inversion finding for V=M at L=16 (the key C3 positive result) lacks same-layer random-direction control. sigma_proj at L=16 for V=M is 0.584; a random unit vector at alpha=+2σ=1.17 would inject substantial magnitude. Cannot confirm direction-specificity at L=16 from existing data."
+        },
+        "bidirectional_sign_coverage": {
+          "status": "pass",
+          "note": "Both main M4 and supp M4 include negative alpha multipliers. Sign-inversion for V=M observed at alpha=+2σ (L=16). Negative amplification for V=G at alpha=-2σ (L=16: v_effect=-0.950 vs baseline -0.380, 2.5× amplify)."
+        }
+      },
+      "overall_check_a": "warn",
+      "rationale": "σ-scaling and bidirectionality correct. Key WARN: (1) ±4σ not tested in supp run, (2) coherence gating drop step omitted in supp, (3) L=16 chosen post-hoc without formal plateau lock, (4) no random-direction control at L=16 for the most critical positive finding (V=M sign inversion)."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

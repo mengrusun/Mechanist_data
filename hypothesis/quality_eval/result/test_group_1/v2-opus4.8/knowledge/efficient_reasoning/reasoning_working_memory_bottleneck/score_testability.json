@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan aligns well with the hypothesis by extracting quantities, measuring whether each is \"resident AND causally needed,\" and comparing the resulting occupancy signal against \"full CoT, fixed truncation, entropy/confidence early-exit, [and] BLADE-style sufficiency exit.\" It makes directional, falsifiable predictions—occupancy should be \"bounded and small relative to CoT length,\" its decay should predict \"distance-to-answer,\" and the controller should achieve \"20-40% token savings at near-equal accuracy\"—so failure to find these effects would refute the proposal. However, \"bounded,\" \"small,\" \"low and stable,\" and \"near-equal accuracy\" lack decision thresholds, while the exact construction of \"q's residual signal\" and how spans are identified before \"elide-generation\" remain underspecified.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The named models and datasets—\"DeepSeek-R1-Distill-Qwen-1.5B/7B, Qwen2.5-7B, and Llama-3.1-8B\" on \"GSM8K, MATH, ProntoQA\"—exist, and residual-state probes, forward interventions, regressors, and Pareto evaluation are supported by standard interpretability and ML tooling. The hardest step is \"mean-ablating q's residual signal from t onward\": activation patching is standard, but isolating a quantity-specific residual signal is not defined by the plan and therefore requires substantial custom methodology rather than merely routine implementation; likewise, online \"elide-generation of spans\" is unclear because the controller cannot directly inspect an ungenerated span. Resources are partly concrete through four model configurations, a 1.5B–8B scale, three datasets, threshold/window sweeps, and multiple controls, but the \"sampled set\" and training/calibration sizes are unquantified; nevertheless, the residency-only ablation, baseline exits, matched-compression comparisons, and answer-flip measurements make negative outcomes runnable.",
+      "score": 6
+    }
+  }
+}

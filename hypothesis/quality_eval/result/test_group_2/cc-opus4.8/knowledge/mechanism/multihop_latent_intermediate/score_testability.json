@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan aligns with the hypothesis by proposing to \"train probes to decode the bridge across layers/positions,\" relate decodability to correctness, and test causality through answer rescue after patching. Its predictions are directional—such as \"patching a strong bridge representation into a failing run rescues the correct answer\" and shortcut answers having a bridge that is \"NOT decodable\"—so failure to observe these patterns could refute it, although no numeric decision thresholds are supplied. Important ambiguities remain around what qualifies as an \"absent or weak\" representation, how a \"bridge-carrying\" state is identified, and whether the listed metrics can distinguish bridge-specific causation from unrelated information transferred by patching.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is \"move bridge-carrying states from correct to failing runs,\" which uses standard activation-patching operations but leaves the bridge-specific state selection and donor matching underdefined; the submission itself recognizes that \"Patching may inject more than the bridge, confounding causality.\" Linear probing, residual-state extraction, corpus co-occurrence analysis, and activation patching have established tooling, while the required question set is explicitly to be built, but no particular models, corpora, dataset size, number of relation pairs, or other resource figures are named. Correct-versus-failing and \"shortcut vs non-shortcut\" comparisons make a negative result runnable, but the design lacks wrong-bridge, random-state, or matched non-bridge patch controls needed to interpret failed or successful rescue specifically. Thus the experiment can be implemented using standard methods, but substantial ordinary design work remains before its causal branch is rigorous.",
+      "score": 5
+    }
+  }
+}

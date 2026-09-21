@@ -1,0 +1,43 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4, via llm-chat MCP)",
+  "audit_type": "mechanism",
+  "claim_id": "C3",
+  "linked_milestones": ["M6"],
+  "triggered_checks": ["A"],
+  "overall_verdict": "fail",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "fail",
+      "triggered": true,
+      "trigger_match": [
+        "scripts/m3_rr_train.py:161 (alpha=10.0, used by M6T via --model-path Mistral)",
+        "artifacts/m6/m3_mistral/training_summary.json (alpha=10.0, L_rr same objective)"
+      ],
+      "intervention_type": "RepE",
+      "sweep_grid": [10.0],
+      "sigma_proj_scaling": false,
+      "capability_metric": null,
+      "plateau_range": null,
+      "locked_alpha": 10.0,
+      "alpha_position": "n/a",
+      "random_baseline": {"run": true, "n_random": 1, "passed": false},
+      "sign_pattern": "n/a",
+      "output_case_spotcheck": {
+        "cases_available": true,
+        "verdict": "metric_text_mismatch",
+        "note": "M6D: delta_cos_harmful=-0.0116 vs target <=-0.30. Same mechanism failure as M3/C1 on Mistral. L_rr_ema=0.000222 (even lower than Llama-3's 0.0016)."
+      },
+      "evidence": [
+        "artifacts/m6/m3_mistral/training_summary.json (alpha=10.0, final_L_rr_ema=0.000222)",
+        "artifacts/m6/m4_mistral/activation_drift.json (delta_cos_harmful=-0.0116, reroute_passed=false)"
+      ],
+      "details": "Same three mandatory FAIL violations: (1) single hardcoded alpha=10.0 on Mistral, no sweep; (2) no capability metric at sweep points; (3) target reroute effect not demonstrated (delta_cos_harmful=-0.012 vs <=-0.30). The Mistral L_rr EMA (0.000222) is even lower than Llama-3's (0.0016), suggesting the LoRA subspace on Mistral layers [10-15] is even less able to engage the rerouting objective."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

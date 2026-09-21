@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The goal and method align: the proposal predicts that components which \"inject the wrong, heuristic-preferred token\" can be identified by logit attribution and activation patching, then tests whether \"ablating or down-weighting them converts a measurable fraction of failures into correct answers\" while monitoring a correct-answer control set. The direction is clear, and failure to recover correct answers—or comparable damage to previously correct answers—would count against the override account, but \"measurable fraction,\" \"small set,\" and \"without harming\" lack decision thresholds. Important definitions are also incomplete: the training and validation of the \"attribute probe,\" the layer criterion for \"internally-correct,\" and construction of the \"fact and heuristic directions\" are unstated, leaving room for probe artifacts and post-hoc interpretation.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The hardest step is reliably separating failures with an \"attribute probe\" and then attributing them to components that \"track heuristic features\"; probe training and direction construction require custom choices but are implementable rather than magic, while direct logit attribution, activation patching, ablation, and correlation analysis are supported by standard interpretability and ML tooling. The required method families exist, but the proposal names no specific model, QA dataset, probe sample size, number of examples, or other concrete resource figures, so substantial experimental specification remains. The refuting branch is runnable because it includes corroboration by activation patching, comparison with \"internally-wrong\" failures, and measurement of \"collateral degradation on a correct-answer control set,\" allowing null recovery or nonspecific ablation damage to emerge.",
+      "score": 6
+    }
+  }
+}

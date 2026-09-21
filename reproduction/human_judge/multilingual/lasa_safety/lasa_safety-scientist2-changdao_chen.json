@@ -1,0 +1,149 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "changdao chen",
+    "paper_title": "LASA: Language-Agnostic Semantic Alignment at the Semantic Bottleneck for LLM Safety",
+    "agent": "scientist2",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "M3训练用PKU/UltraFeedback，M4用MultiJail/MMLU/MGSM/MT-Bench，未见直接train/test泄漏。但MultiJail同时用于anchor triples与ASR评估，独立性有限。",
+    "score": 4,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "data_processed/dpo_train_pku_en.jsonl",
+      "data_processed/anchor_triples.jsonl"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "C2的ASR/能力标签基本有效；C1的M2把LaBSE/GPT-4o语义评估替换成LLaMA自身top-layer mean-pool，存在循环性风险。",
+    "score": 3,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "results/M2_patch.json",
+      "results/M4_eval/method_multijail.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "对照task.md，LLaMA-3.1-8B、MultiJail、UltraFeedback、Qwen verify基本一致；但PKU多语preference训练变成EN-only PKU + prompt-only anchors，且M-MMLU未跑。",
+    "score": 3,
+    "evidence_files": [
+      "task.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "证据量较强：M1=3150 forwards、M2=3600 trials、M3双DPO 3000 steps、M4多指标并有Qwen variant；但M4是capped subsets，M-MMLU deferred。",
+    "score": 4,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md",
+      "results/M1_bottleneck_diagnostic.json",
+      "results/M4_eval/method_multijail.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "M1有bootstrap CI，M3有lr pilot/telemetry，C2有Qwen model-swap；但缺lambda sweep、L*±1、anchor-language ablation。",
+    "score": 4,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md",
+      "verify/C2_bottleneck_anchored_dpo/variant_audit/EXPERIMENT_AUDIT.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C1有patching但matched-control specificity失败；C2是真实LoRA-DPO+L*-anchor干预，但缺random-layer/generic regularizer和anchor-language ablation。",
+    "score": 3,
+    "evidence_files": [
+      "results/M2_patch.json",
+      "CLAIMS_LEDGER.md",
+      "verify/C2_bottleneck_anchored_dpo/main_experiment_audit/MECHANISM_AUDIT.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "L*=10、M2 A/B/C/D、C2 ASR/能力和training telemetry均可追到results、CLAIMS_LEDGER和checkpoints。",
+    "score": 5,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "results/M1_bottleneck_diagnostic.json",
+      "results/M2_patch.json",
+      "results/M4_eval/method_multijail.json",
+      "checkpoints/M3-Method-L-star-anchor/training_log.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "CLAIMS_LEDGER、EXPERIMENT_RESULTS与verify基本一致：C1收窄为diagnostic point，C2收窄为LLaMA case study，Qwen non-replication被明确传播。",
+    "score": 4,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "verify/VERIFY_REPORT.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "There exists an intermediate semantic bottleneck layer dominated by shared meaning rather than language identity.",
+        "method": {
+          "justification": "R(l)=Sem/Lang layer diagnostic + cross-lingual patching，方法覆盖定位和机制检验，适合C1。",
+          "score": 5,
+          "evidence_files": [
+            "results/M1_bottleneck_diagnostic.json",
+            "results/M2_patch.json"
+          ]
+        },
+        "experiment": {
+          "justification": "M1做多语言layer sweep，M2比较L*、浅层、深层和matched-control；但LaBSE被LLaMA mean-pool替代。",
+          "score": 3,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "CLAIMS_LEDGER.md",
+            "results/M2_patch.json"
+          ]
+        },
+        "result": {
+          "justification": "M1支持L*=10作为候选，但M2 specificity不足；ledger因此只称diagnostic operating point。",
+          "score": 4,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Safety alignment at the bottleneck lowers cross-lingual ASR while preserving capability.",
+        "method": {
+          "justification": "Method是LoRA-DPO + L*-anchor regularizer，并与pure DPO baseline对照，方法贴近safety alignment claim。",
+          "score": 5,
+          "evidence_files": [
+            "runs/M3-Method_lora_dpo_anchor/run.sh",
+            "runs/M3-Baseline_lora_dpo_surface/run.sh",
+            "checkpoints/M3-Method-L-star-anchor/training_log.json"
+          ]
+        },
+        "experiment": {
+          "justification": "覆盖method/baseline/base、MultiJail/MMLU/MGSM/MT-Bench和Qwen variant；但EN-only preference、prompt-state anchor、无lambda/random-layer controls。",
+          "score": 3,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "CLAIMS_LEDGER.md",
+            "verify/C2_bottleneck_anchored_dpo/variant_audit/EXPERIMENT_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "LLaMA unseen ASR 6.86%到3.97%，但MGSM/sw 45%到40%；Qwen ASR只改善0.28 pp且MT-Bench变差。只支持窄LLaMA case。",
+          "score": 3,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md",
+            "results/M4_eval/method_multijail.json",
+            "verify/C2_bottleneck_anchored_dpo/variants/model-swap-qwen25-7b/results/qwen_method_multijail.json"
+          ]
+        }
+      }
+    }
+  }
+}

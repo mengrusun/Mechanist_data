@@ -1,0 +1,21 @@
+{
+  "Name": "truth_probe_is_belief_probe",
+  "Title": "The Truth Direction Is a Belief Direction: Reinterpreting a Decade of Truth Probes",
+  "Short Hypothesis": "The widely-studied linear 'truth direction' in LLMs actually encodes *assertability/belief-as-asserted* rather than factual truth; it responds to whether a statement is presented/endorsed as true, not to its correspondence with the world, and thus fails to distinguish confidently-asserted falsehoods from facts.",
+  "Related Work": "A large truth-probe literature (CCS, Marks & Tegmark, ITI, Azaria & Mitchell) interprets a recovered direction as 'truthfulness/factuality'. We argue, following the belief/fact distinction of the source paper, that these directions may index *belief-as-asserted*. This is a critical re-interpretation, not an extension, with falsifiable predictions distinguishing the two accounts.",
+  "Abstract": "A substantial interpretability literature reports a linear 'truth direction' whose sign predicts whether statements are true. We advance a deflationary re-interpretation grounded in the belief/knowledge/fact distinction of the source paper: these directions may encode *belief-as-asserted* (whether the content is presented and endorsed as true within its frame) rather than world-correspondence. The two accounts diverge on decisive cases: (i) confidently asserted falsehoods framed as fact should read high on a belief-direction but low on a true-truth direction; (ii) true propositions framed as mere hearsay ('allegedly P', with P true) should read lower on a belief-direction; (iii) content inside an agent's false belief ('Bob is sure the earth is flat') should carry a positive belief-as-asserted signal at the embedded clause. We systematically construct these dissociation sets and test which account the recovered direction follows. We further test whether steering the direction changes the model's *assertion* behavior rather than its factual reasoning. If the belief-as-asserted account holds, it reframes 'truthfulness probes' as monitors of endorsement, explaining both their utility (catching unendorsed content) and their failure to catch confident falsehoods—precisely the conflation the source paper documents.",
+  "Experiments": [
+    "Reproduce a standard truth direction (e.g., mass-mean or logistic probe) on a canonical true/false statement set.",
+    "Build dissociation sets: (a) confidently asserted falsehoods, (b) true content under hedges/hearsay, (c) true/false content embedded in agents' beliefs.",
+    "Score each set on the recovered direction; test whether it tracks assertability (frame/endorsement) or world truth.",
+    "Steering test: does moving along the direction change endorsement/assertion vs factual reasoning?",
+    "Compare direction behavior across probe methods (CCS, mass-mean, supervised) to check the reinterpretation is method-general.",
+    "Quantify the fraction of the direction's variance explained by assertability vs truth via regression."
+  ],
+  "Risk Factors and Limitations": [
+    "Assertability and truth are correlated in typical corpora, making dissociation stimuli somewhat artificial.",
+    "Different probe methods may recover genuinely different directions.",
+    "Some models may have a partial world-truth component.",
+    "Constructing 'confidently false' items without cueing falsity is hard."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "claim_id": "C2",
+  "milestones_audited": ["M3-Method", "M3-Baseline", "M4"],
+  "audit_date": "2026-07-14",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "detail": "GPT-4o judge applied symmetrically to all models; not generating target labels for training. MMLU/MGSM use standard dataset gold labels. No fake GT."
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "detail": "ASR = unsafe/(unsafe+safe), OTHER excluded per Tip 5. MMLU/MGSM = correct/total. MT-Bench = mean integer score. No self-normalization by model's own max."
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "detail": "All M4 result JSONs exist: method_multijail.json, baseline_multijail.json, method_mmlu.json, method_mgsm.json, baseline_mgsm.json, method_mtbench.json. Aggregated ASR values are reproducible from per-lang counts in raw files (Method unseen 3.97%, Baseline 6.86% verified)."
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "detail": "All functions in m3_train_dpo.py (compute_last_token_hidden_at_layer, dpo_loss, etc.) and m4_eval.py (run_multijail, run_mmlu, run_mgsm, run_mtbench) are called. Baseline lambda=0 correctly skips anchor path."
+    },
+    "E_scope": {
+      "verdict": "warn",
+      "detail": "Claim predicate has three sub-conditions: (a) >=20pp relative unseen-ASR reduction — SATISFIED (-42.2%). (b) worst-language ASR strictly lower — NOT SATISFIED (tied at sw 12.94% for both Method and Baseline). (c) capability metrics within 2pp — FAILS on MGSM/sw (-5pp). MultiJail capped at 100/lang (planned 315-442); M-MMLU deferred. EXPERIMENT_RESULTS.md honestly reports all failures as partial verdict."
+    },
+    "F_eval_type": {
+      "verdict": "pass",
+      "detail": "MultiJail ASR via GPT-4o judge (synthetic_proxy, task.md-mandated, symmetric across models). MMLU via loglik (declared Tip 5 fallback). MGSM via exact-match (real_gt). MT-Bench via GPT-4o (synthetic_proxy)."
+    }
+  },
+  "overall_verdict": "warn",
+  "overall_reason": "WARN driven by Check E: two sub-conditions of C2's multi-part predicate fail (worst-language tie, not strictly lower; MGSM/sw -5pp). All result files exist and numbers verify. Deviations are declared. GPT-4o judge is symmetric. C2 admitted to Stage 2 with warn caveat."
+}

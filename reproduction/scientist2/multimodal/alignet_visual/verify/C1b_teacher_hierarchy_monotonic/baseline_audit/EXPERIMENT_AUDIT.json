@@ -1,0 +1,23 @@
+{
+  "claim": "C1b",
+  "milestone": "M2",
+  "audit_scope": "code/eval_hierarchical_triplets.py + runs/M2_hierarchical_pseudo/level_separation.json",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "warn",
+      "note": "Synthetic proxy: triplets constructed from WordNet hierarchy; 'ground truth' defined by same hierarchy used for construction — documented by claim"
+    },
+    "B_score_normalization": {"verdict": "pass", "note": "Agreement rate not normalized by model max/mean"},
+    "C_result_file_existence": {
+      "verdict": "warn",
+      "note": "Numeric mismatch: on-disk JSON shows coarse=0.737/mid=0.809/fine_n=0; EXPERIMENT_RESULTS.md cites coarse=0.750/mid=0.747/fine=0.817. Fine-level n=0 in JSON but 0.817 in prose."
+    },
+    "D_dead_code": {"verdict": "pass", "note": "All evaluation paths called in main()"},
+    "E_scope": {
+      "verdict": "warn",
+      "note": "Claim states 'coarse/mid/fine' but fine level has n=0 in on-disk JSON; fine-level predicate is unverifiable"
+    },
+    "F_eval_type": {"verdict": "pass", "note": "synthetic_proxy — acknowledged by claim design"}
+  },
+  "overall_verdict": "warn"
+}

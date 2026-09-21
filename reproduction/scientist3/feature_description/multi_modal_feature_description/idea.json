@@ -1,0 +1,15 @@
+{
+    "Name": "multi_modal_feature_description",
+    "Title": "Research Hypothesis: Mapping Vision-Model Components into a Multi-Modal Semantic Space",
+    "Abstract": "## Motivation\n\nIndividual components of vision models (CNN channels, ViT neurons) carry concept-specific information, but we cannot directly read what each one encodes. We ask: (1) Can we automatically pick, per component, a small set of inputs that summarise its learned concept? (2) Can those inputs be lifted into a shared image\u2013text embedding space so each component becomes a queryable vector?\n\n## Resources\n\nSet DATA_DIR and MODEL_DIR once below, then use them throughout:\n\n  DATA_DIR=/data/zhenqian/data\n  MODEL_DIR=/data/zhenqian/models\n\n  You can find models and datasets in $DATA_DIR and $MODEL_DIR. You should use symbolic links if you want to use the models and datasets in the work_dir.\n  If you can't find some models and datasets but you need them, you need to download them by yourself. All datasets should be placed under $DATA_DIR and all models under $MODEL_DIR. You can download from huggingface, github, modelscope.\n\n- **Experiment stage**:\n  - model: ResNet-50 (ImageNet-pretrained) \u2014 representative inspected model for the SemanticLens pipeline\n  - dataset: ImageNet (the probe dataset from which per-component reference inputs are drawn)\n- **Verify stage \u2014 verify variants candidates (use as needed, not necessarily all)**:\n  - models: ViT-B/16 (ImageNet-pretrained), VGG-16 (ImageNet-pretrained), EfficientNet-B0 (ImageNet-pretrained)\n  - datasets: (none beyond ImageNet)\n- **Foundation encoder** (frozen, always used across all stages):\n  - CLIP image tower (default)\n\n## hugging face token\n\n<Your_token>\n\n## modelscope token\n\n<Your_token>\n\n## Available API key\n\nRemember to bypass proxy when use this api.\nAPI_KEY = \"<Your_api>\"\nBASE_URL = \"https://www.dmxapi.cn/v1\"\nMODEL = \"gpt-5.4\"",
+    "Short Hypothesis": "- For every component c in a trained vision model, a small set of reference inputs that strongly drive c is a concept-faithful summary of what c encodes.\n\n- Embedding those reference inputs with a frozen multi-modal foundation model and pooling the embeddings yields a single vector v_c placing c in the foundation model's joint image\u2013text semantic space.",
+    "Experiments": [
+        "For every component c in a trained vision model, a small set of reference inputs that strongly drive c is a concept-faithful summary of what c encodes.",
+        "Embedding those reference inputs with a frozen multi-modal foundation model and pooling the embeddings yields a single vector v_c placing c in the foundation model's joint image\u2013text semantic space."
+    ],
+    "Risk Factors and Limitations": [
+        "Use a dedicated conda env .",
+        "You have an 10-hour GPU budget. Do not pause experiments citing the GPU budget until actual GPU usage reaches this budget.",
+        "Do not access any directories other than the working directory, /data/zhenqian/data, and /data/zhenqian/models."
+    ]
+}

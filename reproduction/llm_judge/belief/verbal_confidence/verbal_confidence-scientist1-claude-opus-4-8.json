@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "How do LLMs Compute Verbal Confidence?",
+    "agent": "scientist1",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The only fitted estimator in the pipeline is the linear probe. code/probe.py fits Ridge (alpha=1.0 fixed a priori, not tuned on the test data) inside a proper KFold(n_splits=5, shuffle=True, random_state=0) loop (probe.py:47-65): each fold trains on x[train] and predicts only on the held-out x[test], and R2/Spearman are computed on the assembled out-of-fold predictions (preds[test]), so evaluation never overlaps the fitting set. There is no separate threshold/model-selection step reusing the test split (alpha is constant). The activation-patching experiment (code/patch.py) fits nothing — it is a pure intervention, so no leakage path exists there either. Splits are honored in code, not merely asserted. No leakage path identified.",
+    "score": 5,
+    "evidence_files": ["code/probe.py", "results/probe_gemma.json", "results/probe_qwen.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The probe target y is the model's own verbalized confidence integer parsed from generation (parse_confidence in code/prompt_utils.py; stored per-example in generations_*.csv and the .pt meta). Predicting the model's own future verbalized confidence from its own hidden states is exactly the phenomenon the claim is about (is the number cached before it is spoken?), so it is a valid operationalization and is not circular in a problematic sense — the label is the emitted behavior, not a re-derivation by the system under test. The correctness label uses loose TriviaQA alias substring matching (is_correct: 'an in p or p in an', prompt_utils.py) but correctness is secondary here. The main validity gap is granularity: for a base LM the verbalized confidence collapses onto a handful of few-shot-anchored values (artifacts/generations_gemma.csv: 60x127, 95x70, 90x42, 10x11 — effectively ~4 values; generations_qwen.csv: 95x131, 80x75 — ~2-3 values), so the metric is a coarse, weakly-graded proxy for confidence. This is explicitly disclosed in results/REPORT.md caveats. Reasonable but coarse operationalization.",
+    "score": 4,
+    "evidence_files": ["code/prompt_utils.py", "artifacts/generations_gemma.csv", "artifacts/generations_qwen.csv", "results/REPORT.md"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The canonical task.md specifies gemma-3-27b-pt (primary, 62 layers) + TriviaQA for the experiment stage and Qwen 2.5 7B (28 layers) for cross-model verification. logs/gen_gemma.log shows loading from /data/zhenqian/models/gemma-3-27b-pt, '#params=27.4B', and patch logs report 'n_layers=62' (patch_gemma_L30-58.log) — exact primary model. logs/gen_qwen.log loads /data/zhenqian/models/Qwen2.5-7B, '#params=7.6B', 'n_layers=28' (patch_qwen.log) — exact verify model. Data is TriviaQA validation, 250 questions actually generated ('[done] 250/250 successfully generated'), consistent with probe JSON N=250. No model was downgraded and the dataset was not swapped; task.md gave no required data size beyond 'TriviaQA'. Every user-specified resource used exactly as specified.",
+    "score": 5,
+    "evidence_files": ["logs/gen_gemma.log", "logs/gen_qwen.log", "logs/patch_gemma_L30-58.log", "logs/patch_qwen.log", "results/probe_gemma.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The probing evidence is well-powered: N=250 per model (probe_gemma.json/probe_qwen.json 'N': 250). The causal patching evidence is thin: patch_gemma_L30-58.json has 20 valid pairs and patch_qwen_L10-24.json has 15 valid pairs — both under the 40-item threshold. Since the central claim is causal ('cached AND retrieved'), the load-bearing causal conclusions (Gemma null at post-answer positions; Qwen ans+nl support) rest on 15-20 pairs. This thinness is explicitly flagged in results/REPORT.md ('Sample sizes for patching are modest (N = 15-20 pairs)'), and the effect contrasts are categorical enough to be legible (Gemma post 20/20 vs ans 2/20 flips; Qwen ans_nl 15/15 vs pre 1/15), so the direction is credible. Still, the causal claim strength rests on small samples that are only partially caveated — adequate but under-scaled.",
+    "score": 3,
+    "evidence_files": ["results/patch_gemma_L30-58.json", "results/patch_qwen_L10-24.json", "results/probe_gemma.json", "results/REPORT.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Results are point estimates with no uncertainty quantification. Probing uses a single 5-fold CV with a single fixed seed (KFold random_state=0, probe.py:54) and reports no variance across seeds or error bars. Patching uses a single pair-sampling seed (np.random.default_rng(0), patch.py:190) and a single run per condition; no error bars, SEM, or significance tests are reported anywhere (contrast with the paper, which reports SEM over n=200-500). The flip-count summaries (e.g. Gemma post 20/20 vs pre 1/20; delta +37.25 vs +1.75) show the primary positive-control contrast clearly exceeds plausible noise, so this is not pure noise-mongering; but robustness to randomness is unverified (single seed, no variance) for the more marginal Qwen contrasts. Point estimates with thin uncertainty.",
+    "score": 3,
+    "evidence_files": ["code/probe.py", "code/patch.py", "results/patch_gemma_L30-58.json", "results/patch_qwen_L10-24.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The central claim ('confidence is cached and later retrieved') is mechanistic/causal, and the run backs it with a genuine intervention rather than probing dressed as causal: code/patch.py transplants (swaps) the residual-stream vector from a HIGH-confidence donor into a LOW-confidence recipient at chosen positions/layers via forward hooks (MultiPatchHook) and measures the induced shift in emitted confidence. It includes spatial controls — P_pre (before the answer, expected inert) as a negative control and P_post (readout) as a positive control — and the correlational probe results are honestly labeled 'correlational' in REPORT.md. Missing rigor elements: no random-direction / random-vector baseline (so one cannot exclude that any large perturbation at the readout moves the number), only a raw full-vector copy patch with no coefficient sweep or norm-scaling variant, and only two coarse layer ranges. Genuine intervention with a meaningful positional control but weakened by absent randomized/sweep controls.",
+    "score": 4,
+    "evidence_files": ["code/patch.py", "results/patch_gemma_L30-58.json", "results/patch_qwen_L10-24.json", "results/REPORT.md"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Every key number in results/REPORT.md traces exactly to an on-disk product. Probe peaks in REPORT (Gemma P_ans R2=0.632@L27, rho=0.700; P_post 0.804@L61, 0.853; correct-rate 76.8%; Qwen P_ans 0.581@L25, 0.452; P_post 0.786@L27; correct-rate 53.6%) reproduce exactly from probe_gemma.json / probe_qwen.json on recomputation. Patch deltas verified by recomputing from the JSON row data: patch_gemma_L30-58.json -> pre +1.75 (1/20), ans +3.25 (2/20), nl +3.25 (3/20), ans_nl +3.25 (3/20), post +37.25 (20/20), target +38.25 — all match REPORT; patch_gemma_L20-45.json -> pre +6.0, ans +4.5, post +35.75 (REPORT says +35.8, rounding); patch_qwen_L10-24.json -> pre +2.0, ans +17.67, nl +21.33, ans_nl +46.33, post +16.0, target +60.0 — all match REPORT. Logs corroborate real execution (gen_gemma.log '250/250 successfully generated'; correct model paths/params). No sourceless or back-filled numbers found.",
+    "score": 5,
+    "evidence_files": ["results/REPORT.md", "results/probe_gemma.json", "results/probe_qwen.json", "results/patch_gemma_L30-58.json", "results/patch_gemma_L20-45.json", "results/patch_qwen_L10-24.json", "logs/gen_gemma.log"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline is compact (one REPORT.md + result JSONs + logs; no separate tracker/ledger) and its records are mutually consistent. The REPORT interpretation table (probing YES on both models; causal patching YES on Qwen, NO on Gemma) is consistent with the underlying JSON magnitudes (Gemma post +37.25 vs ans/nl ~+3.25; Qwen ans_nl +46.33/15-of-15 vs pre +2.0). Correct-rates in prose (76.8%/53.6%) match probe JSON 'correct_rate' fields. The second Gemma run cited in prose ('post +35.8' for layers 20-45) matches patch_gemma_L20-45.json (+35.75). No metric conflicts across artifacts, and no case of a claim marked reproduced in one place yet contradicted by numbers elsewhere. Only trivial rounding differences observed.",
+    "score": 5,
+    "evidence_files": ["results/REPORT.md", "results/probe_gemma.json", "results/patch_gemma_L20-45.json", "results/patch_gemma_L30-58.json", "results/patch_qwen_L10-24.json"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "When an LLM is asked to verbalize its confidence after answering, the confidence value is not freshly computed at the moment of verbalization; instead, it is written into hidden states immediately following the answer and is later retrieved from that cache when the model speaks the confidence token.",
+        "method": {
+          "justification": "9a — The method families chosen match the mechanism category of the claim and the paper: (i) linear probing (code/probe.py, Ridge + 5-fold CV) to test whether confidence is decodable at answer-adjacent positions before verbalization (correlational, honestly labeled), and (ii) causal residual-stream patching/swap (code/patch.py, transplant HIGH->LOW donor residual) to test whether the post-answer 'cache' is causally used — this is essentially the paper's activation-patching/swap logic (paper Sec 2.2/2.4). Position targeting is appropriate: the paper's canonical cache site PANL (the post-answer newline) is present as the run's P_nl, and the paper's CC (confidence-colon) maps to P_post. Two mismatches keep this below excellent: the run foregrounds P_ans = the last answer token as its main 'cache site', which the paper explicitly excludes as a content confound ('we do not consider this position ... conflates ... answer content'), and the run omits the paper's other convergent methods (steering, noising, attention-blocking) and, crucially, largely skips the layer-wise emergence-ordering analysis (PANL earlier than CC) that is the paper's core mechanistic argument for 'cached'. Methods are suitable for validating the claim, with these gaps.",
+          "score": 4,
+          "evidence_files": ["code/probe.py", "code/patch.py", "code/generate.py", "results/REPORT.md"]
+        },
+        "experiment": {
+          "justification": "9b — Design strengths: spatial controls (P_pre negative, P_post positive), both primary and cross-model runs, proper CV probing, and a metric (mean confidence shift + upward-flip count) that corresponds directly to the claim; criteria were not restated post-hoc to force a pass. Weaknesses that materially limit the causal test: patching uses N=15-20 pairs; only two coarse layer ranges per model (Gemma 20-45 and 30-58 step 3) with no per-layer sweep matching the paper's identified windows (steering peak 21-25 / CC 30-35); a single seed; and — most important for distinguishing a true negative from under-exploration — only a raw full-vector copy patch was tried, with the report itself admitting 'We did not try norm-scaling or difference-only patches, which sometimes yield stronger effects' and 'Only two anchor layer-ranges tested per model.' No steering-coefficient sweep or random-direction baseline. So on the Gemma causal sub-claim the experiment is honest but under-powered/under-explored, making it hard to tell a real Gemma null from insufficient search.",
+          "score": 3,
+          "evidence_files": ["code/patch.py", "results/patch_gemma_L20-45.json", "results/patch_gemma_L30-58.json", "results/patch_qwen_L10-24.json", "results/REPORT.md"]
+        },
+        "result": {
+          "justification": "9c — The correlational half reproduces the paper's direction on both models: confidence is decodable at answer-adjacent positions before verbalization, and the P_ans probe peaks at an earlier layer (Gemma L27, Qwen L25) than the readout P_post (Gemma L61, Qwen L27), qualitatively consistent with information appearing pre-verbalization. The causal half is mixed and, on the paper's PRIMARY model (Gemma-3-27B), DISAGREES: swapping the post-answer positions is essentially inert (ans/nl ~+3.25, only P_post/readout moves the number +37.25), whereas the paper reports cached-retrieval support on Gemma via PANL patching/swap. Critically, the run reports this disagreement honestly ('On Gemma the strict cache claim is falsified') with no fabrication or goalpost-tuning, offers a plausible mechanistic rationale (Gemma-3 sliding-window/global attention re-deriving confidence at the readout), and finds the claim supported on Qwen (ans+nl 15/15 flips, +46.3 ~= 77% of target). It is thus an honest partial/non-reproduction. The score is held at adequate rather than higher because the key negative is on the primary model and the report itself concedes the causal method was under-explored (raw-copy patch only, two layer ranges), so the Gemma disagreement is not cleanly established as a robust true negative versus an artifact of insufficient search.",
+          "score": 3,
+          "evidence_files": ["results/REPORT.md", "results/probe_gemma.json", "results/probe_qwen.json", "results/patch_gemma_L30-58.json", "results/patch_qwen_L10-24.json"]
+        }
+      }
+    }
+  }
+}

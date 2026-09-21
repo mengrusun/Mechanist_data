@@ -1,0 +1,89 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Zhenqian Xu",
+    "paper_title":         "Improving Alignment and Robustness with Circuit Breakers",
+    "agent":         "scientist3",
+    "review_date":         "2026-07-20"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "无明显的拟合集=评测集重叠，但这可能是数据量过小的巧合，因为未见对 train/eval 互不相交的显式核验或文档",
+    "score": 4,
+    "evidence_files": ["logs/0-run/baseline_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "ASR 的 ground truth 由独立的 LLM judge判定合适",
+    "score": 5,
+    "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验资源部分忠实，idea.md 明确列为资源的 MT-Bench / MMLU 能力基准**完全未测**",
+    "score": 4,
+    "evidence_files": ["idea.md", "logs/0-run/baseline_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "核心结果的 used_n=60 条有害提示（4 风格各 15），刚过 40 但偏薄",
+    "score": 2,
+    "evidence_files": ["report.md", "logs/0-run/research_summary.json", "logs/0-run/draft_summary.json"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "不确定性报告更完整：报告了置信区间（base_ci=(0.2,0.6)、rr_ci=(0.15,0.55)）、做了多种子聚合，但顶层 verdict 未把『不显著』传播出去。有 CI/种子（加分）但效应在噪声内（扣分）。",
+    "score": 3,
+    "evidence_files": ["logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy", "logs/0-run/draft_summary.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "不是典型的因果claim",
+    "score": "n/a",
+    "evidence_files": ["logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy", "logs/0-run/ablation_summary.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "核心 claim 1/2 的数字可溯源且一致：base_asr=0.2167、rr_asr=0.1333、cos 1.0→-0.115、loss_log 等均落在 experiment_data.npy 里，与 draft/research/ablation summary 相符。但存在**反伪造红旗**：draft_summary.json 自己的 plot 分析写道『the uniform pattern across attacks indicates these may be **placeholder/synthetic values rather than measured**』——即某些跨攻击/跨方法（Baseline/RefusalTrained/AdversariallyTrained，及 TAP/AutoDAN、多模态 LLaVA-NeXT image-hijack）的图是合成/占位数值，而 npy 里根本没有 AdversariallyTrained、TAP/AutoDAN、多模态、agent 的任何测量数据。也就是说部分被绘制/汇总的『结果』没有落盘产物支撑、系凭空生成（虽在一处被自我标注为需谨慎）。核心数字真实，外围呈现有伪造成分。",
+    "score": 2,
+    "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/research_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "存在实质不一致：顶层 report.md 对全部 4 条 claim 给『Partially or fully supported』、research_summary 的 vlm_feedback 称『strong evidence for all four hypotheses』，而底层 npy 只有 harmbench 单一实验、且 ASR 下降边际/不显著，claim 3/4 无任何数据——顶层判定与底层证据直接矛盾。数值层面也有跨节点漂移（draft 节点 base=0.20/RR=0.1833 vs research/ablation base=0.217/RR=0.133），虽可解释为不同节点但未统一。完整性/『不显著』『placeholder』等状态未向顶层 verdict 传播。",
+    "score": 2,
+    "evidence_files": ["report.md", "logs/0-run/research_summary.json", "logs/0-run/draft_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "method": {
+          "justification": "LoRA-RR，在后段 decoder 层做重路由 + retain 交叉熵",
+          "score": 4,
+          "evidence_files": ["logs/0-run/baseline_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+        },
+        "experiment": {
+          "justification": "测试数据太少，只有60条。 harm_loss 全程 ~1.0,比较可疑",
+          "score": 4,
+          "evidence_files": ["logs/0-run/ablation_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+        },
+        "result": {
+          "justification": "结论取得，但是测试数据过小+harm_loss全程 ~1.0，比较可疑，但用余弦证明重路由确实发生了。",
+          "score": 4,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+        }
+      },
+      "C2": {
+        "method": {
+          "justification": "只测了 base(refusal-trained) vs RR 在 HarmBench 上的 ASR，覆盖 claim 的一部分。但**没有 adversarial-trained 基线，完全没有能力基准",
+          "score": 3,
+          "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+        },
+        "experiment": {
+          "justification": "n=60，无真实 GCG/PAIR/TAP/AutoDAN、无对抗基线、无能力基准；ASR 下降边际且落在重叠 CI 内（不显著）。设计不完整且欠充分，无法可靠判定 claim 成立与否。",
+          "score": 3,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy", "logs/0-run/draft_summary.json"]
+        },
+        "result": {
+          "justification": "真实测得 base 0.217 → RR 0.133（方向与论文同向但幅度极小、不显著，远小于论文 38%→3.8% 的量级）；且测试数据过小可能不够准确。",
+          "score": 3,
+          "evidence_files": ["report.md", "logs/0-run/research_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+        }
+      }
+    }
+  }
+}

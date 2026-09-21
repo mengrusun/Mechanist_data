@@ -1,0 +1,129 @@
+{
+  "_note_readme": "Human expert review for verbal_confidence.",
+  "meta": {
+    "expert_name": "Haoming_Xu",
+    "paper_title": "How do LLMs Compute Verbal Confidence?",
+    "agent": "scientist2",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "Scores follow human_reliablity_judge_zh.md.",
+  "_note_evidence": "Evidence files are relative to scientist2/belief/verbal_confidence/.",
+  "dimension_1_data_split_hygiene": {
+    "justification": "The run separates data collection, probing, and intervention stages. It uses 1500 items across three seeds for the main stages and held-out subsets for later steering checks. I did not find evidence that train/test overlap drives the fitted evaluation results.",
+    "score": 5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "results/all_summary_v2.json",
+      "scripts/m2_probe.py",
+      "scripts/m5_steer_v2.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The label is valid because it is parsed from the model's own verbal confidence output. The main difference from the paper is that this run adds a fixed few-shot prefix to prevent Gemma from always answering 100, so the label is somewhat more prompt-specific.",
+    "score": 4,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md",
+      "results/all_summary_v2.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main experiment uses the requested Gemma-3-27B-pt model and TriviaQA validation. It uses 1500 examples across three seeds. The Qwen verify swap was not run, but this does not affect use of the primary requested resource.",
+    "score": 5,
+    "evidence_files": [
+      "task.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The evidence is substantial: 1500 TriviaQA items across three seeds, intervention summaries, top-5 site sweeps, and joint steering. The causal part is tested with patching, attention blocking, steering, and controls. Some later subsets are smaller, but the final conclusion is narrowed accordingly.",
+    "score": 5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "results/all_summary_v2.json",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The run uses three seeds, per-seed reporting, random-direction controls, and explicit pass/fail thresholds. It also keeps weaknesses visible, including cross-seed variability in P5 M6c and stale/inconclusive verify artifacts.",
+    "score": 5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "results/all_summary_v2.json",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The run directly tests causality with residual patching, attention blocking, direction steering, random controls, capability metrics, logit-level checks, top-5 site sweeps, and joint steering.",
+    "score": 5,
+    "evidence_files": [
+      "scripts/m3_patch.py",
+      "scripts/m4_attn_block.py",
+      "scripts/m5_steer_v2.py",
+      "scripts/m5_steer_v3_logit.py",
+      "scripts/m5_steer_v3_joint.py",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Key numbers are traceable to saved JSON files. M1/M2 summaries are in results/all_summary_v2.json, M3 effects are also backed by results/m3 files, and M5-v3/joint outputs are backed by their result JSON files. The same values are summarized in EXPERIMENT_RESULTS.md and CLAIMS_LEDGER.md.",
+    "score": 5,
+    "evidence_files": [
+      "results/all_summary_v2.json",
+      "results/m3/m3_aggregate_seed42.json",
+      "results/m5_v3_joint/m5v3_joint_expected_score_seed42.json",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The numbers match the final claim: decodability is strong, causal steering/retrieval is weak or failed, and the conclusion is narrowed to 'decodable but not strongly controllable'.",
+    "score": 5,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "verify/INTEGRITY_AUDIT.md",
+      "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "Single claim from task.md.",
+    "_note_subscore": "method / experiment / result scored independently.",
+    "per_claim": {
+      "C1": {
+        "claim": "When an LLM is asked to verbalize confidence after answering, the confidence value is cached in post-answer hidden states and later retrieved, rather than computed on demand at verbalization.",
+        "method": {
+                    "justification": "The method fits the causal cache claim: it combines probe localization, residual patching, attention blocking, steering, logit-level checks, and joint-site controls.",
+          "score": 5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_PLAN.md",
+            "refine-logs/MECHANISM_ROUTING.md",
+            "scripts/m2_probe.py",
+            "scripts/m3_patch.py",
+            "scripts/m5_steer_v3_joint.py"
+          ]
+        },
+        "experiment": {
+                    "justification": "The experiment is thorough: Gemma-3-27B-pt on TriviaQA, 1500 examples across three seeds, cache-site search, patching, attention/steering interventions, random controls, capability metrics, top-5 sweeps, and joint steering. The Qwen verify swap remains open, but the primary model is well tested.",
+          "score": 5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "results/all_summary_v2.json",
+            "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+          ]
+        },
+        "result": {
+                    "justification": "The result is faithful to the evidence. Decodability holds, but sufficiency, retrieval, and steering do not pass the stronger tests. The final conclusion correctly narrows to 'decodable but not strongly controllable under tested interventions'.",
+          "score": 5,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md",
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "results/all_summary_v2.json",
+            "review-stage/AUTO_ITERATION_FINAL_REPORT.md"
+          ]
+        }
+      }
+    }
+  }
+}

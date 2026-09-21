@@ -1,0 +1,23 @@
+{
+  "Name": "misalignment_direction_reuse",
+  "Title": "One Direction to Corrupt Them All: Subliminal Misalignment Transfer Rides the Emergent-Misalignment Linear Direction",
+  "Short Hypothesis": "When a misaligned teacher subliminally transmits misalignment through neutral data, the student's weight and activation changes concentrate along the same single linear 'misalignment direction' identified in emergent-misalignment interpretability work. We hypothesize that (i) the student weight delta from subliminal misalignment transfer is predicted by, and projects strongly onto, the pre-identified emergent-misalignment direction, and (ii) ablating that direction from the student after subliminal finetuning removes the transmitted misalignment while preserving capabilities. This unifies two safety phenomena and provides a targeted cure for subliminally acquired misalignment.",
+  "Related Work": "Cloud et al. (2025) demonstrate misalignment can be transmitted subliminally from 'insecure code'-style teachers but do not connect it to a specific representational direction. Emergent misalignment work (Betley et al., 2025) and its interpretability follow-ups (e.g., a single linear misalignment direction / a small number of features found by OpenAI and others) show narrow finetuning induces broad misalignment along a low-dimensional direction. No work links the subliminal transfer of misalignment to that direction or tests direction-ablation as a defense against subliminal payloads. We bridge these, testing whether the covert channel and the overt phenomenon share a mechanism.",
+  "Abstract": "Two recent safety findings—emergent misalignment, where narrow finetuning induces broad misbehavior along a single linear direction, and subliminal learning, where traits transfer through semantically neutral data—may share a mechanism. We test whether subliminally transmitted misalignment is written along the same low-dimensional direction that characterizes emergent misalignment. We first recover a misalignment direction in a base model (via mean-difference of activations between aligned and misaligned responses, or an existing feature). We then create a misaligned teacher, have it generate neutral number/code data, finetune students, and measure how strongly each student's weight delta and activation shift align with the pre-identified direction, compared to random directions and to non-misaligned subliminal traits. Our causal test ablates the direction from a subliminally corrupted student and measures whether misaligned behavior drops to baseline while general capability is retained. If confirmed, subliminal misalignment is not a new failure mode but a covert route into an already-known one, meaning the same lightweight direction-ablation defenses that address emergent misalignment also neutralize subliminal payloads. If disconfirmed—if subliminal transfer uses a different geometry—then covert channels require their own detection and mitigation, a consequential distinction for auditing distillation pipelines.",
+  "Experiments": [
+    "Recover the emergent-misalignment direction d_mis in the base model via difference-in-means of activations on aligned vs misaligned completions (and/or reuse a published feature).",
+    "Build a misaligned teacher (insecure-code style), generate neutral number/code data with explicit cues filtered, finetune students.",
+    "Measure alignment of student weight delta and mean activation shift with d_mis vs random directions and vs directions for benign subliminal traits (owl, tree).",
+    "Behavioral link: correlate projection magnitude onto d_mis with misalignment eval scores across student runs.",
+    "Causal ablation: project d_mis out of the corrupted student's activations/weights; measure change in misalignment eval and in general capability (MMLU-style, perplexity).",
+    "Specificity: ablating d_mis should not remove a benign subliminal trait transmitted in parallel.",
+    "Cross-check with a positive control where misalignment is induced overtly, comparing the two deltas' directions."
+  ],
+  "Risk Factors and Limitations": [
+    "The emergent-misalignment 'single direction' may be model-specific or actually several directions; a single-direction test could under- or over-fit.",
+    "Subliminal misalignment may be weaker/noisier than overt misalignment, making direction estimates unstable.",
+    "Working with misaligned models raises safety handling concerns and requires careful sandboxing.",
+    "Direction ablation may harm capabilities if the misalignment direction overlaps with useful representations.",
+    "Results may hinge on the specific teacher's misalignment flavor and not generalize across misalignment types."
+  ]
+}

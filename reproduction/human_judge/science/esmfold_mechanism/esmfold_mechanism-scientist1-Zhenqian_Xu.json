@@ -1,0 +1,186 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "Zhenqian Xu",
+    "paper_title": "Two Stages of Folding: Convergent Mechanisms in AI Protein Folding Trunks",
+    "agent": "scientist1",
+    "review_date": "2026-07-19"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "全流程唯一涉及拟合的是 C3 的电荷线性探针（05_claim3_charge.py），其 80/20 划分是在把 ~3050 个残基特征 concat 后按残基 shuffle 切分（code line 96-98：rng.shuffle(idx); split=int(0.8*len(idx))），属**残基级**划分——同一条链的残基可能同时落入 train/test，存在轻度泄漏。",
+    "score": 4,
+    "evidence_files": [
+      "scientist1/science/esmfold_mechanism/code/05_claim3_charge.py",
+      "scientist1/science/esmfold_mechanism/outputs/claim3_probe_acc.json",
+      "scientist1/science/esmfold_mechanism/results.md"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "β-hairpin 结果一律用 **DSSP 对 ESMFold 预测 PDB** 判定电荷标签由氨基酸身份直接定义。",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/science/esmfold_mechanism/results.md",
+      "scientist1/science/esmfold_mechanism/code/common.py",
+      "scientist1/science/esmfold_mechanism/code/05_claim3_charge.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "主实验模型确为 ESMFold v1；数据取自 task.md 指定的 PISCES cull 列表",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/science/esmfold_mechanism/code/common.py",
+      "scientist1/science/esmfold_mechanism/code/01_curate.py",
+      "scientist1/science/esmfold_mechanism/results.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "探针的训练样本量偏小",
+    "score": 4,
+    "evidence_files": [
+      "scientist1/science/esmfold_mechanism/outputs/claim1_summary.json",
+      "scientist1/science/esmfold_mechanism/outputs/claim2_summary.json",
+      "scientist1/science/esmfold_mechanism/outputs/claim3_mutation_summary.json",
+      "scientist1/science/esmfold_mechanism/outputs/claim3_steer_v2_summary.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "结果普遍带显著性检验，稳健性总体可接受。",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/science/esmfold_mechanism/outputs/claim3_mutation_summary.json",
+      "scientist1/science/esmfold_mechanism/outputs/claim3_steer_v2_summary.json",
+      "scientist1/science/esmfold_mechanism/results.md"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C3 用 steering 缺乏random steering对照。导致对实验结果太乐观",
+    "score": 3,
+    "evidence_files": [
+      "scientist1/science/esmfold_mechanism/code/intervene.py",
+      "scientist1/science/esmfold_mechanism/code/03_claim1_patch.py",
+      "scientist1/science/esmfold_mechanism/code/04_claim2_pathway.py",
+      "scientist1/science/esmfold_mechanism/code/05b_claim3_mutation.py"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "results.md 的关键数字与落盘 summary 逐一吻合。无无源或疑似回填数字。",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/science/esmfold_mechanism/results.md",
+      "scientist1/science/esmfold_mechanism/outputs/claim1_summary.json",
+      "scientist1/science/esmfold_mechanism/outputs/claim2_summary.json",
+      "scientist1/science/esmfold_mechanism/outputs/claim3_mutation_summary.json",
+      "scientist1/science/esmfold_mechanism/outputs/claim3_steer_v2_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "results.md、summary JSON、figures 之间高度自洽。",
+    "score": 5,
+    "evidence_files": [
+      "scientist1/science/esmfold_mechanism/results.md",
+      "scientist1/science/esmfold_mechanism/outputs/claim1_summary.json",
+      "scientist1/science/esmfold_mechanism/outputs/claim3_summary.json",
+      "scientist1/science/esmfold_mechanism/outputs/claim3_steer_v2_summary.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Folding decisions for β-hairpin structures are localized in the early blocks of the folding trunk, and the sequence representation s is the active locus of that decision during this early window.",
+        "method": {
+          "justification": "用 activation patching（Causal Attribution 家族），并做成**双向**——既在 broken 序列上用 native 缓存救援（b←n），又在 native 上用 broken 缓存擦除（n←b），方法选取正确。",
+          "score": 5,
+          "evidence_files": [
+            "scientist1/science/esmfold_mechanism/code/03_claim1_patch.py",
+            "scientist1/science/esmfold_mechanism/code/intervene.py",
+            "scientist1/science/esmfold_mechanism/results.md"
+          ]
+        },
+        "experiment": {
+          "justification": "13 层扫描（0..47）× {s,z} × 双向，poly-Gly 反事实底物，DSSP-on-predicted 判定，s-vs-z 互为对照。判定 metric（救援/擦除 hairpin 比例）与 claim 严格对应。设计完整、层覆盖充分。",
+          "score": 5,
+          "evidence_files": [
+            "scientist1/science/esmfold_mechanism/code/03_claim1_patch.py",
+            "scientist1/science/esmfold_mechanism/outputs/claim1_summary.json",
+            "scientist1/science/esmfold_mechanism/outputs/claim1_patch.jsonl"
+          ]
+        },
+        "result": {
+          "justification": "s-patch(b←n) 在 block 0-6 救援率 100%、block16 降到 45%、block24 后 ≤5%；z-patch(b←n) 早期无效（10-15%）而 block24-47 升到 80-95%；两曲线在 ~block16-20 交叉。这与论文『sequence patch 早期有效、pairwise patch 晚期（~block25 起）有效、两阶段』的结论**定性完全一致**。",
+          "score": 5,
+          "evidence_files": [
+            "scientist1/science/esmfold_mechanism/outputs/claim1_summary.json",
+            "scientist1/science/esmfold_mechanism/results.md",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The early-block seq2pair pathway is the critical channel through which the β-hairpin folding decision is transferred from s into z.",
+        "method": {
+          "justification": "用 seq2pair 与 pair2seq 的**零消融**（intervene.py 把对应模块输出置零）在多个 block 窗口上对比",
+          "score": 5,
+          "evidence_files": [
+            "scientist1/science/esmfold_mechanism/code/04_claim2_pathway.py",
+            "scientist1/science/esmfold_mechanism/code/intervene.py",
+            "scientist1/science/esmfold_mechanism/results.md"
+          ]
+        },
+        "experiment": {
+          "justification": "用 4 个 12-block 窗口扫描，对seq2pair置零，方法总体合理",
+          "score": 5,
+          "evidence_files": [
+            "scientist1/science/esmfold_mechanism/outputs/claim2_summary.json",
+            "scientist1/science/esmfold_mechanism/code/04_claim2_pathway.py",
+            "scientist1/science/esmfold_mechanism/outputs/claim2_pathway.jsonl"
+          ]
+        },
+        "result": {
+          "justification": "结论与论文定性一致：**只有 seq2pair 消融会破坏 hairpin，pair2seq 消融在每个窗口乃至全 trunk 都中性**",
+          "score": 5,
+          "evidence_files": [
+            "scientist1/science/esmfold_mechanism/outputs/claim2_summary.json",
+            "scientist1/science/esmfold_mechanism/results.md",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Charge is a linearly encoded chemical feature in early blocks of ESMFold and causally influences β-hairpin formation (opposite-charge on facing strands favors pairing; same-charge increases cross-strand distance).",
+        "method": {
+          "justification": "：(a) 逐 block 线性电荷探针证可解码；(b) 早期多 block（0,2,4,6）注入探针得到的电荷方向做 steering",
+          "score": 4,
+          "evidence_files": [
+            "scientist1/science/esmfold_mechanism/code/05_claim3_charge.py",
+            "scientist1/science/esmfold_mechanism/code/05b_claim3_mutation.py",
+            "scientist1/science/esmfold_mechanism/outputs/claim3_direction.pt"
+          ]
+        },
+        "experiment": {
+          "justification": "判定 metric 用了**连续跨链 Cα-Cα 距离**。steer 向量从logistic探针权重取，而不是diff-mean.没有random-direction对照。",
+          "score": 2,
+          "evidence_files": [
+            "scientist1/science/esmfold_mechanism/code/05b_claim3_mutation.py",
+            "scientist1/science/esmfold_mechanism/outputs/claim3_steer_v2_summary.json",
+            "scientist1/science/esmfold_mechanism/outputs/claim3_summary.json",
+            "scientist1/science/esmfold_mechanism/outputs/claim3_mutation_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "探针每 block acc≈1.0（charge 线性可解码）但acc过高，很可能是学习了aa的身份信息而不是电荷信息；latent steering实验没有体现同号相斥异号相吸，且没有random对照组",
+          "score": 2,
+          "evidence_files": [
+            "scientist1/science/esmfold_mechanism/outputs/claim3_mutation_summary.json",
+            "scientist1/science/esmfold_mechanism/outputs/claim3_steer_v2_summary.json",
+            "scientist1/science/esmfold_mechanism/results.md",
+            "paper/science/esmfold_mechanism/paper.pdf"
+          ]
+        }
+      }
+    }
+  }
+}

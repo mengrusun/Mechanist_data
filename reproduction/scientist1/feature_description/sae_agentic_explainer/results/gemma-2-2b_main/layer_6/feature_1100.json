@@ -1,0 +1,412 @@
+{
+  "feature_idx": 1100,
+  "max_act_ref": 61.182289123535156,
+  "trigger_threshold": 12.236457824707031,
+  "sage": {
+    "candidates": [
+      "The feature may be mildly polysemantic around average-report language in biomedical prose: strongest on literal statistical 'mean', but with secondary sensitivity to semantically related average-summary phrasing such as 'average' or 'on average' when reporting cohort measurements.",
+      "The feature activates on the word/phrase 'mean' used as a statistical average in biomedical/scientific results text, especially templates like 'The mean age was X', 'Mean surgical time was X', or 'a mean of X'.",
+      "A narrower variant: the feature prefers concise results/table-style summary-statistic templates where 'mean' appears adjacent to a study variable and a numeric value, often biomedical measurements and sometimes decimal or \u00b1 notation."
+    ],
+    "top": "The feature may be mildly polysemantic around average-report language in biomedical prose: strongest on literal statistical 'mean', but with secondary sensitivity to semantically related average-summary phrasing such as 'average' or 'on average' when reporting cohort measurements.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "This feature activates on the word 'mean' when it introduces a reported average value for a clinical or scientific variable (e.g., age, time, score) in results-style prose.",
+            "positive_probes": [
+              "The mean age was 62 years.",
+              "Mean follow-up time was 18 months.",
+              "The mean score increased to 14.2.",
+              "Mean tumor diameter measured 3.1 centimeters.",
+              "The mean plasma glucose was 105 mg/dL."
+            ],
+            "positive_acts": [
+              51.367122650146484,
+              31.514827728271484,
+              51.3366584777832,
+              31.543813705444336,
+              51.39173126220703
+            ],
+            "distractor_probes": [
+              "The average age was 62 years.",
+              "What do you mean by baseline score?",
+              "Participants were older, meaning risks increased."
+            ],
+            "distractor_acts": [
+              40.16804122924805,
+              10.341327667236328,
+              10.341327667236328
+            ],
+            "score": 23.14726524353027
+          },
+          {
+            "hypothesis": "This feature responds to summary-statistics phrasing where a noun phrase like 'mean age' or 'mean surgical time' is followed by a numerical measurement, often with decimals or plus/minus notation.",
+            "positive_probes": [
+              "Mean age was 62.4 years.",
+              "Mean surgical time was 183.5 \u00b1 21.7 minutes.",
+              "Average tumor size measured 4.8 cm.",
+              "Median hospital stay was 7.0 days.",
+              "Mean BMI was 27.3 kg/m\u00b2."
+            ],
+            "positive_acts": [
+              31.63660430908203,
+              31.590192794799805,
+              26.354555130004883,
+              23.11743927001953,
+              31.685766220092773
+            ],
+            "distractor_probes": [
+              "The patients were older on average.",
+              "Surgery usually lasted several hours.",
+              "Age and operative time were recorded."
+            ],
+            "distractor_acts": [
+              40.92549133300781,
+              10.341330528259277,
+              10.341330528259277
+            ],
+            "score": 8.340860748291014
+          },
+          {
+            "hypothesis": "This feature detects formal academic writing that reports aggregate central tendency in study populations or experiments, including both capitalized sentence-initial 'Mean' and lowercase 'mean' after an article.",
+            "positive_probes": [
+              "Mean blood pressure was 128 across participants.",
+              "The mean reaction time was 450 milliseconds.",
+              "Mean scores differed significantly between treatment groups.",
+              "A mean tumor diameter of 3.2 cm was observed.",
+              "The mean age was 62 years at baseline."
+            ],
+            "positive_acts": [
+              31.514827728271484,
+              51.3366584777832,
+              31.652992248535156,
+              38.48230743408203,
+              51.3366584777832
+            ],
+            "distractor_probes": [
+              "Median blood pressure was 128 across participants.",
+              "Mean while, participants completed the follow-up survey.",
+              "The average mood improved after the intervention."
+            ],
+            "distractor_acts": [
+              23.155628204345703,
+              31.676301956176758,
+              40.08702850341797
+            ],
+            "score": 9.225035985310871
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature activates on the token/phrase 'mean' in scientific or clinical results prose when it reports an average measurement, especially in patterns like 'The mean age was...', 'Mean surgical time was...', or 'a mean of 13.6'.",
+            "positive_probes": [
+              "The mean age was 62 years.",
+              "Mean surgical time was 94 minutes.",
+              "Patients had a mean of 13.6 visits.",
+              "The mean tumor diameter measured 2.1 cm.",
+              "Average pain score had a mean of 4.8."
+            ],
+            "positive_acts": [
+              51.377750396728516,
+              31.5438175201416,
+              56.940025329589844,
+              51.24789047241211,
+              53.3431510925293
+            ],
+            "distractor_probes": [
+              "I mean the surgical team arrived early.",
+              "The median age was 62 years.",
+              "Mean arterial pressure was carefully monitored."
+            ],
+            "distractor_acts": [
+              10.341327667236328,
+              29.07378578186035,
+              31.606760025024414
+            ],
+            "score": 25.216569137573245
+          },
+          {
+            "hypothesis": "The feature may more narrowly prefer summary-statistic reporting templates where 'mean' is adjacent to a study variable and followed by a numeric measurement, often in concise table/results style and sometimes with decimals or \u00b1 notation.",
+            "positive_probes": [
+              "Mean age 42.7 \u0000b1 6.1 years.",
+              "Mean BMI 27.4 kg/m\u0000b2.",
+              "Mean systolic pressure 128.3 mmHg.",
+              "Mean glucose 5.6 mmol/L at baseline.",
+              "Mean tumor size 3.2 cm."
+            ],
+            "positive_acts": [
+              31.590192794799805,
+              31.59661293029785,
+              31.685766220092773,
+              31.529836654663086,
+              31.63660430908203
+            ],
+            "distractor_probes": [
+              "Median age was 43 years overall.",
+              "The average blood pressure increased slightly.",
+              "Age and BMI were measured at baseline."
+            ],
+            "distractor_acts": [
+              23.13218879699707,
+              40.00477600097656,
+              10.341327667236328
+            ],
+            "score": 7.1150384267171205
+          },
+          {
+            "hypothesis": "The feature is not just about academic prose in general; it is likely keyed to statistical-average language in biomedical reporting, with some secondary sensitivity to semantically similar average-report phrases such as 'average age' or 'on average'.",
+            "positive_probes": [
+              "The mean age was 62 years.",
+              "On average, patients received three cycles.",
+              "Average tumor size was 4.2 centimeters.",
+              "Mean follow-up duration was 18 months.",
+              "The cohort had an average BMI of 27."
+            ],
+            "positive_acts": [
+              51.31572723388672,
+              37.77889633178711,
+              26.380281448364258,
+              31.608760833740234,
+              42.33559036254883
+            ],
+            "distractor_probes": [
+              "Age varied widely across participants.",
+              "Patients generally completed three treatment cycles.",
+              "Tumor sizes ranged from two to six centimeters."
+            ],
+            "distractor_acts": [
+              10.341327667236328,
+              10.341327667236328,
+              10.341327667236328
+            ],
+            "score": 27.542523574829104
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "The feature activates on the word/phrase 'mean' used as a statistical average in biomedical/scientific results text, especially templates like 'The mean age was X', 'Mean surgical time was X', or 'a mean of X'.",
+            "positive_probes": [
+              "The mean age was 62 years.",
+              "Mean surgical time was 94 minutes.",
+              "Patients had a mean of 3.2 lesions.",
+              "The mean follow-up was 18 months.",
+              "A mean of 12 lymph nodes were removed."
+            ],
+            "positive_acts": [
+              51.31572723388672,
+              31.607938766479492,
+              56.6932258605957,
+              51.269630432128906,
+              38.55302429199219
+            ],
+            "distractor_probes": [
+              "The median age was 62 years.",
+              "She did not mean to miss surgery.",
+              "Average recovery time was 10 days."
+            ],
+            "distractor_acts": [
+              29.07378578186035,
+              10.341327667236328,
+              26.348426818847656
+            ],
+            "score": 23.966729227701823
+          },
+          {
+            "hypothesis": "A narrower variant: the feature prefers concise results/table-style summary-statistic templates where 'mean' appears adjacent to a study variable and a numeric value, often biomedical measurements and sometimes decimal or \u00b1 notation.",
+            "positive_probes": [
+              "Mean systolic BP 128.4 \u0000b1 12.1 mmHg.",
+              "Table 2: mean glucose 5.6 mmol/L.",
+              "Mean BMI 27.3 in the treatment arm.",
+              "Mean heart rate 72.8 bpm at baseline.",
+              "Mean LDL cholesterol 3.1 \u0000b1 0.7 mmol/L."
+            ],
+            "positive_acts": [
+              31.625314712524414,
+              51.20413589477539,
+              31.658811569213867,
+              31.658811569213867,
+              31.78849220275879
+            ],
+            "distractor_probes": [
+              "Median systolic BP was 128 mmHg overall.",
+              "The average patient improved after treatment.",
+              "Blood pressure and glucose were reported in Table 2."
+            ],
+            "distractor_acts": [
+              23.155628204345703,
+              40.16930389404297,
+              10.334461212158203
+            ],
+            "score": 11.033982086181638
+          },
+          {
+            "hypothesis": "The feature may be mildly polysemantic around average-report language in biomedical prose: strongest on literal statistical 'mean', but with secondary sensitivity to semantically related average-summary phrasing such as 'average' or 'on average' when reporting cohort measurements.",
+            "positive_probes": [
+              "The mean serum sodium was 139 mmol/L.",
+              "Average tumor diameter was 2.1 centimeters at baseline.",
+              "On average, patients gained 1.8 kilograms yearly.",
+              "The cohort's mean age was 64 years.",
+              "Mean fasting glucose measured 102 mg/dL across participants."
+            ],
+            "positive_acts": [
+              51.247901916503906,
+              26.375173568725586,
+              37.7385368347168,
+              51.67520523071289,
+              31.559497833251953
+            ],
+            "distractor_probes": [
+              "Median survival was 14 months after treatment.",
+              "Patients were generally healthy at enrollment.",
+              "Most subjects reported improved sleep quality."
+            ],
+            "distractor_acts": [
+              23.155628204345703,
+              10.334461212158203,
+              10.334461212158203
+            ],
+            "score": 25.11107953389486
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "82.5%). Added chemotherapy increased the complication severity significantly for the skin (P<0.05). The mean number of complications was 6.3+/-2.2 (range from 1 to 12). In this study",
+    "2). Cases included in the present study (*n*=310) were comparable to those excluded in terms of age (mean: 65.4 *vs* 66.1 years), but slightly different in gender (57 *",
+    "The bakery opened at seven every morning.",
+    "Small pebbles crunched under his boots on the path.",
+    "The lawyer objected on procedural grounds.",
+    "75190.g001}\n\nBaseline characteristics {#sec019}\n------------------------\n\nThe mean age of the study population was 5",
+    "The train from Milan arrived twenty minutes late.",
+    "postoperative arteriography. Nine of ten patients have had satisfactory results on follow-up from 5 to 99 months (mean 43 months), although two patients required operative revision to achieve this. The operative technique is described, including approach to the",
+    "He plotted the data on a log-log scale.",
+    "She whisked the eggs and folded them into the batter.",
+    "29 assessable patients are presented in [Table 6](#tbl6){ref-type=\"table\"}. The mean total body clearance values of irinotecan were similar across all three groups and no relevant differences in dose-normalised exposure",
+    "SMI. A meta-analysis of non-pharmacological interventions in people with SMI \\[[@CR14]\\] reported a mean reduction in weight of 3.12\u2009kg over a period of 8--24\u2009weeks. However,"
+  ],
+  "heldout_true_acts": [
+    54.87872314453125,
+    55.157318115234375,
+    10.340354919433594,
+    10.340354919433594,
+    10.340354919433594,
+    49.72410583496094,
+    10.340354919433594,
+    56.624324798583984,
+    10.368818283081055,
+    10.368818283081055,
+    55.83357238769531,
+    54.077476501464844
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "statistical measurements and mean values related to age and other characteristics",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 40.57361316680908,
+        "sentences": [
+          "The mean age was 42.7 years overall.",
+          "Average height measured 168 centimeters across participants.",
+          "Median income and mean age were reported separately.",
+          "Patients had a mean BMI of 27.3.",
+          "The cohort's average age at diagnosis was 61.",
+          "Mean blood pressure differed by age group.",
+          "Researchers calculated average weight, age, and cholesterol.",
+          "The sample showed a median age of 34."
+        ],
+        "activations": [
+          51.346561431884766,
+          26.290494918823242,
+          42.81330108642578,
+          56.84366226196289,
+          42.89259719848633,
+          31.824888229370117,
+          39.15590286254883,
+          33.4214973449707
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9707681274074428,
+        "spearman": 0.7860776758195905,
+        "preds": [
+          8.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          9.0,
+          0.0,
+          7.0,
+          2.0,
+          0.0,
+          8.0,
+          8.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "The feature may be mildly polysemantic around average-report language in biomedical prose: strongest on literal statistical 'mean', but with secondary sensitivity to semantically related average-summary phrasing such as 'average' or 'on average' when reporting cohort measurements.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 38.82687449455261,
+        "sentences": [
+          "The mean tumor size was 3.2 cm.",
+          "Mean serum glucose was elevated at baseline.",
+          "On average, patients lost 5 kilograms.",
+          "The average heart rate was 78 bpm.",
+          "Mean survival time reached 14 months.",
+          "Average daily dose was 250 milligrams.",
+          "The cohort had a mean age of 61.",
+          "On average, lesions measured 12 millimeters."
+        ],
+        "activations": [
+          51.39142990112305,
+          31.59661293029785,
+          37.77143478393555,
+          40.11886978149414,
+          31.569246292114258,
+          26.342329025268555,
+          54.0800666809082,
+          37.7450065612793
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9927362442379414,
+        "spearman": 0.7707139547199077,
+        "preds": [
+          10.0,
+          9.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          9.0,
+          0.0,
+          0.0,
+          10.0,
+          10.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 60.76446318626404,
+  "layer": 6,
+  "sae_info": {
+    "layer": 6,
+    "width": "16k",
+    "l0": 70,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_6/width_16k/average_l0_70/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "statistical measurements and mean values related to age and other characteristics"
+}

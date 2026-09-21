@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The primary causal question is well aligned with the intervention: the plan will \"Importance-resample each teacher's 10,000 sequences so its feature battery matches the no-trait control\" and compare targeted removal with an \"untargeted perturbation of EQUAL statistical magnitude.\" Predictions are directional and unusually decidable, including \"accuracy preserved (within 3 pp) under shuffling but collapses to chance,\" partial-correlation thresholds, and a defense criterion of \">=50% suppression\" with \"<=2 pp utility loss\" and \">=10 pp more\" suppression than control; falling below these thresholds supplies clear refuting outcomes. Minor clarification remains around how the roughly 40 heterogeneous features are combined into one matching objective and what precisely constitutes a random direction of equal statistical magnitude, but these do not undermine the overall logical test.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is the custom instruction to \"Importance-resample each teacher's 10,000 sequences so its feature battery matches the no-trait control,\" especially constructing the equal-magnitude random-direction control; this is implementable with standard density-ratio weighting or constrained optimization, but the exact objective and distance metric still require engineering choices rather than being fully specified. The named Qwen2.5-7B and Llama-3.2-3B models, LoRA, logistic regression, gradient-boosted trees, bootstrap intervals, MMLU, and HumanEval exist and are supported by mature ML tooling. Resources are exceptionally concrete, including \"30,000 completions per condition,\" 10,000 retained examples, \"100 probes x 20 samples,\" at least 24 teachers, three seeds, and explicit LoRA and optimization settings. The refuting branch is runnable because the design includes no-trait, random-relabeling, held-out-teacher, marginal-resampling, mismatched-base, equal-magnitude untargeted, and utility controls, so chance-level decoding, weak partial correlation, or suppression within the null band can genuinely emerge.",
+      "score": 8
+    }
+  }
+}

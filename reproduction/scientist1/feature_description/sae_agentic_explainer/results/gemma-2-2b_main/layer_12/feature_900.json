@@ -1,0 +1,412 @@
+{
+  "feature_idx": 900,
+  "max_act_ref": 25.66938018798828,
+  "trigger_threshold": 5.133876037597656,
+  "sage": {
+    "candidates": [
+      "A narrower polysemantic component may respond to member-access/code tokens like `this.` at the beginning of a fresh code statement, especially near chunk starts or line/statement boundaries.",
+      "The feature may specifically detect text immediately following `<<<bos>>>` when the new chunk begins in a distinctive register such as code, legal/news boilerplate, citations, or markup/comments.",
+      "Activation is driven by a hard document/chunk boundary token, especially the exact start-of-sequence marker `<<<bos>>>` or an equivalent abrupt reset into unrelated text."
+    ],
+    "top": "A narrower polysemantic component may respond to member-access/code tokens like `this.` at the beginning of a fresh code statement, especially near chunk starts or line/statement boundaries.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature activates at document/chunk boundaries marked by a beginning-of-sequence token, especially when a new article, legal opinion, patent, or post starts after unrelated preceding text.",
+            "positive_probes": [
+              "Begin new article: The court reverses the judgment below.",
+              "Start of post: Today I\u2019m launching an unrelated project.",
+              "New patent text begins: A widget comprising a flexible hinge.",
+              "Fresh opinion starts here: Justice Smith delivered the judgment.",
+              "Beginning of document: Chapter One introduces a different topic."
+            ],
+            "positive_acts": [
+              25.653839111328125,
+              25.653839111328125,
+              25.653839111328125,
+              25.653839111328125,
+              25.653839111328125
+            ],
+            "distractor_probes": [
+              "In the same article, the court later reversed itself.",
+              "This paragraph continues the patent description without restarting.",
+              "Today\u2019s post updates the project mentioned just above."
+            ],
+            "distractor_acts": [
+              25.718584060668945,
+              25.718584060668945,
+              25.718584060668945
+            ],
+            "score": -0.06474494934082031
+          },
+          {
+            "hypothesis": "The feature responds to sentence or statement terminators immediately followed by a new top-level declaration or assignment, such as a period before a JavaScript property access like `this.` or before a new code construct.",
+            "positive_probes": [
+              "End the call. this.value = 42;",
+              "Finish here. const result = compute();",
+              "Stop now. function init() { return; }",
+              "That concludes it. let count = items.length;",
+              "Sentence ends. this.render();"
+            ],
+            "positive_acts": [
+              25.653850555419922,
+              25.653850555419922,
+              25.653850555419922,
+              25.653850555419922,
+              25.653850555419922
+            ],
+            "distractor_probes": [
+              "Use this.value inside the same sentence.",
+              "End the call with this value tomorrow.",
+              "Finish here, then compute the result later."
+            ],
+            "distractor_acts": [
+              25.73185157775879,
+              25.73185157775879,
+              25.73185157775879
+            ],
+            "score": -0.07800102233886719
+          },
+          {
+            "hypothesis": "The feature detects abrupt format/domain transitions at the start of a fresh block, such as prose switching into headlines, YAML/HTML/comments, or metadata-heavy text right after a boundary marker.",
+            "positive_probes": [
+              "---\ntitle: Midnight Train, author: Lee",
+              "Chapter ended.\n# BREAKING: Markets Halted at Noon",
+              "She whispered goodbye.\n<!-- draft note: trim this scene -->",
+              "The story stops here.\nitems:\n- lantern\n- map",
+              "He closed the letter.\nPublished: 2024-11-03 | Tags: memoir, war"
+            ],
+            "positive_acts": [
+              25.66938018798828,
+              25.66938018798828,
+              25.66938018798828,
+              25.66938018798828,
+              25.66938018798828
+            ],
+            "distractor_probes": [
+              "# BREAKING: Markets Halted at Noon",
+              "Published: 2024-11-03 | Tags: memoir, war",
+              "items:\n- lantern\n- map"
+            ],
+            "distractor_acts": [
+              25.71857452392578,
+              25.71857452392578,
+              25.71857452392578
+            ],
+            "score": -0.0491943359375
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature is likely tied to a special boundary token or hard document-reset marker (e.g. BOS / start-of-chunk), often where a new unrelated document begins after prior text.",
+            "positive_probes": [
+              "Begin a fresh document with an unrelated topic now.",
+              "Start a new chunk; previous text is no longer relevant.",
+              "New article begins here after a hard reset.",
+              "Open a separate document from scratch on another subject.",
+              "This is the start of an entirely new passage."
+            ],
+            "positive_acts": [
+              25.653850555419922,
+              25.653850555419922,
+              25.653850555419922,
+              25.653850555419922,
+              25.653850555419922
+            ],
+            "distractor_probes": [
+              "Continue the same document with a new paragraph.",
+              "Restart the printer before opening the file again.",
+              "A fresh topic emerges gradually within the conversation."
+            ],
+            "distractor_acts": [
+              25.73185157775879,
+              25.73185157775879,
+              25.73185157775879
+            ],
+            "score": -0.07800102233886719
+          },
+          {
+            "hypothesis": "The feature may detect transitions immediately after a hard boundary into a new formatting regime or domain, such as prose\u2192code, prose\u2192legal/news text, or text\u2192markup/comments.",
+            "positive_probes": [
+              "After the explanation, begin with: `for(i=0;i<n;i++)`",
+              "The article ends; next line starts: Whereas, the parties agree.",
+              "Plain text stops here: <!-- navigation menu begins -->",
+              "Following her note, he pasted: SELECT * FROM accounts;",
+              "Narrative breaks, then appears: Section 1. Definitions and Scope."
+            ],
+            "positive_acts": [
+              25.698802947998047,
+              25.698802947998047,
+              25.698802947998047,
+              25.698802947998047,
+              25.698802947998047
+            ],
+            "distractor_probes": [
+              "He explained the code snippet in plain English only.",
+              "The contract summary remains ordinary prose throughout.",
+              "A comment about markup appears inside the paragraph."
+            ],
+            "distractor_acts": [
+              25.718584060668945,
+              25.718584060668945,
+              25.718584060668945
+            ],
+            "score": -0.019781112670898438
+          },
+          {
+            "hypothesis": "The feature may be polysemantic with another component for starts of fresh code statements near object/member access or top-level declarations, especially right after a chunk break or statement boundary.",
+            "positive_probes": [
+              "After the blank line, obj.method() starts a new statement.",
+              "Chunk break here: user.profile updates on the next line.",
+              "Fresh statement begins with config.value after the separator.",
+              "Right after the boundary, data.items.push(x) executes.",
+              "New top-level declaration follows: const api = client.service;"
+            ],
+            "positive_acts": [
+              25.653846740722656,
+              25.653846740722656,
+              25.653846740722656,
+              25.653846740722656,
+              25.653846740722656
+            ],
+            "distractor_probes": [
+              "Inside the expression, obj.method() continues without a boundary.",
+              "The paragraph mentions object access, not code statements.",
+              "After the separator, the function keeps running mid-statement."
+            ],
+            "distractor_acts": [
+              25.718584060668945,
+              25.718584060668945,
+              25.718584060668945
+            ],
+            "score": -0.06473731994628906
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Activation is driven by a hard document/chunk boundary token, especially the exact start-of-sequence marker `<<<bos>>>` or an equivalent abrupt reset into unrelated text.",
+            "positive_probes": [
+              "<<<bos>>> Suddenly, a completely different article begins here.",
+              "<<<bos>>> New chapter starts; prior context is abruptly discarded.",
+              "Random notes end. <<<bos>>> Fresh unrelated transcript opens now.",
+              "Page footer appears, then <<<bos>>> an entirely new document.",
+              "<<<bos>>> Reset: switch immediately to a different topic."
+            ],
+            "positive_acts": [
+              25.653839111328125,
+              25.653839111328125,
+              25.653839111328125,
+              25.653839111328125,
+              25.653839111328125
+            ],
+            "distractor_probes": [
+              "At the beginning of the essay, the argument starts.",
+              "A new paragraph begins, but the topic continues smoothly.",
+              "He wrote the symbol <<<bos>>> in his notebook."
+            ],
+            "distractor_acts": [
+              25.718584060668945,
+              25.718584060668945,
+              25.718584060668945
+            ],
+            "score": -0.06474494934082031
+          },
+          {
+            "hypothesis": "The feature may specifically detect text immediately following `<<<bos>>>` when the new chunk begins in a distinctive register such as code, legal/news boilerplate, citations, or markup/comments.",
+            "positive_probes": [
+              "<<<bos>>> for(int i=0;i<n;i++) return sum;",
+              "<<<bos>>> Whereas the Parties agree as follows.",
+              "<<<bos>>> Reuters \u2014 Updated 14:32 GMT, London.",
+              "<<<bos>>> [1] Smith et al., 2021, Nature.",
+              "<<<bos>>> <!-- navigation menu begins here -->"
+            ],
+            "positive_acts": [
+              25.698802947998047,
+              25.698802947998047,
+              25.698802947998047,
+              25.698802947998047,
+              25.698802947998047
+            ],
+            "distractor_probes": [
+              "We discuss code style and legal language generally.",
+              "The article mentions Reuters and several citations.",
+              "A comment about markup appears mid-paragraph."
+            ],
+            "distractor_acts": [
+              25.73185157775879,
+              25.73185157775879,
+              25.73185157775879
+            ],
+            "score": -0.03304862976074219
+          },
+          {
+            "hypothesis": "A narrower polysemantic component may respond to member-access/code tokens like `this.` at the beginning of a fresh code statement, especially near chunk starts or line/statement boundaries.",
+            "positive_probes": [
+              "this.value = computeTotal();",
+              "this.name = userInput.trim();",
+              "this.count++;",
+              "this.items.push(newItem);",
+              "this.render();"
+            ],
+            "positive_acts": [
+              25.718584060668945,
+              25.718584060668945,
+              25.718584060668945,
+              25.718584060668945,
+              25.718584060668945
+            ],
+            "distractor_probes": [
+              "const thisValue = computeTotal();",
+              "that.value = computeTotal();",
+              "Use this value at startup."
+            ],
+            "distractor_acts": [
+              25.731855392456055,
+              25.731855392456055,
+              25.731855392456055
+            ],
+            "score": -0.013271331787109375
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "pattern, pagesize);\n\n}\n\nAs shown in above code we will get all dadta into \"scanresult\".\n\n<bos>Soluble di- and aminopeptidases in Escherichia K-12",
+    "backed up every night, it\u2019s a good idea to store your most important files on your network drive (\"G drive\").<bos>Ingeg\u00e4rd T\u00f6pel\n\nIngeg\u00e4rd Margareta T\u00f6pel (13 May 1906 \u2013",
+    "Small pebbles crunched under his boots on the path.",
+    "Two children played chess on a wooden bench.",
+    "The mountain trail wound past three small lakes.",
+    "do\n   # Extract the first word of \"$ac_prog\", so it can be a program name with args.\n<bos>Not your usual blog",
+    "The engine cooled after the long climb.",
+    "of Chicago Press, 2015.\n\nCategory:Broadcast journalism\n Broadcasting\nBroadcasting\nCategory:Television terminology<bos><!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w",
+    "She whisked the eggs and folded them into the batter.",
+    "The train from Milan arrived twenty minutes late.",
+    "used to illustrate this story is Alexander Keus. If you'd like to see more photos of him, click here.<bos>Q:\n\nUnderstanding difference in unix epoch time via Python vs. InfluxDB\n\nI've been trying to figure out how",
+    "by the frame for movement with it and for rotation and lateral movement.<bos>{\n    \"id\": \"draft04.json\",\n    \"$schema\": \"draft04.json\","
+  ],
+  "heldout_true_acts": [
+    25.74472427368164,
+    25.74472427368164,
+    25.74472427368164,
+    25.74472427368164,
+    25.74472427368164,
+    25.74472427368164,
+    25.74472427368164,
+    25.74472427368164,
+    25.64727783203125,
+    25.64727783203125,
+    25.64727783203125,
+    25.64727783203125
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "instances of standalone \"this.\"",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 25.718584060668945,
+        "sentences": [
+          "Please read this.",
+          "I can prove this.",
+          "Nobody expected this.",
+          "They keep repeating this.",
+          "She remembered this.",
+          "Do not ignore this.",
+          "Scientists still debate this.",
+          "We should discuss this."
+        ],
+        "activations": [
+          25.718584060668945,
+          25.718584060668945,
+          25.718584060668945,
+          25.718584060668945,
+          25.718584060668945,
+          25.718584060668945,
+          25.718584060668945,
+          25.718584060668945
+        ]
+      },
+      "predictive": {
+        "pearson": 0.0,
+        "spearman": 0.0,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "A narrower polysemantic component may respond to member-access/code tokens like `this.` at the beginning of a fresh code statement, especially near chunk starts or line/statement boundaries.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 25.653839111328125,
+        "sentences": [
+          "this.value = 42;",
+          "if (ready) this.start();",
+          "return this.result;",
+          "while (open) this.refresh();",
+          "try { this.connect(); }",
+          "console.log(this.name);",
+          "this.items.push(item);",
+          "await this.loadData();"
+        ],
+        "activations": [
+          25.653839111328125,
+          25.653839111328125,
+          25.653839111328125,
+          25.653839111328125,
+          25.653839111328125,
+          25.653839111328125,
+          25.653839111328125,
+          25.653839111328125
+        ]
+      },
+      "predictive": {
+        "pearson": -0.4082482904638631,
+        "spearman": -0.408248290463863,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 79.65793085098267,
+  "layer": 12,
+  "sae_info": {
+    "layer": 12,
+    "width": "16k",
+    "l0": 82,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_12/width_16k/average_l0_82/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "instances of standalone \"this.\""
+}

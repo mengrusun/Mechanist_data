@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-14",
+  "auditor": "llm-chat (gpt-5.4, shell env)",
+  "claim_id": "C1",
+  "linked_milestones": ["M6_C1_last_layer", "M7_C1_hidden", "M11_layer_granularity"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "P1a GT is dataset-structural (fc unit index = ImageNet class index by construction, not model output). P1b GT is an external broden-style vocabulary top-2 cosine gap — a paired within-component comparison, not circular. No model-output-as-GT detected."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Only standard L2 normalization for cosine similarity. No metric divided by model's own max/mean/prediction statistics. Delta_pure and delta_sep are absolute or relative to independently-derived baselines."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All C1 result files exist at claimed paths. Numbers match tracker: M6 k=16 top1_purity=0.898 delta_pure=0.897 p=1.89e-270; M7 k=16 layer4 delta_sep=0.02015 p=0.0. All tracker rows DONE."
+    },
+    "dead_code": {
+      "status": "warn",
+      "details": "All metric functions are called. Minor documentation mismatch: m7 docstring says 'matched-control test' but implementation computes top-1 vs. top-2 best cosine gap on same vocabulary. Not dead code; a naming imprecision."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "Claim says 'every component c in a trained vision model' but only ResNet-50 tested (2000 sampled components). P3 cross-model (M12) SKIPPED by user directive 2026-07-14 and disclosed. Scope overstatement is documented but not corrected in claim header."
+    },
+    "eval_type": "real_gt (P1a) + synthetic_proxy (P1b/P1c via external broden-style vocab)"
+  }
+}

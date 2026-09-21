@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-14",
+  "auditor": "executor (Claude Sonnet 4.6) + evidence review",
+  "claim_id": "C2",
+  "linked_milestones": ["M2", "M3", "M4"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "GSM8K: dataset answer field via #### separator. SocialIQA: dev-labels.lst dataset file. MedQA: answer_idx from jsonl dataset file. All three tasks use dataset-provided GT. No model output used.",
+      "evidence": ["scripts/run_prefix_eval.py:34-43", "scripts/run_prefix_eval.py:47-63", "scripts/run_prefix_eval.py:66-79"]
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "MCQ accuracy = n_correct/n_items. No model-derived normalization. Spread = max(acc)-min(acc) over dataset-evaluated accuracies.",
+      "evidence": ["scripts/run_prefix_eval.py:338-348", "scripts/analyze_c3.py:155-178"]
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "M3 SocialIQA (26 files) and MedQA (26 files) result files exist per tracker (status=done, spread values reported). M4 analysis exists at reports/M4_c3_analysis.json. WARN: spread comparison conflates CoT (GSM8K) vs MCQ log-likelihood (SocialIQA, MedQA) evaluation modes — a known confound noted in EXPERIMENT_RESULTS.md. Numbers match tracker (spread_social=0.030, spread_math=0.186, spread_factual=0.028).",
+      "evidence": ["runs/M3/*.json (52 files expected)", "reports/M4_c3_analysis.json", "refine-logs/EXPERIMENT_RESULTS.md:101-108"]
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "C2 spread computation in analyze_c3.py:155-178 is called in main() and output written to JSON. No dead code.",
+      "evidence": ["scripts/analyze_c3.py:155-186"]
+    },
+    "scope": {
+      "status": "warn",
+      "details": "26 conditions × 500 items × 2 tasks = 26,000 evaluations — adequate quantity. WARN: evaluation mode differs across compared tasks (CoT generation vs MCQ log-likelihood), introducing a confound for cross-task spread comparison. The much larger GSM8K spread is partly explained by CoT variance, not solely by emotional framing effects.",
+      "evidence": ["refine-logs/EXPERIMENT_RESULTS.md:101-108", "scripts/run_prefix_eval.py:306-348"]
+    },
+    "eval_type": "real_gt (mixed modes: CoT for GSM8K, MCQ log-likelihood for SocialIQA and MedQA)"
+  }
+}

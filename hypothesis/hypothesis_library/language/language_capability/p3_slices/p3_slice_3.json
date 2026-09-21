@@ -1,0 +1,566 @@
+[
+  {
+    "index": 30,
+    "Name": "affect_labeling_debiasing",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core claims: (1) an LLM can benefit from affect labeling as a debiasing intervention, (2) the effect is opposite to existing emotion-steering work because it reduces emotion's influence rather than amplifying/injecting it, (3) the effect is selective to affect-biased judgments versus length-matched controls/reappraisal, and (4) the mechanism is mediated by a deflatable affect representation. This is a genuinely new regulatory framing and causal test relative to prior emotion steering / emotion-circuit work. The setting is not brand-new, but the question is meaningfully different enough to be novel if executed carefully. The delta from closest prior work is concrete: from probing/steering emotion representations to testing whether explicit emotion naming suppresses their downstream causal impact on reasoning.",
+      "revision_notes": [
+        "State the exact prior-work delta more sharply: 'we test the opposite causal direction of emotion steering' and separate it from generic sentiment detection.",
+        "Clarify whether the novelty is the phenomenon, the mechanism, or the benchmark; right now it is split across all three.",
+        "Pre-register the non-obvious comparison against reappraisal and non-affect labeling to show the claim is not just 'extra deliberation helps'.",
+        "Tighten the claim that mediation by an affect direction is a new mechanistic finding rather than a standard probing result."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether naming emotion in LLM inputs reduces affect-driven judgment errors. If true, it matters to interpretability, emotion/safety research, and any downstream system exposed to emotionally framed inputs, especially triage or decision support. The strongest one-line case: affect labeling could become a simple, general debiasing prompt for emotion-laden inputs. Uptake is plausible because it is actionable and easy to test; even a null result would be informative for whether human affect-labeling transfers to LLMs. That said, the practical reach is somewhat bounded because the effect may be niche, model-specific, or small, and the proposal does not yet establish broad application value beyond a few framed tasks.",
+      "revision_notes": [
+        "Add a clearer application story: where affect-labeled debiasing would be used in deployed LLM systems.",
+        "Include an explicit 'so what if null?' argument for interpretability and human-AI transfer claims.",
+        "Broaden the downstream relevance beyond clinical triage to safety-critical or high-stakes decision support.",
+        "Specify what behavior would actually change in practice if the effect holds, not just that the metric improves."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The hypothesis is testable but still somewhat underspecified. Main gaps: 'affect-driven errors' and 'affect representation' are broad; mediation via probing plus activation steering can easily overstate causal interpretation; and the proposal risks confounding labeling with added deliberation, extra tokens, or instruction-following. The experiment plan is decent and mostly feasible, but it needs stronger controls, clearer task construction, and better identification of the mechanism. Related work is positioned well enough, but the mechanistic claim will be hard to defend without more rigorous causal tests. If the effect is real and robust, this could be a serious venue paper; as written, it needs tighter scope and stronger falsifiability.",
+      "revision_notes": [
+        "Define the target phenomenon precisely: what counts as an affect-driven error, and how it differs from generic difficulty or sentiment effects.",
+        "Add stronger controls for deliberation and token budget, not just non-affect labeling.",
+        "Replace 'mediated by a locatable affect representation' with a more careful causal claim and specify the identification strategy.",
+        "Include ablations across task types, model families, and prompt formats to test robustness and boundary conditions.",
+        "Add negative controls where emotion words are present but irrelevant, to show selectivity.",
+        "Specify statistical tests, stopping criteria, and effect-size thresholds for each experiment."
+      ]
+    },
+    "revision_notes": [
+      "State the exact prior-work delta more sharply: 'we test the opposite causal direction of emotion steering' and separate it from generic sentiment detection.",
+      "Clarify whether the novelty is the phenomenon, the mechanism, or the benchmark; right now it is split across all three.",
+      "Pre-register the non-obvious comparison against reappraisal and non-affect labeling to show the claim is not just 'extra deliberation helps'.",
+      "Tighten the claim that mediation by an affect direction is a new mechanistic finding rather than a standard probing result.",
+      "Add a clearer application story: where affect-labeled debiasing would be used in deployed LLM systems.",
+      "Include an explicit 'so what if null?' argument for interpretability and human-AI transfer claims.",
+      "Broaden the downstream relevance beyond clinical triage to safety-critical or high-stakes decision support.",
+      "Specify what behavior would actually change in practice if the effect holds, not just that the metric improves.",
+      "Define the target phenomenon precisely: what counts as an affect-driven error, and how it differs from generic difficulty or sentiment effects.",
+      "Add stronger controls for deliberation and token budget, not just non-affect labeling.",
+      "Replace 'mediated by a locatable affect representation' with a more careful causal claim and specify the identification strategy.",
+      "Include ablations across task types, model families, and prompt formats to test robustness and boundary conditions.",
+      "Add negative controls where emotion words are present but irrelevant, to show selectivity.",
+      "Specify statistical tests, stopping criteria, and effect-size thresholds for each experiment."
+    ]
+  },
+  {
+    "index": 31,
+    "Name": "curse_of_knowledge_teaching",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core novel claims are: (1) LLM explanations exhibit a curse-of-knowledge effect measured by downstream learner gains, (2) teaching quality worsens as teacher topic competence rises, and (3) an internal learner-knowledge representation can be located and causally steered to improve teaching. The behavioral question is crowded in recent LLM teaching/tutoring and ToM work, so the novelty is mostly in the specific curse-of-knowledge framing plus the mechanistic causal-intervention angle, not in the general task. The closest prior family is LLM pedagogical steering / simulated-learner teaching / mentalizing-in-teaching; the delta is moving from prompt-level adaptation to probing and intervening on an internal learner model, with a downstream learning-gain metric.",
+      "revision_notes": [
+        "State explicitly what is new relative to EducationQ, PEARL, and 'Do LLMs Mentalize When They Teach?' by naming the exact behavioral gap and why existing metrics cannot test it.",
+        "Tighten the novelty claim around the causal-mechanistic contribution: define the learner-model direction, how it differs from generic simplicity/verbosity, and why this is not just another steering prompt.",
+        "Specify whether the expertise-worsens-teaching finding is a new phenomenon or a re-analysis of known expert-blind-spot effects in LLMs; if re-analysis, present it as a novel setting/result rather than a theory claim.",
+        "Add a crisp statement of the problem definition delta: 'default audience-agnostic explanations' vs 'teaching with explicit learner state inference.'"
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The problem under study is whether LLMs give audience-agnostic, expert-biased explanations that harm learner gains, and whether this can be fixed by modeling the learner. Who cares: tutoring-system builders, education researchers, interpretability/ToM researchers, and safety-critical education contexts like patient instruction. If true, serious practitioners would likely change how they prompt, evaluate, and instrument LLM tutors, because the result directly ties explanation style to downstream learning outcomes. The strongest one-line case is: if LLMs systematically teach worse as they know more, then current 'better model = better tutor' assumptions are unsafe and misleading.",
+      "revision_notes": [
+        "Add a concrete downstream use case beyond patient education (e.g., classroom tutoring, customer support, workplace training) to broaden applicability.",
+        "Quantify the practical consequence in the abstract/introduction: what magnitude of learning-gain delta would justify changing deployment or evaluation practice.",
+        "Separate 'phenomenon discovery' from 'system fix' and explain which audiences would adopt the causal learner-model steering result versus just the behavioral warning.",
+        "Clarify whether the result changes evaluation benchmarks for LLM tutors, not just model behavior in a lab setting."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is testable and reasonably scoped, but several claims are too broad or under-specified. Main gaps: reliance on simulated learners risks shared-bias confounds; 'learner model' could reduce to length/simplicity/persona effects; the causal intervention and mediation story needs sharper operationalization; and the relationship between hidden-state decodability and actual causal role is not yet guaranteed. The experiments are directionally good—controls, multiple models, random-direction control, human-learner subset—but need stronger controls and clearer falsifiable criteria. If executed well, this could be a solid ML venue paper, especially as a behavior-plus-mechanism study.",
+      "revision_notes": [
+        "Define the primary hypothesis in strictly falsifiable terms, including the exact nulls for novice/expert interaction, probe performance, and steering effect.",
+        "Add stronger controls for verbosity, lexical simplicity, and prompt length in the predict-then-teach and steering experiments.",
+        "Specify the learner panel construction, how shared-bias artifacts are minimized, and how much human-learner validation is needed to support the main claim.",
+        "Separate correlation, decoding, and causality: make clear that probe AUROC alone does not establish a learner model, and add ablation/intervention tests that rule out generic knowledge, persona, or uncertainty directions.",
+        "Include an explicit baseline suite: prompt-only audience design, length-matched reflection, self-consistency, and generic simplification baselines.",
+        "State the exact statistical tests, effect sizes, and power assumptions for the 600-topic study and the patient-education case.",
+        "Clarify how 'teaching quality' is measured across domains and whether downstream questions are pre-registered or generated in a leakage-safe way."
+      ]
+    },
+    "revision_notes": [
+      "State explicitly what is new relative to EducationQ, PEARL, and 'Do LLMs Mentalize When They Teach?' by naming the exact behavioral gap and why existing metrics cannot test it.",
+      "Tighten the novelty claim around the causal-mechanistic contribution: define the learner-model direction, how it differs from generic simplicity/verbosity, and why this is not just another steering prompt.",
+      "Specify whether the expertise-worsens-teaching finding is a new phenomenon or a re-analysis of known expert-blind-spot effects in LLMs; if re-analysis, present it as a novel setting/result rather than a theory claim.",
+      "Add a crisp statement of the problem definition delta: 'default audience-agnostic explanations' vs 'teaching with explicit learner state inference.'",
+      "Add a concrete downstream use case beyond patient education (e.g., classroom tutoring, customer support, workplace training) to broaden applicability.",
+      "Quantify the practical consequence in the abstract/introduction: what magnitude of learning-gain delta would justify changing deployment or evaluation practice.",
+      "Separate 'phenomenon discovery' from 'system fix' and explain which audiences would adopt the causal learner-model steering result versus just the behavioral warning.",
+      "Clarify whether the result changes evaluation benchmarks for LLM tutors, not just model behavior in a lab setting.",
+      "Define the primary hypothesis in strictly falsifiable terms, including the exact nulls for novice/expert interaction, probe performance, and steering effect.",
+      "Add stronger controls for verbosity, lexical simplicity, and prompt length in the predict-then-teach and steering experiments.",
+      "Specify the learner panel construction, how shared-bias artifacts are minimized, and how much human-learner validation is needed to support the main claim.",
+      "Separate correlation, decoding, and causality: make clear that probe AUROC alone does not establish a learner model, and add ablation/intervention tests that rule out generic knowledge, persona, or uncertainty directions.",
+      "Include an explicit baseline suite: prompt-only audience design, length-matched reflection, self-consistency, and generic simplification baselines.",
+      "State the exact statistical tests, effect sizes, and power assumptions for the 600-topic study and the patient-education case.",
+      "Clarify how 'teaching quality' is measured across domains and whether downstream questions are pre-registered or generated in a leakage-safe way."
+    ]
+  },
+  {
+    "index": 32,
+    "Name": "strategic_vagueness_escape_hatch",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core claims that must be novel: (1) answer-content semantic specificity, not confidence wording or abstention, is a difficulty-gated behavioral axis; (2) models use reduced specificity as a self-protective strategy when anticipated error risk is high; (3) vague answers can mask recoverable correct knowledge, operationalized as a Knowledge-Masking Gap; (4) there exists a locatable, steerable commitment/specificity direction distinct from verbal uncertainty features; (5) suppressing that direction recovers hidden correct answers without merely increasing recklessness. Relative to the cited landscape and search summary, this is a real delta from VUF/calibration, ambiguity detection, and abstention work. The strongest novelty is the answer-content-specificity framing plus the masking-gap operationalization and VUF dissociation. The main limitation is that it is adjacent to the recent 'knowing but not showing' family and steering/probing work, so some pieces may read as a natural extension unless the dissociation is made airtight.",
+      "revision_notes": [
+        "State the 3-5 core novelty claims explicitly in the intro as claim/findings/mechanism/setting, not just in broad framing.",
+        "Sharpen the contrast table against VUF, abstention, ambiguity-detection, and 'knowing but not showing' papers with one-row deltas: output variable, mechanism, observable, intervention target.",
+        "Define precisely where novelty lives: behavioral finding (difficulty-gated specificity), measurement (Knowledge-Masking Gap), and mechanism (separable commitment direction).",
+        "Add at least one setting where answer-content specificity is uniquely consequential and not reducible to abstention/confidence, to strengthen the 'meaningfully different setting' case.",
+        "Pre-register failure conditions under which the work would collapse into existing uncertainty/calibration results, to show the claim is non-trivial rather than relabeling hedging."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is strategic underspecification of answer content that hides usable knowledge. Stakeholders include calibration/hallucination researchers, honesty and safety evaluators, and deployers in high-stakes advice settings where vague non-answers can be harmful. If true, the result could shift evaluation from confidence labels and abstention toward semantic specificity and hidden-knowledge recovery, which is meaningful. The strongest case is that models may already know the correct specific guidance yet default to vague content as an error-avoidance policy. However, the proposal's application reach is not yet fully demonstrated: it only includes a small high-stakes instance, and it remains unclear whether practitioners would materially change deployment policies absent stronger evidence that this happens frequently and harms outcomes. The 'so what' test is passed for parts of the safety/evals community, but less clearly for broader ML unless prevalence and downstream consequence are shown.",
+      "revision_notes": [
+        "Quantify the practical prevalence target up front: how often does masking occur on realistic tasks and how large must the gap be to matter operationally?",
+        "Expand the high-stakes evaluation from an 'instance' to a clearly scoped benchmark slice with decision-relevant outcomes, not just vagueness rate.",
+        "State concrete downstream actions that would change if the claim holds: eval metrics, RLHF reward design, abstention policies, or deployment monitoring.",
+        "Include a stronger argument for why either result matters: positive result changes calibration/eval practice; negative result rules out a popular interpretive story about hedging.",
+        "Add a cross-model or post-training comparison showing whether instruction tuning/RLHF amplifies or reduces masking, which would increase relevance to model developers."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is unusually concrete and testable, with explicit experiments, controls, and thresholds, but several technical gaps remain. The central construct 'anticipated error-risk' is underspecified: how it is measured without leakage or circularity is critical. 'Specificity' is also vulnerable to confounding with answer length, style, politeness, and task format. The Knowledge-Masking Gap is promising but forced commitment can create guessing, and hidden-state probes can overstate recoverable knowledge unless trained/evaluated very carefully. The mechanistic claim of a distinct commitment direction separable from VUF is ambitious and currently under-justified; cosine and AUROC alone may not establish causal distinctness. The clinical/legal component is too underspecified for serious claims. Overall, this could become a solid ML paper if executed well, but it needs tighter definitions, stronger controls, and clearer experimental design to support the mechanistic and strategic language.",
+      "revision_notes": [
+        "Define 'anticipated error-risk' operationally and ex ante, e.g., from independent model signals or held-out predictors, and ensure it is not tautologically derived from the same output being analyzed.",
+        "Specify the specificity metric in detail and control for verbosity/length/register; include adversarial examples where long answers are vague and short answers are specific.",
+        "Replace or supplement single-threshold success criteria with confidence intervals, mixed-effects models, and per-task/per-model analyses.",
+        "Strengthen the masking-gap design: compare forced commitment to temperature-matched second-sample baselines, majority-vote baselines, and answer-space-constrained guessing baselines.",
+        "For the probe, enforce strict train/test separation across topics/templates/models and report calibration, not just accuracy, to avoid probe overfitting artifacts.",
+        "Add causal controls for the commitment direction: matched-token/length interventions, VUF-direction subtraction, orthogonalization tests, and effects on unrelated capabilities.",
+        "Clarify the claim language around 'strategic' and 'self-protective' as behavioral shorthand unless you have evidence of optimization over explicit error costs.",
+        "Expand the high-stakes study with concrete datasets, annotation criteria for helpfulness/unsafe specificity, and domain-expert review.",
+        "Include key ablations: base vs instruction-tuned vs RLHF models, answerable vs ambiguous vs unanswerable, and tasks where specificity is irrelevant.",
+        "Reduce overclaiming: frame the paper as evidence for a specificity-linked masking behavior plus a candidate mechanism, not definitive proof of intent-like strategy."
+      ]
+    },
+    "revision_notes": [
+      "State the 3-5 core novelty claims explicitly in the intro as claim/findings/mechanism/setting, not just in broad framing.",
+      "Sharpen the contrast table against VUF, abstention, ambiguity-detection, and 'knowing but not showing' papers with one-row deltas: output variable, mechanism, observable, intervention target.",
+      "Define precisely where novelty lives: behavioral finding (difficulty-gated specificity), measurement (Knowledge-Masking Gap), and mechanism (separable commitment direction).",
+      "Add at least one setting where answer-content specificity is uniquely consequential and not reducible to abstention/confidence, to strengthen the 'meaningfully different setting' case.",
+      "Pre-register failure conditions under which the work would collapse into existing uncertainty/calibration results, to show the claim is non-trivial rather than relabeling hedging.",
+      "Quantify the practical prevalence target up front: how often does masking occur on realistic tasks and how large must the gap be to matter operationally?",
+      "Expand the high-stakes evaluation from an 'instance' to a clearly scoped benchmark slice with decision-relevant outcomes, not just vagueness rate.",
+      "State concrete downstream actions that would change if the claim holds: eval metrics, RLHF reward design, abstention policies, or deployment monitoring.",
+      "Include a stronger argument for why either result matters: positive result changes calibration/eval practice; negative result rules out a popular interpretive story about hedging.",
+      "Add a cross-model or post-training comparison showing whether instruction tuning/RLHF amplifies or reduces masking, which would increase relevance to model developers.",
+      "Define 'anticipated error-risk' operationally and ex ante, e.g., from independent model signals or held-out predictors, and ensure it is not tautologically derived from the same output being analyzed.",
+      "Specify the specificity metric in detail and control for verbosity/length/register; include adversarial examples where long answers are vague and short answers are specific.",
+      "Replace or supplement single-threshold success criteria with confidence intervals, mixed-effects models, and per-task/per-model analyses.",
+      "Strengthen the masking-gap design: compare forced commitment to temperature-matched second-sample baselines, majority-vote baselines, and answer-space-constrained guessing baselines.",
+      "For the probe, enforce strict train/test separation across topics/templates/models and report calibration, not just accuracy, to avoid probe overfitting artifacts.",
+      "Add causal controls for the commitment direction: matched-token/length interventions, VUF-direction subtraction, orthogonalization tests, and effects on unrelated capabilities.",
+      "Clarify the claim language around 'strategic' and 'self-protective' as behavioral shorthand unless you have evidence of optimization over explicit error costs.",
+      "Expand the high-stakes study with concrete datasets, annotation criteria for helpfulness/unsafe specificity, and domain-expert review.",
+      "Include key ablations: base vs instruction-tuned vs RLHF models, answerable vs ambiguous vs unanswerable, and tasks where specificity is irrelevant.",
+      "Reduce overclaiming: frame the paper as evidence for a specificity-linked masking behavior plus a candidate mechanism, not definitive proof of intent-like strategy."
+    ]
+  },
+  {
+    "index": 33,
+    "Name": "polarity_load_tracking",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core claims that would need to be novel: (1) performance degrades as a function of the number of simultaneously active negations, not just sentence-level negation presence; (2) negation is represented as a separable additive polarity flag attached to otherwise positive content; (3) a distinctive behavioral signature distinguishes this from generic difficulty, especially double-negation being easier than same-count independent negations and dominance of polarity-drop errors; (4) the polarity signal is locatable, decodable, and causally manipulable via patching/steering; (5) this matters in multi-step reasoning and a clinical decision setting. Relative to prior work, the broad intuition that negation increases reasoning/working-memory load is already substantially occupied by recent benchmarking and memory-bias papers, so the proposal cannot claim that framing as novel. The real delta is the specific parameterization by simultaneous active negation count, the additive-flag hypothesis with nontrivial behavioral signatures, the named polarity-drop failure mode, and especially the full location-plus-causal-intervention account. That is nontrivial and more specific than an obvious next step, but still somewhat adjacent to existing probing/WM and negation work rather than a wholly new problem or task.",
+      "revision_notes": [
+        "Reframe the novelty claim away from 'negation imposes load' and toward the specific mechanistic package: active-negation count scaling, additive polarity representation, polarity-drop signature, and causal rescue/induction.",
+        "Name the closest prior work family explicitly and state the exact delta sentence-by-sentence, especially versus multi-hop cognitive-load papers and negation-forgetting/probing papers.",
+        "Strengthen the non-obviousness of the additive-flag hypothesis by adding competing representational hypotheses and predicted distinguishing signatures.",
+        "Clarify whether the novelty is primarily a new finding, a mechanistic explanation, a benchmark design, or a causal interpretability result; right now these are blended.",
+        "If possible, add a more clearly new artifact such as a benchmark or controlled dataset release centered on active-negation load."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is failure to preserve negated facts through multi-step reasoning, leading to silent polarity reversals. People who would care include reasoning-robustness researchers, interpretability researchers, and safety/application domains like clinical NLP where negated findings can flip decisions. The strongest case is that silent negation loss is a compact, safety-relevant failure mode that may expose a broader memory-like bottleneck in LLM reasoning. If the result holds, follow-up work could build benchmarks, mitigation methods, and mechanistic analyses around polarity tracking; if it fails, that also constrains a popular working-memory-style explanation. This is more than a niche curiosity, but it is still somewhat specialized unless the proposal better demonstrates prevalence in practical settings and broader generalization beyond crafted reasoning chains. It could influence how researchers diagnose reasoning failures, though probably not shift the whole field unless the causal evidence is especially strong and general.",
+      "revision_notes": [
+        "Quantify the real-world stakes more concretely, especially in the clinical setting, with examples of decision consequences from polarity drops.",
+        "Broaden the application case beyond one high-stakes domain by naming additional settings where negation propagation matters, such as legal, policy, retrieval, or agent planning.",
+        "State explicitly what downstream research would change if the hypothesis is confirmed versus rejected.",
+        "Make the benchmark or released analysis tools part of the contribution so others can directly adopt and cite them.",
+        "Show that the phenomenon appears in realistic prompting/data distributions, not only in tightly controlled synthetic chains."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is unusually concrete and testable, with explicit hypotheses, controls, thresholds, and causal experiments. The core hypothesis is falsifiable, and the proposed controls for length/depth/surface form are thoughtful. However, there are important technical risks and some overreach. The 'separable additive polarity flag' claim is stronger than what the proposed evidence may actually establish; decodability plus patching does not by itself prove additive representation rather than correlated latent state. The double-negation comparison is promising but may still admit alternative explanations such as training frequency or logical simplification effects. The causal story needs sharper specification: where patching vectors come from, how they are identified independently of answer content, and how mediation is computed robustly. The proposal also relies heavily on bespoke thresholds (e.g., >=4pp, >=6pp, AUROC>=0.80) that read as arbitrary and could become success-criterion gaming rather than principled inference. Related work is directionally adequate but currently under-specific given the crowded nearby space. If executed well, this could be a solid mechanistic reasoning paper for a serious ML venue, but only if the claims are narrowed and the experimental logic is tightened to rule out generic difficulty/confidence confounds and probe leakage.",
+      "revision_notes": [
+        "Narrow the strongest claim from 'LLM represents negation as positive proposition plus additive polarity flag' to a more defensible operational hypothesis unless stronger identification tests are added.",
+        "Add explicit rival hypotheses and discriminating experiments: generic difficulty, uncertainty/confidence collapse, lexical 'not' tracking, training-frequency effects, and answer-content leakage.",
+        "Specify the intervention pipeline in detail: how polarity directions are estimated, at what token/proposition positions, how patching sources are chosen, and how contamination from answer information is prevented.",
+        "Replace arbitrary success thresholds with statistical power analysis, confidence intervals, preregistered model comparisons, and effect-size-based inference.",
+        "Strengthen the dataset design description with examples of item templates, human validation protocol, and how semantic equivalence is checked under minimal negation edits.",
+        "Add stronger controls for double negation, including logically equivalent reformulations without explicit negation markers, to distinguish representational additivity from surface familiarity.",
+        "Clarify the mediation analysis assumptions and whether probe degradation temporally precedes errors rather than merely correlating with them.",
+        "Tighten the related work section to specifically engage the most threatening recent papers on cognitive load, WM probing, negation forgetting, and structural negation probes."
+      ]
+    },
+    "revision_notes": [
+      "Reframe the novelty claim away from 'negation imposes load' and toward the specific mechanistic package: active-negation count scaling, additive polarity representation, polarity-drop signature, and causal rescue/induction.",
+      "Name the closest prior work family explicitly and state the exact delta sentence-by-sentence, especially versus multi-hop cognitive-load papers and negation-forgetting/probing papers.",
+      "Strengthen the non-obviousness of the additive-flag hypothesis by adding competing representational hypotheses and predicted distinguishing signatures.",
+      "Clarify whether the novelty is primarily a new finding, a mechanistic explanation, a benchmark design, or a causal interpretability result; right now these are blended.",
+      "If possible, add a more clearly new artifact such as a benchmark or controlled dataset release centered on active-negation load.",
+      "Quantify the real-world stakes more concretely, especially in the clinical setting, with examples of decision consequences from polarity drops.",
+      "Broaden the application case beyond one high-stakes domain by naming additional settings where negation propagation matters, such as legal, policy, retrieval, or agent planning.",
+      "State explicitly what downstream research would change if the hypothesis is confirmed versus rejected.",
+      "Make the benchmark or released analysis tools part of the contribution so others can directly adopt and cite them.",
+      "Show that the phenomenon appears in realistic prompting/data distributions, not only in tightly controlled synthetic chains.",
+      "Narrow the strongest claim from 'LLM represents negation as positive proposition plus additive polarity flag' to a more defensible operational hypothesis unless stronger identification tests are added.",
+      "Add explicit rival hypotheses and discriminating experiments: generic difficulty, uncertainty/confidence collapse, lexical 'not' tracking, training-frequency effects, and answer-content leakage.",
+      "Specify the intervention pipeline in detail: how polarity directions are estimated, at what token/proposition positions, how patching sources are chosen, and how contamination from answer information is prevented.",
+      "Replace arbitrary success thresholds with statistical power analysis, confidence intervals, preregistered model comparisons, and effect-size-based inference.",
+      "Strengthen the dataset design description with examples of item templates, human validation protocol, and how semantic equivalence is checked under minimal negation edits.",
+      "Add stronger controls for double negation, including logically equivalent reformulations without explicit negation markers, to distinguish representational additivity from surface familiarity.",
+      "Clarify the mediation analysis assumptions and whether probe degradation temporally precedes errors rather than merely correlating with them.",
+      "Tighten the related work section to specifically engage the most threatening recent papers on cognitive load, WM probing, negation forgetting, and structural negation probes."
+    ]
+  },
+  {
+    "index": 34,
+    "Name": "acquisition_prerequisite_gating",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core claims requiring novelty: (1) the observed LM acquisition timeline can be reframed as a causal prerequisite graph rather than a descriptive order; (2) surgical single-capability training-data ablation can selectively delay one capability while preserving downstream signal; (3) prerequisite-vs-parallel specificity, dose-response, and rescue can identify true gating edges; (4) per-edge gating strengths can be assembled into a sparse empirical skill tree stricter than temporal order. Relative to the search summary, this is meaningfully novel: prior work is largely descriptive about when capabilities emerge, or causal only for isolated constructions/curriculum effects. The closest prior family is developmental-order/emergence studies plus narrow causal-intervention work on specific constructions and curriculum learning. The actual delta is the move from temporal emergence to cross-capability causal dependency mapping. This is non-trivial, though it is adjacent to obvious next-step intervention work and depends heavily on whether the ablations really isolate capabilities.",
+      "revision_notes": [
+        "Name 3-5 concrete capability edges to test first (e.g., morphology->syntax, syntax->semantic composition) and justify why each is theoretically plausible and separable.",
+        "Define precisely what is novel beyond prior causal intervention on single constructions: cross-capability graph discovery, edge-specific rescue, and sparsity relative to temporal order.",
+        "Clarify whether the contribution is primarily a new finding, a new causal methodology, or a new problem formulation; state this explicitly.",
+        "Add one comparison to a simpler baseline causal view, e.g., general data quality degradation or training-speed slowdown, to sharpen the claimed delta."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether earlier linguistic capabilities are actual causal prerequisites for later ones during LM pretraining. Stakeholders include developmental-interpretability researchers, pretraining/curriculum/data-curation researchers, and cognitive scientists using LMs as acquisition models. Strongest case: if acquisition order reflects causal gating, then pretraining should be organized around prerequisites rather than treating emergence order as incidental. This is an important and reusable question, and even a null result would matter by arguing the timeline is not a skill tree. Likely uptake is moderate to strong in interpretability and language acquisition circles, with some downstream relevance to curriculum and dataset design. However, real-world application impact is somewhat indirect unless the proposal demonstrates actionable changes to training practice or scaling behavior beyond small models.",
+      "revision_notes": [
+        "State explicitly what practitioners would change if gating is confirmed: curriculum ordering, data filtering, synthetic augmentation, or capability-targeted remediation.",
+        "Add a concrete translational experiment showing whether skill-tree knowledge improves training efficiency or sample efficiency compared with standard training.",
+        "Specify which communities would cite this and for what use cases: developmental interpretability, curriculum learning, data curation, mechanistic studies, cognitive modeling.",
+        "Include the 'so what if null' argument more sharply: either outcome changes theory of emergence and informs whether intervention on prerequisite skills is worthwhile."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is testable and better specified than average, with explicit interventions, controls, dose-response, rescue, and seed counts. The central hypothesis is reasonably falsifiable. Main weaknesses are technical: capability-selective ablations are very hard to achieve without collateral damage; several operational definitions are underspecified (what counts as emergence, exact probes/benchmarks, how gating strength is computed, what parallel capabilities are); thresholds like 25% delay and 5pp ceiling drop seem arbitrary; discourse may be infeasible at the proposed scale; and the related work positioning is somewhat broad rather than specific on the most relevant intervention papers. The experiments could support a serious workshop or conference paper if executed well, but for a strong ML venue the design needs tighter measurement validity and stronger controls against generic training degradation/confounding.",
+      "revision_notes": [
+        "Operationalize each capability with at least two independent measurements: a probe and a behavioral/minimal-pair benchmark, and predefine the emergence criterion.",
+        "Specify exact ablation procedures and manipulation checks proving that targeted cues are disrupted while downstream cues and token counts are preserved.",
+        "Define 'parallel' controls rigorously and motivate them theoretically rather than treating them as arbitrary non-prerequisites.",
+        "Replace arbitrary success thresholds with preregistered statistical tests/effect-size estimation and confidence intervals across seeds.",
+        "Add controls for generic optimization slowdown: matched perplexity, training-loss trajectories, and non-linguistic corruption baselines.",
+        "State how Gating Strength is computed, normalized, and distinguished from simple delay or overall capability damage.",
+        "Narrow scope to 2-3 robust capability edges first; make discourse exploratory or remove it from primary claims.",
+        "Cite and contrast the closest causal-intervention papers more specifically to defend that this is not just a broader replication of existing intervention logic."
+      ]
+    },
+    "revision_notes": [
+      "Name 3-5 concrete capability edges to test first (e.g., morphology->syntax, syntax->semantic composition) and justify why each is theoretically plausible and separable.",
+      "Define precisely what is novel beyond prior causal intervention on single constructions: cross-capability graph discovery, edge-specific rescue, and sparsity relative to temporal order.",
+      "Clarify whether the contribution is primarily a new finding, a new causal methodology, or a new problem formulation; state this explicitly.",
+      "Add one comparison to a simpler baseline causal view, e.g., general data quality degradation or training-speed slowdown, to sharpen the claimed delta.",
+      "State explicitly what practitioners would change if gating is confirmed: curriculum ordering, data filtering, synthetic augmentation, or capability-targeted remediation.",
+      "Add a concrete translational experiment showing whether skill-tree knowledge improves training efficiency or sample efficiency compared with standard training.",
+      "Specify which communities would cite this and for what use cases: developmental interpretability, curriculum learning, data curation, mechanistic studies, cognitive modeling.",
+      "Include the 'so what if null' argument more sharply: either outcome changes theory of emergence and informs whether intervention on prerequisite skills is worthwhile.",
+      "Operationalize each capability with at least two independent measurements: a probe and a behavioral/minimal-pair benchmark, and predefine the emergence criterion.",
+      "Specify exact ablation procedures and manipulation checks proving that targeted cues are disrupted while downstream cues and token counts are preserved.",
+      "Define 'parallel' controls rigorously and motivate them theoretically rather than treating them as arbitrary non-prerequisites.",
+      "Replace arbitrary success thresholds with preregistered statistical tests/effect-size estimation and confidence intervals across seeds.",
+      "Add controls for generic optimization slowdown: matched perplexity, training-loss trajectories, and non-linguistic corruption baselines.",
+      "State how Gating Strength is computed, normalized, and distinguished from simple delay or overall capability damage.",
+      "Narrow scope to 2-3 robust capability edges first; make discourse exploratory or remove it from primary claims.",
+      "Cite and contrast the closest causal-intervention papers more specifically to defend that this is not just a broader replication of existing intervention logic."
+    ]
+  },
+  {
+    "index": 35,
+    "Name": "multilingual_cot_faithfulness",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims requiring novelty: (1) CoT faithfulness varies systematically with language dominance/pivot status, not just across models/tasks; (2) this faithfulness gap is dissociable from accuracy using accuracy-matched comparisons and right-answer-unfaithful rates; (3) multilingual reasoning decouples visible non-dominant-language CoT from internal computation routed through a dominant pivot; (4) a locatable 'CoT-reliance' direction mediates this gap and can be causally steered; (5) reduced faithfulness in non-dominant languages harms CoT-based monitoring. Based on the search summary, the raw behavioral claim that faithfulness varies by language is already substantially pre-empted by very recent multilingual CoT-faithfulness work using similar perturbation tests, and English-pivot multilingual reasoning is also adjacent prior art. The real delta is narrower and more interesting: tying effects to a dominance-gradient slope, rigorously separating faithfulness from accuracy, and especially the mechanistic location/mediation/steering story plus monitorability consequence. Relative to the proposal's own related work, the claim is overstated because it says 'first to test' language-gated faithfulness, which is no longer tenable. So novelty is moderate: the mechanism and dissociation pieces look non-trivial, but the headline finding is crowded.",
+      "revision_notes": [
+        "Rewrite the novelty claim to drop 'first to test whether faithfulness varies by language' and instead foreground the actual fresh contribution: dominance-gradient quantification, accuracy-dissociation, and mechanistic steering.",
+        "Add explicit positioning against the recent multilingual CoT-faithfulness paper: state exactly which claims are already known and what new hypothesis remains.",
+        "Make the language-dominance construct operational and non-obvious, e.g. predefine dominance using training-data proxies or independent proficiency measures rather than post hoc labels.",
+        "Strengthen the mechanistic novelty by specifying how the 'CoT-reliance direction' differs from generic confidence/difficulty/language-identity directions and why steering it is not an obvious activation-engineering extension."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether visible reasoning traces are causally trustworthy across languages, especially in multilingual models that may internally route through an English-like pivot. The stakeholders are the CoT-monitoring/safety community, multilingual NLP researchers, and practitioners deploying LLMs in non-English settings. The strongest case for importance is: if CoT is much less faithful outside dominant languages, then current reasoning-based interpretability and monitoring pipelines silently fail for many users. This is a real problem rather than a niche curiosity because multilingual deployment is widespread and safety/monitorability assumptions often inherit from English-only evidence. If the result holds, researchers may stop treating CoT monitorability as language-invariant, benchmark multilingual monitor recall, and build language-aware oversight tools. The direction-shifting potential is decent, particularly for safety and interpretability, though not maximal because practical consequences depend on effect size/generalization and some of the behavioral phenomenon is already adjacent in the literature. The 'so what?' test is passed mainly by the monitorability angle and the accuracy-dissociation: a null would reassure practitioners, while a positive result would change evaluation and safety practice in multilingual settings.",
+      "revision_notes": [
+        "State the concrete deployment scenarios affected: multilingual tutoring, customer support, regulated domains, and safety monitoring systems that inspect CoT or rationale-like traces.",
+        "Quantify expected practical harm in application terms, not just metric deltas—for example, missed monitor detections or false reassurance rates in non-dominant languages.",
+        "Clarify what researchers/practitioners would do differently under positive vs null outcomes, ideally as a decision table.",
+        "Broaden downstream relevance beyond CoT monitors by linking to auditing, red-teaming, evaluation design, and rationale-based human oversight in multilingual models."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is well structured, hypothesis-driven, and unusually concrete about experiments, controls, and success criteria. It has a falsifiable central hypothesis and includes reasonable threats such as competence confounds, trace length, translation artifacts, and random-direction controls. However, there are important technical gaps. The related-work positioning is already outdated/overclaimed relative to the search summary, which weakens credibility. The key latent constructs—'dominant language,' 'pivot-shaped,' and especially 'CoT-reliance direction'—are underspecified operationally. The mediation story risks overinterpretation: showing a projection drops in non-dominant languages and steering changes sensitivity does not by itself establish a unique causal mechanism rather than generic confidence, difficulty, or language-processing effects. The experiments are feasible but somewhat thin for the breadth of claims: ~900 translated items over multiple languages, tasks, and five models may be underpowered for slope claims, mediation, and steering across heterogeneous settings. The translation setup could confound reasoning difficulty and naturalness, especially for constructed logic and multihop tasks. Monitorability is promising but underspecified: what monitor architecture, training data, and language exposure? The proposal could be strong for a serious ML venue if executed very carefully and if the mechanistic claims hold, but as written the narrative overreaches relative to what the planned evidence can cleanly support.",
+      "revision_notes": [
+        "Define all core variables operationally before experimentation: language dominance metric, pivot proxy, faithfulness metric(s), decorative-CoT signature, and the exact monitor model/training regime.",
+        "Update related work and narrow the central claim so the paper does not hinge on a scooped behavioral finding.",
+        "Add stronger controls for competence and translation confounds: native-authored or independently verified multilingual test sets, paraphrase controls, and same-language answer-only baselines.",
+        "Expand the experimental design or narrow scope: either increase sample size substantially for reliable slope/mediation estimation or reduce the number of tasks/models/languages to support deeper analysis.",
+        "For the mechanistic section, include adversarial controls against alternative explanations: compare against confidence, logit-margin, language-ID, and difficulty directions; test layer specificity and cross-model transfer.",
+        "Specify the causal steering protocol in enough detail to judge validity: intervention site, dose schedule, preservation metrics, and failure cases.",
+        "Clarify the monitorability experiment with train/test language splits and whether degradation is due to monitor weakness vs trace unfaithfulness.",
+        "Tone down causal language around 'mediates' unless the analysis supports formal mediation assumptions; otherwise frame it as a candidate mechanism."
+      ]
+    },
+    "revision_notes": [
+      "Rewrite the novelty claim to drop 'first to test whether faithfulness varies by language' and instead foreground the actual fresh contribution: dominance-gradient quantification, accuracy-dissociation, and mechanistic steering.",
+      "Add explicit positioning against the recent multilingual CoT-faithfulness paper: state exactly which claims are already known and what new hypothesis remains.",
+      "Make the language-dominance construct operational and non-obvious, e.g. predefine dominance using training-data proxies or independent proficiency measures rather than post hoc labels.",
+      "Strengthen the mechanistic novelty by specifying how the 'CoT-reliance direction' differs from generic confidence/difficulty/language-identity directions and why steering it is not an obvious activation-engineering extension.",
+      "State the concrete deployment scenarios affected: multilingual tutoring, customer support, regulated domains, and safety monitoring systems that inspect CoT or rationale-like traces.",
+      "Quantify expected practical harm in application terms, not just metric deltas—for example, missed monitor detections or false reassurance rates in non-dominant languages.",
+      "Clarify what researchers/practitioners would do differently under positive vs null outcomes, ideally as a decision table.",
+      "Broaden downstream relevance beyond CoT monitors by linking to auditing, red-teaming, evaluation design, and rationale-based human oversight in multilingual models.",
+      "Define all core variables operationally before experimentation: language dominance metric, pivot proxy, faithfulness metric(s), decorative-CoT signature, and the exact monitor model/training regime.",
+      "Update related work and narrow the central claim so the paper does not hinge on a scooped behavioral finding.",
+      "Add stronger controls for competence and translation confounds: native-authored or independently verified multilingual test sets, paraphrase controls, and same-language answer-only baselines.",
+      "Expand the experimental design or narrow scope: either increase sample size substantially for reliable slope/mediation estimation or reduce the number of tasks/models/languages to support deeper analysis.",
+      "For the mechanistic section, include adversarial controls against alternative explanations: compare against confidence, logit-margin, language-ID, and difficulty directions; test layer specificity and cross-model transfer.",
+      "Specify the causal steering protocol in enough detail to judge validity: intervention site, dose schedule, preservation metrics, and failure cases.",
+      "Clarify the monitorability experiment with train/test language splits and whether degradation is due to monitor weakness vs trace unfaithfulness.",
+      "Tone down causal language around 'mediates' unless the analysis supports formal mediation assumptions; otherwise frame it as a candidate mechanism."
+    ]
+  },
+  {
+    "index": 36,
+    "Name": "associative_fan_interference",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core novel claims are: (1) associated-but-absent distractors can hijack multi-step reasoning/factual retrieval, not just copy literal context tokens; (2) interference follows a graded fan law with number/strength of associates; (3) the effect is mechanistically separable from known contextual-entrainment heads; (4) it is steerable causally. The closest prior work already covers contextual distraction, paraphrase/meaning-preserving hijacking, semantic priming, and literal-token entrainment, so the general idea is crowded. The actual delta is the absent-associate + graded-fan + separability-from-entrainment package, which is non-trivial but still an extension of established priming/distractor effects rather than a wholly new phenomenon.",
+      "revision_notes": [
+        "State a sharper delta against prior work: explicitly separate 'associated-but-absent' from token-copying and paraphrase hijacking in the main contribution statement.",
+        "Pre-register the fan-law prediction as a quantitative interaction (fan count × associative strength) rather than a vague 'interference happens' claim.",
+        "Add a mechanistic hypothesis for why retrieval-competition should be distinct from entrainment heads, with a planned falsification criterion.",
+        "Specify whether novelty is in the phenomenon, the mechanistic dissociation, or the clinical application; do not bundle all three equally."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The under-study phenomenon is whether associative distractors, even when absent from the prompt, can systematically bias LLM retrieval/reasoning. Who cares: interpretability, RAG/retrieval robustness, and safety-sensitive domains like clinical QA. If true, it would matter because it reveals a failure mode of associative retrieval and suggests new defenses; if false, it still constrains how far human memory analogies apply. The 'so what' is real for researchers working on distraction, prompt robustness, and model evaluation, though the likely reach is narrower than broadly transformative because it is mainly about a specific error mode rather than a new capability.",
+      "revision_notes": [
+        "Explicitly connect the phenomenon to concrete downstream failures in RAG, tool use, and safety-critical QA.",
+        "Add a short 'if this is true, what changes?' paragraph for model evaluation and mitigation practice.",
+        "Narrow the clinical claim unless you can show external validity; otherwise frame it as an illustrative case study, not a separate impact pillar.",
+        "Clarify why practitioners should care beyond curiosity: e.g., evaluation benchmarks for associative robustness."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The hypothesis is testable but somewhat overpacked: behavior, graded law, mechanism, and causal steering are all bundled into one proposal. Main gaps: no precise operational definition of 'retrieval-competition signal,' unclear how separability from entrainment will be established beyond correlation, and the clinical experiment sounds underpowered/underspecified. The experiments are plausible in principle, but the proposal needs tighter controls against generic difficulty, semantic similarity, and prompt-length confounds. Related work is reasonably positioned, but the negative claim 'NONE test...' is too absolute given the provided context. As written, it could be fundable if narrowed and pre-registered, but not yet submission-ready at a strong venue without more precise experimental design and falsifiable analyses.",
+      "revision_notes": [
+        "Define each dependent variable and the retrieval-competition probe operationally; specify what internal representation will be measured and how causality will be tested.",
+        "Add controls for semantic similarity, answer frequency, prompt length, and task difficulty; include matched non-associated and paraphrase controls.",
+        "Pre-register the statistical model for the fan effect and interaction terms; report planned effect sizes and power.",
+        "Replace absolute related-work claims with a precise comparison table showing what is new versus entrainment, semantic priming, and context hijacking.",
+        "Split the proposal into a primary behavioral paper and a secondary mechanistic/clinical extension unless the latter is equally well powered and controlled."
+      ]
+    },
+    "revision_notes": [
+      "State a sharper delta against prior work: explicitly separate 'associated-but-absent' from token-copying and paraphrase hijacking in the main contribution statement.",
+      "Pre-register the fan-law prediction as a quantitative interaction (fan count × associative strength) rather than a vague 'interference happens' claim.",
+      "Add a mechanistic hypothesis for why retrieval-competition should be distinct from entrainment heads, with a planned falsification criterion.",
+      "Specify whether novelty is in the phenomenon, the mechanistic dissociation, or the clinical application; do not bundle all three equally.",
+      "Explicitly connect the phenomenon to concrete downstream failures in RAG, tool use, and safety-critical QA.",
+      "Add a short 'if this is true, what changes?' paragraph for model evaluation and mitigation practice.",
+      "Narrow the clinical claim unless you can show external validity; otherwise frame it as an illustrative case study, not a separate impact pillar.",
+      "Clarify why practitioners should care beyond curiosity: e.g., evaluation benchmarks for associative robustness.",
+      "Define each dependent variable and the retrieval-competition probe operationally; specify what internal representation will be measured and how causality will be tested.",
+      "Add controls for semantic similarity, answer frequency, prompt length, and task difficulty; include matched non-associated and paraphrase controls.",
+      "Pre-register the statistical model for the fan effect and interaction terms; report planned effect sizes and power.",
+      "Replace absolute related-work claims with a precise comparison table showing what is new versus entrainment, semantic priming, and context hijacking.",
+      "Split the proposal into a primary behavioral paper and a secondary mechanistic/clinical extension unless the latter is equally well powered and controlled."
+    ]
+  },
+  {
+    "index": 37,
+    "Name": "use_mention_flag_integrity",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core claims requiring novelty are: (1) a unified internal use-vs-mention flag spanning quotation, attribution, hypothetical, and negation; (2) leakage of mentioned content into belief/reasoning/behavior increases in a graded way with frame complexity, including nested/additive signatures; (3) the flag is separable and decodable even at quote-free attributed/hypothetical positions, not just from surface quotation markers; (4) causal manipulation of that signal changes leakage and can defend against prompt injection. Relative to prior work, the strongest novelty is the unifying linguistic framing plus the additivity/error-localization hypothesis and non-surface-quote probing. The prompt-injection steering/defense piece is substantially adjacent to existing mechanistic work on role confusion, intrinsic-feature detection, and activation steering, so that part is not very novel. Overall the delta over closest families—belief/source representations, negation failures, entrainment, and prompt-injection mechanistic interpretability—is meaningful but only partly non-obvious.",
+      "revision_notes": [
+        "Sharpen the novelty claim away from generic 'steerable defense' and center it on the unified cross-frame use/mention mechanism plus nested-frame additivity.",
+        "Explicitly differentiate from role-geometry / prompt-injection-mechanism papers by stating what observations they cannot explain but a unified mention flag would.",
+        "Add one experiment that directly tests transfer of the same probe/intervention across quotation, attribution, negation, and hypothetical settings to support the 'single unified flag' claim.",
+        "State a falsifiable alternative: separate frame-specific mechanisms rather than one shared flag, and design analyses comparing shared-vs-separate probes.",
+        "Reduce emphasis on instruction-in-quotes as the headline novelty unless the proposal can show dissociation from already-known injection features."
+      ]
+    },
+    "impact": {
+      "score": 8,
+      "reasoning": "The underlying problem is whether LLMs confuse asserted content with embedded/attributed/negated/hypothetical content, leading to misbelief, misattribution, and prompt-injection-like failures. This matters to interpretability, safety, agent reliability, and semantic evaluation. If the result holds, researchers could rethink several failure modes as one representational boundary problem and build diagnostics/defenses around it; if it fails, that also informs whether these phenomena should be treated as distinct. The strongest impact case is the unification of semantics and safety under one mechanistic failure mode. Real-world reach is credible through agent safety and trustworthiness, though the proposal currently demonstrates only a small-scale mechanistic battery and one injection instance, limiting practical reach.",
+      "revision_notes": [
+        "Strengthen the 'so what' by stating exactly what safety evaluations, benchmark design, or defense strategies would change if a unified mention signal is confirmed or refuted.",
+        "Add concrete stakeholder framing: agent developers, safety teams, eval builders, and semantics/interp researchers.",
+        "Expand beyond one high-stakes injection case to show whether the phenomenon matters across realistic agent/tool-use settings.",
+        "Include a claim about benchmark or dataset release value, especially if the battery spans multiple semantic frames in a controlled way.",
+        "Clarify what practitioners should do differently under each possible outcome: unified signal found, no unified signal, or frame-specific mechanisms only."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is interesting and reasonably testable, but several core claims are underspecified or over-bundled. 'Mention flag' could mean many things, and separable/additive/causal/unified are each strong claims that need clearer operational definitions. The related work is directionally relevant but not specific enough on the crowded prompt-injection mechanistic literature, making the positioning overclaimed. Experiments are promising but some thresholds look arbitrary, the battery is modest in size, and the mediation/causality language is too strong given likely probe confounding. Key missing controls include stronger tests against generic difficulty, syntax depth, source uncertainty, role markers, and content leakage in patching/steering. The high-level story could be publication-worthy if executed well, especially as a careful mechanistic negative-or-positive result, but in current form it needs tighter hypotheses and more rigorous disambiguation to meet a serious ML venue bar.",
+      "revision_notes": [
+        "Define the latent variable precisely: what counts as 'use' vs 'mention' in each frame family, and what additive structure is mathematically expected across nested frames.",
+        "Split the main hypothesis into ranked subclaims: behavioral leakage exists; a shared decodable feature exists; that feature is cross-frame transferable; interventions on it causally alter behavior.",
+        "Replace or justify arbitrary success thresholds (AUROC>=0.80, >=30% patching, >=6pp steering) with power analysis or effect-size rationale.",
+        "Add stronger baselines: syntax-depth controls, quote-token ablations, source-reliability controls, generic role/confusion probes, and separate probes for each frame family versus one shared probe.",
+        "Design explicit cross-generalization tests: train the probe on quotation and evaluate on attribution/hypothetical/negation, and vice versa.",
+        "For causality, include negative controls for patching/steering location, random directions, matched-norm steering, and tests that answer content is not directly injected.",
+        "Clarify the leakage metric and error-localization method, and specify how legitimate instruction compliance is preserved and measured.",
+        "Update related work to acknowledge mechanistic prompt-injection papers and narrow the contribution claim accordingly.",
+        "Increase dataset detail: item construction, balancing, human validation, contamination checks, and whether 750 items are enough for all slices.",
+        "State what result pattern would falsify the 'single unified flag' theory and support a weaker frame-specific account instead."
+      ]
+    },
+    "revision_notes": [
+      "Sharpen the novelty claim away from generic 'steerable defense' and center it on the unified cross-frame use/mention mechanism plus nested-frame additivity.",
+      "Explicitly differentiate from role-geometry / prompt-injection-mechanism papers by stating what observations they cannot explain but a unified mention flag would.",
+      "Add one experiment that directly tests transfer of the same probe/intervention across quotation, attribution, negation, and hypothetical settings to support the 'single unified flag' claim.",
+      "State a falsifiable alternative: separate frame-specific mechanisms rather than one shared flag, and design analyses comparing shared-vs-separate probes.",
+      "Reduce emphasis on instruction-in-quotes as the headline novelty unless the proposal can show dissociation from already-known injection features.",
+      "Strengthen the 'so what' by stating exactly what safety evaluations, benchmark design, or defense strategies would change if a unified mention signal is confirmed or refuted.",
+      "Add concrete stakeholder framing: agent developers, safety teams, eval builders, and semantics/interp researchers.",
+      "Expand beyond one high-stakes injection case to show whether the phenomenon matters across realistic agent/tool-use settings.",
+      "Include a claim about benchmark or dataset release value, especially if the battery spans multiple semantic frames in a controlled way.",
+      "Clarify what practitioners should do differently under each possible outcome: unified signal found, no unified signal, or frame-specific mechanisms only.",
+      "Define the latent variable precisely: what counts as 'use' vs 'mention' in each frame family, and what additive structure is mathematically expected across nested frames.",
+      "Split the main hypothesis into ranked subclaims: behavioral leakage exists; a shared decodable feature exists; that feature is cross-frame transferable; interventions on it causally alter behavior.",
+      "Replace or justify arbitrary success thresholds (AUROC>=0.80, >=30% patching, >=6pp steering) with power analysis or effect-size rationale.",
+      "Add stronger baselines: syntax-depth controls, quote-token ablations, source-reliability controls, generic role/confusion probes, and separate probes for each frame family versus one shared probe.",
+      "Design explicit cross-generalization tests: train the probe on quotation and evaluate on attribution/hypothetical/negation, and vice versa.",
+      "For causality, include negative controls for patching/steering location, random directions, matched-norm steering, and tests that answer content is not directly injected.",
+      "Clarify the leakage metric and error-localization method, and specify how legitimate instruction compliance is preserved and measured.",
+      "Update related work to acknowledge mechanistic prompt-injection papers and narrow the contribution claim accordingly.",
+      "Increase dataset detail: item construction, balancing, human validation, contamination checks, and whether 750 items are enough for all slices.",
+      "State what result pattern would falsify the 'single unified flag' theory and support a weaker frame-specific account instead."
+    ]
+  },
+  {
+    "index": 38,
+    "Name": "endogenous_filler_buffer",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core claims requiring novelty: (1) spontaneous natural-language filler in free generation is an adaptive self-allocated compute buffer, not merely stylistic noise; (2) filler placement follows a just-in-time allocation law, rising before locally hard reasoning steps; (3) endogenous filler is load-bearing in a way dissociable from length/content-matched substantive text or neutral padding; (4) a locatable internal buffer-request signal predicts and causally governs filler placement; (5) this signal can drive a buffer-gated efficiency controller. Relative to prior work, the crowded part is only the broad idea that filler/pause tokens can support hidden computation. The actual delta—endogenous rather than experimenter-injected filler, adaptive allocation law, and a steerable internal request signal—is meaningfully distinct and non-obvious. The closest prior family is injected filler/pause-token computation and hidden-computation decoding work; the proposal's delta is shifting from exogenous compute tokens to self-emitted natural-language filler as an adaptive resource. Novelty is strong but not maximal because much of the mechanism rests on extending an existing filler-computation story into a new behavioral setting rather than introducing a wholly new theory.",
+      "revision_notes": [
+        "Tighten the novelty claim by explicitly contrasting endogenous natural-language filler with each injected-filler baseline and stating exactly which claims are new versus inherited.",
+        "Add one sharper exclusion claim showing why this is not just a verbosity/surprisal effect, e.g. a preregistered dissociation from generic long-form CoT length.",
+        "Define the proposed 'buffer-request' signal more concretely at the representation/intervention level so the novelty is not only framing-based.",
+        "Include at least one setting where spontaneous filler is common without permissive prompting, to show the contribution is about native model behavior rather than prompt-induced style."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether LLMs self-allocate extra serial computation through their own filler spans during reasoning. People who would care include test-time scaling/reasoning researchers, interpretability researchers, and safety/monitorability researchers concerned with invisible reasoning. If true, it could affect how practitioners elicit reasoning, allocate adaptive compute, monitor CoT, and design efficiency controllers. The strongest case is that a model may expose a naturally occurring, steerable adaptive-compute channel that also creates monitorability failures. This passes the 'so what?' test: a positive result would likely change how researchers think about spontaneous verbosity, hidden computation, and intervention points; a strong negative result would also matter by narrowing the injected-filler story to an artifact of exogenous prompting/training. Impact is not higher because the proposal focuses on a fairly specific behavioral substrate, and practical adoption depends on effect sizes, prevalence across models, and whether filler is common enough in production settings to matter.",
+      "revision_notes": [
+        "State explicit downstream decisions that would change under positive versus negative results, especially for inference-time compute allocation and CoT safety evaluation.",
+        "Quantify expected practical gains for the buffer-gated controller relative to standard test-time scaling baselines, not only random gating.",
+        "Add a clearer argument for prevalence: how often spontaneous filler occurs in realistic model deployments and whether it generalizes beyond permissive prompts.",
+        "Broaden the application story with one concrete use case in monitoring or adaptive inference where this mechanism would outperform existing heuristics."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is ambitious, interesting, and partially testable, but several core claims are underspecified or vulnerable to confounds. The central hypothesis is reasonably falsifiable, yet key constructs—'semantically-empty filler,' 'local step difficulty,' 'answer-emergence jump,' and especially 'buffer-request signal'—need stricter operational definitions. The related-work positioning is decent and, with the search context, plausibly correct. Experimental plans are concrete enough to be feasible, but there are serious identification issues: spontaneous filler may simply track uncertainty, verbosity policy, or discourse style; deletion/corruption analyses can alter context in ways that mimic load-bearing effects; probing beyond entropy/surprisal risks overclaiming mechanism from correlation; causal steering may shift style or attention rather than a true compute buffer. The dataset scale (~900 items) may be light for multi-model, multi-task mediation and intervention claims. The proposal would be stronger as a focused behavioral-plus-causal paper than a full mechanistic account. If executed carefully, it could be venue-worthy, but in its current form it overreaches on mechanism relative to the planned evidence.",
+      "revision_notes": [
+        "Operationalize all latent variables precisely: define filler taxonomy, local step difficulty estimator, and exact criteria for 'answer emergence' before running experiments.",
+        "Add stronger controls against verbosity and uncertainty confounds: match on token position, surprisal, entropy, length, punctuation, and discourse markers; include non-filler verbose restatements and semantically-bleached paraphrases.",
+        "Strengthen causal tests with activation patching/transplant or constrained decoding interventions targeted only at candidate filler positions, not broad steering alone.",
+        "Increase statistical power and clarity: specify sample sizes per task/model, primary endpoints, correction for multiple comparisons, and preregistered success criteria.",
+        "Include human or model-based validation that auto-classified filler spans are truly semantically empty and not covertly contentful planning text.",
+        "Add failure-case analysis across model families, especially instruction-tuned versus base models, to test whether the effect is robust or merely prompt-style dependent.",
+        "Narrow the narrative: either claim a behavioral law plus useful controller, or a mechanistic signal discovery, but avoid presenting both as fully established by the same evidence.",
+        "Compare the proposed controller against meaningful adaptive-compute baselines such as uncertainty-triggered extra tokens or standard repeated-sampling/test-time scaling methods."
+      ]
+    },
+    "revision_notes": [
+      "Tighten the novelty claim by explicitly contrasting endogenous natural-language filler with each injected-filler baseline and stating exactly which claims are new versus inherited.",
+      "Add one sharper exclusion claim showing why this is not just a verbosity/surprisal effect, e.g. a preregistered dissociation from generic long-form CoT length.",
+      "Define the proposed 'buffer-request' signal more concretely at the representation/intervention level so the novelty is not only framing-based.",
+      "Include at least one setting where spontaneous filler is common without permissive prompting, to show the contribution is about native model behavior rather than prompt-induced style.",
+      "State explicit downstream decisions that would change under positive versus negative results, especially for inference-time compute allocation and CoT safety evaluation.",
+      "Quantify expected practical gains for the buffer-gated controller relative to standard test-time scaling baselines, not only random gating.",
+      "Add a clearer argument for prevalence: how often spontaneous filler occurs in realistic model deployments and whether it generalizes beyond permissive prompts.",
+      "Broaden the application story with one concrete use case in monitoring or adaptive inference where this mechanism would outperform existing heuristics.",
+      "Operationalize all latent variables precisely: define filler taxonomy, local step difficulty estimator, and exact criteria for 'answer emergence' before running experiments.",
+      "Add stronger controls against verbosity and uncertainty confounds: match on token position, surprisal, entropy, length, punctuation, and discourse markers; include non-filler verbose restatements and semantically-bleached paraphrases.",
+      "Strengthen causal tests with activation patching/transplant or constrained decoding interventions targeted only at candidate filler positions, not broad steering alone.",
+      "Increase statistical power and clarity: specify sample sizes per task/model, primary endpoints, correction for multiple comparisons, and preregistered success criteria.",
+      "Include human or model-based validation that auto-classified filler spans are truly semantically empty and not covertly contentful planning text.",
+      "Add failure-case analysis across model families, especially instruction-tuned versus base models, to test whether the effect is robust or merely prompt-style dependent.",
+      "Narrow the narrative: either claim a behavioral law plus useful controller, or a mechanistic signal discovery, but avoid presenting both as fully established by the same evidence.",
+      "Compare the proposed controller against meaningful adaptive-compute baselines such as uncertainty-triggered extra tokens or standard repeated-sampling/test-time scaling methods."
+    ]
+  },
+  {
+    "index": 39,
+    "Name": "register_gated_competence",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims: (1) low/colloquial register vs high/formal register changes reasoning accuracy with content held fixed; (2) the effect is framed as a competence-gating/processing-mode issue rather than comprehension failure; (3) a formal-vs-casual internal mode can be probed and causally steered/patching can rescue performance; (4) the setting is register orthogonal to dialect/language/meaning. The raw penalty finding is heavily crowded and partly scooped by dialect/register robustness work, but the dissociation plus causal mechanism are more novel and not just an obvious baseline. Closest family is dialect-fairness / register-shift robustness; the delta is narrow but real: isolate register and argue locked-out competence with mechanistic intervention.",
+      "revision_notes": [
+        "Tighten the novelty claim to the dissociation + causal steering; explicitly concede that the raw low-register penalty is prior art.",
+        "Add a sharper comparison table against ReDial/EnDive/register-shift papers showing exactly what those works do not test (restatement recovery, formalize-then-solve, mediation/patching).",
+        "Define 'register' operationally and separate it from dialect, verbosity, slang, and grammatical noise with ablations.",
+        "State the unique contribution as a mechanistic finding, not a new benchmark result."
+      ]
+    },
+    "impact": {
+      "score": 6,
+      "reasoning": "The underlying phenomenon is real and relevant: socially-coded phrasing can suppress reasoning in models, which matters for fairness, accessibility, and safety-critical input like colloquial patient descriptions. That said, because the broad penalty itself is already well established, the impact depends on the mechanistic dissociation and whether steering actually changes practice. If confirmed, researchers working on robustness, interpretability, and prompt/interface design would care, but this is not obviously direction-shifting for the field unless the causal mode claim is strong. So what? Yes, practitioners might adapt prompts or interfaces for sensitive domains, but the biggest value is explanatory rather than transformative.",
+      "revision_notes": [
+        "Lead with the practical settings that care most: clinical intake, tutoring, consumer support, and low-literacy or code-switched interfaces.",
+        "Quantify downstream consequences beyond accuracy, e.g. unsafe advice, refusal rates, or calibration errors.",
+        "Frame the result as an actionable robustness/fairness diagnostic, not just a sociolinguistic curiosity.",
+        "Add a short section on who would change behavior if the result is positive vs null."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The hypothesis is testable but currently over-assertive relative to the crowded prior art. Main risks: register is underspecified and may collapse into length, verbosity, grammar, or dialect; restatement accuracy does not by itself prove the reasoning competence is fully present; causal steering/patching could be confounded with difficulty, confidence, or content leakage. The experiments are plausible and partly controlled, but several key controls are missing or only implied: matched-length and matched-complexity paraphrases, human validation of semantic equivalence, strong baselines (paraphrase, dialect, noisy-text, instruction tone), random-direction steering, and pre-registered mediation criteria. With those fixes, this could be a solid ML venue paper.",
+      "revision_notes": [
+        "Precisely define and operationalize register, and add controls separating register from grammar, tokenization, verbosity, and dialect.",
+        "Pre-register or explicitly specify the mediation test and what would falsify the 'locked-out competence' hypothesis.",
+        "Add ablations for simple alternatives: length, sentiment/politeness, lexical rarity, punctuation, and instruction tone.",
+        "Strengthen the mechanism section with layer/location specifics, random-direction steering controls, and content-leakage checks.",
+        "Include human or model-based semantic-equivalence validation for all paired prompts.",
+        "Revise the narrative to avoid claiming 'competence' unless the dissociation experiments strongly support it."
+      ]
+    },
+    "revision_notes": [
+      "Tighten the novelty claim to the dissociation + causal steering; explicitly concede that the raw low-register penalty is prior art.",
+      "Add a sharper comparison table against ReDial/EnDive/register-shift papers showing exactly what those works do not test (restatement recovery, formalize-then-solve, mediation/patching).",
+      "Define 'register' operationally and separate it from dialect, verbosity, slang, and grammatical noise with ablations.",
+      "State the unique contribution as a mechanistic finding, not a new benchmark result.",
+      "Lead with the practical settings that care most: clinical intake, tutoring, consumer support, and low-literacy or code-switched interfaces.",
+      "Quantify downstream consequences beyond accuracy, e.g. unsafe advice, refusal rates, or calibration errors.",
+      "Frame the result as an actionable robustness/fairness diagnostic, not just a sociolinguistic curiosity.",
+      "Add a short section on who would change behavior if the result is positive vs null.",
+      "Precisely define and operationalize register, and add controls separating register from grammar, tokenization, verbosity, and dialect.",
+      "Pre-register or explicitly specify the mediation test and what would falsify the 'locked-out competence' hypothesis.",
+      "Add ablations for simple alternatives: length, sentiment/politeness, lexical rarity, punctuation, and instruction tone.",
+      "Strengthen the mechanism section with layer/location specifics, random-direction steering controls, and content-leakage checks.",
+      "Include human or model-based semantic-equivalence validation for all paired prompts.",
+      "Revise the narrative to avoid claiming 'competence' unless the dissociation experiments strongly support it."
+    ]
+  }
+]

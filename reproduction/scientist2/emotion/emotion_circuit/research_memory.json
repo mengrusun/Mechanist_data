@@ -1,0 +1,48 @@
+{
+  "direction": "Localisable emotion circuits in LLMs — identify per-emotion component sets (locatability), prove they are causally necessary + scenario-stable (causal + stability), and use them for reliable emotion control that beats prompting and single-direction steering (applied).",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "LLMs exhibit locatable, per-emotion internal component sets C_e (attention heads + MLP neurons) that are stable across scenarios and whose interventional manipulation via ablation weakens target-emotion expression and via additive-injection strengthens it enough to beat prompting and single-direction steering on hidden-target 6-way judged accuracy on SEV.",
+      "status": "conditional",
+      "behavior_conclusion": "Locatability holds robustly (per-emotion Jaccard 6/6 for both attention heads and MLP neurons, ~0.98 mean vs. permutation-null upper edge ~0.05-0.27; k*_h, k*_n at grid floor). Causal necessity in the directionally-necessary sense DOES NOT hold under the tested per-stem OTHER-5 mean-substitute ablation (positive ablation Δ_target = +0.48 to +0.93 nats on all 6 emotions, ruling out an operator-scope bug via iteration-1 ② fix). Practical open-generation control via additive-injection FAILS: circuit Arm A macro accuracy 0.053 (Llama, original) / 0.076 (Qwen swap) / 0.139 (Llama, after α+components fix), all catastrophically below prompting (0.669 / 0.969 / 0.663). Prefix-level target-emotion score modulation via C_e does hold (enhancement Δ_target > 0 on 6/6 emotions at α ∈ {0.05..1.0}). The behavior thus holds in a narrowed conditional form (locatability + limited specificity + prefix-level modulation) but fails on causal necessity and on open-generation control.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention → Tuning & Editing",
+          "family": "Causal Attribution / Ablation",
+          "headline": "The Causal-Attribution/Ablation pipeline (paired-contrast direction extraction → Stage-A per-layer probe + MLP-neuron cosine → Stage-B per-shortlisted-component single-component-enhancement prefix-logprob-gain; ablation = mean-substitute; enhancement = additive activation injection) localises stable per-emotion component sets C_e on Llama-3.2-3B-Instruct (Jaccard 6/6 both axes at (k_h*, k_n*) = (24, 2000)) but the mean-substitute ablation operator produces positive rather than negative Δ_target on all 6 emotions — a real negative confirmed by an iteration ② fix (per-stem OTHER-5 mean instead of global mean) that ruled out the operator-scope-bug hypothesis. The additive-injection enhancement operator produces reliable prefix-level Δ_target > 0 on all 6 emotions but pushes generation OOD at any tested α ∈ {0.05..2.0}: Arm A macro accuracy 0.053 (Llama)/0.076 (Qwen)/0.139 (Llama post-fix), each below the 1/6 chance floor or well below prompting. Same failure pattern reproduces on Qwen2.5-7B (M4 verify-swap). Final scientific take: located components are emotion-relevant/discriminative but not strongly verified causal necessities under mean-substitute ablation, and are not usable for open-generation control under additive injection.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "The paired-contrast direction extraction + per-emotion attention-head + MLP-neuron selection framework yields sparse per-emotion component sets C_e on Llama-3.2-3B-Instruct across SEV, with per-emotion set-Jaccard exceeding size-matched permutation-null 95% CI on ≥5/6 emotions — narrowed at iteration 4 to a coarse-locatability scope (discriminative emotion-relevant regions/layers with stable component-set structure, not precise causal-subset identification).",
+              "method": "Stage-A screen (per-layer per-emotion linear probe + MLP-neuron cosine alignment) + Stage-B causal-verify (per-shortlisted-component single-component-enhancement target-prefix log-prob gain at α=1.0) over a sparsity grid k_h ∈ {24,48,96} × k_n ∈ {2000,4000,8000}; predicate = mean pairwise Jaccard across 3 event-subsample folds vs. 200-draw size-matched permutation-null 95% CI on ≥5/6 emotions; random top-K control.",
+              "conclusion": "Highly stable per-emotion component sets: head Jaccard 0.947-1.000 (~5× the null upper edge of 0.265-0.277) and neuron Jaccard 0.972-0.983 (~20× the null upper edge of 0.045-0.047), 6/6 pass on both axes; random top-K falls inside the null CI as expected; k* landed at the grid floor (24, 2000). Audit passed with two WARNs (flat k* grid does not uniquely identify a sparsity minimum; head Stage-B degenerate at layer level), and Stage-2 swap-test was deferred by the max_verify_claims cap — hence supported at coarse-locatability scope only."
+            },
+            {
+              "id": "C2",
+              "statement": "The located components C_e causally carry emotion generation on Llama-3.2-3B-Instruct in the directionally-necessary sense: mean-substitute ablation weakens target-emotion prefix log-prob (Δ_target < 0 at α2), additive-injection enhancement strengthens it with monotonic dose response (Spearman(α, Δ_enh) ≥ 0.7), specificity holds against random-set/targeted-C_{e'}/off-target controls, and C_e is scenario-stable (Jaccard(S1,S2) > permutation null).",
+              "method": "Mean-substitute ablation of C_e using per-stem mean over the 5 other-emotion variants of the SAME stem (fixed in iteration 1 from a buggy global-mean formulation); additive activation injection at α ∈ {0.5,1.0,2.0}; three specificity controls (100-draw random-set null with enlarged pool of 72 heads / 4915 neurons post-fix, targeted-C_{e'} pairs, off-target continuation scoring); scenario S1/S2 refit for stability. Rubric verdict {full, partial, causal-only, not-supported}.",
+              "conclusion": "Not-supported — a REAL negative confirmed by the iteration-1 ② operator fix that ruled out the operator-scope-bug hypothesis. Ablation Δ_target = +0.48 to +0.93 nats on all 6 emotions under the CORRECT per-stem operator (essentially unchanged from the +0.51 to +0.93 of the original buggy global-mean, so the sign is real). Enhancement Δ_target correct-sign at α=1.0 (+1.34 to +5.83 nats) but Spearman(α, Δ_enh) < 0.7 on 4/6 emotions. Scenario stability holds (6/6 S1/S2 Jaccard pass), targeted-C_{e'} 5/6, off-target 4/6. For 3/6 emotions (joy, sadness, anger) random top-K sets outperform C_e under the enlarged random-null, weakening any unique-causal-privilege claim at the subset level. Post-fix baseline integrity was upgraded to PASS; Stage-2 swap-test deferred by max_verify_claims cap."
+            },
+            {
+              "id": "C3_v2",
+              "statement": "Located emotion-relevant components C_e are associated with reliable prefix-level target-emotion score modulation under additive activation injection (positive enhancement Δ_target on all 6 emotions at α ∈ {0.05..1.0}) with limited/partial cross-emotion specificity (targeted-C_{e'} passes 4/6), but this prefix-level modulation does not translate into effective open-generation control on Llama-3.2-3B-Instruct — additive-injection Arm A is catastrophically worse than prompting (macro 0.139 vs 0.663) and substantially worse than CAA/RepE single-direction steering (0.354). Reported as a negative result for the practical generation-time control application of C_e.",
+              "method": "Reuses M2 enhancement-Δ measurements for the positive part and M3/M4 judge-scored 3-arm accuracy for the negative part; Arm A circuit enhancement × (k_h, k_n) neighborhood, Arm B 3 templates × 3 injection positions, Arm C mean_diff single-direction steering frozen pre-eval-split; hidden-target 6-way judged accuracy (gpt-5.4 judge, gold agreement 1.000). Iteration-1 ② narrowed α to {0.05,0.1,0.3} and components to {5,12,24}×{200,500,2000}.",
+              "conclusion": "Supported at narrowed scope by pre-existing data. Positive part: enhancement Δ_target > 0 on 6/6 emotions across α ∈ {0.05..1.0}, targeted-C_{e'} specificity 4/6. Negative part: Arm A macro accuracy 0.139 (post iter-1 α+components fix) versus Arm B prompting 0.663 versus Arm C CAA/RepE 0.354 — A>B: 0/6, A>C: 0/6 emotions after fix (up from 0.053/0.669/0.357 pre-fix). Same open-generation failure reproduces on Qwen2.5-7B (Arm A 0.076 vs B 0.969 vs C 0.125). Diagnosed as intervention-semantics failure of cumulative additive injection at generation time, not evidence-of-absence for C_e. Not stress-tested — Stage-2 swap-test deferred (new claim produced by iteration-2 ③ lightweight in-loop re-entry)."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": ["Formation Tracing", "Unit Interpretation", "Decision Auditing"]
+    }
+  ],
+  "untried_behavior_directions": []
+}

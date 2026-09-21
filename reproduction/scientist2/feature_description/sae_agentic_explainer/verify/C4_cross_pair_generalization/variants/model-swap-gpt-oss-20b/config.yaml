@@ -1,0 +1,27 @@
+# Variant config: model-swap-gpt-oss-20b
+# Diff from M2: model_id=gpt-oss-20b, sae_id=resid-post-aa, layers=3/11/19
+
+# --- CHANGED vs M2 ---
+target_pair: gpt-oss-20b_resid-post-aa
+model_id: gpt-oss-20b
+sae_id_template: "{layer}-resid-post-aa"
+layers: [3, 11, 19]
+n_heldout_c2: 10  # adjusted for gpt-oss-20b's ~40 activations/feature (80/20 → ~8 held-out)
+
+# --- UNCHANGED vs M2 ---
+n_features_per_layer: 15
+split_seed: 42
+methods: ["sage_lite", "neuronpedia", "gpt5_1shot"]
+max_features_scan: 2000
+label: verify_c4_gpt_oss_20b
+
+# GPT-5 (DMXAPI)
+agent_backbone: gpt-5.4
+dmxapi_url: https://www.dmxapi.cn/v1
+
+# Output
+out: verify/C4_cross_pair_generalization/variants/model-swap-gpt-oss-20b/
+
+# GPU
+cuda_visible_devices: "1"  # pinned to GPU 1 (from allowlist {1,2,3,5,6}); minimal GPU use expected
+conda_env: sage

@@ -1,0 +1,85 @@
+{
+  "direction": "Mechanistic control of protein secondary structure via SAE feature steering in the Evo2 genomic language model.",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "Evo2-7B's Layer-26 SAE contains a set of features that selectively respond to protein α-helix, and amplifying them during autoregressive DNA generation causally raises the α-helix content of the encoded protein.",
+      "status": "established",
+      "behavior_conclusion": "Established across E. coli and H. sapiens and now HARDENED at publication rigor in round 2: a distributed, set-level α-helix code exists in Evo2-7B's Layer-26 SAE (round-2 set test-AUROC 0.90 prokaryote / 0.87 eukaryote vs ~0.51 confound-only / ~0.53 shuffle-null; still no single feature clears 0.75) and functions as a causally manipulable knob — amplifying the frozen 19-feature set monotonically raises the encoded protein's pLDDT-weighted α-helix fraction (helix_hgi_w baseline ~0.45 → +0.129/+0.135 at the capability-preserved interior optimum c*=21.48 σ_proj-units; ESMFold Spearman ρ=0.867, OmegaFold ρ=0.879, dual-predictor agreement) with the helix rise specific to S (0/48 norm-matched random directions match or exceed S under BOTH predictors, z=5.30/5.80; matched-control Δ negative; NOT a pLDDT-confidence artifact — S's pLDDT is LOWER than baseline). β-arm is a documented negative → framed as helix-axis specificity, not symmetric double dissociation. Verify PASS on all 3 claims (robustness 1.00; DSSP helix-definition swap HGI→H-only strengthens specificity to z=5.83/6.13). Residual paper-narrative caveats: all causal readouts are predictor-mediated (ESMFold+OmegaFold, no wet-lab); capability metric = valid-ORF only (no perplexity/composition drift); C1 label-provenance details in code only; empirical p floored at ~0.02 by n_null=48; H-only variant lacks cluster-bootstrap CI (per-sample values not stored).",
+      "impact": {"assessment": "", "recommendation": "", "assessed_in_round": null},
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Feature Dictionary Learning / SAE (amplification steering at blocks.26.post_norm)",
+          "headline": "α-helix is encoded as a distributed, cross-organism feature set in Evo2-7B's Layer-26 SAE (set-AUROC 0.86–0.89; the paper's f/28741 is the top single helix feature at 0.64) that is a causally steerable knob: amplifying the 19-feature set monotonically raises encoded-protein α-helix fraction 0.48→0.83 (ρ=0.76, p=1.7e-5), robust to the DSSP SS-assignment choice (pydssp ρ=0.89), with the clean-quality operating point at α=8; the helix gain there (+0.096) is specific to the α-helix features vs all 33 norm-matched random directions (0/33≥S, p=0.029, z=3.0) and a matched control (p=3.5e-4) with capability matched — but it operates on an ESMFold→DSSP proxy, the structure-predictor robustness axis is untested, and the β-sheet symmetric-amplification arm is a documented negative (so it is helix-axis specificity, not a full double dissociation).",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "In Evo2-7B's Layer-26 SAE a distributed set of ~19 features jointly detects α-helix codons (set-level, no single detector), replicating across E. coli and H. sapiens.",
+              "method": "Per-codon AUROC/F1 of ~32,768 SAE features against real DSSP helix labels on natural coding sequences with experimental PDB structures (no reverse-translation); BH-FDR-controlled feature set with length/GC/position/coding confound controls and shuffle-null checks.",
+              "conclusion": "Established as a conditional set-level phenomenon (set test-AUROC 0.86–0.89 vs ~0.50 confound/null; cross-organism replicated), but no single feature clears AUROC 0.75; verify audit flagged the original 'established' label as an overclaim (relabeled 'conditional', degenerate seed_jaccard disclosed) and the swap-robustness test was deferred by the MAX_VERIFY_CLAIMS cap → INTEGRITY_ONLY."
+            },
+            {
+              "id": "C2",
+              "statement": "Amplifying the α-helix feature set during Evo2-7B autoregressive DNA generation causally raises the encoded protein's α-helix fraction, monotonically with steering strength up to an optimum.",
+              "method": "Dose-response sweep α∈{-2,0,1,2,4,8,16,32}; DSSP α-helix fraction on ESMFold-predicted structures of translated valid ORFs; Spearman trend + quality gates; verify method-swap re-scoring the same structures with pydssp.",
+              "conclusion": "Supported and verify-PASS: helix fraction rises 0.475→0.834 (ρ=0.759, p=1.7e-5, effect +0.36) with a threshold near α≈4 and a clean-quality optimum at α=8; robust to the SS-assignment algorithm (pydssp reproduces it, ρ=0.886); the structure-predictor robustness axis (OmegaFold) remains untested (network-infeasible)."
+            },
+            {
+              "id": "C3",
+              "statement": "The amplification-induced α-helix rise is specific to the α-helix feature set — norm-matched random directions and a matched-control feature do not reproduce it at a quality-preserved dose.",
+              "method": "At the capability-preserved dose α=8, compare the feature set's helix gain against a genuine 33-direction norm-matched random-direction null and a matched-control feature; DSSP helix/sheet readout with valid-ORF (capability) matched across arms.",
+              "conclusion": "Helix-axis specificity supported: the feature set's helix gain +0.096 exceeds all 33 random directions (0/33≥S, empirical p=0.029, z=3.0) and the matched-control (Mann–Whitney p=3.5e-4) with capability matched (valid-ORF ~0.89 both); the β-sheet symmetric-amplification arm is an honest negative (Δsheet +0.005), so this is helix-axis specificity rather than a full double dissociation; INCONCLUSIVE at the original degraded α=16 dose, repaired in iteration to INTEGRITY_ONLY (mechanism-audit FAIL→WARN), swap-test deferred by cap."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        },
+        {
+          "round": 2,
+          "direction": "Location → Causal Intervention",
+          "family": "Feature Dictionary Learning / SAE (amplification steering at blocks.26.post_norm, σ_proj-unit dosing) — rigor/hardening round on same behavior + mechanism as round 1",
+          "headline": "Round-2 hardening of the round-1 knob (SAME behavior + mechanism, publication-grade rigor): frozen 19-feature set S re-confirmed with cross-organism M0 verdict `established` (prok set-AUROC 0.897 HGI / 0.906 H-only; euk 0.865 / 0.868); pLDDT-WEIGHTED helix fraction (helix_hgi_w) added as the primary endpoint; σ_proj-unit dosing maps interior optimum c*=21.48 (valid-ORF 0.893 ≈ baseline 0.88 → capability preserved); OmegaFold added as an independent second structure predictor (OmegaPLM backbone, not MSA/ESM2/AF2 family); dose-response reproduced across both predictors (ESMFold ρ=0.867 p=0.0012 / OmegaFold ρ=0.879 p=0.0008, Δ+0.129/+0.135 with cluster-bootstrap CIs 283 clusters); C3 hardened from round-1 z=3.0 (33 nulls) to z=5.30/5.80 (48 norm-matched nulls, 0/48 null≥S under BOTH predictors) with matched-control Δ NEGATIVE and pLDDT-confound explicitly ruled out (S pLDDT LOWER than baseline); β-arm resolved as documented negative → helix-axis specificity framing; verify PASS on all 3 claims (robustness 1.00, DSSP helix-def swap HGI→H-only, specificity strengthens to z=5.83/6.13). Reviewer 6.5/10 top ML mech-interp / 7/10 strong genomics venue with narrow framing, canonical verdict 'almost' — iteration STOP on iteration 1 (zero back-edges consumed).",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "In Evo2-7B's Layer-26 SAE, a set-level group of features selectively marks α-helix codons (frozen round-1 set S = 19 features, cross-organism, cross-helix-def), beyond confounds and multiple-testing chance.",
+              "method": "Reuse frozen round-1 S on data/ caches (no re-mining, no reverse-translation — natural CDS + experimental DSSP, ~531,627 codons: E. coli 181,359 + H. sapiens 350,268); recompute set-level combined AUROC on FROZEN S across 12 configs (2 organisms × 2 helix-defs × 3 seeds); confound-only baseline (GC3+position) and shuffle-label null; BH-FDR per feature; four-state M0 verdict; identify a stronger β_v2 set on same bar.",
+              "conclusion": "M0 verdict `established` re-confirmed and now cross-organism: prokaryote set-AUROC 0.897 HGI / 0.906 H-only; eukaryote 0.865 HGI / 0.868 H-only (all above 0.80 threshold, vs confound-only 0.506 and shuffle-null 0.53). No single feature clears 0.75 (best relaxed 0.62–0.68) → set-level, not single-feature. holds_multi_organism = True (round-1 had False), holds_multi_helixdef = True. β_v2 exists (set-AUROC 0.826 on β labels) but did NOT clear sheet-raising bar at c* → β-arm framed as documented negative. Verify PASS with H-only swap (robustness 1.00, integrity clean). Caveats: label-provenance details (PDB redundancy, homology-family splits, codon-to-residue mapping) currently in code only, must be documented in paper supplementary; cross-organism ≠ cross-distribution (2-organism is meaningful but not universal)."
+            },
+            {
+              "id": "C2",
+              "statement": "Amplifying the frozen 19-feature set S (σ_proj-unit dosing) during Evo2-7B autoregressive DNA generation increases the encoded protein's pLDDT-weighted α-helix fraction, monotonically up to a mapped interior capability-preserved optimum, across two independent structure predictors.",
+              "method": "σ_proj = 0.410, ||base_dir|| = 1.102 at blocks.26.post_norm (natural-CDS reference); round-1 raw-α grid mapped to c-axis (c(α=8)=21.48, c(α=16)=42.96, c(α=32)=85.92); 30 runs = 10 σ_proj doses × 3 seeds (~540 valid ORFs per dose across seeds); split-sample c* selection on seed 42, held-out trend on seeds 200,201; PRIMARY endpoint = pLDDT-weighted helix fraction (helix_hgi_w) — pLDDT is a WEIGHT in the statistic, not just a gate; c* selection rule = pLDDT-weighted-helix argmax WITHIN contiguous capability-preserved region (valid-ORF ≥ 0.95×baseline); cluster-robust bootstrap CIs (283 clusters); both ESMFold + OmegaFold folded per run.",
+              "conclusion": "Supported and verify-PASS. Interior optimum c*=21.48 (valid-ORF 0.893 ≈ baseline 0.88 → capability preserved); dose-response ESMFold Spearman ρ=0.867 p=0.0012, Δ(c*)=+0.129 [95% CI 0.100, 0.159]; OmegaFold ρ=0.879 p=0.0008, Δ(c*)=+0.135 [0.109, 0.161]; both predictors agree on trend sign. High-dose helix resurgences at c ∈ {43, 64, 86} are in the degraded regime (valid-ORF ≤ 0.82) and correctly excluded per plan P7. Verify H-only swap: ρ=0.867 ESMFold / 0.903 OmegaFold, Δ slightly larger under H-only (robustness 1.00, integrity clean). Caveats: monotonicity language must be scoped to capability-preserved segment (full curve is non-monotone under degradation); capability metric = valid-ORF only, could add composition drift / perplexity / disorder; structure-predictor dependence is the central paper-narrative vulnerability, hardened by dual predictors but not eliminated."
+            },
+            {
+              "id": "C3",
+              "statement": "At the capability-preserved interior dose c*=21.48, the α-helix rise is specific to S — exceeds a 48-direction norm-matched random-null AND a matched-control arm, across two predictors — establishing S as a specific, causally manipulable knob (helix-axis specificity; β-arm resolved as documented negative).",
+              "method": "36 arm runs [S / matched-control / β_v2] × 4-dose bracket {0, 10.74, 21.48, 32.22} × 3 seeds + 16 chunks × 3 dirs = 48-direction norm-matched random null at locked c*; PRIMARY statistic = empirical p (S vs 48-dir null on pLDDT-weighted endpoint) + z-score (S vs null mean/variance) + cluster-bootstrap CI on Δ; capability matched via valid-ORF across arms; pLDDT-confound explicitly checked (mean pLDDT per arm); β-arm: β_v2 raises sheet → symmetric double dissociation, else documented helix-axis specificity (plan P9); ESMFold + OmegaFold folded per run.",
+              "conclusion": "Supported and verify-PASS. ESMFold: S Δ=+0.129 [0.100, 0.159] (283 clusters), matched-control Δ=-0.031, null mean=-0.004, null max=+0.056, 0/48 null≥S, empirical p=0.020, z=5.30. OmegaFold: S Δ=+0.135 [0.109, 0.161], matched-control Δ=-0.025, null max=+0.059, 0/48, p=0.020, z=5.80. Capability matched: S valid-ORF 0.895 ≈ null 0.882 ≈ c0 0.902. NOT a pLDDT-confidence artifact: S mean pLDDT (59.7 ESMFold / 66.3 OmegaFold) is LOWER than baseline c0 (62.8 / 68.7). β-arm: β_v2 did NOT clear sheet bar at c* → C3 is helix-axis specificity, NOT symmetric double dissociation (documented negative per plan P9). Verify H-only swap: 0/48 null≥S under both predictors; z=5.83 ESMFold / 6.13 OmegaFold — specificity STRENGTHENS under the swap (robustness 1.00, integrity clean; caveat: per-sample H-only values not stored → no cluster-bootstrap CI for H-only variant, empirical p+z remain valid). Caveats: empirical p floored at ~1/(48+1)=0.0204 by n_null=48 — z-score is the stronger statistic and both must be reported together; matched-control construction must be transparent in paper writeup; ESMFold hard-gated pLDDT-threshold sweep returned null (OmegaFold gate-sweep is populated and stable); β-arm negative means paper text must not slip to symmetric-axis language."
+            }
+          ],
+          "iteration_summary": {
+            "reviewer_score_top_ml": 6.5,
+            "reviewer_score_genomics_narrow_framing": 7.0,
+            "canonical_verdict": "almost",
+            "iterations_consumed": 0,
+            "max_iterations": 6,
+            "claim_reentries_consumed": 0,
+            "max_claim_reentries": 2,
+            "termination_reason": "positive_verdict",
+            "back_edges_fired": [],
+            "runs_total": 0,
+            "gpu_hours_total": 0.0
+          },
+          "archived_to": "rounds/round_2/",
+          "archive_pending": true
+        }
+      ],
+      "untried_mechanism_directions": ["Tuning & Editing", "Formation Tracing", "Unit Interpretation", "Decision Auditing"]
+    }
+  ],
+  "untried_behavior_directions": []
+}

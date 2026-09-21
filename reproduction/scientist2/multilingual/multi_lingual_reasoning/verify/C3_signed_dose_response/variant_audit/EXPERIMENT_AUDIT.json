@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-14 (re-audit 14:06 after random-control arm completed)",
+  "auditor": "llm-chat (gpt-5.4 via dmxapi) — original; iteration-agent — re-audit",
+  "claim_id": "C3",
+  "variant": "model_swap_deepseek_r1_llama8b",
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "MGSM accuracy ground truth is taken from the dataset (answer_number column), not from model outputs. Real dataset GT provenance confirmed. Evidence: mlr/m2_projection_eval.py:248-254, 265-271"
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Macro accuracy = mean(per-language accuracies), where per-language acc = n_correct/n (n = dataset sample count, not model-output statistic). No model-output-based normalization. Evidence: mlr/m2_projection_eval.py:294-303"
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "All 9 vlang summary files present and non-empty. Alpha=0 summary internally consistent (mean per-language accs = 0.4473 = macro_accuracy). Other 8 summaries verified by top-line only. Random control results NOW AVAILABLE — 9 random_alpha*_summary.json files on disk with matched grid and same seed (re-audit 2026-07-14 14:06). Still WARN for single-seed, but result_existence gap is resolved."
+    },
+    "dead_code": {
+      "status": "warn",
+      "details": "grade() imported from mlr.mgsm_eval but never called in the evaluation loop (only extract_answer() and numeric_equal() used directly). Minor dead import, not integrity-breaking. Evidence: mlr/m2_projection_eval.py:33"
+    },
+    "scope": {
+      "status": "warn",
+      "details": "11 languages, 9 alpha values, n=50/lang, 1 seed (seed=42). Single-seed evaluation. Sufficient to judge C3's monotone-decrease claim (violated: A(-1)=0.391 < A(0)=0.447), but single-seed limits statistical confidence."
+    },
+    "eval_type": "real_gt"
+  }
+}

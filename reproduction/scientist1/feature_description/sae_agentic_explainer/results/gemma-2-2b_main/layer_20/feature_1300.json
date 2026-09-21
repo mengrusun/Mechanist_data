@@ -1,0 +1,404 @@
+{
+  "feature_idx": 1300,
+  "max_act_ref": 163.9494171142578,
+  "trigger_threshold": 32.78988342285157,
+  "sage": {
+    "candidates": [
+      "May also respond more strongly when multiple spelled-out month-day-year dates appear in a sequence or list separated by commas/semicolons.",
+      "Activates on full month names that begin a written American-style date expression ('Month Day, Year'), regardless of surrounding sentence context.",
+      "Activates on full month names at the start of a spelled-out date in the form 'Month Day, Year', especially when the date is formatted as a standalone entry or follows punctuation/newlines in records, headers, or legal-style documents."
+    ],
+    "top": "May also respond more strongly when multiple spelled-out month-day-year dates appear in a sequence or list separated by commas/semicolons.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "This feature activates on full month names when they begin a date expression formatted like 'Month day, year'.",
+            "positive_probes": [
+              "January 12, 1998 changed everything for our family.",
+              "February 3, 2020 was unexpectedly warm downtown.",
+              "March 14, 2015 marked the grand opening ceremony.",
+              "August 27, 2004 remains vivid in my memory.",
+              "December 1, 2021 brought the first major snowfall."
+            ],
+            "positive_acts": [
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969
+            ],
+            "distractor_probes": [
+              "Jan 12, 1998 changed everything for our family.",
+              "The meeting happened on January 12, 1998 downtown.",
+              "January sales rose sharply during the first week."
+            ],
+            "distractor_acts": [
+              58.20384216308594,
+              58.20384216308594,
+              58.20384216308594
+            ],
+            "score": 0.03363037109375
+          },
+          {
+            "hypothesis": "This feature fires on month tokens that appear immediately after punctuation or a line break in legal/document metadata dates such as filing or decision dates.",
+            "positive_probes": [
+              "Filed: January 12, 2021.",
+              "Decision Date:\nMarch 3, 2020.",
+              "Entered\u2014April 7, 2019 on docket.",
+              "Judgment, February 14, 2018, affirmed.",
+              "Issued:\nSeptember 30, 2022 by clerk."
+            ],
+            "positive_acts": [
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969,
+              58.3914909362793
+            ],
+            "distractor_probes": [
+              "The hearing was held in January 2021.",
+              "Filed on 01/12/2021 yesterday.",
+              "March was unusually busy for the clerk."
+            ],
+            "distractor_acts": [
+              58.20384979248047,
+              58.20384979248047,
+              58.20384979248047
+            ],
+            "score": 0.06442642211914062
+          },
+          {
+            "hypothesis": "This feature detects month names followed by a specific day number, especially in repeated chronological listings separated by commas or semicolons.",
+            "positive_probes": [
+              "January 12, February 13, March 14, April 15.",
+              "June 3; July 4; August 5; September 6.",
+              "October 21, November 22, December 23.",
+              "March 7, April 8, May 9, June 10.",
+              "February 1; March 2; April 3; May 4."
+            ],
+            "positive_acts": [
+              58.32477951049805,
+              58.32477951049805,
+              58.32477951049805,
+              58.32477951049805,
+              58.32477951049805
+            ],
+            "distractor_probes": [
+              "January was cold, and February brought heavy rain.",
+              "On March third, we met again in April.",
+              "June, July, and August are summer months."
+            ],
+            "distractor_acts": [
+              58.20384979248047,
+              58.20384979248047,
+              58.20384979248047
+            ],
+            "score": 0.12092971801757812
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "This feature activates on full month names when they are the first token of a written date expression like 'March 26, 2007' or 'July 28, 2010'.",
+            "positive_probes": [
+              "March 26, 2007 marked the official launch.",
+              "July 28, 2010 was unusually hot downtown.",
+              "September 3, 1999 changed everything for her.",
+              "January 14, 2021 brought surprising election results.",
+              "December 1, 1984 began the long investigation."
+            ],
+            "positive_acts": [
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969
+            ],
+            "distractor_probes": [
+              "On March 26, 2007, the meeting adjourned.",
+              "Mar 26, 2007 marked the official launch.",
+              "March was unusually cold that year."
+            ],
+            "distractor_acts": [
+              58.20384216308594,
+              58.20384216308594,
+              58.20384216308594
+            ],
+            "score": 0.03363037109375
+          },
+          {
+            "hypothesis": "This feature activates on month names that begin a date immediately after punctuation or a newline, especially in document-style headers or records.",
+            "positive_probes": [
+              "Report filed: March 14, 2022.",
+              "Meeting notes.\nApril 3, 1998",
+              "Invoice entry; September 30, 2021.",
+              "Case update:\nJanuary 12, 2005",
+              "Archive record, November 7, 2019."
+            ],
+            "positive_acts": [
+              58.23746871948242,
+              58.23746871948242,
+              58.23746871948242,
+              58.23746871948242,
+              58.23746871948242
+            ],
+            "distractor_probes": [
+              "March winds arrived after a cold winter.",
+              "The report was finalized in April.",
+              "On 12 January, the hearing resumed."
+            ],
+            "distractor_acts": [
+              58.20384979248047,
+              58.20384979248047,
+              58.20384979248047
+            ],
+            "score": 0.033618927001953125
+          },
+          {
+            "hypothesis": "This feature may partially respond to month names followed by numeric day/year formatting in lists or repeated date-like sequences separated by commas or semicolons.",
+            "positive_probes": [
+              "January 12, 2023; February 3, 2024; March 9, 2025.",
+              "April 7, 2022, May 8, 2023, June 10, 2024.",
+              "September 14, 2021; October 15, 2022; November 16, 2023.",
+              "March 1, 2020, April 2, 2021, May 3, 2022.",
+              "July 4, 2023; August 5, 2024; September 6, 2025."
+            ],
+            "positive_acts": [
+              58.331851959228516,
+              58.331851959228516,
+              62.22612380981445,
+              81.2286376953125,
+              58.331851959228516
+            ],
+            "distractor_probes": [
+              "January was cold, and February felt even colder.",
+              "The meeting is on 2023-01-12 and 2024-02-03.",
+              "April, May, and June are spring months."
+            ],
+            "distractor_acts": [
+              58.23747253417969,
+              68.3847427368164,
+              58.23747253417969
+            ],
+            "score": 2.0701675415039062
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Activates on full month names at the start of a spelled-out date in the form 'Month Day, Year', especially when the date is formatted as a standalone entry or follows punctuation/newlines in records, headers, or legal-style documents.",
+            "positive_probes": [
+              "January 12, 2021",
+              "Filed: March 3, 1998.",
+              "Hearing date:\nOctober 27, 2015",
+              "Effective Date \u2014 July 1, 2004",
+              "December 31, 1999, final entry"
+            ],
+            "positive_acts": [
+              58.23746871948242,
+              58.23746871948242,
+              58.23746871948242,
+              58.23746871948242,
+              58.23746871948242
+            ],
+            "distractor_probes": [
+              "Jan. 12, 2021",
+              "On March 3 we met again",
+              "The deadline is 2021-01-12"
+            ],
+            "distractor_acts": [
+              58.20384979248047,
+              58.20384979248047,
+              62.30263137817383
+            ],
+            "score": -1.3326416015625
+          },
+          {
+            "hypothesis": "Activates on full month names that begin a written American-style date expression ('Month Day, Year'), regardless of surrounding sentence context.",
+            "positive_probes": [
+              "January 5, 2022 marked the official launch.",
+              "We met on February 14, 1999 downtown.",
+              "March 3, 2001 was unusually cold.",
+              "Please remember April 22, 2010 for the filing.",
+              "The contract began May 7, 1988 without delay."
+            ],
+            "positive_acts": [
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969,
+              58.23747253417969
+            ],
+            "distractor_probes": [
+              "January was unusually warm that year.",
+              "We met on 5 January 2022 downtown.",
+              "Please remember May seventh, nineteen eighty-eight."
+            ],
+            "distractor_acts": [
+              58.20384979248047,
+              58.20384979248047,
+              58.20384979248047
+            ],
+            "score": 0.03362274169921875
+          },
+          {
+            "hypothesis": "May also respond more strongly when multiple spelled-out month-day-year dates appear in a sequence or list separated by commas/semicolons.",
+            "positive_probes": [
+              "March 4, 1999; April 5, 2000; May 6, 2001.",
+              "January 12, 1987, February 13, 1988, March 14, 1989.",
+              "June 1, 1970; July 2, 1971; August 3, 1972.",
+              "September 9, 1993, October 10, 1994, November 11, 1995.",
+              "December 24, 2001; January 25, 2002; February 26, 2003."
+            ],
+            "positive_acts": [
+              58.331851959228516,
+              58.331851959228516,
+              58.331851959228516,
+              58.331851959228516,
+              58.331851959228516
+            ],
+            "distractor_probes": [
+              "March 4 and April 5 were memorable spring days.",
+              "January 1987, February 1988, and March 1989 passed quickly.",
+              "June 1; July 2; August 3 marked milestones."
+            ],
+            "distractor_acts": [
+              58.23746871948242,
+              58.23746871948242,
+              58.23746871948242
+            ],
+            "score": 0.09438323974609375
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "be notified in advance for approval.\n\nWhat does your Flat Fee service Include? admin 2017-06-",
+    "A single cloud drifted over the harbor.",
+    "com.<bos>@comment $NetBSD: PLIST,v 1.5 2017/06/21 08:28:43 markd Exp $\nshare/texmf-dist/scripts/",
+    "She whisked the eggs and folded them into the batter.",
+    "or shortly after March 5, 1999, the date he was sentenced in Natrona County. On April 12, 1999, the Board of Parole revoked his parole for the Sweetwater County offense, crediting",
+    "The company announced quarterly earnings yesterday afternoon.",
+    "Small pebbles crunched under his boots on the path.",
+    "The old library sat quietly at the edge of the park.",
+    "23, 1982. Petitioner's Application for Certificate of Probable Cause to Appeal was denied on April 20, 1982. Subsequently, a petition for a writ of certiorari was filed in which the petitioner challenged",
+    "The recipe called for a pinch of saffron."
+  ],
+  "heldout_true_acts": [
+    133.65830993652344,
+    58.1909294128418,
+    114.6563949584961,
+    58.1909294128418,
+    134.1750030517578,
+    58.1909294128418,
+    58.1909294128418,
+    58.1909294128418,
+    113.76802062988281,
+    58.32477951049805
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "elements related to legal or administrative processes",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 58.23747253417969,
+        "sentences": [
+          "The court issued a summons for the defendant.",
+          "She filed the permit application with city hall.",
+          "Tax records were submitted before the audit deadline.",
+          "A notary certified the signed affidavit yesterday.",
+          "They appealed the agency's licensing decision immediately.",
+          "The clerk stamped the divorce decree as final.",
+          "His visa renewal required additional immigration documents.",
+          "Police served a search warrant at dawn."
+        ],
+        "activations": [
+          58.23747253417969,
+          58.23747253417969,
+          58.23747253417969,
+          58.23747253417969,
+          58.23747253417969,
+          58.23747253417969,
+          58.23747253417969,
+          58.23747253417969
+        ]
+      },
+      "predictive": {
+        "pearson": 0.8461562106859324,
+        "spearman": 0.7847411446423121,
+        "preds": [
+          7.0,
+          0.0,
+          1.0,
+          0.0,
+          10.0,
+          1.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "May also respond more strongly when multiple spelled-out month-day-year dates appear in a sequence or list separated by commas/semicolons.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 75.95830154418945,
+        "sentences": [
+          "The milestones were January 5, 2020, March 8, 2021, and July 12, 2022.",
+          "Remember these dates: February 14, 2019; April 20, 2020; June 1, 2021.",
+          "Her journals covered May 3, 2018, August 9, 2019, September 10, 2020.",
+          "Important hearings fell on October 2, 2017; November 11, 2018; December 25, 2019.",
+          "The archive lists January 1, 2000, February 2, 2001, March 3, 2002.",
+          "We met on April 4, 2014; May 5, 2015; June 6, 2016.",
+          "Key deadlines included July 7, 2007, August 8, 2008, September 9, 2009.",
+          "The plaque mentions October 10, 2010; November 12, 2011; December 13, 2012."
+        ],
+        "activations": [
+          58.337196350097656,
+          58.337196350097656,
+          58.337196350097656,
+          127.19828033447266,
+          58.337196350097656,
+          79.51118469238281,
+          109.27096557617188,
+          58.337196350097656
+        ]
+      },
+      "predictive": {
+        "pearson": 0.6142265451438809,
+        "spearman": 0.5813183589761799,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          4.0,
+          0.0,
+          0.0,
+          0.0,
+          3.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 186.19509935379028,
+  "layer": 20,
+  "sae_info": {
+    "layer": 20,
+    "width": "16k",
+    "l0": 71,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_20/width_16k/average_l0_71/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "elements related to legal or administrative processes"
+}

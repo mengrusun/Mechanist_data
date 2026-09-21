@@ -1,0 +1,21 @@
+{
+  "Name": "counterfactual_belief_steering",
+  "Title": "Installing a False Belief: Causal Steering of Attributed Belief States",
+  "Short Hypothesis": "There exists a steering intervention that makes an LLM report a specific agent as holding a chosen (even false) belief about an item, while leaving the model's factual knowledge and other agents' beliefs unchanged, demonstrating that attributed belief is a manipulable, factored representation.",
+  "Related Work": "Steering-vector work (ActAdd; Turner et al. 2023; CAA) steers style/refusal/sentiment, not per-agent belief states. Knowledge editing (ROME/MEMIT) edits facts globally, not an agent's in-context belief. We demonstrate factored, agent-specific belief installation, a stronger causal claim tied to the belief/fact separation.",
+  "Abstract": "If beliefs are genuinely represented as factored, agent-indexed states—as the belief/knowledge/fact framing of the source paper implies they should be—then it should be possible to *install* a chosen belief in a chosen agent by intervention, without disturbing facts or other agents. We derive an agent-specific belief steering vector by contrasting activations where a target agent believes P-true vs P-false, localized to the agent-belief binding. We then apply it in fresh contexts and test three properties: (i) specificity to the target agent (Bob's belief unchanged when steering Alice), (ii) content-factoring (the model's own factual answer to 'Is P true?' is unchanged), and (iii) compositionality (independently installing contradictory beliefs in two agents). Success establishes that attributed belief is a real, manipulable variable, not an epiphenomenon of the prompt, and provides a controllable testbed for downstream reasoning about beliefs (e.g., predicting an agent's action from an installed false belief). Failure of specificity or factoring would indicate the belief representation is entangled with facts—itself a mechanistic explanation for the conflation the source paper reports.",
+  "Experiments": [
+    "Derive per-agent belief steering vectors from contrastive (believes-true vs believes-false) activation pairs at the binding site.",
+    "Apply the vector in held-out contexts; measure whether the model reports the installed belief for the target agent.",
+    "Specificity test: verify other agents' reported beliefs and the model's own factual answer are unchanged.",
+    "Compositionality: install contradictory beliefs in two agents simultaneously; check both are maintained.",
+    "Downstream test: after installing a false belief, ask for the agent's predicted action and check it follows the false belief.",
+    "Sweep steering strength and layer to map where installation is clean vs where it corrupts facts."
+  ],
+  "Risk Factors and Limitations": [
+    "Steering may bleed into factual channels, failing factoring (though this is itself informative).",
+    "Vectors may not generalize across contexts/agents.",
+    "Strong steering can degrade fluency.",
+    "Ground-truth for 'clean' installation requires careful behavioral probes."
+  ]
+}

@@ -1,0 +1,287 @@
+{
+  "project": "Belief Localization in Pretrained Language Models (Pythia)",
+  "direction": "Reproduction of belief-circuit localization in Pythia via Fisher-information heads, checkpoint-window analysis, and probe-and-amplify controller — per task.md (behavior_source=given, mechanism=given, resource_fidelity=strict).",
+  "date_range": {"start": "2026-07-22", "end": "2026-07-22"},
+  "models": {
+    "claim": "claude-opus-4-7",
+    "experiment": "claude-opus-4-7",
+    "verify": "claude-sonnet-4-6",
+    "iteration": "claude-opus-4-7"
+  },
+  "pipeline_status": "completed",
+  "round_end": {
+    "qualifier": "",
+    "detail": "",
+    "remedy": "",
+    "see": "",
+    "partial_artifacts": [],
+    "next_round_options": []
+  },
+  "journey_summary": {
+    "claim": "4 given claims (no ideation) → unified plan across M1→M2→M3&M4; resource_fidelity=strict, per-claim chosen_mechanism map stamped",
+    "mechanism_strategy": "n/a (MECHANISM=given — no /mechanism-explore invocation)",
+    "mechanism_routing": "per-claim map — C1:not-applicable, C2:fisher-information-matrix-zero-ablation, C3:checkpoint-analysis-with-zero-ablation, C4:probe-and-amplify-controller",
+    "experiment": "~148 runs, ~5.5 wall-clock hours (4-6 concurrent GPUs), all 4 claims SUPPORTED with headline: distinct scale-emergence + sparse (|H*|∈{1,2,4}) Fisher-localized belief heads + distinct formation windows on pythia-1b + probe-and-amplify controller beats prompt-hint baseline",
+    "verify": "4 claim(s): 0 PASS / 1 FAIL (C2 cross-family OLMo-1B swap — out-of-scope for Pythia-scoped claim) / 0 INCONCLUSIVE / 0 ZEV / 3 INTEGRITY_ONLY (cap=3, swap_off=0); integrity[Phase2 WARN — C3 scope warn only / Phase9 WARN — cross-vocab PPL on OLMo-1B]",
+    "iteration": "5/6 iterations (0 back-edge budget consumed — all ⓪ narrative-only or no-action; claim-reentries=0/2; score 8.0→8.5→8.8→8.8→8.8, verdict `almost`; termination=stalled via reviewer's iteration-3 natural-terminal declaration + consecutive_noop_count=2 stall guard)",
+    "figures": "8 across 4 claims; 0 judgment-skipped; 0 render-skipped, 0 errored"
+  },
+  "open_items": [
+    "C3 environmental gap: only 24 of 154 planned pythia-1b intermediate checkpoints stored on disk (native log-spaced subset). Ran M3 on the 24 available — resolution is coarse-log-spaced rather than every-1000-steps. Not a downscale (missing files, not cost-saving), so strict-harness HALT rule inapplicable. Documented in MECHANISM_ROUTING.md `## Plan reconciliation` + EXPERIMENT_RESULTS.md.",
+    "Cross-model code review substitution: llm-chat MCP unavailable during experiment stage — Phase 3 replaced with self-review + a hook-mechanism sanity test (scripts/_test_hooks.py: α=0 knockout non-trivial, α=1 identity exactly zero, α>1 amplifies) + log-prob-metric round-trip test (scripts/_test_logprob.py). One bug caught during self-review: batched continuation_logprob shared past_key_values across continuations, which transformers 4.57 stateful Cache mutates in-place — fixed by dropping the KV-cache optimization.",
+    "C1 verify: INTEGRITY_ONLY, stage2_skip_reason=max_verify_claims_cap. Swap-test deferred; upgrade with `/auto-verify C1 -- resume: true`.",
+    "C3 verify: INTEGRITY_ONLY, stage2_skip_reason=max_verify_claims_cap. Also Phase 2 integrity WARN (scope: 24/154 checkpoints). Swap-test deferred; upgrade with `/auto-verify C3 -- resume: true`.",
+    "C4 verify: INTEGRITY_ONLY, stage2_skip_reason=max_verify_claims_cap. Swap-test deferred; upgrade with `/auto-verify C4 -- resume: true`.",
+    "C2 cross-family fragility (verify FAIL): on OLMo-1B (16L/16H, 2048D) the same Fisher-mask+zero-ablation pipeline produces heads that either entangle with general LM computation (personal: PPL up to 46× clean) or act as suppressors (attributed: all 30 greedy steps show negative drops — inverted causal direction). Jackknife ρ=0.954 on OLMo-1B confirms Fisher signal itself is stable → failure is architectural, not statistical. Optional follow-up: download pythia-160m or pythia-6.9b to distinguish cross-family from cross-scale fragility (blocked by task.md hard-constraint allowlist unless explicitly authorized)."
+  ],
+  "iteration_summary": {"score": 8.8, "verdict": "almost", "rounds_consumed": 5, "max_rounds": 6, "iterations_budget_consumed": 0, "claim_reentries_consumed": 0, "termination_reason": "stalled"},
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "Personal belief and attributed belief exhibit distinct emergence patterns across pythia-{410m, 1b, 2.8b}; the two belief-ability accuracy curves differ in slope, in the presence/absence of monotonic scaling, or in where they cross (chance vs above-chance).",
+      "origin": "task.md — Claim 1 (given)",
+      "data": {
+        "provenance": "existing",
+        "source": "/data/xuhaoming/belief_loc/data/derived/belief_core/{reality,believe_truth,follow_belief}.jsonl",
+        "available_n": "227 + 681 + 681 = 1589",
+        "used_n": "227 + 681 + 681 = 1589 (FULL, per task.md)",
+        "subset_note": ""
+      },
+      "models": ["pythia-410m", "pythia-1b", "pythia-2.8b"],
+      "method": "M1 — log-prob-comparison behavioral evaluation (gold > distractor); Wilson 95% CI per (model, task) cell; above-chance gate = acc>0.5 AND wilson_ci_low>0.5 — screen → decode → verify (no mechanism intervention; behavioural-only)",
+      "main_experiment": {
+        "verdict": "SUPPORTED",
+        "key_stats": "pythia-410m: WK 0.881 / personal 0.852 / attributed 0.457 (below chance, CI [0.420, 0.494]); pythia-1b: 0.925 / 0.786 / 0.833; pythia-2.8b: 0.960 / 0.994 / 0.796. Above-chance gate cleared in 5 of 6 belief cells (pythia-410m×attributed fails). Personal-attributed gap: 410m=+39pp (personal above, attributed below chance); 1b=−4pp; 2.8b=+20pp. Personal curve is non-monotonic 410m→1b→2.8b (0.85→0.79→0.99).",
+        "headline": "Personal- and attributed-belief scaling curves are behaviourally dissociable across pythia-{410m, 1b, 2.8b}; the smallest model handles personal belief above chance but fails attributed belief entirely (below chance with tight CI)."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"},
+        "integrity": "PASS",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap"
+      },
+      "iteration": {
+        "final_reviewer_status": "SUPPORTED-across-3-Pythia-scales",
+        "changed": ["added '3-scales-only, not a scaling law' caveat to FINAL_PROPOSAL.md §C1 (i1)", "scope-qualified Final label to `SUPPORTED-across-3-Pythia-scales (awaiting swap-test)` (i2)"],
+        "falsified": [],
+        "narrowed_to": "no formal rewrite; scope caveats added to existing claim wording"
+      },
+      "final_status": "SUPPORTED-across-3-Pythia-scales (differential behavior observed; not a scaling law) — awaiting swap-test (INTEGRITY_ONLY, max_verify_claims_cap)",
+      "caveats": ["Only 3 model sizes observed. 'Scale-dependent emergence' should be read as *differential behavior across the available Pythia scales* rather than as a scaling-law characterization; the personal-belief non-monotonicity (0.85 → 0.79 → 0.99) precludes any smooth monotonic reading."],
+      "artifacts": ["refine-logs/artifacts/behavioral/{pythia-410m,pythia-1b,pythia-2.8b}/{world_knowledge,personal_belief,attributed_belief}.json", "refine-logs/artifacts/behavioral/above_chance_gate.json", "verify/C1_scale_dependent_emergence/baseline_audit/{EXPERIMENT,MECHANISM}_AUDIT.{md,json}"],
+      "figures": [
+        {
+          "id": "c1_scale_matrix",
+          "type": "grouped_bar",
+          "caption": "Behavioral scaling of world_knowledge / personal_belief / attributed_belief across pythia-{410m, 1b, 2.8b} — Wilson 95% CI. The smallest model handles personal belief above chance (0.85) but fails attributed belief entirely (0.46, below chance). Personal-belief accuracy is non-monotonic across scales.",
+          "png": "figures/C1/c1_scale_matrix.png",
+          "pdf": "figures/C1/c1_scale_matrix.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "refine-logs/artifacts/behavioral/{pythia-410m,pythia-1b,pythia-2.8b}/{world_knowledge,personal_belief,attributed_belief}.json",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "statement": "For pythia models that behaviorally clear the above-chance gate, Fisher-information masks (top-0.1% target AND-NOT top-1% F_knowledge) identify a smallest attention-head set H* whose zero-ablation satisfies all four causal-localization criteria (target-acc drop ≥0.30 AND >mean+2σ of 20 random-head controls; off-target belief AND world-knowledge drop ≤0.10; post-ablation PPL ≤1.05× clean), separately for personal_belief and attributed_belief.",
+      "origin": "task.md — Claim 2 (given)",
+      "data": {
+        "provenance": "existing",
+        "source": "belief_core (person∈{james,mary} for Fisher; full for evaluation) + Pile PPL sample (1,048,576 tokens)",
+        "available_n": "F_personal/F_attributed: 454 each (James+Mary subset); F_knowledge: 227 full; eval: 227+681+681",
+        "used_n": "F_personal=454, F_attributed=454, F_knowledge=227; eval on FULL datasets; PPL on 1,048,576 tokens",
+        "subset_note": "Fisher signals restricted to person∈{james,mary} per task.md; evaluation uses full datasets"
+      },
+      "models": ["pythia-410m", "pythia-1b", "pythia-2.8b"],
+      "method": "M2 — Fisher-information matrix + zero-ablation: (M2.1) empirical Fisher per signal, fp32 accumulation, per-head aggregation over fused QKV + dense; (M2.2) top-0.1% AND-NOT top-1% masks + per-head candidate scoring + jackknife stability (ρ≥0.6 flag); (M2.3) deterministic greedy-add + greedy-remove smallest-H* search, |S|≤30; (M2.4) 20 random-head controls (seeds 100..119) + 20 random-mask controls (seeds 200..219) + 4-criteria acceptance — screen (Fisher) → decode (mask+rank) → verify (zero-ablation) → recover (controls)",
+      "main_experiment": {
+        "verdict": "SUPPORTED-within-Pythia",
+        "key_stats": "5 of 5 admissible (model, target) pairs LOCALIZED under all four verbatim criteria; |H*| ∈ {1, 2, 4}, median=2, smallest is a single head (pythia-2.8b × attributed: L5H22; pythia-1b × attributed: L4H1). Jackknife Spearman ρ ∈ [0.885, 0.992] all above 0.6. Details: pythia-410m×personal |H*|=2 (L13H1,L8H8) Δ_target=0.372 PPL=1.010×; pythia-1b×personal |H*|=2 (L12H1,L9H1) Δ=0.471 PPL=1.019×; pythia-1b×attributed |H*|=1 (L4H1) Δ=0.463 PPL=1.011×; pythia-2.8b×personal |H*|=4 Δ=0.307 PPL=1.007×; pythia-2.8b×attributed |H*|=1 (L5H22) Δ=0.355 PPL=1.003×. Negative off-belief drops (e.g. -0.31 on pythia-410m×personal) hint personal- and attributed-belief circuits are opposing in some scales.",
+        "headline": "Personal-belief and attributed-belief circuits in every pythia scale we tested are separable via Fisher-information + zero-ablation; the attributed-belief circuit is often as small as a single attention head. Boundary: this is Pythia-family-specific — a cross-family swap to OLMo-1B does not transfer."
+      },
+      "verify": {
+        "robustness": 0.0,
+        "axes": {"method": "n/a", "dataset": "n/a", "model": "fail"},
+        "integrity": "WARN",
+        "verdict": "FAIL",
+        "stage2_skip_reason": null,
+        "detail": "model-swap-olmo-1b: 0/2 localized (personal_belief: C2c/C2d both fail; attributed_belief: C2a never met — all 30 greedy steps show negative accuracy drops, indicating the selected heads act as suppression heads in OLMo-1B rather than encoding heads). Jackknife ρ=0.954 confirms Fisher ranking is stable — the causal direction is architecturally inverted relative to Pythia. Phase 9 mechanism WARN due to cross-vocab PPL (Pythia-tokenized eval on OLMo vocab): no OOB, ratio C2d valid, absolute PPL not cross-comparable."
+      },
+      "iteration": {
+        "final_reviewer_status": "SUPPORTED-within-Pythia",
+        "changed": [
+          "added Pythia-family boundary caveat to FINAL_PROPOSAL.md §C2 Must-Prove (i1)",
+          "added Cross-family boundary subsection to EXPERIMENT_RESULTS.md M2 (i1)",
+          "reworded C2 row in CLAIMS_LEDGER.md (Iteration, Final, Caveats fields; i1)",
+          "added top-level bookkeeping-vs-scope one-liner in CLAIMS_LEDGER.md summary table (i2)",
+          "scope-qualified all 4 verdict labels in EXPERIMENT_RESULTS.md summary table (i2)",
+          "added 'operational designator, not universal semantic head identity' terminology note (i1)"
+        ],
+        "falsified": [],
+        "narrowed_to": "no formal claim rewrite; the existing Pythia-scoped wording was preserved and the boundary made explicit via caveats"
+      },
+      "final_status": "SUPPORTED-within-Pythia (fragile under cross-family swap — verify's FAIL is an out-of-scope cross-family stress-test artifact; the Pythia-scoped claim itself is unfalsified by main-experiment 5/5 LOCALIZED)",
+      "caveats": [
+        "pythia-410m×attributed excluded from M2.3 per R1 protocol (M1 above-chance gate failed at 45.7%, CI upper 0.494)",
+        "Model-swap picked OLMo-1B (cross-family) rather than a Pythia neighbor — the FAIL confirms cross-family fragility but does not distinguish cross-family from cross-scale fragility. To distinguish, download pythia-160m or pythia-6.9b (blocked by task.md hard-constraint allowlist unless explicitly authorized).",
+        "Cross-family fragility (verify-derived, iteration i1): on OLMo-1B the same Fisher-mask+zero-ablation pipeline produces heads that either entangle with general LM computation (personal: PPL up to 46× clean) or act as suppressors (attributed: all 30 greedy steps show negative drops — inverted causal direction). Jackknife ρ=0.954 on OLMo-1B confirms Fisher signal itself stable → failure is architectural, not statistical.",
+        "Terminology: 'belief heads' is an operational designator for the Pythia-family Fisher-selected set, not a universal semantic head identity."
+      ],
+      "artifacts": ["refine-logs/artifacts/fisher/{model}/{signal}.pt", "refine-logs/artifacts/masks/{model}/{Mask,RankedHeads,Jackknife}_{target}.json", "refine-logs/artifacts/hstar/{model}/H_{target}{,_acceptance}.json", "refine-logs/artifacts/ablation/{model}/{target}/{main,random_head,random_mask}/*.json", "verify/C2_belief_heads_localization/baseline_audit/{EXPERIMENT,MECHANISM}_AUDIT.{md,json}", "verify/C2_belief_heads_localization/variant_audit/{EXPERIMENT,MECHANISM}_AUDIT.{md,json}", "verify/C2_belief_heads_localization/variants/model-swap-olmo-1b/", "verify/C2_belief_heads_localization/ROBUSTNESS.md"],
+      "figures": [
+        {
+          "id": "c2_localization_table",
+          "type": "table",
+          "caption": "M2 final acceptance for the 5 admissible (model, target) pairs. Every pair LOCALIZED under all four verbatim criteria; |H*| ∈ {1, 2, 4}; the attributed circuit is often a single head (pythia-2.8b × attributed: L5H22; pythia-1b × attributed: L4H1).",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C2/c2_localization_table.md",
+          "tex": "figures/C2/c2_localization_table.tex",
+          "source_data": "refine-logs/artifacts/hstar/{pythia-410m,pythia-1b,pythia-2.8b}/H_{personal,attributed}_acceptance.json",
+          "status": "ok"
+        },
+        {
+          "id": "c2_hstar_size_bar",
+          "type": "bar",
+          "caption": "Smallest localized attention-head-set size |H*| for each (Pythia model, belief target) — median 2, minimum 1. Sparsity of the belief circuit is robust across scale.",
+          "png": "figures/C2/c2_hstar_size_bar.png",
+          "pdf": "figures/C2/c2_hstar_size_bar.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "refine-logs/artifacts/hstar/{pythia-410m,pythia-1b,pythia-2.8b}/H_{personal,attributed}.json",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "statement": "Personal belief and attributed belief exhibit distinct formation windows during pythia-1b pretraining, as measured by both a behavioral-emergence step (first checkpoint with acc≥0.60 that persists 2-of-next-3) and a causal-emergence step (first checkpoint with Δ:=acc(target)−acc_ablated(H*_target,target)≥0.20 that persists 2-of-next-3).",
+      "origin": "task.md — Claim 3 (given)",
+      "data": {
+        "provenance": "existing",
+        "source": "pythia-1b intermediate checkpoints (native schedule; 24 of 154 planned checkpoints stored on disk under /mnt/quarkfs/share_model/Ptyhia/pythia-1b-checkpoints/) + belief_core datasets",
+        "available_n": "24 pythia-1b checkpoints × (227+681+681)=1589 examples × 9 measurements/checkpoint",
+        "used_n": "all 24 available checkpoints (step0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1000, 2000, 4000, 8000, 13000, 23000, 33000, 43000, 63000, 83000, 103000, 123000, 143000); FULL datasets per task-eval; 9 measurements per checkpoint (3 behavioral + 3 H*_personal-ablated + 3 H*_attributed-ablated)",
+        "subset_note": "154 checkpoints planned, only 24 native log-spaced ones on disk — environmental constraint (missing files), not a cost-saving downscale (strict-harness HALT rule inapplicable). Resolution is coarse-log-spaced rather than every-1000-steps."
+      },
+      "models": ["pythia-1b (intermediate checkpoints)"],
+      "method": "M3 — checkpoint-analysis with zero-ablation: at each of 24 available pythia-1b checkpoints run 9 measurements = 3 behavioral × {no-intervention, ablate H*_personal (L12H1+L9H1), ablate H*_attributed (L4H1)}. Post-hoc emergence detection with pre-registered thresholds (behavioral acc≥0.60 with 2/3 persistence; causal Δ≥0.20 with 2/3 persistence). Distinctness = non-identical windows.",
+      "main_experiment": {
+        "verdict": "SUPPORTED",
+        "key_stats": "Distinct formation windows: personal [step 13000, step 13000] vs attributed [step 0, step 33000]. Distinct=TRUE. Notable early-training reorganization at step 2000: personal=0.043 (dips near zero) while attributed=0.971 (spike near ceiling). Attributed-belief behaviour is above 60% at initialization (step 0: acc 0.670) — likely a prompt-structure bias; its causal circuit only emerges at step 33000.",
+        "headline": "Personal- and attributed-belief circuits in pythia-1b emerge along distinct developmental trajectories — attributed-belief behavior is present at initialization but its causal circuit only forms at step 33000, while personal-belief behavior and its causal circuit both crystallize together at step 13000."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"},
+        "integrity": "WARN",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap",
+        "detail": "Baseline integrity WARN (scope: 24/154 checkpoints — matches known environmental caveat). Swap-test deferred; upgrade: /auto-verify C3 -- resume: true"
+      },
+      "iteration": {
+        "final_reviewer_status": "SUPPORTED-coarse-window",
+        "changed": [
+          "added interval-censored coarse-bounds caveat to FINAL_PROPOSAL.md §C3 (i1)",
+          "clarified that personal window [13000,13000] is a singleton reflecting sampling granularity between recorded steps 8000 and 23000, not a sharp transition (i1)",
+          "clarified attributed early behavioral window at step 0 reflects operational-definition + prompt-structure bias (causal emergence is step 33000) (i1)",
+          "scope-qualified Final label to `SUPPORTED-coarse-window (awaiting swap-test)` (i2)"
+        ],
+        "falsified": [],
+        "narrowed_to": "no formal rewrite; coarse-window scoping added as caveats"
+      },
+      "final_status": "SUPPORTED-coarse-window (distinct behavioral+causal windows on the observed native-log-spaced checkpoint subset) — awaiting swap-test (INTEGRITY_ONLY, max_verify_claims_cap; main-experiment WARN from 24/154 scope)",
+      "caveats": [
+        "Coarse-log-spaced resolution — 24 of 154 planned pythia-1b intermediate checkpoints on disk (environmental gap, not downscale). Emergence-step localization is at native-log-schedule resolution rather than every-1000-steps.",
+        "Personal window [13000, 13000] is a *singleton* reflecting the adjacent recorded checkpoints (step 8000 next-below, step 23000 next-above); do NOT interpret as a sharp behavioral transition at exactly step 13000.",
+        "Attributed early behavioral window (from step 0, acc 0.670) reflects the operational definition (acc ≥ 0.60 + 2/3 persistence) applied to a prompt structure that biases toward follow-belief continuations at initialization; the causal circuit for attributed_belief only emerges at step 33000 (17k steps after personal's causal emergence at 13000). The two facts are consistent, not contradictory."
+      ],
+      "artifacts": ["refine-logs/artifacts/formation/step{0..143000}.json (×24)", "refine-logs/artifacts/formation/summary.{json,md}", "verify/C3_formation_window/baseline_audit/{EXPERIMENT,MECHANISM}_AUDIT.{md,json}"],
+      "figures": [
+        {
+          "id": "c3_formation_trajectories",
+          "type": "multi_panel",
+          "caption": "Formation windows for personal vs attributed belief on pythia-1b. Attributed behaviour is above 60% at initialization (prompt-structure bias) but its causal circuit only emerges at step 33000; personal-belief behaviour and its causal circuit both crystallize together at step 13000. Distinct=TRUE. Coarse-log-spaced resolution reflects the 24 checkpoints available on disk (of 154 planned).",
+          "png": "figures/C3/c3_formation_trajectories.png",
+          "pdf": "figures/C3/c3_formation_trajectories.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "refine-logs/artifacts/formation/summary.json",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "statement": "A lightweight probe-and-amplify controller — a frame-classifier (MLP on 3 pre-belief-head layers) that infers the current frame at inference time and amplifies the matched Claim-2 belief-head set with a tuned magnitude — yields net-positive OOD improvement on belief_holdout for the two belief tasks without destroying world-knowledge accuracy or general LM ability (PPL), and its improvement is comparable to (or better than) an explicit prompt-hint baseline.",
+      "origin": "task.md — Claim 4 (given)",
+      "data": {
+        "provenance": "existing",
+        "source": "belief_core/ (training, 227+681+681=1589, 80/20 stratified split seed=0) + belief_holdout/ (OOD eval: reality.jsonl n=367, believe_truth.jsonl n=1101, follow_belief.jsonl n=1101) + Pile PPL sample (1,048,576 tokens)",
+        "available_n": "belief_core=1589; belief_holdout=367+1101+1101=2569",
+        "used_n": "belief_core=1271 train / 318 val; belief_holdout=FULL (367/1101/1101); PPL=1,048,576 tokens",
+        "subset_note": "controller trained on belief_core train split; α tuned on belief_core val split; ALL evaluation is on belief_holdout OOD (2569 examples)"
+      },
+      "models": ["pythia-1b (H*_personal + H*_attributed both LOCALIZED in M2.4)", "pythia-2.8b (both LOCALIZED)"],
+      "method": "M4 — probe-and-amplify controller: (M4.1) train MLP frame classifier hidden=256 dropout=0.1 on concatenated hidden states from 3 layers before earliest-H*-head layer (pythia-1b L_ctrl=4 probing layers [1,2,3]; pythia-2.8b L_ctrl=5 probing layers [2,3,4]); (M4.2) grid-search α_personal × α_attributed ∈ {1.0,1.5,2.0,3.0,4.0,6.0}² on belief_core val, select by max net_improvement s.t. Δ_wk≤0.05 strict guardrail; (M4.3) OOD evaluation on belief_holdout — 3 arms (baseline_no_control, controller, prompt_hint_baseline) + PPL preservation check — screen (probe train) → decode (α grid) → verify (OOD 3-arm) → recover (WK preservation + PPL)",
+      "main_experiment": {
+        "verdict": "SUPPORTED",
+        "key_stats": "Frame classifier OOD acc: pythia-1b 0.9977 / pythia-2.8b 0.9957. pythia-1b (α_p*=3.0, α_a*=1.5): OOD personal_belief 0.672→0.850 (+17.8pp), attributed_belief 0.788→0.909 (+12.1pp), WK exactly preserved 0.850→0.850, controller recovered=165 degraded=14 net_impr=+151, prompt-hint net_impr=−1, PPL 1.047×. pythia-2.8b (α_p*=1.5, α_a*=4.0): OOD personal 0.948→0.973 (+2.5pp), attributed 0.825→0.880 (+5.5pp), WK exactly preserved 0.886→0.886, controller net_impr=+27, prompt-hint net_impr=−87 (actively harmful on larger model), PPL 1.005×.",
+        "headline": "A tiny 3-way frame classifier on early-layer hidden states + amplifying the matched M2-localized head set produces double-digit OOD gains on both belief tasks with zero cost to world_knowledge task accuracy and near-zero PPL cost (1.047× / 1.005×, both under the C2 1.05× bar) — and outperforms the prompt-hint baseline (which is actively negative on pythia-2.8b, net_impr=−87). Effect size is model-dependent (+151 on pythia-1b vs +27 on pythia-2.8b)."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {"method": "n/a", "dataset": "n/a", "model": "excluded"},
+        "integrity": "PASS",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap"
+      },
+      "iteration": {
+        "final_reviewer_status": "SUPPORTED-on-tested-Pythia-scales",
+        "changed": [
+          "clarified in FINAL_PROPOSAL.md §C4 that 'WK exactly preserved' is task-level (belief_holdout WK subset) and that general LM ability is tracked separately via Pile PPL (i1)",
+          "added explicit PPL disclosure (1.047× on pythia-1b, 1.005× on pythia-2.8b) rather than folding into 'WK exactly preserved' (i1)",
+          "flagged effect-size model-dependence (+151 vs +27) — no uniform-controllability-across-scale claim (i1)",
+          "scope-qualified Final label to `SUPPORTED-on-tested-Pythia-scales (awaiting swap-test)` (i2)"
+        ],
+        "falsified": [],
+        "narrowed_to": "no formal rewrite; scale-scope caveats added"
+      },
+      "final_status": "SUPPORTED-on-tested-Pythia-scales (net-positive OOD gain on both pythia-1b and pythia-2.8b; strictly beats prompt-hint on both; PPL preserved within the C2 bar; effect size differs by model) — awaiting swap-test (INTEGRITY_ONLY, max_verify_claims_cap)",
+      "caveats": [
+        "pythia-410m excluded from M4 per plan (only H*_personal localized in M2, needs both H* to run controller).",
+        "Effect size is not uniform: +151 net_impr on pythia-1b vs +27 on pythia-2.8b. Do not present controllability as scale-invariant.",
+        "PPL delta is small but non-zero (1.047× on 1b, 1.005× on 2.8b); report explicitly rather than folding into 'WK exactly preserved' which only covers task-level WK accuracy."
+      ],
+      "artifacts": ["refine-logs/artifacts/controller/{pythia-1b,pythia-2.8b}/{probe.pt,probe_report.json,probe_split.json,alpha_grid/*.json,alpha_selected.json,ood_baseline_no_control.json,ood_controller.json,ood_prompt_hint.json,M4_report.{json,md}}", "verify/C4_dynamic_controllability/baseline_audit/{EXPERIMENT,MECHANISM}_AUDIT.{md,json}"],
+      "figures": [
+        {
+          "id": "c4_ood_by_arm_and_model",
+          "type": "multi_panel",
+          "caption": "Controller vs baseline vs prompt-hint on belief_holdout OOD (n=367+1101+1101=2569). Controller delivers strictly positive net improvement on both models; the prompt-hint baseline is net-negative on both (actively harmful on pythia-2.8b: −87). World-knowledge accuracy exactly preserved across arms.",
+          "png": "figures/C4/c4_ood_by_arm_and_model.png",
+          "pdf": "figures/C4/c4_ood_by_arm_and_model.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "refine-logs/artifacts/controller/{pythia-1b,pythia-2.8b}/{ood_baseline_no_control,ood_controller,ood_prompt_hint}.json",
+          "status": "ok"
+        },
+        {
+          "id": "c4_summary_table",
+          "type": "table",
+          "caption": "M4.3 OOD summary: controller wins over prompt-hint on both Pythia scales; effect size differs (+151 on 1b vs +27 on 2.8b — see caveat C4.2 about non-uniform gain across scale).",
+          "png": null,
+          "pdf": null,
+          "md": "figures/C4/c4_summary_table.md",
+          "tex": "figures/C4/c4_summary_table.tex",
+          "source_data": "refine-logs/artifacts/controller/{pythia-1b,pythia-2.8b}/M4_report.json",
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

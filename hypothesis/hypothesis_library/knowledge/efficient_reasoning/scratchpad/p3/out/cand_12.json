@@ -1,0 +1,44 @@
+{
+  "novelty": {
+    "score": 7,
+    "reasoning": "Core claims: (1) a pre-generation prompt-boundary hidden state linearly encodes a length/budget prior before any reasoning token; this is close to established probe/steering work. (2) This prior is substantially driven by superficial prompt features (verbosity cues, numbers, phrasing) rather than true difficulty; this is the main novel claim and is a meaningful reframing, but it is a plausible extension of known non-difficulty length biases. (3) Steering that prior causally changes trace length while leaving accuracy mostly unchanged; causal steering itself is established, but the specific independence-from-accuracy claim is non-trivial. (4) Reasoning length is self-fulfilling because the model fills its pre-set budget; this is novel only as a causal narrative, not as a mechanism family. Overall: solid delta over prior work, but the representation/probe and steering pieces are not new.",
+    "revision_notes": [
+      "Tighten the novelty claim to the causal dissociation: 'surface-form features shift a pre-committed budget prior independently of difficulty and accuracy' rather than 'we probe hidden states'.",
+      "Add a direct contrast table against planning/length-steering/budgeting papers, with one row each for target signal, causal claim, and what they do not test.",
+      "Specify which superficial features are hypothesized a priori and why they should affect budget rather than task difficulty."
+    ]
+  },
+  "impact": {
+    "score": 8,
+    "reasoning": "Behavior/problem: reasoning models spend too many/few tokens because the model's pre-generation budget is miscalibrated by prompt form. Who cares: anyone paying for inference, adaptive-compute, prompt engineering, robustness, and benchmark designers. Downstream if true: we can deliberately shorten traces without much accuracy loss, diagnose over/underthinking as budget-setting errors, and potentially harden prompts against manipulative verbosity cues. Strongest case: if trace length is set before reasoning begins by superficial cues, then compute waste is controllable at the prompt level, not just by post-hoc early-exit or pruning.",
+    "revision_notes": [
+      "State the concrete user-facing consequence in the title/abstract: fewer tokens, lower latency/cost, same accuracy.",
+      "Add a 'so what' sentence for two audiences: deployment cost control and robustness against prompt manipulation.",
+      "Clarify the failure mode addressed: miscalibrated compute allocation, not just interpretability of length representations."
+    ]
+  },
+  "review": {
+    "score": 5,
+    "reasoning": "The main weakness is falsifiability/control. 'Superficial features' are confounded with difficulty and answer structure, and the proposal risks attributing correlational effects to causation unless variants are tightly matched. The probe result alone is weak because predicting length from hidden states may simply recover latent difficulty or prompt style. The steering experiment is stronger, but accuracy-unchanged claims need rigorous controls, sufficient power, and off-distribution/validity checks. Related work is cited at a high level but not differentiated experimentally enough. Venue-readiness depends on whether the surface-variant design can truly hold problem difficulty fixed across datasets and whether controls can rule out alternative explanations.",
+    "revision_notes": [
+      "Pre-register a minimal causal test: paired prompts identical in semantics but varying only one surface cue, with human validation that difficulty and answer remain invariant.",
+      "Add controls: prompt-length control, lexical-frequency control, number-content control, random-direction steering, and a difficulty-direction steering baseline.",
+      "Define exact acceptance criteria for 'accuracy unchanged' with confidence intervals and powered sample sizes; avoid loose phrases like 'roughly flat'.",
+      "Add ablations showing the effect survives after regressing out prompt length, readability, and explicit budget instructions.",
+      "Strengthen related work by naming the closest prior papers and stating the exact missing experiment each one did not perform."
+    ]
+  },
+  "revision_notes": [
+    "Tighten the novelty claim to the causal dissociation: 'surface-form features shift a pre-committed budget prior independently of difficulty and accuracy' rather than 'we probe hidden states'.",
+    "Add a direct contrast table against planning/length-steering/budgeting papers, with one row each for target signal, causal claim, and what they do not test.",
+    "Specify which superficial features are hypothesized a priori and why they should affect budget rather than task difficulty.",
+    "State the concrete user-facing consequence in the title/abstract: fewer tokens, lower latency/cost, same accuracy.",
+    "Add a 'so what' sentence for two audiences: deployment cost control and robustness against prompt manipulation.",
+    "Clarify the failure mode addressed: miscalibrated compute allocation, not just interpretability of length representations.",
+    "Pre-register a minimal causal test: paired prompts identical in semantics but varying only one surface cue, with human validation that difficulty and answer remain invariant.",
+    "Add controls: prompt-length control, lexical-frequency control, number-content control, random-direction steering, and a difficulty-direction steering baseline.",
+    "Define exact acceptance criteria for 'accuracy unchanged' with confidence intervals and powered sample sizes; avoid loose phrases like 'roughly flat'.",
+    "Add ablations showing the effect survives after regressing out prompt length, readability, and explicit budget instructions.",
+    "Strengthen related work by naming the closest prior papers and stating the exact missing experiment each one did not perform."
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "gpt-5.4 (external LLM reviewer, dmxapi/llm-chat-equivalent)",
+  "claim_id": "C1",
+  "linked_milestones": ["M1"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "GT loaded from dataset JSONL 'answer' field, deterministically set by build_propositional_dataset.py (50/50 True/False balance). Not derived from model outputs."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Recovery = (patch_ld - corr_ld) / (clean_ld - corr_ld). Denominator is clean-corrupt delta, not model max/mean. No fraud pattern."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "results/M1_attribution.json exists. All reported values match file: shortlist_size=158, sparsity=0.150, completeness=0.955, minimality=0.0014, n_pairs=500, success_C1=False. Tracker status DONE."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All metric functions (attribution_scores, run_activation_patch, build_shortlist) are called in attribution_screen.py and produce output in M1_attribution.json."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "Minimality sweep sampled only 20 of 158 shortlist components (n_min=min(20,len(components)) in attribution_screen.py). This approximation is not disclosed in EXPERIMENT_RESULTS.md or final_report.md. The reporting language is restrained (uses 'partial', no overclaim), but the undisclosed 20/158 sample weakens evidential integrity for the minimality sub-claim."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

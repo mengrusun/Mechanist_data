@@ -1,0 +1,570 @@
+[
+  {
+    "index": 20,
+    "Name": "information_burst_reasoning",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core claims: (1) bursts are not just correlates but a causal driver of reasoning failure; (2) there is a locatable pre-emission internal pacing signal; (3) a single-pass, training-free burst-aware decomposition intervention can improve accuracy; (4) high-stakes clinical reasoning is a meaningful test setting. Relative to the closest prior UID reranking work, the delta is real and non-trivial: from passive post-hoc selection to causal intervention + mechanistic probe + steering. However, the underlying signal is a very recent known correlational phenomenon, so the novelty is incremental unless the causal/steering claims survive strong controls. The setting is not radically new; the novelty lives mainly in mechanism/causality and intervention, not in the task or dataset.",
+      "revision_notes": [
+        "Explicitly separate the three novelty claims into distinct contributions: causal effect, internal locus, and intervention.",
+        "Add a sharper statement of what would be genuinely new if true vs what is just a stronger version of UID reranking.",
+        "Name the closest baseline family in the intro and state the delta in one sentence.",
+        "If possible, include a genuinely new setting or phenomenon (not just another reasoning benchmark) to broaden novelty beyond method transfer."
+      ]
+    },
+    "impact": {
+      "score": 6,
+      "reasoning": "The phenomenon under study is whether reasoning failures arise when models concentrate too much information into a step, and whether pacing/decomposition can fix this. Who cares: LLM reasoning/inference-time-compute, mechanistic interpretability, and possibly clinical decision-support researchers. Strongest case: if bursts are causal and steerable, we get a cheap test-time lever for improving reasoning without training. This could affect follow-up work and citation if the effect is robust, but it remains somewhat niche and benchmark-centric. So what? If true, serious practitioners may adopt burst-aware prompting or decomposition; if false, the field mainly learns that UID is a useful correlate, not a control knob. That is useful but not obviously direction-shifting for the broader ML community.",
+      "revision_notes": [
+        "Make the downstream implication concrete: how would inference-time prompting, reranking, or safety workflows change if the claim holds?",
+        "Add one application-facing metric beyond accuracy, e.g. calibration, error severity, or hallucination reduction.",
+        "Explain why the clinical vignette result would matter beyond a toy demonstration, or drop the clinical claim if it cannot be made credible.",
+        "State the strongest negative-result value: what policy or research direction would be abandoned if bursts are non-causal."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is testable and more rigorous than many concept papers, with explicit controls, effect thresholds, and multi-model evaluation. Main weakness: the causal story is still under-justified because 'burst injection' may change difficulty, content, or compliance, and the probe may simply read out generic difficulty/confidence. The hypothesis is somewhat precise, but parts remain underspecified: what exactly constitutes a burst, how decomposition is enforced without altering semantics, and how steering direction is extracted robustly. Related work is decent, but the experimental section needs tighter control logic and clearer failure criteria. As written, it is fundable/submittable only if the causal controls are airtight and the probe/steering claims are presented as secondary. Minimum viable improvement is a more rigorous identification strategy and clearer ablation plan.",
+      "revision_notes": [
+        "Pre-register or explicitly define the causal identification strategy for burst injection vs matched-difficulty controls, including semantic-preservation checks.",
+        "Add ablations for burst thresholding, segmentation choice, and alternative density definitions.",
+        "Include controls for generic difficulty, confidence, and length under the probe experiment; report calibration and out-of-distribution generalization.",
+        "Specify how many items are excluded for non-compliance and how sensitivity analysis will handle that selection bias.",
+        "Tighten the narrative hierarchy: primary claim = causality, secondary = probe, tertiary = steering; do not overclaim all three equally."
+      ]
+    },
+    "revision_notes": [
+      "Explicitly separate the three novelty claims into distinct contributions: causal effect, internal locus, and intervention.",
+      "Add a sharper statement of what would be genuinely new if true vs what is just a stronger version of UID reranking.",
+      "Name the closest baseline family in the intro and state the delta in one sentence.",
+      "If possible, include a genuinely new setting or phenomenon (not just another reasoning benchmark) to broaden novelty beyond method transfer.",
+      "Make the downstream implication concrete: how would inference-time prompting, reranking, or safety workflows change if the claim holds?",
+      "Add one application-facing metric beyond accuracy, e.g. calibration, error severity, or hallucination reduction.",
+      "Explain why the clinical vignette result would matter beyond a toy demonstration, or drop the clinical claim if it cannot be made credible.",
+      "State the strongest negative-result value: what policy or research direction would be abandoned if bursts are non-causal.",
+      "Pre-register or explicitly define the causal identification strategy for burst injection vs matched-difficulty controls, including semantic-preservation checks.",
+      "Add ablations for burst thresholding, segmentation choice, and alternative density definitions.",
+      "Include controls for generic difficulty, confidence, and length under the probe experiment; report calibration and out-of-distribution generalization.",
+      "Specify how many items are excluded for non-compliance and how sensitivity analysis will handle that selection bias.",
+      "Tighten the narrative hierarchy: primary claim = causality, secondary = probe, tertiary = steering; do not overclaim all three equally."
+    ]
+  },
+  {
+    "index": 21,
+    "Name": "self_invented_shorthand",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core novel claims: (1) a single frozen LLM can be induced in-context to invent and reuse its own compressed private notation for its own downstream reasoning; (2) performance may show a non-monotonic inverted-U / compression cliff rather than simple degradation; (3) self-decodability is treated as a measurable internal signal that predicts and potentially gates the cliff; (4) the effect is tested in a setting distinct from prior CoT-compression and multi-agent communication. Closest prior families are CoT/latent reasoning compression and emergent communication, but the delta is the self-authored, reusable shorthand inside one frozen model without training. This is genuinely nontrivial, though some of the novelty depends on whether the result reduces to ordinary length/difficulty effects.",
+      "revision_notes": [
+        "State explicitly what is new relative to Coconut/TokenSkip and emergent-communication: single-agent, frozen, in-context, self-authored notation with reuse.",
+        "Add a sharper novelty claim around the mechanism: self-decoding as a controllable latent variable, not just a correlation with success.",
+        "Specify whether the novelty is the phenomenon, the setting, or the mechanism, and avoid mixing them in one claim.",
+        "Pre-register a concrete definition of 'self-invented shorthand' distinct from abbreviations, scratchpads, and external codebooks."
+      ]
+    },
+    "impact": {
+      "score": 6,
+      "reasoning": "The studied phenomenon is whether models can use self-invented compressed shorthand to improve multi-step reasoning, and when that breaks. Who cares: efficiency/latency researchers, mechanistic interpretability, and safety researchers worried about compressed hand-offs. The strongest case is that it could reveal a general tradeoff between compression and self-decodability that matters for reasoning systems and protocol design. Still, the direct practical reach is moderate because the setup is somewhat artificial, and serious practitioners would only change behavior if the effect is robust and transferable beyond toy/math tasks.",
+      "revision_notes": [
+        "Broaden the application story beyond synthetic state-tracking and add at least one realistic workflow where shorthand matters (agent memory, tool-use traces, long-context summarization).",
+        "Explicitly argue what changes if the result holds: e.g., when to prefer latent/compressed reasoning vs explicit chains of thought.",
+        "Include a safety/efficiency implication that is concrete, not just speculative.",
+        "Show transfer across domains or model families to support uptake by both interpretability and reasoning communities."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The hypothesis is testable but somewhat overpacked: inverted-U, self-decodability, causal steering, and clinical hand-off are all bundled together. There are good controls proposed, but the causal story is not yet tight: decodability may just proxy for task difficulty, token budget, or model confidence. Related work positioning is decent but still broad. The experiments are feasible, yet the key test of 'steering the cliff' is the weakest link and may be hard to interpret if the probe direction affects other latent factors. As written, the proposal is fundable only if it is narrowed and the causal identification is sharpened.",
+      "revision_notes": [
+        "Separate the proposal into one primary hypothesis and one secondary mechanistic hypothesis; do not make steering equally central to the paper.",
+        "Add explicit controls for task difficulty, output length, and uncertainty to rule out trivial explanations of the cliff.",
+        "Define the probe target precisely and add a gold-standard validation that the probe reflects symbol binding, not generic latent state.",
+        "Specify how 'reuse verified' is measured and how failures are handled, since compliance is likely the main confound.",
+        "Reduce the clinical hand-off claim to a downstream demonstration unless you can justify a real evaluation protocol and expert-relevant metric.",
+        "Add ablations for fixed external code, random symbols, and forced verbosity to isolate self-authored compression from mere brevity."
+      ]
+    },
+    "revision_notes": [
+      "State explicitly what is new relative to Coconut/TokenSkip and emergent-communication: single-agent, frozen, in-context, self-authored notation with reuse.",
+      "Add a sharper novelty claim around the mechanism: self-decoding as a controllable latent variable, not just a correlation with success.",
+      "Specify whether the novelty is the phenomenon, the setting, or the mechanism, and avoid mixing them in one claim.",
+      "Pre-register a concrete definition of 'self-invented shorthand' distinct from abbreviations, scratchpads, and external codebooks.",
+      "Broaden the application story beyond synthetic state-tracking and add at least one realistic workflow where shorthand matters (agent memory, tool-use traces, long-context summarization).",
+      "Explicitly argue what changes if the result holds: e.g., when to prefer latent/compressed reasoning vs explicit chains of thought.",
+      "Include a safety/efficiency implication that is concrete, not just speculative.",
+      "Show transfer across domains or model families to support uptake by both interpretability and reasoning communities.",
+      "Separate the proposal into one primary hypothesis and one secondary mechanistic hypothesis; do not make steering equally central to the paper.",
+      "Add explicit controls for task difficulty, output length, and uncertainty to rule out trivial explanations of the cliff.",
+      "Define the probe target precisely and add a gold-standard validation that the probe reflects symbol binding, not generic latent state.",
+      "Specify how 'reuse verified' is measured and how failures are handled, since compliance is likely the main confound.",
+      "Reduce the clinical hand-off claim to a downstream demonstration unless you can justify a real evaluation protocol and expert-relevant metric.",
+      "Add ablations for fixed external code, random symbols, and forced verbosity to isolate self-authored compression from mere brevity."
+    ]
+  },
+  {
+    "index": 22,
+    "Name": "reasoning_register_shift",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core claims are: (1) models reduce syntactic complexity of their own reasoning as difficulty rises; (2) that per-step syntax is a diagnostic signal of impending error; (3) syntax can be causally manipulated at hard steps to change reasoning; (4) a steerable 'syntactic-elaboration' direction exists. Relative to prior work, the key delta is flipping from input/training syntax to output, step-level, self-regulated reasoning syntax and adding causal intervention. The novelty is real and centered on the mechanism/setting, though it risks collapsing into known verbosity/short-CoT effects unless the syntax-control separation is clean.",
+      "revision_notes": [
+        "Sharpen the claim from 'simpler syntax' to a specific dependency-structure phenomenon distinct from length/verbosity, with a preregistered operational definition.",
+        "Add an explicit novelty table contrasting input-syntax, training-syntax, and output-reasoning-syntax along dimensions of locus, causality, and measurability.",
+        "State what would count as a non-mentionable prior if the effect is merely correlated with shorter CoT or lower token entropy.",
+        "Include at least one mechanism-level analysis that could distinguish register downshift from generic compression or answer shortening."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The studied phenomenon is how models allocate form vs computation during reasoning, which matters for interpretability, adaptive CoT control, efficiency, and potentially safety-critical domains. If true, it would be useful as a per-step difficulty/error signal and could inform adaptive decoding or monitoring. The 'so what' is credible: people working on reasoning LMs would care, and clinical settings raise stakes. However, the application reach depends on effect size and robustness; if it merely tracks verbosity, impact drops to a niche diagnostic result.",
+      "revision_notes": [
+        "State the one-line practical payoff more explicitly: e.g., a low-cost online signal for when a model is about to fail and when to simplify its reasoning trace.",
+        "Add a concise section on likely adopters: reasoning benchmarks, monitoring/interpretability, adaptive decoding, and clinical decision support.",
+        "Clarify whether this would change model training, decoding, or only post-hoc analysis; impact is stronger if it enables an actionable control policy.",
+        "Include a failure-mode analysis showing why this matters even if accuracy gains are modest (e.g., safety monitoring)."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is testable and unusually specific, but several key threats remain: syntax is heavily confounded with length, difficulty, compliance, and content changes; the causal steering claim is ambitious; and the mechanistic 'register downshift' story is not yet fully isolated from compression/verbosity. The experiments are extensive and mostly feasible, but too many are bundled, and some decisive claims depend on parser reliability across languages and on whether forced syntax preserves content. Overall, this could be a strong paper if the causal and diagnostic separations are demonstrated cleanly.",
+      "revision_notes": [
+        "Reduce the claim set to one primary hypothesis and one secondary causal test to avoid overextension.",
+        "Add a direct length-matched and token-entropy-matched control for every syntax intervention, not just some experiments.",
+        "Specify exact compliance checks for forced-syntax prompts and exclude/stratify noncompliant samples a priori.",
+        "Add a baseline using generic CoT shortening/compression controls to show the effect is syntactic rather than just shorter.",
+        "Predefine one gold-standard syntax metric and one backup metric; too many partially redundant metrics weaken falsifiability.",
+        "Add an ablation showing whether the steering direction works across models and languages or only within a single model family.",
+        "Tighten the related work section with explicit citations and a short paragraph on why prior CoT compression work does not already explain the result."
+      ]
+    },
+    "revision_notes": [
+      "Sharpen the claim from 'simpler syntax' to a specific dependency-structure phenomenon distinct from length/verbosity, with a preregistered operational definition.",
+      "Add an explicit novelty table contrasting input-syntax, training-syntax, and output-reasoning-syntax along dimensions of locus, causality, and measurability.",
+      "State what would count as a non-mentionable prior if the effect is merely correlated with shorter CoT or lower token entropy.",
+      "Include at least one mechanism-level analysis that could distinguish register downshift from generic compression or answer shortening.",
+      "State the one-line practical payoff more explicitly: e.g., a low-cost online signal for when a model is about to fail and when to simplify its reasoning trace.",
+      "Add a concise section on likely adopters: reasoning benchmarks, monitoring/interpretability, adaptive decoding, and clinical decision support.",
+      "Clarify whether this would change model training, decoding, or only post-hoc analysis; impact is stronger if it enables an actionable control policy.",
+      "Include a failure-mode analysis showing why this matters even if accuracy gains are modest (e.g., safety monitoring).",
+      "Reduce the claim set to one primary hypothesis and one secondary causal test to avoid overextension.",
+      "Add a direct length-matched and token-entropy-matched control for every syntax intervention, not just some experiments.",
+      "Specify exact compliance checks for forced-syntax prompts and exclude/stratify noncompliant samples a priori.",
+      "Add a baseline using generic CoT shortening/compression controls to show the effect is syntactic rather than just shorter.",
+      "Predefine one gold-standard syntax metric and one backup metric; too many partially redundant metrics weaken falsifiability.",
+      "Add an ablation showing whether the steering direction works across models and languages or only within a single model family.",
+      "Tighten the related work section with explicit citations and a short paragraph on why prior CoT compression work does not already explain the result."
+    ]
+  },
+  {
+    "index": 23,
+    "Name": "premature_disambiguation_branching",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core technical claims needing novelty: (1) ambiguous inputs induce a dynamic per-step collapse from multiple interpretations to one during reasoning; (2) collapse timing relative to a known disambiguating cue is the key phenomenon ('premature disambiguation'); (3) a per-step branch-count/branch-entropy signal can be read from hidden states and predicts downstream errors beyond confidence/entropy; (4) keeping multiple branches alive via prompting or steering improves correctness, shifting the target from abstention/detection to parallel-hypothesis maintenance; (5) this matters in a clinical ambiguity setting. Relative to the cited 2025 ambiguity-representation work, the main delta is real: prior work studies static ambiguity encoding/detection and abstention, whereas this proposal targets dynamic branch maintenance and causal rescue during multi-step reasoning. That said, the branch-count operationalization is partly an obvious next step from ambiguity probes plus sampled continuations, and the intervention family overlaps with existing 'consider alternatives' and uncertainty-steering ideas. Novelty mostly lives in the finding/phenomenon framing and dynamic setting, less in a fundamentally new mechanism.",
+      "revision_notes": [
+        "Define more sharply what counts as an 'interpretation branch' and why this is not reducible to ordinary decoding uncertainty or beam diversity.",
+        "Add a clearer contrast table against the closest prior families: static ambiguity detection, syntactic uncertainty tracking, and linear ambiguity steering/abstention.",
+        "Strengthen novelty by including at least one claim that could not be obtained from output-space sampling alone, e.g. a hidden-state signature that precedes behavioral divergence.",
+        "Specify whether the main novelty is the empirical finding, the causal mechanism, the intervention, or the benchmark/task formulation, and narrow scope accordingly.",
+        "Introduce a cleaner benchmark or dataset contribution with rigorously controlled late-disambiguation items to make the setting itself a reusable contribution."
+      ]
+    },
+    "impact": {
+      "score": 8,
+      "reasoning": "The problem under study is premature commitment under ambiguity, especially confidently wrong reasoning before evidence resolves competing interpretations. Who cares is credible: interpretability, reasoning/uncertainty, safety, and clinical decision support. If true, the result could change how researchers frame ambiguity handling from detection/abstention to maintaining parallel hypotheses, and could influence prompting, evaluation, and monitoring of high-stakes deployments. The strongest case is that many harmful model errors may come from committing too early rather than failing to detect ambiguity. The 'so what?' test is mostly passed: positive results would motivate new diagnostics and interventions; strong nulls would still matter by weakening the branch-maintenance framing. Impact is limited somewhat by the current dependence on synthetic ambiguity batteries and uncertain transfer of steering to real behavior.",
+      "revision_notes": [
+        "Clarify the single primary application story, general reasoning reliability or clinical safety, and align experiments to that audience.",
+        "Add a stronger real-world evaluation beyond templated ambiguity, e.g. naturally occurring ambiguous user queries or clinician-style differential diagnosis notes.",
+        "Quantify what downstream practice would change if the effect is confirmed: monitoring collapse, prompting policies, abstention policies, or decoding changes.",
+        "Include a decision-relevant benchmark showing whether branch-maintenance improves user-facing outcomes, not just internal diagnostics.",
+        "State explicit criteria for when a null result would still be impactful, to strengthen the contribution independent of intervention success."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is testable and better specified than average, with concrete hypotheses, baselines, models, and success criteria. However, there are substantial technical risks and logical gaps. The central latent variable 'number of live branches' is only operationalized via sampled continuations plus clustering, which may conflate stochastic surface variation, decoding artifacts, and genuine maintained interpretations. 'Premature' is still vulnerable to circularity unless the items guarantee no earlier latent cue availability. The probe target depends on the noisy sampling proxy, weakening causal interpretation. The steering plan is under-justified given prior evidence that decodable signals are not necessarily behaviorally correctable by fixed linear steering. The clinical experiment is underspecified and risks looking opportunistic without a validated dataset and safety framing. As written, this could become a solid workshop or conference submission if executed carefully, but for a serious ML venue it needs tighter construct validity and stronger controls.",
+      "revision_notes": [
+        "Pre-register a rigorous operational definition of collapse, including sensitivity analyses over N, clustering method, entropy threshold, and decoding strategy.",
+        "Add controls that separate interpretation-branch maintenance from generic uncertainty, verbosity, and chain-of-thought token expansion; include matched-length and matched-uncertainty interventions throughout.",
+        "Validate the branch proxy with human annotation of sampled branches and with tasks where the true branch set is formally known.",
+        "Strengthen the causal story by testing whether hidden-state branch signals predict errors before any observable output divergence, and by comparing to stronger non-mechanistic baselines.",
+        "For steering, include layer selection rationale, intervention locality, and tests against generic entropy-raising/random residual perturbations; be explicit that behavior change is uncertain.",
+        "Tighten the clinical study: define data provenance, ambiguity taxonomy, expert validation, and safety limits; otherwise demote it to a small case study.",
+        "Add natural, non-templated ambiguity examples and adversarial controls to show robustness beyond constructed late-cue items.",
+        "Reduce scope if needed: focus on demonstrating the phenomenon and diagnostic value first, and treat steering/clinical claims as secondary if evidence is weak."
+      ]
+    },
+    "revision_notes": [
+      "Define more sharply what counts as an 'interpretation branch' and why this is not reducible to ordinary decoding uncertainty or beam diversity.",
+      "Add a clearer contrast table against the closest prior families: static ambiguity detection, syntactic uncertainty tracking, and linear ambiguity steering/abstention.",
+      "Strengthen novelty by including at least one claim that could not be obtained from output-space sampling alone, e.g. a hidden-state signature that precedes behavioral divergence.",
+      "Specify whether the main novelty is the empirical finding, the causal mechanism, the intervention, or the benchmark/task formulation, and narrow scope accordingly.",
+      "Introduce a cleaner benchmark or dataset contribution with rigorously controlled late-disambiguation items to make the setting itself a reusable contribution.",
+      "Clarify the single primary application story, general reasoning reliability or clinical safety, and align experiments to that audience.",
+      "Add a stronger real-world evaluation beyond templated ambiguity, e.g. naturally occurring ambiguous user queries or clinician-style differential diagnosis notes.",
+      "Quantify what downstream practice would change if the effect is confirmed: monitoring collapse, prompting policies, abstention policies, or decoding changes.",
+      "Include a decision-relevant benchmark showing whether branch-maintenance improves user-facing outcomes, not just internal diagnostics.",
+      "State explicit criteria for when a null result would still be impactful, to strengthen the contribution independent of intervention success.",
+      "Pre-register a rigorous operational definition of collapse, including sensitivity analyses over N, clustering method, entropy threshold, and decoding strategy.",
+      "Add controls that separate interpretation-branch maintenance from generic uncertainty, verbosity, and chain-of-thought token expansion; include matched-length and matched-uncertainty interventions throughout.",
+      "Validate the branch proxy with human annotation of sampled branches and with tasks where the true branch set is formally known.",
+      "Strengthen the causal story by testing whether hidden-state branch signals predict errors before any observable output divergence, and by comparing to stronger non-mechanistic baselines.",
+      "For steering, include layer selection rationale, intervention locality, and tests against generic entropy-raising/random residual perturbations; be explicit that behavior change is uncertain.",
+      "Tighten the clinical study: define data provenance, ambiguity taxonomy, expert validation, and safety limits; otherwise demote it to a small case study.",
+      "Add natural, non-templated ambiguity examples and adversarial controls to show robustness beyond constructed late-cue items.",
+      "Reduce scope if needed: focus on demonstrating the phenomenon and diagnostic value first, and treat steering/clinical claims as secondary if evidence is weak."
+    ]
+  },
+  {
+    "index": 24,
+    "Name": "morphological_role_scaffolding",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core claims needing novelty: (1) overt case marking is not just linguistic variation but a functional scaffold for argument-role binding in LLM relational reasoning; (2) this yields a distinctive behavioral signature, robustness to word-order scrambling in case-marked languages versus collapse in English; (3) the advantage is mediated by a locatable, scramble-invariant role-binding representation; (4) that representation is causally steerable to rescue or induce role confusion; (5) the effect appears in a practical direction-flip setting. Relative to prior families on relational binding, multilingual morphology circuits, and SRL, the main delta is the typological-functional framing and the clean scramble-invariance test. This is more than a trivial extension, though some ingredients are incremental: morphology encoding, cross-lingual comparisons, and binding probes/steering already exist, and scrambling advantages for case-marked languages are linguistically expected. Novelty is strongest in the finding/problem framing and cross-connection between typology and mechanistic binding, weaker in raw methodology.",
+      "revision_notes": [
+        "State the exact closest baselines more concretely and contrast against them claim-by-claim: multilingual morphology-as-noise work, relational complexity/binding work, and any prior word-order scrambling studies.",
+        "Add at least one non-case-marking control language or construction that preserves overt role cues without rich case morphology, to show the novelty is specifically about morphological role marking rather than any explicit cueing.",
+        "Sharpen what is genuinely new: is the contribution primarily a new phenomenon, a new mechanistic explanation, or a new evaluation setting? Make one primary novelty claim and subordinate the others.",
+        "Include a clearer argument for why the scramble result is not just a restatement of basic typology, e.g., by predicting model-specific failures or representational signatures not implied by linguistics alone."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether explicit grammatical role marking materially improves LLM robustness on role-sensitive reasoning and reduces dangerous role reversals. Who cares: multilingual NLP, interpretability/binding researchers, typology/computational linguistics, and potentially safety-sensitive practitioners dealing with causal or clinical statements. Strongest case: if morphology acts as a reasoning scaffold, then language choice and prompt framing can systematically change relational reliability and expose a controllable route to reduce role-confusion errors. This is a real and interesting problem, and the clinical direction-flip example helps. The main limiter is the likely scope: the result may mainly affect multilingual prompting/evaluation and mechanistic understanding rather than broadly shifting mainstream LLM practice unless the effects are large and general. The 'so what?' test passes moderately well: positive results could change multilingual evaluation, prompt design, and theory of binding; null results would still refine beliefs, but many practitioners may not change behavior unless practical gains are substantial.",
+      "revision_notes": [
+        "Quantify the practical stakes more directly: estimate expected error reductions in high-risk relation extraction, QA, or clinical summarization settings if the effect holds.",
+        "Broaden downstream relevance beyond the clinical vignette by naming concrete tasks that hinge on role binding: information extraction, legal/medical causality, multilingual agents, and translation robustness.",
+        "Specify what researchers or practitioners would do differently under positive versus null outcomes, e.g., language-conditioned prompting, training data design, or morphology-aware evaluation benchmarks.",
+        "Add a stronger case that this could shift direction in interpretability or multilingual modeling, not just produce an interesting cross-lingual observation."
+      ]
+    },
+    "review": {
+      "score": 7,
+      "reasoning": "The proposal is unusually specific, falsifiable, and fairly well controlled for a short pitch: clear hypotheses, concrete models, datasets, statistical plan, probes, mediation, and steering. The experiments are mostly feasible. However, several technical gaps remain. The central confound, case marking versus overall language competence/resource level, is acknowledged but not fully neutralized by accuracy stratification; matched competence is not equivalent to matched representation quality on the relevant cues. The design also risks conflating morphology with broader overt cue availability, tokenization differences, translation artifacts, and naturalness of scrambled forms. The mechanistic claims are ambitious: per-item mediation from probe decodability is only correlational, and the proposed steering direction could capture generic correctness or difficulty rather than role binding. The clinical direction-flip dataset is underspecified and may be too synthetic to support application claims. Related work is decent but not exhaustive on the exact nearest baselines. If executed carefully, this could be serious venue material, but the current story overreaches slightly from behavioral differences to causal mechanism.",
+      "revision_notes": [
+        "Add stronger controls for the core confound: within-language manipulations that add/remove overt role cues while preserving content, or minimal pairs inside a single language where only case morphology changes.",
+        "Define the translation/rendering protocol more rigorously, including native validation criteria, ambiguity checks, and whether lexical/morphological frequency is matched across languages.",
+        "Strengthen the mechanistic section with negative controls: decode non-role features, test alternative steering directions, and show role-symmetric controls are unaffected not just behaviorally but representationally.",
+        "Clarify how mediation will be tested and avoid causal language unless the design supports it; distinguish correlational probe evidence from intervention evidence.",
+        "Specify sample construction and power more concretely for the clinical set and justify that 300 examples are sufficient for the claimed interaction effects.",
+        "Add at least one baseline using explicit role labels or paraphrastic markers in English to test whether the effect is morphology-specific versus general explicit role annotation.",
+        "Pre-register primary endpoints and success criteria more cleanly, especially which experiment is decisive if others are mixed.",
+        "Tone down broad claims about morphology as a reasoning resource until the design rules out simpler explanations like cue explicitness or model familiarity."
+      ]
+    },
+    "revision_notes": [
+      "State the exact closest baselines more concretely and contrast against them claim-by-claim: multilingual morphology-as-noise work, relational complexity/binding work, and any prior word-order scrambling studies.",
+      "Add at least one non-case-marking control language or construction that preserves overt role cues without rich case morphology, to show the novelty is specifically about morphological role marking rather than any explicit cueing.",
+      "Sharpen what is genuinely new: is the contribution primarily a new phenomenon, a new mechanistic explanation, or a new evaluation setting? Make one primary novelty claim and subordinate the others.",
+      "Include a clearer argument for why the scramble result is not just a restatement of basic typology, e.g., by predicting model-specific failures or representational signatures not implied by linguistics alone.",
+      "Quantify the practical stakes more directly: estimate expected error reductions in high-risk relation extraction, QA, or clinical summarization settings if the effect holds.",
+      "Broaden downstream relevance beyond the clinical vignette by naming concrete tasks that hinge on role binding: information extraction, legal/medical causality, multilingual agents, and translation robustness.",
+      "Specify what researchers or practitioners would do differently under positive versus null outcomes, e.g., language-conditioned prompting, training data design, or morphology-aware evaluation benchmarks.",
+      "Add a stronger case that this could shift direction in interpretability or multilingual modeling, not just produce an interesting cross-lingual observation.",
+      "Add stronger controls for the core confound: within-language manipulations that add/remove overt role cues while preserving content, or minimal pairs inside a single language where only case morphology changes.",
+      "Define the translation/rendering protocol more rigorously, including native validation criteria, ambiguity checks, and whether lexical/morphological frequency is matched across languages.",
+      "Strengthen the mechanistic section with negative controls: decode non-role features, test alternative steering directions, and show role-symmetric controls are unaffected not just behaviorally but representationally.",
+      "Clarify how mediation will be tested and avoid causal language unless the design supports it; distinguish correlational probe evidence from intervention evidence.",
+      "Specify sample construction and power more concretely for the clinical set and justify that 300 examples are sufficient for the claimed interaction effects.",
+      "Add at least one baseline using explicit role labels or paraphrastic markers in English to test whether the effect is morphology-specific versus general explicit role annotation.",
+      "Pre-register primary endpoints and success criteria more cleanly, especially which experiment is decisive if others are mixed.",
+      "Tone down broad claims about morphology as a reasoning resource until the design rules out simpler explanations like cue explicitness or model familiarity."
+    ]
+  },
+  {
+    "index": 25,
+    "Name": "canonicalization_convergence",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core technical claims that would need to be novel: (1) LLMs perform a pre-reasoning internal canonicalization/'mental paraphrase' that maps varied phrasings of the same problem toward a shared representation; (2) failures on awkward phrasings are specifically caused by incomplete convergence to that canonical form rather than later reasoning errors; (3) per-item pre-reasoning convergence is a measurable diagnostic signal predicting correctness beyond shallow features/confidence; (4) patching the canonical representation from an easy phrasing into a hard phrasing causally rescues performance; (5) a canonicalization steering direction can modulate robustness, including in a clinical colloquial-vs-formal setting. Relative to prior behavioral brittleness studies and representation-convergence work, the proposal's main novelty is the mechanistic canonicalization-bottleneck account plus pre-reasoning causal patching/steering tests. The closest prior family is paraphrase brittleness and representation convergence under successful reasoning; the actual delta is moving from observation of sensitivity/convergence to a specific causal mechanism localized before reasoning. This is meaningfully non-trivial, though some components are adjacent to known representation/steering methods and the 'canonical form' concept risks collapsing into superficial similarity unless operationalized more sharply.",
+      "revision_notes": [
+        "Define 'canonical form' more rigorously and distinguish it from frequent phrasing, terse style, or embedding centroid artifacts.",
+        "Add one stronger novelty separator versus existing representation-convergence papers: e.g., demonstrate convergence before any reasoning token and not merely during answer production.",
+        "Include a direct comparison to alternative mechanisms such as confidence, familiarity, lexical normalization, or retrieval-to-pretraining-neighbor accounts.",
+        "Strengthen the claim that novelty lives in mechanism rather than just setting by pre-registering competing causal explanations and discriminating tests.",
+        "Clarify whether the clinical component is a genuine new setting contribution or only an illustrative case study."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The problem under study is surface-form fragility in LLM reasoning and decision-making: semantically equivalent wording changes correctness because internal normalization may fail. Who cares: interpretability researchers, robustness/evaluation researchers, model developers, and potentially safety/clinical users where colloquial phrasing matters. If true, the result could change how people evaluate robustness, localize failure modes, and design interventions or benchmarks; the strongest one-line case is that many 'reasoning failures' may actually be pre-reasoning representation failures caused by wording. This has decent citation and follow-up potential because it provides both a mechanistic framing and diagnostics/interventions. The 'so what?' test mostly passes: if supported, researchers may shift from output-only paraphrase stress tests toward internal diagnostics and robustness interventions; if falsified, that also clarifies that brittleness arises later in reasoning. Still, the downstream practical reach is moderate rather than maximal because the proposal studies mechanism in medium-scale open models and the application path to production systems is not fully developed.",
+      "revision_notes": [
+        "State more concretely what would change in benchmarking, training, or deployment if the hypothesis holds, e.g., new robustness metrics, data augmentation, or inference-time repair methods.",
+        "Make the clinical relevance less illustrative and more consequential by specifying a realistic error taxonomy and stakeholder implications.",
+        "Show why this matters beyond interpretability by tying canonicalization failure to user-facing reliability for multilingual, colloquial, or accessibility-sensitive interfaces.",
+        "Add a stronger case that either outcome is useful: positive result suggests intervention targets; negative result rules out a prominent mechanism and redirects robustness research.",
+        "Identify the communities most likely to build on the work (mechanistic interpretability, evaluation, safety, medical NLP) and the concrete artifacts they would reuse."
+      ]
+    },
+    "review": {
+      "score": 7,
+      "reasoning": "The proposal is unusually testable and better specified than many mechanism proposals: hypotheses are falsifiable, experiments are concrete, controls are partly thought through, and causal claims are backed by patching/steering plans. However, there are important logical and methodological gaps. The biggest issue is construct validity: the 'canonical centroid' defined as frequent/terse-formal phrasing may bake in style/familiarity assumptions and may not reflect a true latent canonical representation. Layer selection by maximal within-cluster convergence risks post hoc optimization. The pre-reasoning extraction point ('end-of-problem') may already contain substantial problem parsing or hidden answer-related processing; answer leakage controls need to be stronger than 'no answer tokens present.' Meaning-preservation verification with only 10% human checks may be insufficient, especially for math and clinical paraphrases. The diagnostic regression may still confound convergence with difficulty or training familiarity. The steering direction derived from converged-minus-non-converged examples may entangle correctness, confidence, and task difficulty. The clinical experiment is underspecified relative to the rest and may overclaim on 'misdiagnosis.' If executed well, this could be strong enough for a serious ML venue, but only with sharper operationalization, stricter controls, and stronger alternative-explanation tests.",
+      "revision_notes": [
+        "Pre-specify the convergence layer selection procedure on held-out data or use nested evaluation to avoid circularity/post hoc layer picking.",
+        "Replace or supplement the centroid definition with multiple canonicalization operationalizations (e.g., medoid phrasing, consensus latent, pairwise convergence, or latent factor model) and show robustness across them.",
+        "Add stronger controls against shallow similarity: matched lexical-overlap subsets, adversarial paraphrases with same length/overlap, and residualized representations after predicting lexical features.",
+        "Strengthen causal patching validation with timing sweeps, token-position sweeps, partial patch ablations, and tests showing rescue without generic confidence inflation.",
+        "Evaluate whether patching/steering preserves answer identity specificity by checking that it rescues the correct answer for the same item but not semantically related distractor items.",
+        "Increase paraphrase quality assurance, especially for MedQA and math, with more human verification or expert review and explicit exclusion criteria.",
+        "Add explicit competing hypotheses and discriminative experiments: familiarity-to-pretraining, parser load, difficulty/confidence, and multilingual/format normalization alternatives.",
+        "Clarify the pre-reasoning boundary operationally and justify why the chosen hidden state is before reasoning rather than already containing latent solution steps.",
+        "Temper the clinical claim from 'misdiagnosis' to model error unless there is a stronger evaluation protocol and domain oversight.",
+        "Report power or expected detectable effect sizes for the causal rescue and steering claims, since the proposed thresholds may be optimistic across 7B-14B models."
+      ]
+    },
+    "revision_notes": [
+      "Define 'canonical form' more rigorously and distinguish it from frequent phrasing, terse style, or embedding centroid artifacts.",
+      "Add one stronger novelty separator versus existing representation-convergence papers: e.g., demonstrate convergence before any reasoning token and not merely during answer production.",
+      "Include a direct comparison to alternative mechanisms such as confidence, familiarity, lexical normalization, or retrieval-to-pretraining-neighbor accounts.",
+      "Strengthen the claim that novelty lives in mechanism rather than just setting by pre-registering competing causal explanations and discriminating tests.",
+      "Clarify whether the clinical component is a genuine new setting contribution or only an illustrative case study.",
+      "State more concretely what would change in benchmarking, training, or deployment if the hypothesis holds, e.g., new robustness metrics, data augmentation, or inference-time repair methods.",
+      "Make the clinical relevance less illustrative and more consequential by specifying a realistic error taxonomy and stakeholder implications.",
+      "Show why this matters beyond interpretability by tying canonicalization failure to user-facing reliability for multilingual, colloquial, or accessibility-sensitive interfaces.",
+      "Add a stronger case that either outcome is useful: positive result suggests intervention targets; negative result rules out a prominent mechanism and redirects robustness research.",
+      "Identify the communities most likely to build on the work (mechanistic interpretability, evaluation, safety, medical NLP) and the concrete artifacts they would reuse.",
+      "Pre-specify the convergence layer selection procedure on held-out data or use nested evaluation to avoid circularity/post hoc layer picking.",
+      "Replace or supplement the centroid definition with multiple canonicalization operationalizations (e.g., medoid phrasing, consensus latent, pairwise convergence, or latent factor model) and show robustness across them.",
+      "Add stronger controls against shallow similarity: matched lexical-overlap subsets, adversarial paraphrases with same length/overlap, and residualized representations after predicting lexical features.",
+      "Strengthen causal patching validation with timing sweeps, token-position sweeps, partial patch ablations, and tests showing rescue without generic confidence inflation.",
+      "Evaluate whether patching/steering preserves answer identity specificity by checking that it rescues the correct answer for the same item but not semantically related distractor items.",
+      "Increase paraphrase quality assurance, especially for MedQA and math, with more human verification or expert review and explicit exclusion criteria.",
+      "Add explicit competing hypotheses and discriminative experiments: familiarity-to-pretraining, parser load, difficulty/confidence, and multilingual/format normalization alternatives.",
+      "Clarify the pre-reasoning boundary operationally and justify why the chosen hidden state is before reasoning rather than already containing latent solution steps.",
+      "Temper the clinical claim from 'misdiagnosis' to model error unless there is a stronger evaluation protocol and domain oversight.",
+      "Report power or expected detectable effect sizes for the causal rescue and steering claims, since the proposed thresholds may be optimistic across 7B-14B models."
+    ]
+  },
+  {
+    "index": 26,
+    "Name": "self_translation_drift",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core technical claims that must be novel: (1) forcing an LLM to restate its own intermediate conclusion in another language mid-trace causes semantic drift and downstream error; (2) this drift compounds across multiple such self-translations; (3) drift is larger for lexical-gap or culturally specific concepts than for clean equivalents; (4) a locatable meaning-preservation representation mediates the effect and can be patched/steered to reduce drift; (5) this matters in a hand-off style clinical setting. Relative to prior multilingual reasoning, language-mixing, and language-drift work, the strongest novelty is the controlled intra-trace self-translation manipulation with same-language paraphrase and no-restatement controls, which sharpens a causal claim beyond merely observing natural pivoting/mixing. The content-selectivity and mechanistic mediation add non-trivial delta. That said, the broader phenomenon, cross-lingual semantic distortion during reasoning, is already active and close prior work exists on pivot errors, language drift, and translation-localized mechanisms, so the contribution is a new experimental paradigm and mechanistic decomposition more than a wholly new problem.",
+      "revision_notes": [
+        "State 3-4 closest papers by name and give a one-sentence explicit delta against each, especially distinguishing self-translation from natural language drift and English-pivot studies.",
+        "Narrow and sharpen the central novelty claim to the controlled causal manipulation plus same-language paraphrase contrast, rather than broadly implying discovery of cross-lingual drift itself.",
+        "Specify why intra-trace self-translation is not reducible to existing code-switching or translation-noise baselines, e.g. by adding an external-translation control or prompted copy-preserve-semantic-content baseline.",
+        "Clarify whether the main novelty is the finding, the paradigm, the mechanism, or the application setting, and align title/abstract around that single primary claim."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The problem under study is whether multilingual LLMs corrupt their own intermediate semantic state when forced to re-express it across languages during reasoning, and whether that corruption causes downstream mistakes. Relevant stakeholders are multilingual NLP researchers, interpretability/safety researchers, and practitioners deploying multilingual systems for QA, RAG, translation, or cross-lingual hand-offs. If true, the result could change evaluation and prompting practice by discouraging or safeguarding mid-trace cross-lingual restatement and motivating mitigation at representation level. The strongest case is that a very common operational pattern, cross-lingual reformulation during reasoning or hand-off, may introduce systematic semantic corruption invisible from final surface fluency. The impact is meaningful but not obviously field-defining: many users do not expose chain-of-thought or force intermediate restatement, and the proposal still needs to show the effect appears in realistic deployments rather than mostly in constructed prompting setups. The phenomenon value is fairly strong even if the method is simple, because either a positive or null result would inform how multilingual reasoning is conceptualized.",
+      "revision_notes": [
+        "Make the real-world pathway more concrete: list 3-5 actual deployment patterns where models are forced to re-express intermediate content across languages, beyond chain-of-thought prompting.",
+        "Strengthen the 'so what' by specifying what practitioners would change if H1/H3 are confirmed versus falsified: prompting rules, RAG pipeline design, translation hand-off safeguards, or decoding-time mitigation.",
+        "Expand the clinical or hand-off use case into a more credible application story with realistic provenance and failure consequences, rather than a small illustrative add-on.",
+        "Include at least one naturally occurring benchmark or agent/RAG setting to show the phenomenon is not limited to an artificial forced-restatement protocol.",
+        "Define success thresholds in terms of practical significance, not just statistical significance, for application-facing settings."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is thoughtful, testable, and unusually explicit about controls, models, seeds, statistics, and convincing-result thresholds. The core hypotheses are reasonably falsifiable. Strong points include the decisive same-language paraphrase control, compounding condition, multiple models, mixed-effects analysis, and patch/random controls. However, there are several technical gaps. 'Known intermediate-conclusion ground truth' is underspecified and hard to guarantee for 2Wiki and logic traces; compliance verification and proving the model actually continues from the translated conclusion are non-trivial. Back-translation checking may itself miss nuanced drift. The mechanistic claims are the weakest: a probe AUROC>=0.70 and correlation with error do not establish a distinct meaning-preservation representation, and mediation language is overstrong without a more rigorous causal design. Patching/steering may leak answer information or improve performance via generic confidence restoration rather than semantic preservation. The concept-gap annotation scheme is also underspecified and potentially subjective. The clinical experiment looks underdeveloped relative to the rest and may feel bolted on. If executed carefully, this could be workshop-to-mid-tier conference interesting and potentially stronger if the mechanistic evidence is solid, but in current form it is not yet airtight enough for a top ML venue.",
+      "revision_notes": [
+        "Precisely define how intermediate-conclusion ground truth is obtained for each dataset, with templates or annotated traces, and show that insertion points are semantically comparable across tasks.",
+        "Add a direct test that the translated conclusion is causally used downstream, e.g. masked-context or contradiction injection controls, not only format compliance.",
+        "Temper mechanistic claims: rename 'meaning-preservation representation' to an operationally defined decodable state unless stronger causal localization is provided.",
+        "Strengthen Exp4/5 with stricter controls against answer leakage and generic denoising, such as within-item wrong-conclusion patches, orthogonalized steering directions, and tests on no-translation conditions.",
+        "Specify layer/token/site choices for probing, patching, and steering, plus a preregistered localization procedure to avoid post hoc cherry-picking.",
+        "Detail the concept-gap labeling protocol, annotator agreement, and resources used; consider automated and human labels with robustness checks.",
+        "For drift measurement, add human bilingual evaluation on a stratified subset to validate NLI/back-translation metrics.",
+        "Either deepen the clinical study with realistic vignettes and expert validation or remove it from the main claim to avoid overextension.",
+        "Clarify power analysis or expected effect-size sensitivity for the proposed sample sizes and per-condition splits.",
+        "Tighten the narrative around one main contribution and one secondary mechanistic contribution; the current package risks looking overclaimed relative to what the experiments can firmly establish."
+      ]
+    },
+    "revision_notes": [
+      "State 3-4 closest papers by name and give a one-sentence explicit delta against each, especially distinguishing self-translation from natural language drift and English-pivot studies.",
+      "Narrow and sharpen the central novelty claim to the controlled causal manipulation plus same-language paraphrase contrast, rather than broadly implying discovery of cross-lingual drift itself.",
+      "Specify why intra-trace self-translation is not reducible to existing code-switching or translation-noise baselines, e.g. by adding an external-translation control or prompted copy-preserve-semantic-content baseline.",
+      "Clarify whether the main novelty is the finding, the paradigm, the mechanism, or the application setting, and align title/abstract around that single primary claim.",
+      "Make the real-world pathway more concrete: list 3-5 actual deployment patterns where models are forced to re-express intermediate content across languages, beyond chain-of-thought prompting.",
+      "Strengthen the 'so what' by specifying what practitioners would change if H1/H3 are confirmed versus falsified: prompting rules, RAG pipeline design, translation hand-off safeguards, or decoding-time mitigation.",
+      "Expand the clinical or hand-off use case into a more credible application story with realistic provenance and failure consequences, rather than a small illustrative add-on.",
+      "Include at least one naturally occurring benchmark or agent/RAG setting to show the phenomenon is not limited to an artificial forced-restatement protocol.",
+      "Define success thresholds in terms of practical significance, not just statistical significance, for application-facing settings.",
+      "Precisely define how intermediate-conclusion ground truth is obtained for each dataset, with templates or annotated traces, and show that insertion points are semantically comparable across tasks.",
+      "Add a direct test that the translated conclusion is causally used downstream, e.g. masked-context or contradiction injection controls, not only format compliance.",
+      "Temper mechanistic claims: rename 'meaning-preservation representation' to an operationally defined decodable state unless stronger causal localization is provided.",
+      "Strengthen Exp4/5 with stricter controls against answer leakage and generic denoising, such as within-item wrong-conclusion patches, orthogonalized steering directions, and tests on no-translation conditions.",
+      "Specify layer/token/site choices for probing, patching, and steering, plus a preregistered localization procedure to avoid post hoc cherry-picking.",
+      "Detail the concept-gap labeling protocol, annotator agreement, and resources used; consider automated and human labels with robustness checks.",
+      "For drift measurement, add human bilingual evaluation on a stratified subset to validate NLI/back-translation metrics.",
+      "Either deepen the clinical study with realistic vignettes and expert validation or remove it from the main claim to avoid overextension.",
+      "Clarify power analysis or expected effect-size sensitivity for the proposed sample sizes and per-condition splits.",
+      "Tighten the narrative around one main contribution and one secondary mechanistic contribution; the current package risks looking overclaimed relative to what the experiments can firmly establish."
+    ]
+  },
+  {
+    "index": 27,
+    "Name": "translation_crutch_grammar_induction",
+    "novelty": {
+      "score": 8,
+      "reasoning": "Core novel claims: (1) in-context novel-language learning is often mediated by a covert pivot-language translation process rather than standalone grammar induction; (2) reliance on this pivot crutch increases with typological distance and specifically harms pivot-incompatible constructions; (3) the pivot representation is internally locatable even after gloss removal; (4) this representation is causally steerable, with a predicted near-vs-far typology crossover; (5) the pivot should align with the model's dominant training language, not necessarily English. Relative to prior behavioral learnability and known-language pivot-routing work, the main delta is a mechanistic dissociation between translation-crutch and genuine induction plus causal intervention. This is meaningfully beyond an obvious baseline, though it still sits close to existing ICL-of-languages and multilingual-routing families rather than introducing a wholly new task.",
+      "revision_notes": [
+        "Define more sharply what counts as 'genuine standalone grammar induction' versus 'pivot-mediated generation' in operational terms, to make the claimed novelty crisp rather than interpretive.",
+        "Add at least one non-synthetic or linguistically grounded held-out setting to show the contribution is not only a new hypothesis on artificial languages.",
+        "Specify the closest baselines from prior work and state exactly what result they cannot already explain behaviorally.",
+        "Clarify whether the novelty is primarily a mechanistic finding, a causal method, or a new evaluation setting, and align the paper around that single main contribution."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether LLMs truly acquire new grammar in context or instead rely on covert translation through a known pivot. This matters to multilingual NLP, low-resource translation/language documentation, ICL theory, and interpretability. If true, it would change how researchers evaluate few-shot language learning claims and how practitioners trust grammar-book prompting for unseen languages. The strongest case is that apparent novel-language competence may be an illusion bounded by pivot compatibility. The work is likely citable and useful, especially as a cautionary mechanistic result, but real-world reach depends on whether findings transfer beyond artificial-language setups and a small set of models.",
+      "revision_notes": [
+        "Strengthen the practical 'so what' by mapping concrete downstream implications for low-resource MT, language documentation, and prompt-based adaptation workflows.",
+        "Include at least one decision-relevant takeaway: e.g., when grammar-book prompting should be avoided or how to detect pivot-crutch failure modes in deployment.",
+        "Add a stronger argument for generalization beyond synthetic languages, ideally via a semi-natural benchmark or typologically controlled real-language transfer case.",
+        "State explicitly what researchers would do differently under each outcome, including if the hypothesis is falsified."
+      ]
+    },
+    "review": {
+      "score": 6,
+      "reasoning": "The proposal is ambitious, testable, and unusually specific for a short proposal, but several technical risks remain. The central hypothesis is falsifiable, and the predicted interaction/crossover patterns are commendably concrete. However, the causal identification is not fully convincing: decoding a pivot gloss from hidden states may still reflect residual task structure rather than translation per se, and steering directions may induce generic degradation or shallow prompt-feature suppression. The typological-distance metric is hand-designed and English-centric, the notion of a model's 'dominant training language' is asserted rather than measurable, and synthetic-language construction may confound distance with task difficulty or data sparsity. Related work positioning is decent but could be more specific on exact baselines and expected failure modes. Experiments are mostly feasible, but key controls are missing to disentangle translation, memorization of examples, latent interlingua representations, and generic instruction-following artifacts. If executed well, this could be strong for a serious ML venue, but only with tighter operationalization and stronger controls.",
+      "revision_notes": [
+        "Pre-register or formally define the causal estimand for the 'translation crutch' and distinguish it from generic latent semantic representation or instruction-following state.",
+        "Add controls that match difficulty while breaking pivot-translatability, plus adversarial constructions where pivot and grammar predict different outputs but surface complexity is equal.",
+        "Quantify and validate 'dominant training language' empirically for each model rather than assuming English default.",
+        "Add stronger probe controls: shuffled gloss targets, alternative non-pivot labels, layer/time-position matching, and tests against simple lexical memorization from examples.",
+        "Specify how steering directions are learned and validated, and include controls for equal-norm random directions, unrelated semantic directions, and global performance degradation.",
+        "Refine the typological-distance measure or replace it with a factorial design that isolates word order, case, agreement, and morphology separately.",
+        "Include power estimates and expected item counts per condition to justify detecting the proposed interaction and crossover effects.",
+        "Clarify evaluation for free-generation outputs beyond auto-grading, including human adjudication or constrained decoding checks for ambiguous acceptable forms.",
+        "Narrow the paper's main claim if needed: either focus on behavioral evidence plus probe-based support, or on a stronger causal interpretability claim with fewer but cleaner settings."
+      ]
+    },
+    "revision_notes": [
+      "Define more sharply what counts as 'genuine standalone grammar induction' versus 'pivot-mediated generation' in operational terms, to make the claimed novelty crisp rather than interpretive.",
+      "Add at least one non-synthetic or linguistically grounded held-out setting to show the contribution is not only a new hypothesis on artificial languages.",
+      "Specify the closest baselines from prior work and state exactly what result they cannot already explain behaviorally.",
+      "Clarify whether the novelty is primarily a mechanistic finding, a causal method, or a new evaluation setting, and align the paper around that single main contribution.",
+      "Strengthen the practical 'so what' by mapping concrete downstream implications for low-resource MT, language documentation, and prompt-based adaptation workflows.",
+      "Include at least one decision-relevant takeaway: e.g., when grammar-book prompting should be avoided or how to detect pivot-crutch failure modes in deployment.",
+      "Add a stronger argument for generalization beyond synthetic languages, ideally via a semi-natural benchmark or typologically controlled real-language transfer case.",
+      "State explicitly what researchers would do differently under each outcome, including if the hypothesis is falsified.",
+      "Pre-register or formally define the causal estimand for the 'translation crutch' and distinguish it from generic latent semantic representation or instruction-following state.",
+      "Add controls that match difficulty while breaking pivot-translatability, plus adversarial constructions where pivot and grammar predict different outputs but surface complexity is equal.",
+      "Quantify and validate 'dominant training language' empirically for each model rather than assuming English default.",
+      "Add stronger probe controls: shuffled gloss targets, alternative non-pivot labels, layer/time-position matching, and tests against simple lexical memorization from examples.",
+      "Specify how steering directions are learned and validated, and include controls for equal-norm random directions, unrelated semantic directions, and global performance degradation.",
+      "Refine the typological-distance measure or replace it with a factorial design that isolates word order, case, agreement, and morphology separately.",
+      "Include power estimates and expected item counts per condition to justify detecting the proposed interaction and crossover effects.",
+      "Clarify evaluation for free-generation outputs beyond auto-grading, including human adjudication or constrained decoding checks for ambiguous acceptable forms.",
+      "Narrow the paper's main claim if needed: either focus on behavioral evidence plus probe-based support, or on a stronger causal interpretability claim with fewer but cleaner settings."
+    ]
+  },
+  {
+    "index": 28,
+    "Name": "pragmatic_enrichment_default",
+    "novelty": {
+      "score": 6,
+      "reasoning": "Core claims: (1) LLM pragmatic enrichment is a default failure mode on literal-required tasks, not just a competence; (2) a locatable 'pragmatic-mode' signal predicts literal-vs-enriched behavior; (3) steering that signal causally reduces literal errors while preserving cooperative pragmatics; (4) this matters especially for logic/legal/clinical text. The framing is meaningfully different from prior pragmatics work, but the underlying phenomenon sits close to existing scalar-implicature / pragmatic-competence studies and steering/intervention work. The main novelty is the reframing plus causal probing in a new failure-mode setting, not a clearly new mechanism. The strongest delta vs prior work is moving from 'can models compute implicatures?' to 'does enrichment systematically misfire under literal-only tasks, and can we suppress it?' That is non-trivial, but the proposal is in tension with recent literalist-bias results, so the novelty claim depends on a stronger-than-usual empirical reversal.",
+      "revision_notes": [
+        "State explicitly what is new relative to literalist-bias pragmatics papers: is the claim a new default regime, a different task class, or a new causal interpretation?",
+        "Narrow the novelty claim to one crisp contribution (e.g., 'literal-required failure mode with causal steering') instead of bundling behavior, probe, and intervention as equally novel.",
+        "Add a direct comparison to the closest 2025 literalist-bias findings and explain why your items/tasks should overturn or refine them.",
+        "If possible, define a new benchmark or protocol for 'literal-required vs enrichment-correct' matched pairs; dataset/task novelty would strengthen the axis.",
+        "Clarify whether the 'pragmatic-mode' is a new mechanistic entity or just a probeable latent direction; avoid overclaiming theory novelty."
+      ]
+    },
+    "impact": {
+      "score": 7,
+      "reasoning": "The phenomenon under study is whether LLMs over-enrich meaning when literal interpretation is required, causing errors in logic, contracts, statutes, and clinical instructions. That is a real and broadly relevant problem, especially for safety-critical and high-stakes NLP where silent misreadings matter. The strongest one-line case: if models default to pragmatic enrichment, they can look fluent while violating literal constraints in domains where that is dangerous. If true, follow-up work in safety, legal/clinical NLP, and interpretability would likely cite and build on it. Even a null result would be useful because it would suggest pragmatic inference is more context-gated than feared. Uptake is plausible across pragmatics, interpretability, and domain NLP, though the real-world reach depends on showing substantial and generalizable error rates, not just curated examples.",
+      "revision_notes": [
+        "Quantify the downstream stakes with one domain-specific case study showing concrete harm potential, not just illustrative vignettes.",
+        "Add analysis of how often this failure occurs in real prompts or documents, not only in synthetic matched pairs.",
+        "Include comparison against existing guardrails/prompting so the practical value is clear.",
+        "Frame the contribution as a safety/robustness issue for legal/clinical deployment to broaden who would care.",
+        "If effects are modest, spell out the phenomenon value: what new scientific insight about model interpretation does it reveal?"
+      ]
+    },
+    "review": {
+      "score": 5,
+      "reasoning": "The proposal is testable and has a decent experimental spine, but several claims are too ambitious relative to the evidence it currently promises. The central hypothesis is plausible but under-specified: 'pragmatic-mode' could be a useful latent description, yet the proposal does not cleanly separate a true default mechanism from general difficulty, instruction sensitivity, or dataset artifacts. Related work is cited in broad families, but positioning is somewhat overstated ('NONE frame...') and needs more precise differentiation from recent literalist-bias and steering work. The experiments are reasonably concrete, with controls and matched pairs, but key failures remain: no clear item construction protocol, no preregistered operational definition of enriched vs literal correctness, no ablation isolating steering specificity from capacity suppression, and no plan for alternative explanations if probe AUROC is high but causality is weak. The clinical dosing claim is the weakest and most vulnerable. As written, this could be submission-ready only if the empirical scope is tightened and the claims are softened.",
+      "revision_notes": [
+        "Define the exact item-generation and annotation protocol for literal-required vs enrichment-correct pairs, including adjudication of ambiguous cases.",
+        "Pre-register the primary endpoint and success criterion; separate behavioral default, probe predictivity, and causal steering into distinct hypotheses.",
+        "Add strong baselines: generic difficulty, instruction-following, confidence calibration, and a random-direction steering control.",
+        "Include ablations showing whether steering changes pragmatics specifically versus overall verbosity, conservatism, or refusal behavior.",
+        "Tighten the clinical section: either use a vetted benchmark with clear literal ground truth or downscope it to a motivating example.",
+        "Rewrite related work with a sharper contrast to recent literalist-bias findings and explain exactly why your result would extend or contradict them.",
+        "Add failure-mode analysis for when the probe predicts but steering does not help, or vice versa.",
+        "Reduce overclaiming around 'default' and 'cause' unless mediation and specificity are convincingly demonstrated."
+      ]
+    },
+    "revision_notes": [
+      "State explicitly what is new relative to literalist-bias pragmatics papers: is the claim a new default regime, a different task class, or a new causal interpretation?",
+      "Narrow the novelty claim to one crisp contribution (e.g., 'literal-required failure mode with causal steering') instead of bundling behavior, probe, and intervention as equally novel.",
+      "Add a direct comparison to the closest 2025 literalist-bias findings and explain why your items/tasks should overturn or refine them.",
+      "If possible, define a new benchmark or protocol for 'literal-required vs enrichment-correct' matched pairs; dataset/task novelty would strengthen the axis.",
+      "Clarify whether the 'pragmatic-mode' is a new mechanistic entity or just a probeable latent direction; avoid overclaiming theory novelty.",
+      "Quantify the downstream stakes with one domain-specific case study showing concrete harm potential, not just illustrative vignettes.",
+      "Add analysis of how often this failure occurs in real prompts or documents, not only in synthetic matched pairs.",
+      "Include comparison against existing guardrails/prompting so the practical value is clear.",
+      "Frame the contribution as a safety/robustness issue for legal/clinical deployment to broaden who would care.",
+      "If effects are modest, spell out the phenomenon value: what new scientific insight about model interpretation does it reveal?",
+      "Define the exact item-generation and annotation protocol for literal-required vs enrichment-correct pairs, including adjudication of ambiguous cases.",
+      "Pre-register the primary endpoint and success criterion; separate behavioral default, probe predictivity, and causal steering into distinct hypotheses.",
+      "Add strong baselines: generic difficulty, instruction-following, confidence calibration, and a random-direction steering control.",
+      "Include ablations showing whether steering changes pragmatics specifically versus overall verbosity, conservatism, or refusal behavior.",
+      "Tighten the clinical section: either use a vetted benchmark with clear literal ground truth or downscope it to a motivating example.",
+      "Rewrite related work with a sharper contrast to recent literalist-bias findings and explain exactly why your result would extend or contradict them.",
+      "Add failure-mode analysis for when the probe predicts but steering does not help, or vice versa.",
+      "Reduce overclaiming around 'default' and 'cause' unless mediation and specificity are convincingly demonstrated."
+    ]
+  },
+  {
+    "index": 29,
+    "Name": "doubt_marker_gating",
+    "novelty": {
+      "score": 7,
+      "reasoning": "Core claims: (1) specific metacognitive marker identity is causally functional rather than a surface readout; (2) different markers recruit different revision types (full backtrack vs local edit); (3) forcing the right marker at an injected error can trigger correction while mismatched/neutral fillers do not; (4) suppressing the emitted marker can abort correction; (5) marker-specific internal directions may exist beyond a single reflection axis. Relative to prior work, the delta is a sharper lexical-granularity causal test with sufficiency/necessity, not just a holistic reflection direction. That is non-trivial. Novelty is somewhat weakened because marker-type differences, Wait/Hmm cues, and repeated Wait effects are already partly known, so the main novelty is in the causal mechanism and matched controls rather than the setting or task.",
+      "revision_notes": [
+        "Tighten the novelty claim to one primary contribution: lexical identity as a causal gate on revision, not a generic reflection study.",
+        "Explicitly distinguish your hypothesis from known marker-type correlations (e.g., Wait/Hmm vs But/However) by stating the new causal prediction that only the semantically appropriate marker changes revision type.",
+        "Add a compact table mapping each marker to the exact prior result it goes beyond and the precise delta.",
+        "State what would count as a null or weaker finding (e.g., marker identity predicts but does not cause revision) so the novelty boundary is clear."
+      ]
+    },
+    "impact": {
+      "score": 8,
+      "reasoning": "The phenomenon under study is whether LLM self-correction is gated by specific discourse markers or merely signaled by them. Who cares: interpretability, reasoning control, self-correction, and safety-oriented inference-time steering. Strong one-line case: if lexical markers causally control revision, then a simple token-level intervention can modulate model error correction and reveal how metacognitive behavior is implemented. This is an important and widely reusable question, not a niche curiosity. Either positive or negative results would matter: positive would suggest controllable linguistic gates; negative would sharpen the view that markers are epiphenomenal. So yes, the result would change how researchers think about self-correction and control if it holds.",
+      "revision_notes": [
+        "Add a short paragraph on downstream uses: prompt control, interpretability, calibration, and safety monitoring.",
+        "State explicitly which communities would likely cite it (mechanistic interpretability, reasoning, alignment, evaluation).",
+        "Strengthen the 'so what' by contrasting practical implications of positive vs negative results.",
+        "Include at least one real-world-facing consequence beyond benchmarks, even if modest (e.g., debugging reasoning failures)."
+      ]
+    },
+    "review": {
+      "score": 7,
+      "reasoning": "The proposal is testable and reasonably well-scoped, with causal sufficiency and necessity experiments, controls for length, mismatched markers, and random-token baselines. That said, there are several gaps: the hypothesis bundles multiple claims (informativeness, sufficiency, necessity, mediation, clinical transfer), making the core falsifiable claim somewhat diffuse; the related work positioning is plausible but a bit overstated in saying prior work treats markers only as epiphenomenal; and some experiments risk confounding marker identity with token frequency, syntax, and decoding constraints. The clinical vignette experiment feels underjustified relative to the main claim. Overall, if executed carefully, this is strong enough for a serious ML venue, but the proposal needs sharper prioritization and cleaner primary endpoints.",
+      "revision_notes": [
+        "Reduce to one primary hypothesis and two decisive experiments; move the rest to secondary analyses.",
+        "Pre-register the exact outcome metrics for sufficiency and necessity, including effect sizes and failure criteria.",
+        "Add controls that isolate lexical semantics from token count, punctuation, and position more thoroughly.",
+        "Specify how the latent-error injection preserves naturalism and avoids creating artifacts that make markers artificially useful.",
+        "Clarify the mediation analysis, or drop it if it is not central; it currently reads as underpowered relative to the main claim.",
+        "Justify the clinical vignette experiment or remove it from the core evaluation to keep the story tight."
+      ]
+    },
+    "revision_notes": [
+      "Tighten the novelty claim to one primary contribution: lexical identity as a causal gate on revision, not a generic reflection study.",
+      "Explicitly distinguish your hypothesis from known marker-type correlations (e.g., Wait/Hmm vs But/However) by stating the new causal prediction that only the semantically appropriate marker changes revision type.",
+      "Add a compact table mapping each marker to the exact prior result it goes beyond and the precise delta.",
+      "State what would count as a null or weaker finding (e.g., marker identity predicts but does not cause revision) so the novelty boundary is clear.",
+      "Add a short paragraph on downstream uses: prompt control, interpretability, calibration, and safety monitoring.",
+      "State explicitly which communities would likely cite it (mechanistic interpretability, reasoning, alignment, evaluation).",
+      "Strengthen the 'so what' by contrasting practical implications of positive vs negative results.",
+      "Include at least one real-world-facing consequence beyond benchmarks, even if modest (e.g., debugging reasoning failures).",
+      "Reduce to one primary hypothesis and two decisive experiments; move the rest to secondary analyses.",
+      "Pre-register the exact outcome metrics for sufficiency and necessity, including effect sizes and failure criteria.",
+      "Add controls that isolate lexical semantics from token count, punctuation, and position more thoroughly.",
+      "Specify how the latent-error injection preserves naturalism and avoids creating artifacts that make markers artificially useful.",
+      "Clarify the mediation analysis, or drop it if it is not central; it currently reads as underpowered relative to the main claim.",
+      "Justify the clinical vignette experiment or remove it from the core evaluation to keep the story tight."
+    ]
+  }
+]

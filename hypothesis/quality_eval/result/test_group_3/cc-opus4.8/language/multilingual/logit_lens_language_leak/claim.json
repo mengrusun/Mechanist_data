@@ -1,0 +1,22 @@
+{
+  "Name": "logit_lens_language_leak",
+  "Title": "Reading the Interlingua: Do Intermediate Logits Reveal a Language-Neutral or Dominant-Language Code?",
+  "Short Hypothesis": "Applying the unembedding to intermediate layers (logit lens) in non-dominant-language processing yields dominant-language tokens not because computation is dominant-language-based, but because the unembedding is dominant-language-biased; a language-fair lens (per-language calibrated unembedding) reveals the intermediate code is more language-neutral than raw logit lens suggests.",
+  "Related Work": "Wendler et al. use logit lens to argue for English-centric processing. We critically test whether that conclusion is an unembedding artifact by building a language-calibrated lens, distinguishing genuine dominant-language computation from readout bias—an important methodological correction with substantive implications.",
+  "Abstract": "The claim that models 'think in English' rests largely on logit-lens readouts showing dominant-language tokens in intermediate layers. We hypothesize this is partly an artifact of a dominant-language-biased unembedding, not evidence that intermediate computation is dominant-language-based. We propose a language-fair lens: calibrate the unembedding per language (e.g., whiten/normalize per-language token statistics or learn a per-language readout) and re-examine intermediate representations. We predict the fair lens shows substantially more language-neutrality (or target-language content) in the middle layers than the raw logit lens, indicating the intermediate code is more abstract than 'English tokens.' We quantify the gap between raw and fair-lens language attributions across layers and languages, and validate the fair lens against causal probes (which language's content is causally present). Metrics: raw vs fair-lens dominant-language token fraction by layer, agreement of fair lens with causal concept probes, and residual dominant-language content after calibration. This offers a methodological correction to a prominent multilingual interpretability claim and sharpens conclusions about latent-language processing.",
+  "Experiments": [
+    "Reproduce raw logit-lens dominant-language token fractions across layers for non-dominant-language inputs.",
+    "Build a language-fair lens: per-language unembedding calibration (whitening / learned readout).",
+    "Compare raw vs fair-lens dominant-language attribution by layer/language.",
+    "Validate fair lens against causal concept probes (which language's content is causally present).",
+    "Quantify residual dominant-language content after calibration.",
+    "Test on models with different dominant languages.",
+    "Controls: dominant-language inputs (should read dominant either way); random calibration."
+  ],
+  "Risk Factors and Limitations": [
+    "Calibration could over-correct, hiding genuine dominant-language content.",
+    "Defining a 'fair' lens is itself a modeling choice with assumptions.",
+    "Logit lens is inherently limited for nonlinear representations.",
+    "Conclusions may depend on the calibration method."
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Improving Alignment and Robustness with Circuit Breakers",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The run fits a LoRA RR adapter and reports metrics on disjoint data, honored in code. In logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_ff42395603ec42719294c154fcb73750.py the CB training data (circuit_breakers_train.json) is shuffled with random.seed(0) and split: train_pairs = pairs[:1024], heldout_harm_pairs = pairs[1024:1064]; the generalization probe (probe_generalization) is measured on the held-out slice, disjoint from training. ASR is evaluated on a separate HarmBench behavior pool (build_attack_set over harm_prompts), independent of the CB training set. There is no fitted threshold/classifier selected on the test set — the ASR judge is a fixed keyword heuristic (judge_asr), so no selection-set/eval-set leakage path exists. Minor caveat: base and RR are evaluated on the same 60 prompts (correct, since it is a paired before/after comparison, not a fitted model). Splits are real and code-honored with one small held-out probe, so hygiene is good but not perfectly documented across all artifacts.",
+    "score": 4,
+    "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_ff42395603ec42719294c154fcb73750.py"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "Two labels are used. (1) For the rerouting/mechanism claim, the metric is cosine similarity between LoRA and base hidden states on held-out harmful response tokens (probe_generalization), which directly and validly operationalizes 'rerouting representations to an orthogonal subspace' (pre_train_cos=1.0 -> post_train_cos=-0.105). (2) For ASR, the label is produced by a home-grown keyword/heuristic 'coherence-gated' judge (judge_asr / is_refusal / has_harmful_substance / is_gibberish in best_solution_...py) rather than the paper's fine-tuned HarmBench classifier. This heuristic counts any non-refusing, non-gibberish, >=15-word response as a successful attack, which is a crude and noisy proxy that can both over- and under-count harm and is not validated against the paper's classifier. The gibberish gate is a thoughtful addition, but the ASR label remains an under-validated proxy for the 'harmful compliance' the claim cares about.",
+    "score": 3,
+    "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_ff42395603ec42719294c154fcb73750.py", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The base model is honored exactly: find_model_dir resolves Llama-3-8B-Instruct from MODEL_DIR and the run executes on it (benign generation returns 'Paris.', confirming a real load). Training data is the specified GraySwanAI circuit_breakers_train.json (find_cb_train). However the evaluation dataset resource is materially downgraded: the task specifies 'HarmBench — safety evaluation under unseen attacks (GCG, PAIR, TAP, AutoDAN, direct request, human red-team)', but the code uses only raw HarmBench behaviors and SYNTHESIZES the attacks itself via hand-written GCG_SUFFIXES / PAIR_PREFIXES / HUMAN_REDTEAM_PREFIXES (build_attack_set), explicitly noting 'real GCG suffixes / PAIR jailbreaks may not be present.' TAP and AutoDAN are absent entirely. Only ~60 eval prompts (15 x 4 styles) are used. The paper's required comparison baselines (refusal-trained AND adversarial-trained/R2D2) and capability benchmarks (MT-Bench, MMLU) are not run at all (grep confirms no refusal_trained/adv/mmlu/mt_bench in the code). Model exact but the headline dataset (real unseen attacks) is replaced by fabricated attack strings on a tiny subset — a disclosed but significant downgrade of the core resource.",
+    "score": 2,
+    "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_ff42395603ec42719294c154fcb73750.py", "idea.md", "logs/0-run/baseline_summary.json"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The realized evidence is thin and does not match the breadth of the claims. The main ASR result rests on 60 eval prompts (experiment_data.npy ground_truth: 15 each for direct_request/gcg_transfer/pair/human_redteam) and the generalization probe on 20 held-out prompts. Two of the four canonical claims (C3 multimodal, C4 agent) have ZERO executed experiments anywhere in the tree (no LLaVA/BFCL/agent code exists), yet report.md marks the overall verdict as 'Partially or fully supported' and research_summary.json / ablation_summary.json vlm_feedback prose asserts that 'the intervention transfers to multimodal LLaVA-NeXT-Mistral-7B' and 'transfers to LLM agents, reducing harmful tool-use rates' — conclusions stated with no experiment run. Claim C2 lacks the refusal/adv baselines and capability benchmarks needed to support it. This is a clear overclaim relative to the data actually produced.",
+    "score": 2,
+    "evidence_files": ["report.md", "logs/0-run/research_summary.json", "logs/0-run/ablation_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The result is a single-seed point estimate. The research node uses random.seed(0) with no seed loop, and the 'seed aggregation' step (experiment_results/seed_aggregation_afc71a.../aggregation_plotting_code.py) references only ONE npy path (experiment_c9384ee6..._proc_2293813), so N=1 run and SEM is 0 by construction. Bootstrap CIs were computed but only over 20 stored samples and overlap heavily: base_ci=(0.2,0.6) vs rr_ci=(0.099,0.45) (experiment_data.npy). The reported ASR reduction (base 0.2167 -> RR 0.1167, delta -0.10) therefore sits entirely within noise with no significance separation. No variance across seeds/runs is reported. The draft honestly flags the delta as 'marginal', but robustness to randomness is unverified and the effect is not distinguishable from noise.",
+    "score": 2,
+    "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_ff42395603ec42719294c154fcb73750.py", "logs/0-run/experiment_results/seed_aggregation_afc71a4673f745e58b9b94540b71a783/aggregation_plotting_code.py", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "Claim C1 is mechanistic/causal (harmful representations 'can be rerouted' to an orthogonal subspace). The run supports it with a genuine intervention rather than mere correlation: LoRA RR training actively optimizes rr_harm_loss_multi to push cos(h_lora, h_base) toward/below zero across layers 10-20, and the effect is measured on HELD-OUT harmful prompts via probe_generalization (pre_train_cos=1.0 -> post_train_cos=-0.105 in experiment_data.npy), showing the rerouting generalizes beyond training samples. The ablation stage adds a single-layer vs multi-layer control. However, a random-direction baseline and a coefficient/alpha sweep are absent, so a key control that would rule out trivial-direction effects is missing. Intervention is real but controls are partial.",
+    "score": 3,
+    "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_ff42395603ec42719294c154fcb73750.py", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy", "logs/0-run/ablation_summary.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "The core executed metrics are traceable and agree with on-disk products: base_asr=0.2167 / rr_asr=0.1167 in research_summary.json and draft_summary.json match experiment_data.npy (harmbench.base_asr=0.21666..., rr_asr=0.11666...), and the probe cosines and per-style ASR likewise trace to the npy. That part is grounded in real execution. The provenance failure is narrative: research_summary.json and ablation_summary.json contain vlm_feedback prose describing concrete non-existent results — e.g. multimodal 'ASR remains dramatically lower (10-25% range)', agents 'high rate (~60-75%)' reduced to '(~10-20%)', and 'MMLU accuracy (~65-70%)' — none of which correspond to any run product (no multimodal/agent/MMLU code or data exists). These are confabulated numbers/interpretations with no traceable source. So metric numbers are grounded, but a substantial layer of the reported narrative is sourceless.",
+    "score": 3,
+    "evidence_files": ["logs/0-run/research_summary.json", "logs/0-run/ablation_summary.json", "logs/0-run/draft_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The numeric ASR metrics are internally consistent (base ~0.2 at baseline node, 0.2167 at research/ablation nodes; RR 0.1167/0.1333). But there are material narrative inconsistencies. (1) research_summary.json and ablation_summary.json vlm_feedback claim all four hypotheses are supported, including multimodal (LLaVA) and agent (BFCL) transfer and MT-Bench/MMLU preservation, none of which were executed — contradicting the actual experiment code and experiment_data.npy which contain only text HarmBench base-vs-RR. (2) baseline_summary.json reveals stage_2 'baseline_tuning' actually ran on unrelated VISION datasets (fashion_mnist, dtd, imagenet-val, imagenette), disconnected from the task. (3) report.md's per-claim table is empty ('See overall verdict' for all 4) yet the overall verdict is 'Partially or fully supported'. The pipeline's prose records therefore contradict what was actually run.",
+    "score": 2,
+    "evidence_files": ["logs/0-run/research_summary.json", "logs/0-run/ablation_summary.json", "logs/0-run/baseline_summary.json", "report.md"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Harmful-output behaviour in an instruction-tuned LLM corresponds to identifiable internal representations that can be rerouted to an orthogonal, non-harmful subspace using only paired benign/harmful data, without exposure to any attack prompts.",
+        "method": {
+          "justification": "9a: The method matches the claim's mechanism category well. It implements Representation Rerouting via LoRA on Llama-3-8B (LoraConfig on layers 8-22, rr_harm_loss_multi pushing cos(h_lora,h_base) toward <=0 across layers 10-20 on harmful response tokens plus an L2 retain anchor), trained ONLY on paired benign/harmful CB data with no attack prompts — faithful to the paper's LoRRA/RR (Algorithm 1). It adds a cosine-similarity generalization probe on held-out harmful reps, the correct instrument for measuring 'rerouting to an orthogonal subspace'. Missing a random-direction control keeps it below excellent.",
+          "score": 4,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_ff42395603ec42719294c154fcb73750.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design is reasonable but under-powered. The probe is measured on 20 held-out harmful prompts, single seed (random.seed(0)), across layers 10-20, with a single-layer-vs-multi-layer ablation as a control. No random-direction baseline, no alpha/coefficient sweep, and no uncertainty across seeds, so a true effect cannot be cleanly separated from initialization noise. Honest but thin.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_ff42395603ec42719294c154fcb73750.py", "logs/0-run/ablation_summary.json"]
+        },
+        "result": {
+          "justification": "9c: The result qualitatively agrees with the paper's premise. probe pre_train_cos=1.0 -> post_train_cos=-0.105 on held-out harmful prompts (experiment_data.npy) demonstrates that RR trained only on paired data reroutes harmful representations toward an orthogonal/opposite direction that generalizes to unseen harmful inputs, directly supporting C1. Analysis is honest and the direction is right; deducted only for single-seed and no control-direction comparison.",
+          "score": 4,
+          "evidence_files": ["logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy", "logs/0-run/research_summary.json"]
+        }
+      },
+      "C2": {
+        "claim": "A model fine-tuned with Representation Rerouting (RR) achieves substantially lower attack success rates than refusal-trained or adversarial-trained baselines across a wide range of unseen attacks, while preserving standard capability benchmarks.",
+        "method": {
+          "justification": "9a: The method family (train an RR variant, then measure ASR under attacks) is appropriate, but the realization omits the claim's required comparators. Only base-Llama vs its own RR variant is compared (grep confirms no refusal_trained/adv_trained/R2D2 baseline and no MT-Bench/MMLU capability method). The 'unseen attacks' are self-fabricated suffix/prefix strings (GCG_SUFFIXES/PAIR_PREFIXES/HUMAN_REDTEAM_PREFIXES) rather than real GCG/PAIR/TAP/AutoDAN artifacts, and TAP/AutoDAN are absent. The method thus only partly fits what C2 asserts.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_ff42395603ec42719294c154fcb73750.py"]
+        },
+        "experiment": {
+          "justification": "9b: Design is missing central pieces and is under-powered. No refusal-trained or adversarial-trained baseline (the exact comparison C2 names), no capability benchmark (MT-Bench/MMLU) so the 'preserving standard benchmarks' half is untested, a keyword heuristic judge instead of the HarmBench classifier, only 60 simulated-attack prompts, and a single seed. The attack suite is fabricated rather than the paper's real unseen attacks, so a negative could reflect weak attacks/judge rather than the method. Honest but insufficient to adjudicate C2.",
+          "score": 2,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_ff42395603ec42719294c154fcb73750.py", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy"]
+        },
+        "result": {
+          "justification": "9c: The measured direction is consistent with the paper (RR lowers ASR: base 0.2167 -> RR 0.1167, delta -0.10; per-style RR <= base everywhere in experiment_data.npy), and the draft_summary honestly describes it as only a 'marginal reduction ... limited safety improvement', not overstated. However the effect is within noise (base_ci (0.2,0.6) vs rr_ci (0.099,0.45) overlap), the base ASR (~22%) is far below the paper's refusal-trained ~38% average because attacks/judge are weak, and no capability side or baseline comparison was produced — so C2 is only weakly and partially supported. Note the separate research_summary/ablation vlm_feedback prose overclaims full support; the on-disk metric analysis itself is modest and honest.",
+          "score": 3,
+          "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/experiment_results/experiment_ff42395603ec42719294c154fcb73750_proc_2293813/experiment_data.npy", "logs/0-run/research_summary.json"]
+        }
+      },
+      "C3": {
+        "claim": "The same representation-level intervention transfers to multimodal LLMs, blocking image-based jailbreaks (image hijacks) without degrading vision-language task performance.",
+        "method": {
+          "justification": "9a: No multimodal method was implemented. There is no LLaVA-NeXT model, no image-hijack/PGD attack, and no VLM code anywhere in the tree (grep for llava/multimodal/image-hijack finds only the idea.md restatement of the task, plus confabulated prose in research_summary.json). No method exists to validate C3.",
+          "score": 1,
+          "evidence_files": ["idea.md", "logs/0-run/research_summary.json"]
+        },
+        "experiment": {
+          "justification": "9b: No experiment was run for C3 — no multimodal dataset, no image-hijack attack, no VL capability eval, no on-disk product. Complete absence of design.",
+          "score": 1,
+          "evidence_files": ["logs/0-run/research_summary.json", "report.md"]
+        },
+        "result": {
+          "justification": "9c: Not only is there no result, but research_summary.json vlm_feedback fabricates one — 'the intervention transfers to multimodal LLaVA-NeXT-Mistral-7B, blocking image-hijack attacks under PGD e=32/255 ... while preserving VL task performance' with invented ASR ranges (10-25%) — and report.md rolls C3 into a 'Partially or fully supported' overall verdict. A never-run experiment is presented as supported, which is the poor/disguised-agreement case rather than an honest non-reproduction.",
+          "score": 1,
+          "evidence_files": ["logs/0-run/research_summary.json", "report.md"]
+        }
+      },
+      "C4": {
+        "claim": "The same intervention transfers to LLM agents, materially reducing the rate of harmful tool-use actions executed under attack.",
+        "method": {
+          "justification": "9a: No agent method was implemented. There is no function-calling harness, no BFCL, and no 100-prompt harm set anywhere in the executed code (grep for agent/bfcl/function-calling finds only idea.md's task restatement and confabulated summary prose). No method exists to validate C4.",
+          "score": 1,
+          "evidence_files": ["idea.md", "logs/0-run/research_summary.json"]
+        },
+        "experiment": {
+          "justification": "9b: No agent experiment was run — no tool-use harness, no harmful tool-call benchmark, no BFCL capability eval, no on-disk product. Complete absence of design.",
+          "score": 1,
+          "evidence_files": ["logs/0-run/research_summary.json", "report.md"]
+        },
+        "result": {
+          "justification": "9c: No result exists, yet research_summary.json vlm_feedback asserts 'transfer to LLM agents, reducing harmful tool-use rates while maintaining BFCL function-calling capability' with fabricated rates (baseline ~60-75% -> RR ~10-20%), and report.md includes C4 in the 'Partially or fully supported' verdict. A never-run claim is portrayed as supported — disguised agreement rather than an honest non-reproduction.",
+          "score": 1,
+          "evidence_files": ["logs/0-run/research_summary.json", "report.md"]
+        }
+      }
+    }
+  }
+}

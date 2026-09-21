@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal supplies directional, decidable criteria, including H1's \"residual ≥ 0.10 with CI excluding 0 in ≥ 3 of 4 models,\" H2's \"residual AUROC ≥ 0.70 and at least +0.05 AUROC over both baselines,\" and H3's requirement to \"cut CIE errors by ≥ 50% relative,\" with lower measurements explicitly treated as negative or inconclusive. However, the central instruction to \"Read the belief probe at the retracted-claim tokens\" is temporally ambiguous and potentially misaligned with the hypothesis: in a causal LLM, activations at the original false-claim tokens cannot incorporate a retraction appearing later, while probing tokens in the correction sentence may measure the correction's wording rather than a post-retraction item state. The proposal also does not clearly specify the labels or contrast used to train the purported belief probe, so an expert must resolve what activation position and training target make \"belief(RETRACTED) − belief(NEVER-INTRODUCED)\" a meaningful belief quantity rather than surface-context discrimination.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The named artifacts—\"Llama-3.1-8B, Qwen2.5-7B, Gemma-2-9B, Mistral-7B\"—exist, and logistic probes, residual-stream hooks, activation patching, difference-of-means steering, mixed-effects models, and bootstrap/FDR analysis all have standard tooling support. The hardest step is to \"Localize via activation patching ... to the minimal head/layer set that removes the residual\"; activation patching itself is standard, but finding a minimal set is under-specified, and the unresolved probe-label and token-position definitions create custom methodological work rather than a fully specified standard operation. Resources are unusually concrete—\"5,000 scenarios,\" an \"80/20 item split,\" \"5 seeds,\" \"10,000 item-level resamples,\" and human validation on \"300-item[s]\"—and the NEVER-INTRODUCED/NO-RETRACTION conditions, shuffled labels, random/truth steering directions, perplexity/MMLU guardrails, and synthetic/real tracks make the refuting branches runnable.",
+      "score": 7
+    }
+  }
+}

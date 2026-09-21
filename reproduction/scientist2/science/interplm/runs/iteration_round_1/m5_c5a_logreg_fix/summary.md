@@ -1,0 +1,8 @@
+# M5 — Annotation Filling (Linear Probes)
+
+- Best layer: 9
+- Concepts probed: 50
+- Train seqs: 1000   Test seqs: 1500
+- Mean PR-AUC (SAE): 0.5391
+- Mean PR-AUC (neurons): 0.5476
+- Paired Wilcoxon (SAE > neurons): W = 231.0, p = 0.5161632113158703

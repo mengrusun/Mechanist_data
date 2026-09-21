@@ -1,0 +1,33 @@
+{
+  "claim_id": "c2",
+  "variant_tag": "model-swap-esm2-8m",
+  "audit_target": "variant",
+  "overall_verdict": "pass",
+  "checks": {
+    "A_gt_provenance": {
+      "status": "pass",
+      "note": "Swiss-Prot external ground truth used identically to main experiment. Same SWISSPROT_DAT file, same 1500 sequence test split from main-experiment m1 activations layer1.pt. Cache at runs/cache/swissprot/all_annotations.pkl reused. No synthetic or proxy GT introduced."
+    },
+    "B_score_normalization": {
+      "status": "pass",
+      "note": "F1 scores range [0,1] by construction. Same normalization as main experiment. ratio_covered_sae_over_neuron computed as covered_sae/covered_neuron (with inf when denominator=0, consistent with main experiment)."
+    },
+    "C_result_existence": {
+      "status": "pass",
+      "note": "All four required output files present and non-empty: coverage.json (1.6KB), sensitivity.json (0.6KB), per_concept_best_F1.parquet, cost.json. Run log (271 lines) confirms all 6 layers completed."
+    },
+    "D_dead_code": {
+      "status": "pass",
+      "note": "Variant script is self-contained. No dead code paths. All functions (collect_8m_hidden_states, f1_matrix_sparse, f1_matrix_dense, compute_neuron_topmask, build_concept_mask) are called in main(). No unused utility functions."
+    },
+    "E_scope": {
+      "status": "pass",
+      "note": "Scope fully disclosed: 1500 sequences (same as main experiment), 387195 residues, 400 concepts (support>=25), 6 layers, 10240 SAE features per layer, 320 neuron dims. Run completed in 255 seconds. No overclaim."
+    },
+    "F_eval_type": {
+      "status": "pass",
+      "note": "Real external GT (Swiss-Prot annotations) used throughout. Per-residue F1 alignment protocol identical to main experiment. Consistency judgment is direction-based (SAE > neurons), which is the scientifically meaningful axis for C2."
+    }
+  },
+  "findings": []
+}

@@ -1,0 +1,54 @@
+{
+  "claim_id": "C2",
+  "variant": "model-swap-qwen25-7b",
+  "audit_type": "variant_mechanism",
+  "audit_date": "2026-07-14",
+  "mechanism_family": "Tuning & Editing — L*-anchored representation-space DPO regularization",
+  "checks": {
+    "M1_l_star_relocalization": {
+      "verdict": "pass",
+      "l_star_llama": 10,
+      "l_star_llama_total_layers": 32,
+      "l_star_llama_relative": 0.313,
+      "l_star_qwen": 14,
+      "l_star_qwen_total_layers": 28,
+      "l_star_qwen_relative": 0.500,
+      "note": "M1-lite correctly re-run; L*=14 confirmed from qwen_m1_bottleneck.json; L* shifts to deeper relative position in Qwen2.5-7B"
+    },
+    "M2_implementation_fidelity": {
+      "verdict": "pass",
+      "lambda_method": 0.5,
+      "lambda_baseline": 0.0,
+      "anchor_layer": 14,
+      "lora_r": 16,
+      "lora_alpha": 32,
+      "lr": 1e-5,
+      "steps": 3000,
+      "seed": 42,
+      "data": "5000 EN PKU-SafeRLHF + 2000 UltraFeedback",
+      "anchor_triples": "315 MultiJail EN/ZH/KO",
+      "note": "Mechanism correctly implemented per config.yaml and DIFF.md; training logs confirm completion"
+    },
+    "M3_within_family_constraint": {
+      "verdict": "pass",
+      "note": "Model swap only; training method (L*-anchor DPO) preserved unchanged for both method and baseline arms; no method swap while model swap active"
+    },
+    "M4_confound_assessment": {
+      "verdict": "warn",
+      "confounds": [
+        {
+          "name": "L* relative depth shift",
+          "description": "L*=50% relative depth in Qwen vs 31% in LLaMA; anchor operates in different geometric regime",
+          "severity": "warn"
+        },
+        {
+          "name": "Qwen2.5-7B higher multilingual baseline",
+          "description": "Lower base ASR for most languages; reduced headroom for L*-anchor regularization signal",
+          "severity": "warn"
+        }
+      ]
+    }
+  },
+  "overall_verdict": "warn",
+  "eligible_for_robustness": true
+}

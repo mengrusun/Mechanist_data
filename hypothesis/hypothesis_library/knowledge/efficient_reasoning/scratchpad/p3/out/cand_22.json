@@ -1,0 +1,50 @@
+{
+  "novelty": {
+    "score": 8,
+    "reasoning": "Core technical claims: (1) a latent internal answer-commitment representation emerges during RL/SFT training; (2) its emergence can be traced checkpoint-by-checkpoint and its commitment point moves earlier faster than the visible CoT shrinks; (3) the verbal CoT becomes a vestigial scaffold after internalization; (4) this internal signal can be localized causally and used for checkpoint-aware early exit. Relative to prior work, the novelty is not in the general observation that reasoning length changes or that answers are decodable late in the forward pass; it is in the training-dynamics/formation account across checkpoints plus causal validation. That is a meaningful delta over behavioral length curves, latent-CoT, and early internal commitment papers. It is also more than an obvious next step because it asks how a representation forms over training, not just whether it exists in a trained model. The closest prior family is mechanistic interpretability of late decodability plus RL compression of CoT; the actual delta is crossing training checkpoints and tying emergence of the latent-answer direction to a per-checkpoint commitment point and early-exit policy. The main caveat is that if checkpoints are sparse or the probe merely reads out the final answer rather than a causal commitment, the core claim weakens substantially.",
+    "revision_notes": [
+      "State explicitly that the novelty is a training-dynamics formation study, not just another probing result.",
+      "Distinguish 'decodable answer' from 'causally load-bearing commitment' in the claim wording.",
+      "Add one sentence on how this differs from latent-CoT/Coconut and from existing internal-commitment interpretability work.",
+      "Specify whether the novel object is the emergence point, the gap trajectory, or the causal circuit localization."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "The phenomenon under study is whether reasoning models develop an internal answer-commitment that makes visible chain-of-thought increasingly redundant during training. Who cares: efficient reasoning, interpretability, and training-dynamics researchers; possibly practitioners interested in cheaper inference and safer deployment of CoT models. Strongest one-line case: if internal commitment forms earlier than verbal reasoning collapses, we get a mechanistic explanation for overthinking and a way to stop generation earlier without losing accuracy. Important problem? Yes, but somewhat specialized: it matters most for reasoning-model efficiency and understanding RL behavior, less as a broad societal problem. Uptake/citation likely if results are clean because it connects multiple active threads and could provide a useful diagnostic. Direction-shifting potential is moderate: it could change how people think about CoT as a scaffold rather than the actual computation. Real-world reach exists through token savings and inference latency, but likely bounded to model developers and researchers. Phenomenon value is high even if the early-exit method is simple. So what? If the result holds, serious researchers would likely revisit assumptions about CoT faithfulness and perhaps shorten traces after commitment; if it fails, the field still learns that visible CoT may remain behaviorally necessary rather than vestigial.",
+    "revision_notes": [
+      "Add a concrete explanation of who would adopt the early-exit result beyond the paper's immediate authors.",
+      "Clarify the downstream change: cheaper inference, safer truncation, or a new mechanistic view of CoT.",
+      "Frame the societal/practical relevance more carefully; avoid overstating broad impact.",
+      "Include a succinct 'if true / if false' statement showing why the field should care either way."
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The proposal is testable and reasonably well-scoped, but there are several technical gaps. The key hypothesis is still a bit ambiguous: what exactly counts as 'internalized-answer representation' versus a probe that simply reads the final answer from a later hidden state? The proposed experiments are mostly feasible, but the central causal claim depends on intermediate checkpoints, which may be sparse or unavailable; the fallback small-model run reduces external validity. Controls are partially specified (matched probe capacity, logit-lens, random-direction patching), but the proposal still needs stronger falsification tests: shuffled-label probes, probe-then-truncate on held-out tasks, early/late checkpoint transfer, and ablations showing the commitment point is not an artifact of probe calibration. Related work positioning is decent but could be more specific on exact prior mechanistic papers and how the proposed measurement differs. The experimental plan is substantive, but some thresholds look hand-wavy (e.g., 80%, 0.15 monotonic decrease, 2-point retention) without justification or power analysis. The strongest weakness is narrative overreach: 'overthinking is the residual scaffold' is plausible but not yet proven by the listed tests, especially on tasks where late verification may be valuable. If executed well, this could be a solid ML/interpretability paper, but in current form it needs tighter falsifiability and stronger causal validation. Minimum viable edits: sharpen the hypothesis, add explicit negative controls and transfer tests, justify thresholds, and separate the formation-tracing claim from the early-exit application.",
+    "revision_notes": [
+      "Define 'internalized-answer circuit' operationally and state what would falsify it.",
+      "Add probe controls: label shuffling, capacity-matched random features, and cross-checkpoint transfer.",
+      "Add causal validation beyond truncation: intervention/ablation that disrupts the latent direction and checks behavior.",
+      "Justify all thresholds statistically or phrase them as exploratory criteria.",
+      "Specify availability and granularity of checkpoints and what happens if they are too coarse.",
+      "Separate the core scientific claim from the engineering early-exit claim."
+    ]
+  },
+  "revision_notes": [
+    "State explicitly that the novelty is a training-dynamics formation study, not just another probing result.",
+    "Distinguish 'decodable answer' from 'causally load-bearing commitment' in the claim wording.",
+    "Add one sentence on how this differs from latent-CoT/Coconut and from existing internal-commitment interpretability work.",
+    "Specify whether the novel object is the emergence point, the gap trajectory, or the causal circuit localization.",
+    "Add a concrete explanation of who would adopt the early-exit result beyond the paper's immediate authors.",
+    "Clarify the downstream change: cheaper inference, safer truncation, or a new mechanistic view of CoT.",
+    "Frame the societal/practical relevance more carefully; avoid overstating broad impact.",
+    "Include a succinct 'if true / if false' statement showing why the field should care either way.",
+    "Define 'internalized-answer circuit' operationally and state what would falsify it.",
+    "Add probe controls: label shuffling, capacity-matched random features, and cross-checkpoint transfer.",
+    "Add causal validation beyond truncation: intervention/ablation that disrupts the latent direction and checks behavior.",
+    "Justify all thresholds statistically or phrase them as exploratory criteria.",
+    "Specify availability and granularity of checkpoints and what happens if they are too coarse.",
+    "Separate the core scientific claim from the engineering early-exit claim."
+  ]
+}

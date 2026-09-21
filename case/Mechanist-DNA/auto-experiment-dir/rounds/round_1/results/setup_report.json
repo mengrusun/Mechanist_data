@@ -1,0 +1,51 @@
+{
+  "milestone": "M(-1) setup precondition",
+  "overall_pass": true,
+  "cuda_visible_devices_policy": "2,3,4,5",
+  "tool_versions": {
+    "torch": "2.7.1+cu126",
+    "cuda": "12.6",
+    "evo2": "0.6.0",
+    "vtx_vortex": "1.1.0",
+    "flash_attn": "2.8.3.post1 (prebuilt wheel cu12torch2.7cxx11abiTRUE cp311)",
+    "transformers": "4.57.0",
+    "biopython": "1.87",
+    "fair_esm": "2.0.0",
+    "pydssp": "0.9.1",
+    "mkdssp": "conda-forge/bioconda installed",
+    "mmseqs2": "conda bioconda installed",
+    "numpy": "1.26.4 (pinned <2 to keep pandas/sklearn ABI)",
+    "sklearn": "1.9.0", "scipy": "1.17.1", "statsmodels": "0.14.6"
+  },
+  "installs_performed": [
+    "pip: evo2==0.6.0 + vtx==1.1.0 (vortex/StripedHyena2 inference engine)",
+    "pip prebuilt wheel: flash_attn 2.8.3.post1 (no nvcc on host -> prebuilt, not source build)",
+    "pip: biopython, pydssp, fair-esm",
+    "conda -c conda-forge -c bioconda: dssp(mkdssp), mmseqs2",
+    "pip: numpy<2 (downgrade to restore pandas/sklearn/statsmodels numpy-1.x ABI)",
+    "download: facebook/esmfold_v1 weights via transformers (openfold-free path)"
+  ],
+  "stop_approval_conditions_hit": "none - every dependency was pip/conda-installable or a free weight download (HC4 install-and-continue). No sudo/apt/root, no credentials/licenses, no quota block.",
+  "weight_paths": {
+    "evo2_7b": "/data1/share_model/evo2/evo2_7b/evo2_7b.pt",
+    "sae": "/data1/share_model/evo2/evo2_sae_layer26_mixed/sae-layer26-mixed-expansion_8-k_64.pt"
+  },
+  "smoke_tests": {
+    "evo2_load": {"pass": true, "detail": "Evo2-7B (StripedHyena2, 32 blocks, hidden 4096) loads on a single A800-80GB in ~4-8s; fits one GPU."},
+    "evo2_forward": {"pass": true, "detail": "512-nt forward returns per-nucleotide residual (L,4096) and logits (1,L,512)."},
+    "sae_load_roundtrip": {"pass": true, "detail": "SAE W(4096,32768)+b_enc+b_dec; tied-weight BatchTopK; per-token top-k=64 encode; L0==64 exactly; dict 32768."},
+    "sae_site_resolution": {"pass": true, "detail": "SAE native site = blocks.26 residual stream with unit_sqrtd input normalization (per-token L2-normalize x sqrt(4096)); best natural-CDS reconstruction (explained_var ~0.37); ||b_dec||=0.275 consistent with normalized-input training."},
+    "sae_validity_on_7b_KNOWN_FEATURES": {
+      "pass": true,
+      "detail": "DECISIVE validity check: on natural E.coli CDS with real DSSP labels, the SAE reproduces the Evo2 paper's named Layer-26 features. beta-sheet f/22326 is the RANK-0 (#1) beta-sheet discriminator (sheet AUROC 0.729); alpha-helix f/28741 is active and top-ranked for helix (AUROC 0.588, rank 4). This proves the released Layer-26 SAE is valid on Evo2-7B Layer-26 activation space (not incompatible) and pins the hook site/normalization. Resolves the task.md 40B-vs-7B caveat: dimensional match (4096) + paper-feature reproduction = compatible."
+    },
+    "sae_beats_shuffled_input": {"pass": true, "detail": "SAE reconstructs real activations far better than dimension-shuffled ones (explained_var 0.34 vs -0.23) -> not a trivial identity."},
+    "dssp_mkdssp": {"pass": true, "detail": "mkdssp runs on experimental PDB (1CRN) -> per-residue 8-state SS; biopython DSSP parser OK; H/G/I helix + E sheet extraction works."},
+    "esmfold": {"pass": true, "detail": "facebook/esmfold_v1 loads via transformers (no openfold pkg needed) and folds a test peptide returning coords + pLDDT."},
+    "cds_pipeline_natural": {"pass": true, "detail": "Natural CDS retrieval (UniProt EMBL ProteinId -> NCBI bulk fasta_cds_na / coded_by) translates EXACTLY to the UniProt protein (no reverse-translation, HC3); CDS<->protein<->DSSP alignment yields per-codon SS at >=0.9 coverage on test proteins. mmseqs2 available for cluster-split leakage control."}
+  },
+  "chosen_structure_predictor": "ESMFold (facebook/esmfold_v1 via transformers), pLDDT-gated",
+  "chosen_sae_layer": "blocks.26",
+  "sae_input_normalization": "unit_sqrtd",
+  "codon_aggregation": "mean-pool over the 3 nucleotide positions per codon"
+}

@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-14",
+  "auditor": "llm-chat (gpt-5.4, cross-model)",
+  "claim_id": "C1",
+  "linked_milestones": ["M1", "M1.5"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "y_correct from TriviaQA alias-based normalized exact-match. Real dataset GT. Reverse-substring exclusion fix applied and documented."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Metrics are raw AUROC/ECE. Isotonic calibration fitted on dev only. No normalization by model prediction statistics."
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "Files exist and core numbers match (AUROC=0.840, ECE_iso=0.031, null AUC=0.497). Minor consistency issue: bootstrap CI [0.818, 0.835] does not contain point estimate 0.840 — expected artifact of bootstrap mean vs full-data estimate. Bootstrap n=200 (planned 1000), disclosed."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All metric functions called and outputs present in probe_metrics.json."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "Single model, single dataset, 10k questions. No over-broad scope language. Scope limitations explicitly stated."
+    },
+    "eval_type": "real_gt"
+  }
+}

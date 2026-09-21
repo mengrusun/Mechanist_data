@@ -1,0 +1,34 @@
+{
+  "date": "2026-08-19",
+  "auditor": "llm-chat (gpt-5.6-luna, cross-model)",
+  "claim_id": "C3",
+  "linked_milestones": [
+    "M2",
+    "M3"
+  ],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Dose-response readout uses the disclosed ESM-2+probe proxy trained/evaluated against external DSSP labels."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Alpha grid, fixed decoding, paired seeds, QC/ITT, predicted-%-helix readout consistently specified across the sweep."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "results/m2_analysis.json matches the 7-point dose-response values and nonflat single-peak analysis incl. alpha_star=1.0 (executor-verified)."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "Reported dose-response and held-out reproduction correspond to executed sweep/analysis."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "Single-peaked shape established on the 7-point DEV sweep; held-out block reproduces only the rising sub-grid {0,0.5,1,2} and does not independently confirm the descending side/optimum."
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}

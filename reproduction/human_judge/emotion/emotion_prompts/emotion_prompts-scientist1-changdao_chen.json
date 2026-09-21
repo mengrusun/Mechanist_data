@@ -1,0 +1,188 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "changdao chen",
+    "paper_title": "Do Emotions in Prompts Matter? Effects of Emotional Framing on Large Language Models",
+    "agent": "scientist1",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "datasets_loader.py对各任务读取固定子集，emotion_rl_v2.py的5-fold CV在每折内拟合TF-IDF/SVD，未见train/test泄漏。GSM8K等评估直接按样本评测，无标签参与prompt选择。",
+    "score": 5,
+    "evidence_files": [
+      "datasets_loader.py",
+      "emotion_rl_v2.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签来自各benchmark标准答案。EmotionRL的reward也由标准答案派生。",
+    "score": 5,
+    "evidence_files": [
+      "run_eval.py",
+      "datasets_loader.py",
+      "emotion_rl_v2.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "对照task.md，主实验Qwen3-14B + GSM8K已完成；SocialIQA/BoolQ/OpenBookQA/MedQA/BBH也作为verify扩展运行。",
+    "score": 5,
+    "evidence_files": [
+      "task.md",
+      "FINDINGS.md",
+      "results/gsm8k__Qwen3-14B__neutral.jsonl"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "证据量较充足：FINDINGS.md报告8个dataset/model组合、25条件和约44,650次inference。SocialIQA/MedQA/BBH等样本量也足以支撑主要趋势。",
+    "score": 5,
+    "evidence_files": [
+      "FINDINGS.md",
+      "results/report.txt"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "EmotionRL使用5-fold CV，静态prefix覆盖大量条件；但多数主表仍是单次greedy accuracy，缺少逐condition CI。",
+    "score": 3,
+    "evidence_files": [
+      "emotion_rl_v2.py",
+      "FINDINGS.md",
+      "results/report.txt"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C4的adaptive policy有真实训练/选择流程，emotion_rl_v2.py在held-out folds上比较selector、neutral和fixed prefix。其他claim主要是描述性比较，无强因果主张。",
+    "score": 5,
+    "evidence_files": [
+      "emotion_rl_v2.py",
+      "FINDINGS.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字均可追溯到FINDINGS.md、results/report.txt和逐样本jsonl；未见报告数字与落盘结果冲突。",
+    "score": 5,
+    "evidence_files": [
+      "FINDINGS.md",
+      "results/report.txt",
+      "results/gsm8k__Qwen3-14B__neutral.jsonl"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "FINDINGS.md、results/report.txt与EmotionRL输出结论一致：静态情绪效应小且任务依赖.无实质性跨产物冲突。",
+    "score": 5,
+    "evidence_files": [
+      "FINDINGS.md",
+      "results/report.txt"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Static emotional prefixes change accuracy only by small, input-dependent amounts and do not behave as a general-purpose enhancement.",
+        "method": {
+          "justification": "neutral + 24个emotion prefix条件直接比较accuracy，方法正好对应“静态情绪前缀是否有普遍增益”。",
+          "score": 5,
+          "evidence_files": [
+            "run_eval.py",
+            "prefixes.py"
+          ]
+        },
+        "experiment": {
+          "justification": "8个dataset/model组合、25条件，能覆盖任务和模型差异；但是单次greedy为主，缺少CI。",
+          "score": 4,
+          "evidence_files": [
+            "FINDINGS.md",
+            "results/report.txt"
+          ]
+        },
+        "result": {
+          "justification": "结果支持前缀只会以较小改变LLM准确率",
+          "score": 5,
+          "evidence_files": [
+            "FINDINGS.md"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The effect is most pronounced on socially grounded tasks and smaller on math/factual QA.",
+        "method": {
+          "justification": "用SocialIQA、GSM8K、BoolQ、OpenBookQA、MedQA、BBH比较任务族，方法能测试social和math/factual差异。",
+          "score": 5,
+          "evidence_files": [
+            "FINDINGS.md"
+          ]
+        },
+        "experiment": {
+          "justification": "SocialIQA是唯一social benchmark，且其他benchmarks任务格式和样本量不完全一致。",
+          "score": 3,
+          "evidence_files": [
+            "FINDINGS.md",
+            "results/report.txt"
+          ]
+        },
+        "result": {
+          "justification": "结果只部分支持：SocialIQA downside/oracle headroom大，但best-prefix正向收益并非social最大。",
+          "score": 4,
+          "evidence_files": [
+            "FINDINGS.md"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "No single basic emotion consistently benefits all models/tasks; stronger wording does not yield proportionally larger gains.",
+        "method": {
+          "justification": "6 emotion × 2 intensity × 2 source的prefix网格可直接检验emotion identity和强度效应。",
+          "score": 5,
+          "evidence_files": [
+            "prefixes.py",
+            "FINDINGS.md"
+          ]
+        },
+        "experiment": {
+          "justification": "best emotion分散，low/high intensity与human/LLM前缀都有汇总指标，实验设计能回答C3。",
+          "score": 5,
+          "evidence_files": [
+            "results/report.txt"
+          ]
+        },
+        "result": {
+          "justification": "结果支持：没有单一emotion稳定获胜，更强或LLM-generated phrasing平均也不更好。",
+          "score": 5,
+          "evidence_files": [
+            "FINDINGS.md",
+            "results/report.txt"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "An adaptive per-query policy yields more reliable gains than fixed prefixes or neutral.",
+        "method": {
+          "justification": "EmotionRL用TF-IDF+LSA与per-condition classifier做per-query selector，是合理但较弱，且与RL无关。",
+          "score": 3,
+          "evidence_files": [
+            "emotion_rl_v2.py"
+          ]
+        },
+        "experiment": {
+          "justification": "比较了neutral、best_fixed_train、oracle和EmotionRL，baseline合理；但selector只是TF-IDF+LSA分类器，探索不足。",
+          "score": 3,
+          "evidence_files": [
+            "FINDINGS.md",
+            "emotion_rl_v2.py"
+          ]
+        },
+        "result": {
+          "justification": "只部分支持：EmotionRL在BBH、SocialIQA/Qwen2.5优于neutral，但在BoolQ、MedQA、OpenBookQA、GSM8K/Qwen3低于neutral。",
+          "score": 3,
+          "evidence_files": [
+            "FINDINGS.md",
+            "results/report.txt"
+          ]
+        }
+      }
+    }
+  }
+}

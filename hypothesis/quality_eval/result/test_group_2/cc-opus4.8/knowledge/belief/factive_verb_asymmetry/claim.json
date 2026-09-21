@@ -1,0 +1,21 @@
+{
+  "Name": "factive_verb_asymmetry",
+  "Title": "Why 'Know' Should Imply True But Doesn't: A Broken Factivity Gate",
+  "Short Hypothesis": "LLMs contain a mechanism that, for factive verbs like 'know', should propagate a truth-presupposition onto the embedded proposition, but this 'factivity gate' is weak/absent, so 'X knows that P' fails to raise the internal truth encoding of P relative to the non-factive 'X believes that P'.",
+  "Related Work": "The source paper reports that models accept 'knows a false thing', violating factivity. Linguistics on factive presupposition (Kiparsky & Kiparsky) is theoretical; NLP factivity datasets (e.g. FactBank, MegaVeridicality) are behavioral. No prior work localizes an internal factivity-propagation mechanism or shows *why* it fails. We give a circuit-level account.",
+  "Abstract": "Factive verbs presuppose the truth of their complement: 'Alice knows that P' entails P, whereas 'Alice believes that P' does not. The paper motivating this study shows LLMs routinely violate this, e.g. accepting knowledge of false propositions. We hypothesize a specific mechanism: an internal 'factivity gate' that, upon encountering a factive verb, should write a truth-presupposition onto the embedded-clause representation. We test whether such a gate exists and characterize its failure. Using minimal pairs that swap only the matrix verb (know vs believe vs think vs be-convinced) over identical embedded propositions of known truth value, we measure the *induced shift* in the internal truth encoding of the complement. A working factivity gate predicts 'know' raises complement-truth activation toward true regardless of world truth; a broken gate predicts near-identical complement encodings across verbs. We localize the effect to attention heads that route information from the verb to complement tokens and test causal necessity via head ablation and path patching. We then attempt to *repair* factivity by amplifying the identified pathway and measure whether behavioral factivity (rejecting 'knows a falsehood') improves. This turns a behavioral failure into a manipulable circuit and clarifies whether factivity failure is a representational gap or a routing failure.",
+  "Experiments": [
+    "Minimal-pair corpus: identical embedded P (balanced true/false) under matrix verbs {know, believe, think, be convinced, be aware}; ~3k items.",
+    "Measure the truth-probe activation on complement tokens as a function of matrix verb; test whether 'know' > 'believe' shift exists and whether it tracks world truth.",
+    "Path patching from the verb token to complement tokens to identify heads carrying the factive signal.",
+    "Ablate candidate factivity heads and measure change in the verb-induced truth shift and in behavioral factivity judgments ('Can someone know something false?').",
+    "Repair experiment: amplify the identified pathway or add a factivity steering vector; evaluate behavioral factivity accuracy on held-out KaBLE-style items.",
+    "Compare factivity-gate strength across model sizes and instruction-tuned vs base checkpoints."
+  ],
+  "Risk Factors and Limitations": [
+    "There may be no localized gate—factivity could be diffusely encoded, making ablation uninformative.",
+    "Truth-probe on complement tokens may be noisy for embedded clauses.",
+    "Repair via steering may degrade unrelated capabilities.",
+    "Verb frequency and collocational confounds could drive apparent asymmetries."
+  ]
+}

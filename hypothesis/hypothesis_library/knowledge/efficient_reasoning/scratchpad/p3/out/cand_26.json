@@ -1,0 +1,54 @@
+{
+  "novelty": {
+    "score": 6,
+    "reasoning": "Core claims that need to be novel: (1) repeated use of one reasoning method primes an LLM to reuse that same costly method on a later problem that has a cheaper shortcut; (2) this is not just an accuracy/flexibility effect but a compute-overuse / overthinking effect measurable in extra reasoning tokens on the same target solved cheaply in isolation; (3) the effect is caused by a carried-over method-commitment representation at the target boundary rather than target difficulty or generic context length; (4) that representation is decodable/localizable and can be causally steered to restore shortcut use; (5) a training-free mitigation can reduce fixation without harming tasks where the costly method is actually needed. From the provided context, claim (1) is not new in broad phenomenon terms: LLM mental-set / Einstellung effects have already been reported, including shortcut-missing after priming. The meaningful delta is mainly claims (2)-(4): reframing as compute inflation and mechanistically identifying a decodable, steerable method-commitment state. That is a non-trivial extension, especially if the same target is cheap in isolation but expensive after method priming. Relative to the proposal's own related work, the novelty is overstated where it says 'First to demonstrate an Einstellung effect in reasoning LLMs'; that part appears false from the search summary. The closest prior family is human Einstellung literature plus recent LLM studies on mental-set/inflexible reasoning. Actual delta: moving from behavioral rigidity/accuracy to token-cost inefficiency and from phenomenon description to mechanistic representation + causal intervention. If executed cleanly, this is moderately novel, but not a new phenomenon.",
+    "revision_notes": [
+      "Remove or soften any 'first demonstration of Einstellung in LLMs' claim; position the work as the first compute-centric and mechanistic study instead.",
+      "Explicitly name the closest LLM prior work and state the exact delta in one sentence: same-target isolated-vs-primed compute inflation plus decodable causal method-commitment signal.",
+      "Make clear why the setting is meaningfully different from prior accuracy-only studies: the key unit is excess reasoning tokens on identical targets, not just lower success or flexibility.",
+      "Pre-register what counts as a shortcut and costly method to avoid appearing like post hoc relabeling of known reasoning failures."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "Problem: recent context can make reasoning models persist with an expensive method, wasting compute and sometimes missing simpler valid solutions on later tasks. Who cares: efficient-reasoning, inference-cost optimization, in-context learning, reasoning robustness, and agentic/multi-turn deployment communities. If true, it changes how people evaluate and prompt reasoning models: benchmark scores alone miss a context-induced inefficiency/fixation failure mode; system designers may need resets, delimiters, anti-fixation prompting, or internal steering to control compute blowups and brittle reuse. Strongest one-line case: the same model can solve the same problem cheaply alone but overthink it after a run of similar problems because context induces a reusable but harmful method commitment. This passes the 'so what?' test better than many interpretability proposals because it ties to both cost and reliability in deployed multi-turn systems. Still, the real-world reach depends on effect size and prevalence outside curated puzzle-like tasks. If it only appears in hand-constructed arithmetic/algebra/combinatorics examples, impact is moderate rather than field-shifting. It is more likely to influence a focused subcommunity than the whole field unless the authors show the effect in realistic agent workflows or long-horizon assistants.",
+    "revision_notes": [
+      "Strengthen the deployment relevance by adding at least one realistic multi-turn or agentic setting beyond curated math-style targets.",
+      "Quantify practical stakes in dollars/latency or token budgets, not only percentage token inflation.",
+      "Clarify whether the main value is scientific understanding of in-context rigidity, a benchmark for efficient reasoning, or a mitigation method; right now all three are present but none dominates.",
+      "Show prevalence/boundary conditions: how often does this happen under normal prompting, not only adversarially designed prime-target sequences?"
+    ]
+  },
+  "review": {
+    "score": 7,
+    "reasoning": "The proposal is unusually concrete and testable for an ML idea: it has a scoped hypothesis, clear controls, target-only metrics, multiple prime-length conditions, diverse-prime and filler controls, mixed-effects analysis, mechanistic probing, causal patching, steering, and specificity checks on M-only targets. The central falsifiable claim is strong: identical targets should be solved more expensively and with lower shortcut usage after method-repetition primes than in isolation. That said, there are several strict-review weaknesses. First, related work specificity is insufficient given the apparent existence of direct LLM mental-set papers; the narrative currently overclaims novelty. Second, the dataset construction is the crux and also the main vulnerability: 'shortcut' versus 'costly method' may be ambiguous, target verification leans on LLM judges, and 60-item human spot-checks may be too weak for a 200-target benchmark. Third, token count is noisy under stochastic decoding and may reflect verbosity/style rather than true method commitment; stronger controls are needed to separate latent reasoning path from generation length. Fourth, the mechanistic claims may be underspecified: linear probes and angle-to-difficulty are suggestive but not decisive, and 'target prompt-boundary residual stream' localization may be too coarse without layer/head/component specificity and robustness across seeds/models. Fifth, activation patching from no-prime to primed contexts can introduce distribution shift; causal claims require carefully matched patch sites and null controls. Overall the plan is feasible and above average in quality, but it needs sharper prior positioning, stronger annotation/controls, and a crisper success criterion to be senior-reviewer robust.",
+    "revision_notes": [
+      "Cite and directly compare to existing LLM mental-set/Einstellung papers; add a table of claims/prior work/delta.",
+      "Upgrade data validation: increase human annotation substantially, publish annotation guidelines, and report inter-annotator agreement for shortcut-vs-method labels.",
+      "Add stronger controls for token inflation: e.g., fixed-format answers, constrained reasoning length analyses, or hidden-chain/internal-token variants if available to show the effect is not mere verbosity.",
+      "Predefine exact operational criteria for 'shortcut usage' and 'costly method usage'; include failure cases where both are mixed.",
+      "Make the isolated-vs-primed same-target comparison the centerpiece, with per-target paired analyses and confidence intervals.",
+      "Strengthen mechanistic evidence by specifying layer ranges, patch locations, cross-model transfer expectations, and null patch controls beyond random directions.",
+      "Test whether explicit instructions like 'solve each problem independently' or context separators eliminate the effect; this is both a control and a practical baseline.",
+      "Consider adding closed or stronger reasoning models if accessible, or clearly justify why the chosen open distilled models are the right testbed."
+    ]
+  },
+  "revision_notes": [
+    "Remove or soften any 'first demonstration of Einstellung in LLMs' claim; position the work as the first compute-centric and mechanistic study instead.",
+    "Explicitly name the closest LLM prior work and state the exact delta in one sentence: same-target isolated-vs-primed compute inflation plus decodable causal method-commitment signal.",
+    "Make clear why the setting is meaningfully different from prior accuracy-only studies: the key unit is excess reasoning tokens on identical targets, not just lower success or flexibility.",
+    "Pre-register what counts as a shortcut and costly method to avoid appearing like post hoc relabeling of known reasoning failures.",
+    "Strengthen the deployment relevance by adding at least one realistic multi-turn or agentic setting beyond curated math-style targets.",
+    "Quantify practical stakes in dollars/latency or token budgets, not only percentage token inflation.",
+    "Clarify whether the main value is scientific understanding of in-context rigidity, a benchmark for efficient reasoning, or a mitigation method; right now all three are present but none dominates.",
+    "Show prevalence/boundary conditions: how often does this happen under normal prompting, not only adversarially designed prime-target sequences?",
+    "Cite and directly compare to existing LLM mental-set/Einstellung papers; add a table of claims/prior work/delta.",
+    "Upgrade data validation: increase human annotation substantially, publish annotation guidelines, and report inter-annotator agreement for shortcut-vs-method labels.",
+    "Add stronger controls for token inflation: e.g., fixed-format answers, constrained reasoning length analyses, or hidden-chain/internal-token variants if available to show the effect is not mere verbosity.",
+    "Predefine exact operational criteria for 'shortcut usage' and 'costly method usage'; include failure cases where both are mixed.",
+    "Make the isolated-vs-primed same-target comparison the centerpiece, with per-target paired analyses and confidence intervals.",
+    "Strengthen mechanistic evidence by specifying layer ranges, patch locations, cross-model transfer expectations, and null patch controls beyond random directions.",
+    "Test whether explicit instructions like 'solve each problem independently' or context separators eliminate the effect; this is both a control and a practical baseline.",
+    "Consider adding closed or stronger reasoning models if accessible, or clearly justify why the chosen open distilled models are the right testbed."
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "tool_versions": {
+    "torch": "2.7.1+cu126",
+    "cuda": "12.6",
+    "evo2": "?",
+    "transformers": "4.57.0",
+    "biopython": "1.87",
+    "sklearn": "1.9.0"
+  },
+  "smoke_tests": {
+    "evo2_load": {
+      "pass": true,
+      "detail": "loaded Evo2-7B in 3.7s"
+    },
+    "resolve_sae_layer": {
+      "pass": true,
+      "detail": "candidates yielding hidden=4096: [('blocks.26.mlp.l3', (1, 128, 4096)), ('blocks.26', (1, 128, 4096)), ('blocks.26.pre_norm', (1, 128, 4096)), ('blocks.26.post_norm', (1, 128, 4096))]"
+    },
+    "evo2_forward_512nt": {
+      "pass": true,
+      "detail": "residual shape (512, 4096), logits (1, 512, 512)"
+    },
+    "sae_site_chosen": {
+      "pass": true,
+      "detail": "best site 'blocks.26.post_norm' explained_var=0.250"
+    },
+    "sae_shuffled_input_FVU": 1.2321841716766357,
+    "sae_roundtrip_metrics": {
+      "FVU": 0.7502120733261108,
+      "explained_var": 0.24978792667388916,
+      "mean_cosine": 0.6358593702316284,
+      "mean_L0": 63.53385543823242,
+      "expected_L0": 64,
+      "dict_size": 32768,
+      "shuffled_input_explained_var": -0.23218417167663574,
+      "note": "smoke probe uses RANDOM DNA (off the natural-CDS manifold the SAE was trained on) -> lower absolute explained_var than the ~0.34 round-1 natural-CDS figure is expected; validity is asserted by the invariants (dict=32768, L0~64) + a clear margin over the dimension-shuffled null. Paper-feature reproduction on natural CDS was the decisive validity check (round-1 M(-1))."
+    },
+    "sae_roundtrip": {
+      "pass": true,
+      "detail": "explained_var=0.250 (vs shuffled -0.232) cosine=0.636 L0=63.5 (expect~64) dict=32768"
+    },
+    "sae_beats_shuffled": {
+      "pass": true,
+      "detail": "real explained_var=0.250 vs shuffled-input -0.232"
+    },
+    "dssp_mkdssp": {
+      "pass": true,
+      "detail": "mkdssp /data/wanghaoxiong/miniconda3/envs/scientist/bin/mkdssp; 46 residues; SS='-EE-SSHHHHHHHHHHHTTT--HHHHHHHHS-EE-SSS--...'; helix_frac=0.48"
+    },
+    "esmfold": {
+      "pass": true,
+      "detail": "folded 46aa in 27.8s -> mean_plddt=50.4, n_resolved=45, helix_hgi=0.16, helix_hgi_w(pLDDT-weighted)=0.17, sheet=0.00"
+    },
+    "omegafold": {
+      "pass": true,
+      "detail": "folded 46aa in 13.6s -> mean_plddt=38.4, n_resolved=46, helix_hgi=0.00, helix_hgi_w(pLDDT-weighted)=0.00, sheet=0.00"
+    },
+    "frozen_S_loads": {
+      "pass": true,
+      "detail": "S=19 helix (+19 s_f), 5 beta, 19 matched-control; round-1 verdict=established; set-AUROC(prok|HGI|s200)=0.8915743209330207"
+    }
+  },
+  "weight_paths": {
+    "evo2_7b": "/data1/share_model/evo2/evo2_7b/evo2_7b.pt",
+    "sae": "/data1/share_model/evo2/evo2_sae_layer26_mixed/sae-layer26-mixed-expansion_8-k_64.pt"
+  },
+  "cuda_visible_devices": "3",
+  "sae_site_selection": {
+    "blocks.26.mlp.l3": {
+      "explained_var": -0.10279524326324463,
+      "FVU": 1.1027952432632446,
+      "cosine": 0.3617055118083954,
+      "L0": 63.21744918823242
+    },
+    "blocks.26": {
+      "explained_var": -1.3558952808380127,
+      "FVU": 2.3558952808380127,
+      "cosine": 0.8532490730285645,
+      "L0": 64.0
+    },
+    "blocks.26.pre_norm": {
+      "explained_var": 0.12062275409698486,
+      "FVU": 0.8793772459030151,
+      "cosine": 0.7430950403213501,
+      "L0": 63.95573043823242
+    },
+    "blocks.26.post_norm": {
+      "explained_var": 0.24978792667388916,
+      "FVU": 0.7502120733261108,
+      "cosine": 0.6358593702316284,
+      "L0": 63.53385543823242
+    }
+  },
+  "chosen_sae_layer": "blocks.26.post_norm",
+  "chosen_structure_predictor": "ESMFold (facebook/esmfold_v1)",
+  "chosen_second_predictor": {
+    "name": "OmegaFold (release2 / model 2)",
+    "why": "Independent single-sequence predictor with its own OmegaPLM language model (NOT MSA-based, NOT the ESM2 trunk ESMFold uses) -> the most independent second axis available without licensed AlphaFold DBs or MSA search. Installed from the repo on PYTHONPATH (its pip setup.py rejects py3.11); release2 weights (~3.18GB) fetched directly from helixon S3 (HC4 install-and-continue, no sudo/creds/quota block). OmegaFold + ESMFold both emit per-residue confidence on a 0-100 scale into the PDB b-factor, feeding a common pLDDT-weighted DSSP readout.",
+    "weights_path": "/home/wanghaoxiong/.cache/omegafold_ckpt/model.pt",
+    "num_cycle": 4
+  },
+  "overall_pass": true
+}

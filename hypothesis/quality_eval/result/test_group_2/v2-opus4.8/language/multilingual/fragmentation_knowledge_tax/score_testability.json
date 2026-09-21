@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The hypothesis is directional and well aligned with the measurements: it predicts that entities split into more tokens are \"systematically harder to query\" and that the effect is \"causally localized to early-layer subject-token aggregation,\" tested through regression, matched pairs, orthographic interventions, and layer-swept patching. The plan specifies what varies and what is measured through \"subject token count,\" \"retrieval accuracy,\" \"matched-pair accuracy gap,\" and \"patching recovery rate\"; a null or reversed within-language fragmentation effect, or recovery outside rather than within early layers, would refute the corresponding claims. However, no numeric decision thresholds are given, and \"this removes resource-level confound\" is somewhat too strong because matching on a popularity bucket and holding language fixed does not necessarily equalize entity-specific training exposure. Orthographic variants such as \"transliteration, inserted spaces\" and \"diacritic/rare-char forms\" can also change familiarity or recognition independently of token count, although the proposed recognition check partially addresses this ambiguity.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The named dependencies—\"Llama-3.1-8B, Qwen2.5-7B, Aya-23-8B, Gemma-2-9B,\" Wikidata, activation patching, and logit-lens analysis—exist and are supported by standard tokenizer, forward-hook, regression, and interpretability tooling. The hardest step is patching \"the last-subject-token early-layer residual state from a low-fragmentation run into a high-fragmentation run\": the tensor intervention itself is standard, but choosing a causally comparable state across differently tokenized and orthographically different runs requires custom alignment logic that is not fully specified; the alternative \"attention-pool\" injection is likewise underdefined as to layer and pooling rule. Resources receive useful concrete specification—\"~1000\" triples, \"~8 languages,\" and four named models—although the orthographic subset and manual-validation subset are not sized. The negative branch is runnable because the design includes within-language matching, fixed-entity variants, layer sweeps, recognition checks, popularity stratification, and \"no degradation on low-fragmentation controls,\" so null, reversed, nonspecific, or non-early-layer outcomes can emerge.",
+      "score": 7
+    }
+  }
+}

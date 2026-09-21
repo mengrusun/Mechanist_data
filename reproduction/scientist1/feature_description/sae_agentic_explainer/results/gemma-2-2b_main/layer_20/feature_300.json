@@ -1,0 +1,412 @@
+{
+  "feature_idx": 300,
+  "max_act_ref": 143.03875732421875,
+  "trigger_threshold": 28.60775146484375,
+  "sage": {
+    "candidates": [
+      "Bibliographic reference fragments with compact journal/volume/page formatting, especially patterns like Journal 12(4):233-239, Nature 418:133-136, or 6:45-51, 2004.",
+      "Dense scholarly-reference punctuation-and-digit clusters, including DOI/article-number style fragments combined with commas, semicolons, parentheses, and page spans, e.g. '(2020), 8(4):233-241, doi:10.x'.",
+      "Citation-like page-range spans embedded in reference metadata, especially hyphenated numeric ranges after a colon or issue marker, such as 7(3):1810-1817 or vol. 4, pages 88-93."
+    ],
+    "top": "Bibliographic reference fragments with compact journal/volume/page formatting, especially patterns like Journal 12(4):233-239, Nature 418:133-136, or 6:45-51, 2004.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature fires on hyphens used as page-range separators in bibliographic citations, especially between two numbers like 45-51 or 1810-1817.",
+            "positive_probes": [
+              "Smith 2018, pp. 45-51, discusses the theorem.",
+              "See Johnson 1999: 1810-1817 for the original letters.",
+              "Brown, Journal of Ethics 12: 33-40, cited here.",
+              "Miller 2007, pages 102-109, offers a survey.",
+              "In Davis 2015, pp. 67-72, the data appear."
+            ],
+            "positive_acts": [
+              63.310768127441406,
+              63.310768127441406,
+              63.310768127441406,
+              63.310768127441406,
+              63.310768127441406
+            ],
+            "distractor_probes": [
+              "The temperature dropped from 45 to 51 overnight.",
+              "Her office number is 1810-1817 in the directory.",
+              "Use a hyphen in well-known compound adjectives."
+            ],
+            "distractor_acts": [
+              63.554542541503906,
+              63.554542541503906,
+              63.554542541503906
+            ],
+            "score": -0.2437744140625
+          },
+          {
+            "hypothesis": "The feature detects numeric ranges embedded in dense reference-style punctuation patterns, such as volume/issue/page strings with colons, commas, semicolons, or parentheses around the numbers.",
+            "positive_probes": [
+              "See J. Med. 12(3):145-152, 2019.",
+              "Reported in Nature 58, 4:233-240.",
+              "Ann. Chem. 7(2);101-109 discussed catalysts.",
+              "Bioletters 3, suppl. 1:55-60 noted anomalies.",
+              "Clin Rev 14(6): 88-94 summarizes outcomes."
+            ],
+            "positive_acts": [
+              90.78155517578125,
+              98.94563293457031,
+              67.4508285522461,
+              63.432342529296875,
+              63.432342529296875
+            ],
+            "distractor_probes": [
+              "Volume three discussed pages extensively yesterday.",
+              "Issue 4 focused on references and citations.",
+              "Pages 145 to 152 contain the main argument."
+            ],
+            "distractor_acts": [
+              63.5545539855957,
+              63.5545539855957,
+              63.5545539855957
+            ],
+            "score": 13.253986358642578
+          },
+          {
+            "hypothesis": "The feature responds specifically to ASCII '->' style arrow-like substrings formed when a hyphen is immediately followed by a greater-than sign in tokenization, particularly inside scientific citation text.",
+            "positive_probes": [
+              "Smith et al. 2019 -> revised catalytic pathway.",
+              "See Appendix B -> experimental parameters unchanged.",
+              "Johnson 2021 -> confirms prior protein folding results.",
+              "Table 2 -> citation counts for each subgroup.",
+              "Garcia and Lee 2018 -> supplementary isotope measurements."
+            ],
+            "positive_acts": [
+              63.414405822753906,
+              63.414405822753906,
+              63.414405822753906,
+              63.414405822753906,
+              63.414405822753906
+            ],
+            "distractor_probes": [
+              "Smith et al. 2019 to revised catalytic pathway.",
+              "See Appendix B => experimental parameters unchanged.",
+              "Johnson 2021 \u2013 confirms prior protein folding results."
+            ],
+            "distractor_acts": [
+              63.5545539855957,
+              63.5545539855957,
+              63.5545539855957
+            ],
+            "score": -0.14014816284179688
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "The feature fires on bibliographic citation fragments containing compact numeric page ranges inside dense reference punctuation, especially patterns like volume(issue):start-end, journal volume:pages, or similar citation-number strings.",
+            "positive_probes": [
+              "J Clin Oncol 12(4):233-239.",
+              "Nature 418:133-136, 2002.",
+              "Blood 97(11):3456-3462.",
+              "Lancet 356(9235):1371-1376.",
+              "Radiology 210:45-51."
+            ],
+            "positive_acts": [
+              108.79054260253906,
+              97.71488189697266,
+              94.30011749267578,
+              121.22152709960938,
+              63.310768127441406
+            ],
+            "distractor_probes": [
+              "See pages 233 to 239 for details.",
+              "Volume 12 issue 4 was delayed.",
+              "The journal published forty-five articles."
+            ],
+            "distractor_acts": [
+              63.5545539855957,
+              63.5545539855957,
+              63.5545539855957
+            ],
+            "score": 33.51301345825195
+          },
+          {
+            "hypothesis": "The feature responds to hyphenated numeric spans such as page ranges in citation-like contexts, e.g. 45-51 or 1810-1817, especially when surrounded by other reference metadata.",
+            "positive_probes": [
+              "See Journal of Botany 12:45-51, 1908.",
+              "Referenced in Nature 7(3):1810-1817.",
+              "Cited at pp. 233-240 in the proceedings.",
+              "Smith 1999, vol. 4, pages 88-93.",
+              "Review article, issue 2, 145-152, April 1987."
+            ],
+            "positive_acts": [
+              63.310768127441406,
+              91.51986694335938,
+              63.310768127441406,
+              63.310768127441406,
+              63.310768127441406
+            ],
+            "distractor_probes": [
+              "See pages 45 through 51 in the appendix.",
+              "The years 1810 and 1817 were turbulent.",
+              "Volume 4 issue 2 appeared in April 1987."
+            ],
+            "distractor_acts": [
+              63.554542541503906,
+              63.554542541503906,
+              63.554542541503906
+            ],
+            "score": 5.398045349121091
+          },
+          {
+            "hypothesis": "The feature may be driven by dense runs of punctuation and digits found in reference formatting\u2014parentheses, colons, semicolons, commas, DOI/article-number fragments, and numeric spans\u2014rather than by the hyphen or arrow itself.",
+            "positive_probes": [
+              "Smith, J.; Lee, K. (2019): 12,345-12,356; doi:10.1000/182.",
+              "Vol. 7, No. 3 (2021), pp. 144-149; Art. 225.",
+              "Ref. 18: Nguyen et al. (2020), 8(4):233-241, doi:10.5555/xyz.",
+              "Data set ID: 2023; batch 14, sample 09 (rev. 2).",
+              "Appendix B (see Fig. 3): items 1,2,3; sections 4:5-4:9."
+            ],
+            "positive_acts": [
+              63.57722854614258,
+              63.57722854614258,
+              70.22728729248047,
+              63.57722854614258,
+              63.57722854614258
+            ],
+            "distractor_probes": [
+              "The arrow points left-to-right across the diagram.",
+              "A hyphen connects the two words cleanly.",
+              "She moved from room A to room B quickly."
+            ],
+            "distractor_acts": [
+              63.5545539855957,
+              63.5545539855957,
+              63.5545539855957
+            ],
+            "score": 1.3526863098144588
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "Bibliographic reference fragments with compact journal/volume/page formatting, especially patterns like Journal 12(4):233-239, Nature 418:133-136, or 6:45-51, 2004.",
+            "positive_probes": [
+              "See Nature 418:133-136 for the original result.",
+              "Reported in Cell 12(4):233-239, the effect persisted.",
+              "The citation reads Science 6:45-51, 2004 exactly.",
+              "Earlier work appeared in Lancet 301(2):77-84.",
+              "Documented at JAMA 15(3):201-205, replication succeeded."
+            ],
+            "positive_acts": [
+              98.80589294433594,
+              111.99420928955078,
+              63.310768127441406,
+              87.10646057128906,
+              71.79483795166016
+            ],
+            "distractor_probes": [
+              "Nature published the study in April 2004.",
+              "Volume 12 issue 4 discussed pages 233 to 239.",
+              "The journal article spans pages 45 through 51."
+            ],
+            "distractor_acts": [
+              63.554542541503906,
+              63.554542541503906,
+              63.554542541503906
+            ],
+            "score": 23.047891235351557
+          },
+          {
+            "hypothesis": "Citation-like page-range spans embedded in reference metadata, especially hyphenated numeric ranges after a colon or issue marker, such as 7(3):1810-1817 or vol. 4, pages 88-93.",
+            "positive_probes": [
+              "J. Chem. 7(3):1810-1817 reports catalytic activity.",
+              "Vol. 4, pages 88-93 describe the assay.",
+              "See Neuroimage 12(1):44-52 for preprocessing details.",
+              "The citation lists issue 5:233-240 after the title.",
+              "In Smith 9(2):101-109, outcomes significantly improved."
+            ],
+            "positive_acts": [
+              79.36358642578125,
+              63.310768127441406,
+              75.08796691894531,
+              63.310768127441406,
+              63.310768127441406
+            ],
+            "distractor_probes": [
+              "The paper discusses pages loading slowly on the website.",
+              "Volume four of the novel spans eighty-eight chapters.",
+              "Issue five raised 233 concerns during the review."
+            ],
+            "distractor_acts": [
+              63.5545539855957,
+              63.5545539855957,
+              63.5545539855957
+            ],
+            "score": 5.322217559814447
+          },
+          {
+            "hypothesis": "Dense scholarly-reference punctuation-and-digit clusters, including DOI/article-number style fragments combined with commas, semicolons, parentheses, and page spans, e.g. '(2020), 8(4):233-241, doi:10.x'.",
+            "positive_probes": [
+              "See Smith et al. (2020), 8(4):233-241; doi:10.1234/abcd.",
+              "Reported in J. Med. 12(3):45-59 (2019), art. e102; doi:10.7/x9.",
+              "Results appear in Nature 5(11):1022-1030; (2021), doi:10.55/nn12.",
+              "Cited as 14(2):77-84, 2018; PMID:123456, doi:10.9/qwe.",
+              "Reference: (2017) 3(6):199-207; article e45, doi:10.1111/xyz."
+            ],
+            "positive_acts": [
+              63.57722854614258,
+              96.08076477050781,
+              108.78096008300781,
+              63.57722854614258,
+              63.57722854614258
+            ],
+            "distractor_probes": [
+              "The 2020 report covered pages 233 to 241.",
+              "See chapter 8, section 4, pages 233-241.",
+              "Published in 2020 with article number 45."
+            ],
+            "distractor_acts": [
+              63.554542541503906,
+              63.554542541503906,
+              63.554542541503906
+            ],
+            "score": 15.564139556884768
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "biol. Aging 1997 July-August; 18(4):351-7).\nNeurofibrillary tangles are intraneuronal lesions that are composed of hyperphosphorylated and insoluble",
+    "viability but did not increase protein production. (See Tey et al., Biotechnol. Bioeng. 68:31-43, 2000.) Another example disclosed overexpression of Bcl-2 proteins to delay apoptosis in CHO cells",
+    "The recipe called for a pinch of saffron.",
+    "The train from Milan arrived twenty minutes late.",
+    "The company announced quarterly earnings yesterday afternoon.",
+    "7;65:670-682.<bos>Q:\n\nSet method for java not working\n\nSo for my assignment it needs to look like this",
+    "The senator refused to comment before the hearing.",
+    "1; Huang et al., 1998, Journal of Industrial Microbiology & Biotechnology 21: 22-27; Lund and Waytt, 1973, Journal of General Microbiology 78: 33",
+    "The bakery opened at seven every morning.",
+    "A soft breeze moved the curtains at dawn.",
+    "its receptors in early diabetic rat retinas. Diabetes 2008;57:1026--1033**\n\nIn the print version of the article listed above, the second affiliation for Xinyuan Zhang is incorrect.",
+    "Lau C 2007 [*Nano Letters*]{} [**7**]{} 2645\u20132649\n\nSahoo S, Gaur A\u00a0P, Ahmadi M, Guinel M\u00a0J\u00a0F and"
+  ],
+  "heldout_true_acts": [
+    119.7379150390625,
+    103.7165756225586,
+    63.465579986572266,
+    63.465579986572266,
+    63.465579986572266,
+    120.96224212646484,
+    63.465579986572266,
+    123.69727325439453,
+    63.57722854614258,
+    63.57722854614258,
+    120.50160217285156,
+    138.4863739013672
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "phrases relating to the impact of tau pathology in neurodegenerative diseases",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 63.310768127441406,
+        "sentences": [
+          "Tau pathology drives neuronal loss in Alzheimer's disease.",
+          "Neurofibrillary tangles worsen cognitive decline in dementia.",
+          "Tau accumulation disrupts synapses during frontotemporal degeneration.",
+          "In Parkinsonian disorders, tau burden accelerates neurodegeneration.",
+          "Progressive tau aggregation damages brain networks and memory.",
+          "Tau-mediated toxicity contributes to hippocampal atrophy and impairment.",
+          "Corticobasal degeneration shows severe symptoms from tau pathology.",
+          "Abnormal tau spreads, intensifying neuronal dysfunction across the cortex."
+        ],
+        "activations": [
+          63.310768127441406,
+          63.310768127441406,
+          63.310768127441406,
+          63.310768127441406,
+          63.310768127441406,
+          63.310768127441406,
+          63.310768127441406,
+          63.310768127441406
+        ]
+      },
+      "predictive": {
+        "pearson": 0.27798213317746956,
+        "spearman": 0.133608531424537,
+        "preds": [
+          9.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Bibliographic reference fragments with compact journal/volume/page formatting, especially patterns like Journal 12(4):233-239, Nature 418:133-136, or 6:45-51, 2004.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 83.0282154083252,
+        "sentences": [
+          "Nature 418:133-136 reported the finding.",
+          "Cell 12(4):233-239 described the pathway.",
+          "See Lancet 6:45-51, 2004 for details.",
+          "The result appeared in Science 299:120-122.",
+          "JAMA 15(2):88-94 covered the trial.",
+          "Earlier work: BMJ 7:101-107, 1998.",
+          "Genome Res. 21(3):455-462 mapped the loci.",
+          "Referenced in Neuron 34:77-83, 2002."
+        ],
+        "activations": [
+          96.8982162475586,
+          94.39532470703125,
+          81.39575958251953,
+          102.41648864746094,
+          63.49431228637695,
+          76.03253173828125,
+          86.0987777709961,
+          63.49431228637695
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9531033992300757,
+        "spearman": 0.7497227869060725,
+        "preds": [
+          10.0,
+          9.0,
+          0.0,
+          0.0,
+          0.0,
+          8.0,
+          0.0,
+          9.0,
+          0.0,
+          0.0,
+          9.0,
+          8.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 68.64326071739197,
+  "layer": 20,
+  "sae_info": {
+    "layer": 20,
+    "width": "16k",
+    "l0": 71,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_20/width_16k/average_l0_71/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "phrases relating to the impact of tau pathology in neurodegenerative diseases"
+}

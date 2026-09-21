@@ -1,0 +1,392 @@
+{
+  "feature_idx": 1000,
+  "max_act_ref": 137.49716186523438,
+  "trigger_threshold": 27.499432373046876,
+  "sage": {
+    "candidates": [
+      "JSX component configuration syntax in opening tags for framework-specific props such as `keyExtractor` and `store`, particularly in React/React Native.",
+      "JSX opening tags with prop assignments, especially expression-valued props written as `prop={...}` inside a component tag.",
+      "React/React Native component tags containing callback or object-valued props in braces, e.g. `keyExtractor={fn}`, `onPress={...}`, `options={{...}}`, `store={...}`."
+    ],
+    "top": "JSX component configuration syntax in opening tags for framework-specific props such as `keyExtractor` and `store`, particularly in React/React Native.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature fires on JSX/React prop names written in camelCase immediately before an equals sign and a JavaScript expression in curly braces, such as `store={store}` or `keyExtractor={item => item.id}`.",
+            "positive_probes": [
+              "Render <List dataSource={items} /> in JSX.",
+              "Use <Button onClick={handleSave} /> here.",
+              "Pass <Card headerTitle={titleText} /> to render.",
+              "Set <Image resizeMode={mode} /> properly.",
+              "Add <FlatList keyExtractor={item => item.id} />."
+            ],
+            "positive_acts": [
+              26.558135986328125,
+              98.54379272460938,
+              36.350162506103516,
+              21.856639862060547,
+              82.0529556274414
+            ],
+            "distractor_probes": [
+              "Render <List data-source=\"items\" /> in JSX.",
+              "Use <Button onClick=\"handleSave\" /> here.",
+              "Pass <Card>{titleText}</Card> to render."
+            ],
+            "distractor_acts": [
+              31.945106506347656,
+              98.13848114013672,
+              11.138505935668945
+            ],
+            "score": 5.9983061472574875
+          },
+          {
+            "hypothesis": "The feature detects identifier suffixes that denote data selection or retrieval roles in UI/framework code, especially tokens ending in words like `store` or `Extractor` used as prop/property names.",
+            "positive_probes": [
+              "Pass selectedStore as a prop to the grid.",
+              "The config expects itemExtractor in widget properties.",
+              "Bind userStore into the component options object.",
+              "Set dataExtractor on the table column definition.",
+              "Update queryStore inside the view props."
+            ],
+            "positive_acts": [
+              8.876996040344238,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "distractor_probes": [
+              "Initialize the storage backend for cached responses.",
+              "The extractor fan runs above the server rack.",
+              "Pass selected item into the grid component."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "score": 1.7753992080688477
+          },
+          {
+            "hypothesis": "The feature activates on React or React Native component configuration syntax where a component is passed a state container or item-key callback prop inside angle-bracket markup.",
+            "positive_probes": [
+              "<FlatList data={items} keyExtractor={itemKey} />",
+              "<Provider store={appStore}><App /></Provider>",
+              "<List items={todos} keyExtractor={getKey} />",
+              "<ConnectedApp store={reduxStore} theme=\"dark\" />",
+              "<VirtualizedList data={rows} keyExtractor={rowKey} />"
+            ],
+            "positive_acts": [
+              121.34757995605469,
+              38.67543029785156,
+              111.78768157958984,
+              99.31304931640625,
+              128.51080322265625
+            ],
+            "distractor_probes": [
+              "const keyExtractor = item => item.id;",
+              "React component receives props but no store passed.",
+              "Use Redux store outside JSX configuration."
+            ],
+            "distractor_acts": [
+              16.8753604888916,
+              0.0,
+              0.0
+            ],
+            "score": 94.30178871154786
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "React/React Native JSX opening-tag props that pass a JavaScript expression in curly braces, especially callback/container props like `keyExtractor={...}` and `store={...}`.",
+            "positive_probes": [
+              "<FlatList keyExtractor={(item) => item.id} />",
+              "<Provider store={configureStore()}><App /></Provider>",
+              "<Button onPress={() => saveItem(id)} title=\"Save\" />",
+              "<Screen options={{ headerShown: false }} component={Home} />",
+              "<TextInput value={name} onChangeText={setName} />"
+            ],
+            "positive_acts": [
+              86.97447967529297,
+              38.67543029785156,
+              109.54603576660156,
+              104.87516021728516,
+              126.16223907470703
+            ],
+            "distractor_probes": [
+              "<FlatList keyExtractor=\"item.id\" />",
+              "const store = configureStore();",
+              "<Button title=\"Save\">Click me</Button>"
+            ],
+            "distractor_acts": [
+              86.90705108642578,
+              0.0,
+              72.20123291015625
+            ],
+            "score": 40.210574340820315
+          },
+          {
+            "hypothesis": "JSX component configuration involving framework-specific props such as `keyExtractor` or `store`, particularly in React/React Native tags like `<FlatList ... keyExtractor={...} />` or `<Provider store={...}>`.",
+            "positive_probes": [
+              "Render <FlatList keyExtractor={item => item.id} /> here.",
+              "Wrap app with <Provider store={reduxStore}> today.",
+              "Use <SectionList keyExtractor={keyFn} sections={data} />.",
+              "Mount <Provider store={appStore}><Screen /></Provider> now.",
+              "Configure <FlatList data={items} keyExtractor={extractKey} /> properly."
+            ],
+            "positive_acts": [
+              88.55750274658203,
+              43.45503234863281,
+              68.93729400634766,
+              15.810625076293945,
+              137.00006103515625
+            ],
+            "distractor_probes": [
+              "React list items need unique keys when rendering.",
+              "The Redux store holds global application state.",
+              "Configure a component with props and children normally."
+            ],
+            "distractor_acts": [
+              0.0,
+              0.0,
+              7.347972869873047
+            ],
+            "score": 68.30277875264485
+          },
+          {
+            "hypothesis": "Expression-valued camelCase props in JSX opening tags, not plain text identifiers: a prop name followed by `={...}` inside angle brackets.",
+            "positive_probes": [
+              "Render <Button onClick={handleSave} disabled={isLocked} /> today.",
+              "Use <Modal initialFocus={inputRef} isOpen={true}> now.",
+              "Try <UserCard displayName={user.name} avatarUrl={photo} />.",
+              "Insert <Chart dataSource={metrics} xAxisLabel={title} /> here.",
+              "Create <FormField maxLength={limit} autoComplete={mode} />."
+            ],
+            "positive_acts": [
+              123.57038116455078,
+              121.01532745361328,
+              111.89427947998047,
+              74.03180694580078,
+              64.52324676513672
+            ],
+            "distractor_probes": [
+              "Render <button onclick=\"save()\" disabled> today.",
+              "Discuss camelCase prop names in JSX opening tags.",
+              "Use <Modal initialFocus inputRef isOpen true> now."
+            ],
+            "distractor_acts": [
+              27.014118194580078,
+              0.0,
+              73.17626953125
+            ],
+            "score": 65.61021245320637
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "JSX opening tags with prop assignments, especially expression-valued props written as `prop={...}` inside a component tag.",
+            "positive_probes": [
+              "Render <Button disabled={isLoading} label=\"Submit\"> in JSX.",
+              "Use <Modal open={true} title={dialogTitle} /> here.",
+              "Create <Card width={300} highlighted={selected} /> component.",
+              "Return <Input value={name} onChange={handleChange} />.",
+              "Include <Avatar size={48} src={imageUrl} rounded={true} />."
+            ],
+            "positive_acts": [
+              105.57146453857422,
+              100.10846710205078,
+              63.74854278564453,
+              138.32943725585938,
+              95.16141510009766
+            ],
+            "distractor_probes": [
+              "Render <Button disabled label=\"Submit\"> without expression props.",
+              "Call createElement(Button, { disabled: isLoading, label: \"Submit\" }).",
+              "Use an HTML tag like <div className=\"box\"> here."
+            ],
+            "distractor_acts": [
+              67.93035125732422,
+              19.883525848388672,
+              56.43721008300781
+            ],
+            "score": 52.500169626871745
+          },
+          {
+            "hypothesis": "React/React Native component tags containing callback or object-valued props in braces, e.g. `keyExtractor={fn}`, `onPress={...}`, `options={{...}}`, `store={...}`.",
+            "positive_probes": [
+              "<FlatList keyExtractor={item => item.id} />",
+              "<Button onPress={handleSave} title=\"Save\" />",
+              "<Stack.Screen options={{ headerShown: false }} />",
+              "<Provider store={appStore}><App /></Provider>",
+              "<TouchableOpacity onPress={() => openModal()} />"
+            ],
+            "positive_acts": [
+              86.83463287353516,
+              109.54597473144531,
+              50.58552932739258,
+              38.378639221191406,
+              95.64315795898438
+            ],
+            "distractor_probes": [
+              "<View style={styles.container}><Text>Hello</Text></View>",
+              "Use onPress carefully in React Native components.",
+              "<Button title=\"Save\" disabled />"
+            ],
+            "distractor_acts": [
+              101.44725799560547,
+              32.384891510009766,
+              72.08797454833984
+            ],
+            "score": 7.557545471191403
+          },
+          {
+            "hypothesis": "JSX component configuration syntax in opening tags for framework-specific props such as `keyExtractor` and `store`, particularly in React/React Native.",
+            "positive_probes": [
+              "<FlatList keyExtractor={item => item.id} data={items} />",
+              "<Provider store={reduxStore}><App /></Provider>",
+              "<List keyExtractor={(x) => x.key} renderItem={renderRow} />",
+              "<ConnectedApp store={store} theme=\"dark\" />",
+              "<SectionList keyExtractor={item => item.slug} sections={data} />"
+            ],
+            "positive_acts": [
+              108.61847686767578,
+              38.40559768676758,
+              78.78199005126953,
+              102.29473114013672,
+              121.7691879272461
+            ],
+            "distractor_probes": [
+              "Use keyExtractor in the list configuration object.",
+              "The store variable holds the Redux state.",
+              "React components accept props passed from parents."
+            ],
+            "distractor_acts": [
+              10.099397659301758,
+              0.0,
+              0.0
+            ],
+            "score": 86.60753084818522
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "The bakery opened at seven every morning.",
+    "A soft breeze moved the curtains at dawn.",
+    "A single cloud drifted over the harbor.",
+    "The lawyer objected on procedural grounds.",
+    "Text>\n                </View> :\n                <FlatList\n                  style={{ marginBottom: 80 }}\n                  keyExtractor={item => item.id}\n                  data={this.state.data}\n                  renderItem={({ item }) =>",
+    "The recipe called for a pinch of saffron.",
+    "The old library sat quietly at the edge of the park."
+  ],
+  "heldout_true_acts": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    125.45153045654297,
+    0.0,
+    0.0
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "elements related to React component structure and rendering methods",
+      "generative": {
+        "trigger_rate": 0.0,
+        "mean_max": 0.0,
+        "sentences": [
+          "The React component renders JSX inside its return statement.",
+          "Class components implement render() to display UI elements.",
+          "This functional component maps props into rendered list items.",
+          "Conditional rendering shows a spinner while data loads.",
+          "The parent component passes children into a layout wrapper.",
+          "Use fragments to return multiple elements without extra nodes.",
+          "Component state updates trigger a rerender of the virtual DOM.",
+          "Render props let one component control another's output."
+        ],
+        "activations": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "predictive": {
+        "pearson": 1.0,
+        "spearman": 0.9999999999999998,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "JSX component configuration syntax in opening tags for framework-specific props such as `keyExtractor` and `store`, particularly in React/React Native.",
+      "generative": {
+        "trigger_rate": 0.75,
+        "mean_max": 60.1531081199646,
+        "sentences": [
+          "<FlatList keyExtractor={item => item.id} /> renders rows.",
+          "<Provider store={appStore}><App /></Provider> wires Redux.",
+          "Use <SectionList keyExtractor={(item) => item.key} /> here.",
+          "<Connect store={store}><Dashboard /></Connect> passes the state.",
+          "Render <FlatList data={items} keyExtractor={getKey} /> now.",
+          "<Provider store={configureStore()}><Root /></Provider> initializes app state.",
+          "Inside JSX, <List keyExtractor={item => String(item.id)} /> appears.",
+          "Mount <Provider store={reduxStore}><Screen /></Provider> at startup."
+        ],
+        "activations": [
+          86.0831527709961,
+          38.24109649658203,
+          48.19750213623047,
+          23.28314781188965,
+          136.52081298828125,
+          38.29619216918945,
+          94.01448059082031,
+          16.58847999572754
+        ]
+      },
+      "predictive": {
+        "pearson": 1.0,
+        "spearman": 0.9999999999999998,
+        "preds": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 57.5161337852478,
+  "layer": 20,
+  "sae_info": {
+    "layer": 20,
+    "width": "16k",
+    "l0": 71,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_20/width_16k/average_l0_71/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "elements related to React component structure and rendering methods"
+}

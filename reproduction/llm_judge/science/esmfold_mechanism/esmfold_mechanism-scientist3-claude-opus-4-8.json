@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "Mechanisms of AI Protein Folding in ESMFold",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The only sub-stage that ran to valid completion is a pure evaluation baseline: ESMFold is run on a fixed hardcoded panel of 8 proteins and each prediction is scored against a curated gt_hairpin label (logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy shows val: {'hairpin_dssp_accuracy':0.625,'n_eval':8,'n_correct':5}, predictions [1,1,1,0,0,0,0,0] vs ground_truth [1,1,1,1,1,1,0,0]). There is no fitted classifier, threshold selection, or trained probe in the realized work — the planned per-block linear charge probe (stage_3 node f7f52968) never completed. With no fitting/selection process there is no train/eval overlap to contaminate, so no leakage path exists. n/a — no fitting/selection process was successfully executed.",
+    "score": 5,
+    "evidence_files": ["logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy", "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json"]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The ground-truth gt_hairpin labels are curated from well-characterized proteins (GB1, ubiquitin, WW-Pin1, Trpzip2 + Trp-cage negative control) and are independent of the model, which is reasonable. However the operationalization is materially flawed relative to what the claims require. Claim 3 explicitly states 'The evaluation of β-hairpin formation must be based on DSSP secondary-structure assignment', but the completed baseline fell back to biotite: per_protein entries in experiment_data.npy record ss_tool='biotite', not DSSP. The pydssp path is documented as broken — stage_3 node f7f52968 analysis: 'pyDSSP is returning all-loop (\"LLLLLLLLLLLL\") for Trpzip2, Chignolin, HP7 ... getting all-L is not physically plausible', and stage_4 node cae62008 analysis: 'Wrong SS assigner is being used ... the fallback cascade iterates pydssp'. The consequence is that the E{3,}L{2,8}E{3,} regex over biotite SS mislabels canonical small β-hairpins, driving recall (TPR) down to 0.5 (half of true hairpins missed) — i.e. the measurement fails to capture the target behavior for half the positives and does not honor the required DSSP basis.",
+    "score": 2,
+    "evidence_files": ["logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy", "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json", "logs/0-run/stage_4_ablation_studies_1_first_attempt/journal.json"]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The base model ESMFold was genuinely used — per_protein records real predicted SS strings and plausible pLDDT values (0.49–0.80), so the model itself was not downgraded. But the specified dataset was silently replaced. task.md `## Resources` mandates the PDB filtered by the PISCES cull list 'cullpdb_pc25.0_res0.0-2.5_len40-10000_R0.3_Xray_d2026_05_14_chains12055' (12,055 chains / 11,633 entries), and the paper's protocol needs ~200 target proteins and ~130,000 donor motif regions. Instead every completed node used a hardcoded panel of only 8 proteins (draft_summary.json: 'a hardcoded panel of well-characterized β-hairpin-containing proteins plus a Trp-cage negative control'; experiment_data.npy n_eval=8). The stage_1 findings even state the panel was chosen because it 'sidestepped the fragile PISCES do[wnload]'. Substituting a 12k-chain non-redundant dataset with 8 curated proteins, plus dropping the required DSSP for biotite, is a drastic silent downgrade of the specified resources.",
+    "score": 1,
+    "evidence_files": ["logs/0-run/draft_summary.json", "logs/0-run/stage_1_initial_implementation_1_preliminary/notes/stage_progress.json", "logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy"]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The completed evidence base is a single 8-protein panel (experiment_data.npy: n_eval=8, n_correct=5, accuracy 0.625) that measures only whether wild-type ESMFold predicts a hairpin — it is not an experiment for any of the three mechanistic claims. The claim-relevant experiments (per-block activation patching/freeze for C1, seq2pair/pair2seq pathway ablation for C2, charge probing + electrostatic steering for C3) were attempted exactly once (stage_3 node f7f52968) and via an SS-assigner ablation (stage_4 node c2502ff7), and all were flagged buggy; ablation_summary.json is literally empty ([]). The paper by contrast uses ~10,000 patching experiments, 400 block-0 cases, and ~500 steering cases per model. Yet report.md's overall verdict states 'Partially or fully supported'. This is a severe overclaim: conclusions are asserted for claims whose experiments never validly ran, on n=8 (< 40).",
+    "score": 1,
+    "evidence_files": ["logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy", "logs/0-run/ablation_summary.json", "report.md"]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "The reported baseline is a single deterministic pass over 8 proteins with no variance, error bars, or significance reported (experiment_data.npy val list has a single epoch-0 entry). Seed-aggregation nodes exist (stage_3 node 2e7a78f2 'Aggregate results from multiple seeds', stage_4 node 81f6016d) but they carry metric.value=None — no aggregated variance was actually produced. No claimed mechanistic effect has any uncertainty quantification because none of the mechanistic experiments produced valid numbers. Point estimates only, single effective run, robustness to randomness unverified.",
+    "score": 2,
+    "evidence_files": ["logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy", "logs/0-run/research_summary.json", "logs/0-run/stage_4_ablation_studies_1_first_attempt/journal.json"]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "Claims 2 and 3 are explicitly causal ('the critical channel through which the decision is transferred', 'exerts a causal effect on β-hairpin formation') and Claim 1 is a localization claim answerable only by intervention. The run planned genuine interventions — block-freeze, seq2pair/pair2seq zeroing, charge steering along a difference-in-means direction (stage_3 node f7f52968 plan) — but they never produced valid causal evidence. The freeze/ablation hook was ineffective: its own analysis notes 'freeze_s_early and freeze_s_late both give 100% hairpin rate ... suggests the freeze hook is not actually preventing information flow' and 'The code calls orig(*args) first and then overwrites s_out = s_in after the fact', so no controlled intervention was realized. The only completed measurement (baseline hairpin accuracy) contains no intervention at all. The causal claims therefore rest on no valid intervention or controls.",
+    "score": 1,
+    "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/journal.json", "logs/0-run/ablation_summary.json"]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "The numeric results that are reported do trace cleanly to on-disk products and agree with them: report.md / draft_summary.json / research_summary.json / baseline_summary.json all cite accuracy 0.625, TPR 0.5, TNR 1.0, mean pLDDT 0.73, and these match experiment_data.npy exactly (val {'hairpin_dssp_accuracy':0.625,'n_eval':8,'n_correct':5}; predictions/ground_truth arrays present). No fabricated or back-filled numbers were found. The one provenance weakness is qualitative rather than numeric: report.md's per-claim table and 'Partially or fully supported' verdict have no supporting run product (the underlying mechanistic experiments are all buggy/empty), so the claim-level conclusion is not grounded in execution even though the baseline numbers are.",
+    "score": 4,
+    "evidence_files": ["report.md", "logs/0-run/draft_summary.json", "logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy"]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The numeric records are self-consistent: the same 0.625/0.375/0.5/1.0/0.73 metrics recur identically across draft_summary.json, research_summary.json, baseline_summary.json, all four stage_progress.json files, and experiment_data.npy, and best_node_id.txt is the identical baseline hash (aebd1b506a874b4b96e009fbbf0a64b2) in all four stages. However there is a verdict-vs-evidence inconsistency: report.md's overall verdict is 'Partially or fully supported' and its per-claim table asserts support for all three claims, while draft_summary itself states 'the downstream localization/pathway analyses are not yet performed in this preliminary stage', ablation_summary.json is empty, and stages 3–4 never advanced past the baseline node. The prose verdict thus overstates a state that the run's own records show was never reached.",
+    "score": 3,
+    "evidence_files": ["report.md", "logs/0-run/draft_summary.json", "logs/0-run/ablation_summary.json", "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_node_id.txt"]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "Folding decisions for β-hairpin structures are localized in the early blocks of the folding trunk. Whether the trunk will fold a target region into a β-hairpin is committed to within early blocks, and the sequence representation `s` is the active locus of that decision during this window.",
+        "method": {
+          "justification": "9a: The intended method — per-block activation patching / block-freeze on s vs z to localize the commitment (stage_3 node f7f52968 plan: 'causal block-freeze interventions ... measuring hairpin_formation_rate at each cut-point') — matches the paper's activation-patching localization method. But it was never validly realized; the only completed measurement is baseline hairpin accuracy on 8 wild-type proteins, which cannot localize computation to any block. The correct method family was chosen but the realized method is unsuited to the claim.",
+          "score": 2,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/journal.json"]
+        },
+        "experiment": {
+          "justification": "9b: The localization experiment did not validly run. The block-freeze hook was ineffective ('freeze_s_early and freeze_s_late both give 100% hairpin rate ... the freeze hook is not actually preventing information flow'), only ~4 usable proteins survived SS assignment, and there was no per-block sweep, no baseline/control comparison, and no successful iteration to fix the hook — the node was abandoned as buggy. No valid metric distinguishes early- from late-block localization.",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/journal.json"]
+        },
+        "result": {
+          "justification": "9c: No valid localization result exists; the only number is baseline panel accuracy 0.625 (experiment_data.npy), which says nothing about early-block commitment. Yet report.md marks the claim as covered by a 'Partially or fully supported' verdict. This is neither a genuine reproduction nor an honest, reasoned NOT-REPRODUCED — it is an unsupported surface conclusion, so it does not qualitatively agree with the paper on any grounded basis.",
+          "score": 1,
+          "evidence_files": ["report.md", "logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy"]
+        }
+      },
+      "C2": {
+        "claim": "The early-block seq2pair pathway is the critical channel through which the β-hairpin folding decision is transferred from `s` into `z`. In the early blocks, the seq2pair operation carries the decision to fold a target region into a β-hairpin from the sequence representation `s` into the pairwise representation `z`.",
+        "method": {
+          "justification": "9a: The planned method — zeroing/monkey-patching the seq2pair vs pair2seq contribution in early vs late blocks (stage_3 node f7f52968 plan: 'seq2pair vs pair2seq pathway ablation by zeroing each pathway's contribution ... monkey-patching TriangularSelfAttentionBlock.forward') — is the correct pathway-ablation family used by the paper. However it was never validly executed; the completed run contains no pathway ablation, and stage_4's only ablation was an SS-assigner comparison, not a seq2pair ablation.",
+          "score": 2,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/journal.json", "logs/0-run/stage_4_ablation_studies_1_first_attempt/journal.json"]
+        },
+        "experiment": {
+          "justification": "9b: The seq2pair pathway-ablation experiment produced no valid results. ablation_summary.json is empty ([]), the stage_3 attempt was buggy with an ineffective hook, and there was no early-vs-late contrast, no pair2seq control, and no coefficient/window sweep completed. It is impossible to tell a true negative from under-execution.",
+          "score": 1,
+          "evidence_files": ["logs/0-run/ablation_summary.json", "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json"]
+        },
+        "result": {
+          "justification": "9c: There is no grounded result on whether seq2pair is the critical early-block channel; only baseline accuracy exists. The report nonetheless presents the claim under a 'Partially or fully supported' verdict, an unsupported conclusion rather than an honest, justified non-reproduction. No qualitative agreement with the paper can be substantiated.",
+          "score": 1,
+          "evidence_files": ["report.md", "logs/0-run/ablation_summary.json"]
+        }
+      },
+      "C3": {
+        "claim": "Charge is a linearly encoded chemical feature in early blocks of ESMFold and causally influences β-hairpin formation. This charge feature exerts a causal effect on β-hairpin formation, consistent with the physical principle that opposite-charge residues on facing β-strands favor pairing (same-charge configurations correspondingly increase cross-strand distance). The evaluation of β-hairpin formation must be based on DSSP secondary-structure assignment on the predicted structure.",
+        "method": {
+          "justification": "9a: The planned method — a difference-in-means charge direction, per-block linear probing on s, and an electrostatic charge-edit steering hook (stage_3 node f7f52968 plan: 'train linear probes on per-block s for a per-residue charge label ... causal charge edit — add ±α along the learned charge direction') — matches the paper's charge-direction/probing/steering methodology. But it was never validly realized, and the required DSSP evaluation basis was not used (the completed pipeline scored on biotite, ss_tool='biotite'), directly violating the claim's stated method constraint.",
+          "score": 2,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/journal.json", "logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy"]
+        },
+        "experiment": {
+          "justification": "9b: Neither the charge linear-probe nor the electrostatic steering (with same-charge / opposite-charge controls and a coefficient sweep, as in the paper) was completed — the single attempt was buggy and produced no interpretable charge results, and the DSSP requirement was unmet (biotite fallback, with pydssp giving physically implausible all-loop SS for canonical hairpins). No steering-strength sweep, no valid controls, no valid causal metric. Under-powered and unfinished.",
+          "score": 1,
+          "evidence_files": ["logs/0-run/stage_3_creative_research_1_first_attempt/journal.json", "logs/0-run/stage_4_ablation_studies_1_first_attempt/journal.json"]
+        },
+        "result": {
+          "justification": "9c: No result on linear charge encoding or its causal effect on cross-strand distance / hairpin formation exists; the only completed number is baseline panel accuracy 0.625. The report's 'Partially or fully supported' verdict is therefore an unsupported surface claim, not a grounded reproduction and not a reasoned NOT-REPRODUCED. It cannot be said to qualitatively agree with the paper.",
+          "score": 1,
+          "evidence_files": ["report.md", "logs/0-run/experiment_results/experiment_aebd1b506a874b4b96e009fbbf0a64b2_proc_631077/experiment_data.npy"]
+        }
+      }
+    }
+  }
+}

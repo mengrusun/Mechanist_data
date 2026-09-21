@@ -1,0 +1,122 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name":         "Zhenqian_Xu",
+    "paper_title":         "Mechanistic understanding and validation of large AI models with SemanticLens",
+    "agent":               "scientist3",
+    "review_date":         "2026-07-15"
+  },
+  "_note_score":       "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "只做到将component映射到文本空间向量，没用测试集作text query",
+    "score": 2,
+    "evidence_files": [
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/research_summary.json",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/experiment_results/experiment_15c348a200fc4eaa9da81f4a7396513c_proc_1176445/experiment_code.py"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "应该准备文本标签但没准备。",
+    "score": 1,
+    "evidence_files": [
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/draft_summary.json",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "task.md 主实验指定 ResNet-50（ImageNet-pretrained）+ ImageNet-val + 冻结 CLIP 图像塔——三者都被使用verify 阶段建议候选 ViT-B/16 / VGG-16 / EfficientNet-B0 完全未被跨模型验证； 只对 layer4 单层且仅 64个 channel做检查，远小于总数。使用图片数量 16000，比 ImageNet-val 完整 50k 少但已合理",
+    "score": 3,
+    "evidence_files": [
+      "human_judge/feature_description/multi_modal_feature_description/task.md",
+      "scientist3/feature_description/multi_modal_feature_description/idea.md",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/experiment_results/experiment_15c348a200fc4eaa9da81f4a7396513c_proc_1176445/experiment_code.py",
+      "scientist3/feature_description/multi_modal_feature_description/report.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "使用的图片数量太少，影响component representative embedding质量。测的component数量为64，远小于2048,不利于作text query.",
+    "score": 3,
+    "evidence_files": [
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/draft_summary.json",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/research_summary.json",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/baseline_summary.json",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/ablation_summary.json"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "没有报告方差 / 误差棒 / 显著性检验；delta 只有 0.0532–0.0978 且未量化其相对随机波动的显著性。虽然 delta 的方向在 N_PROBE 与 TOP_K 扫描中一致为正,但绝对值偏小，缺乏严格的统计报告。",
+    "score": 2,
+    "evidence_files": [
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/experiment_results/experiment_15c348a200fc4eaa9da81f4a7396513c_proc_1176445/experiment_code.py",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "n/a —— 无因果主张。两条 claim 都是表征 / 描述性主张（reference inputs 是 concept summary；池化嵌入产生 v_c），并未声明消融 / 干预类因果结论。SemanticLens 论文原文本身也是把嵌入-作-描述子而非做因果干预（干预由 CRP relevance 承担、此复现未做）。",
+    "score": "n/a",
+    "evidence_files": [
+      "scientist3/feature_description/multi_modal_feature_description/idea.md",
+      "paper/feature_description/multi_modal_feature_description/paper.pdf"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字都能溯源：report.md / draft_summary.json 中的 0.6588 (concept mean) / 0.6413 (median) / 0.6056 (random) / 0.0532 (delta) 与 stage_1 experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289 的 experiment_data.npy 一致；research_summary.json 中 N_PROBE 扫描结果（{2000:0.6588, 4000:0.675, 8000:0.6677, 16000:0.6776}）对应 stage_2 baseline_tuning 落盘 experiment_data；ablation_summary.json 中 TOP_K 扫描 delta / mean 与 experiment_15c348a200fc4eaa9da81f4a7396513c_proc_1176445/experiment_data.npy 一致。每份汇总的 code / plot 都被保留在同一 experiment_<hash>/ 下。未见凭空数字。",
+    "score": 5,
+    "evidence_files": [
+      "scientist3/feature_description/multi_modal_feature_description/report.md",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/draft_summary.json",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/research_summary.json",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/ablation_summary.json",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/experiment_results/experiment_9ca9a381689441eb9a13ef8ca9a45553_proc_967289/experiment_data.npy",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/experiment_results/experiment_15c348a200fc4eaa9da81f4a7396513c_proc_1176445/experiment_data.npy"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "各份产物基本自洽：draft_summary.json（初始 baseline，K=8, N_PROBE=2000 → concept mean 0.6588 / random 0.6056 / delta 0.0532）↔ report.md 引用一致；research_summary.json 中最佳 N_PROBE=16000 得 concept 0.6776, delta 0.0978；ablation_summary.json TOP_K 扫描得 mean 0.6677 / random 0.6301 / delta 0.0376 (TOP_K=4) 等。",
+    "score": 5,
+    "evidence_files": [
+      "scientist3/feature_description/multi_modal_feature_description/report.md",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/draft_summary.json",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/research_summary.json",
+      "scientist3/feature_description/multi_modal_feature_description/logs/0-run/ablation_summary.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "For every component c in a trained vision model, a small set of reference inputs that strongly drive c is a concept-faithful summary of what c encodes.Embedding those reference inputs with a frozen multi-modal foundation model and pooling the embeddings yields a single vector v_c placing c in the foundation model's joint image–text semantic space.(task.md的C1,C2本质在做一个claim，基于同样的实验，故这里合并评估).",
+        "method": {
+          "justification": "机理方法选择基本对齐 SemanticLens, 但没对component寻找文本标签， 也没有探究small set of figures 能否代表component。",
+          "score": 2,
+          "evidence_files": [
+            "scientist3/feature_description/multi_modal_feature_description/logs/0-run/experiment_results/experiment_15c348a200fc4eaa9da81f4a7396513c_proc_1176445/experiment_code.py",
+            "paper/feature_description/multi_modal_feature_description/paper.pdf"
+          ]
+        },
+        "experiment": {
+          "justification": "实验指标只设计了同一component代表性图片集合的相似度，没有探究component的representative vector与文本标签的关联性, 单单是相似度说服力差",
+          "score": 2,
+          "evidence_files": [
+            "scientist3/feature_description/multi_modal_feature_description/logs/0-run/research_summary.json",
+            "scientist3/feature_description/multi_modal_feature_description/logs/0-run/ablation_summary.json",
+            "scientist3/feature_description/multi_modal_feature_description/idea.md",
+            "human_judge/feature_description/multi_modal_feature_description/task.md"
+          ]
+        },
+        "result": {
+          "justification": "复现结果认为同一component的代表图片集合相似度高于随机图片集合，就能支持假设，不具有说服力，因为二者差值很小只有0.098，不能说明代表图片之间很相似。由于没有将代表向量映射到文本空间，也不能证明component和文本标签的关联性。",
+          "score": 1,
+          "evidence_files": [
+            "scientist3/feature_description/multi_modal_feature_description/logs/0-run/draft_summary.json",
+            "scientist3/feature_description/multi_modal_feature_description/logs/0-run/research_summary.json",
+            "scientist3/feature_description/multi_modal_feature_description/logs/0-run/ablation_summary.json",
+            "scientist3/feature_description/multi_modal_feature_description/report.md"
+          ]
+        }
+      }
+    }
+  }
+}

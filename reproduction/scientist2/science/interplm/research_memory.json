@@ -1,0 +1,66 @@
+{
+  "direction": "Sparse autoencoders recover biologically interpretable features inside protein language models (residual-stream SAEs on ESM-2 aligned to Swiss-Prot concepts, plus downstream annotation-filling and steering)",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "SAE features trained on ESM-2 residual-stream activations align with substantially more distinct Swiss-Prot biological concepts than raw ESM-2 neurons do under an identical per-residue F1 protocol.",
+      "status": "established",
+      "behavior_conclusion": "The SAE-vs-neuron concept-coverage gap holds robustly at the directional level: on 1500 Swiss-Prot test sequences with 400 fine-grained sub-typed concepts, SAE covers 15 concepts at primary (q_top=0.99, τ_F1=0.5) vs 0 for raw neurons; the direction is preserved under an ESM-2-650M→ESM-2-8M model swap (SAE covers 14 vs 0), so the gap is model-scale-invariant across an 80× parameter reduction rather than a 650M-specific artifact. Absolute counts fall well below the originally-reported ~143 SAE / ~46 neuron targets at the primary threshold — expansion to 3000 sequences × 300 gated features (iteration L9 rerun) does not narrow the gap to target, so the absolute-count shortfall is not a compute artifact under this protocol; likely contributors are a finer-grained concept universe (each Pfam family / PTM subclass as its own concept) and a smaller sequence pool than the reference. Downstream utility is weaker: SAE-feature linear probes do not beat raw-neuron probes on annotation-filling (fair-test paired-Wilcoxon p=0.516 after fixing dead code + under-fit probe), and SAE-feature-clamp steering does not increase target-property yield under a narrow ≤1-OOM dose ladder + rule-based checkers.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Unit Interpretation → Decision Auditing → Causal Intervention",
+          "family": "Feature Dictionary Learning / SAE",
+          "headline": "Using pretrained InterPLM-style SAEs at ESM-2-650M layers {1,9,18,24,30,33} with layer-9 as best, an identical residue-level F1 alignment protocol (τ_F1=0.5, q_top=0.99) recovers a strict specificity ladder — SAE (15 covered) > PCA (0) ≈ random-rotation (0) ≈ neurons (0) > shuffled-SAE (0) — with the direction preserved under an ESM-2-8M scale swap (SAE=14) and under expanded LLM-gate sampling at L9 (ratio 12.9× SAE/neurons, SAE_interp 95% CI [1034,1825] excluding target 2548). LLM auto-interpretation as a novel-concept assay collapsed (0/100 features passed on both real and matched-fire-frac control), and both downstream utility probes — SAE-feature linear probes for annotation filling (SAE 0.539 ≈ neurons 0.548, p=0.516 under a well-converged class-balanced fair-test probe) and SAE-feature-clamp steering of ESM-2 MLM generation (no_steer > every steered arm on every tested target-property feature) — do not hold, though the steering null is scope-limited by a narrow ≤1-OOM dose ladder + rule-based checkers.",
+          "claims": [
+            {
+              "id": "c1",
+              "statement": "SAE trained on ESM-2-650M residual-stream activations surfaces ~2,548 interpretable latent features per layer, ≥10× the raw-neuron interpretable count at the same layer, on at least one of layers {1,9,18,24,30,33}.",
+              "method": "Per-layer forward pass over Swiss-Prot test residues; SAE latent stats (density, dead-frac); LLM auto-interp gate on K=20 top-activating windows with τ_auto_gate=0.3 as coherence predicate; interpretable count = fraction-passing × dictionary size; ratio SAE-interp / neuron-interp per layer.",
+              "conclusion": "Ratio target ≥10× is robustly met (12.9–19.3× across layers at L9 under expanded sampling) but absolute-count target ~2548 is credibly not achievable under this protocol — the iteration L9 rerun (3000 seqs × 300 gated features) held the pass rate stable at 14.3% and placed SAE_interp at 1430 with 95% CI [1034, 1825] excluding 2548; direction-supported, absolute-under-target well-characterized partial."
+            },
+            {
+              "id": "c2",
+              "statement": "SAE features cover substantially more Swiss-Prot concepts than raw ESM-2 neurons under an identical per-residue F1 protocol.",
+              "method": "For each unit u (SAE feature or raw neuron) and Swiss-Prot concept c, compute F1(u,c) at q_top=0.99 and threshold at τ_F1=0.5 (τ_clean=0.7); coverage = |{c: max_u F1 ≥ τ_F1}|; sensitivity sweep on (q_top × τ_F1) grid.",
+              "conclusion": "SAE≫neurons direction is strongly supported at primary (SAE=15 vs neurons=0) and preserved robustly across an ESM-2-650M→ESM-2-8M scale swap (SAE=14 vs neurons=0, robustness=1.0); the absolute headline SAE~143 is approached only at looser τ_F1=0.3 (SAE=65), so the gap-direction reproduces cleanly but the absolute reference number does not at this sequence budget + concept granularity."
+            },
+            {
+              "id": "c3",
+              "statement": "The SAE-vs-neuron alignment gap is direct evidence of superposition, surviving matched specificity controls (random-orthogonal, PCA, shuffled-SAE).",
+              "method": "Compare six-arm coverage under the M2 protocol: SAE, PCA of raw residual (same d), random-orthogonal rotation (3 seeds), raw neurons, shuffled-SAE (3 seeds, per-feature residue shuffle); require ordered ladder SAE > controls > shuffled-SAE and margin Δ_SAE-PCA ≥ 20 at primary.",
+              "conclusion": "Ordered ladder direction holds strictly at primary (SAE=15 > PCA=0 = random-rotation=0.0±0.0 = neurons=0 = shuffled-SAE=0.0±0.0), so superposition licensing is directionally supported; strict Δ_SAE-PCA≥20 target is a near-miss at 15 at primary and clearly met (Δ=65) at τ_F1=0.3 — inference-by-analogy from the c1 under-power falsification suggests this is a real limit not a compute artifact."
+            },
+            {
+              "id": "c4",
+              "statement": "≥10% of Swiss-Prot-unaligned SAE features receive coherent non-synonym LLM auto-interp labels above a random-feature-control specificity, evidencing novel biological concepts.",
+              "method": "Three-prompt gpt-5.4 auto-interp: (a) label elicit from 20 top-activating residue windows, (b) predictivity score on 20 held-out + 20 low-activation windows, (c) synonym-check against the fixed Swiss-Prot vocabulary; novel = s_auto ≥ 0.3 AND synonym-check-null AND rate > random-feature-control.",
+              "conclusion": "Assay failure — 0/100 features passed on the real arm and 0/50 on the matched-fire-frac control arm; the strict synonym-check-null gate has zero acceptance rate on either arm, so the metric cannot discriminate. LLM does emit coherent-sounding labels ('C2H2 zinc finger alpha-helix start', 'Hydrophobic signal peptide core', 'Gly-rich transmembrane helix motif') but every one is flagged as vocabulary-adjacent — this is not evidence against the phenomenon, only that this instantiation of the assay is non-discriminative."
+            },
+            {
+              "id": "c5a",
+              "statement": "SAE-feature linear probes outperform matched-capacity raw-neuron linear probes on held-out Swiss-Prot annotation-filling across the top-50 most-prevalent concepts (paired-Wilcoxon p<0.05).",
+              "method": "Per-residue binary linear probe (log-loss SGDClassifier, max_iter=1500, class_weight='balanced', tol=1e-4) on SAE sparse code Z_{L*} vs raw residual H_{L*} at best-covering layer L*=9; per-concept PR-AUC across 50 concepts × 3 seeds (30 effectively scored after dropping 20 with no test positives); paired-Wilcoxon(SAE, neurons) one-sided.",
+              "conclusion": "Credible negative under corrected fair test — after the iteration-1 dead-code + probe substitution fix, mean PR-AUC(SAE)=0.5391 ≤ mean PR-AUC(neurons)=0.5476 with paired-Wilcoxon p=0.516; the raw residual carries as much annotation-decodable information as the SAE sparse code at layer 9 under this probe scope, so the SAE dictionary does not provide a decoding advantage for annotation-filling as measured."
+            },
+            {
+              "id": "c5b",
+              "statement": "Clamping a labeled SAE feature during ESM-2 masked-token generation steers the generation toward the target biological property with monotone dose-response, above no-steer / random-clamp / mean-activation-addition baselines, within a preserved-pseudo-perplexity plausibility band.",
+              "method": "SAE-feature-clamp steering with dose ladder α∈{0.5,1,2,4}·σ_f at L*=9 on 3 target-property features (TM helix 3998, Zn finger 4209, SP core 1240) surfaced by M4; four arms (no_steer, sae_clamp, mean_activation_add, random_clamp) × 30 generations each; yield = fraction satisfying external rule-based checker (Kyte-Doolittle for TM, ProSite regex for Zn, N-terminal core rule for SP); plausibility band ≤1.5× no-steer mean pseudo-perplexity.",
+              "conclusion": "No-steer baseline dominates every steered arm on every tested feature (TM: 0.333 > 0.200; Zn: 0.133 > 0.100; SP: 0.167 > 0.133), while plausibility band-pass ≥0.67 shows steering is ineffective not destructive; result is protocol-limited (dose ladder spans <1 OOM vs recommended ≥3, 3/4 features only, 30% of planned generations, rule-based checkers may be too strict on short refilled sequences), so cannot confidently reject nor confirm the causal-steering claim."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": ["Location", "Tuning & Editing", "Formation Tracing"]
+    }
+  ],
+  "untried_behavior_directions": []
+}

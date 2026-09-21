@@ -1,0 +1,19 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4 via dmxapi.cn)",
+  "claim_id": "c5b",
+  "linked_milestones": ["M6"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {"status": "pass", "details": "Rule-based property checkers (SignalP heuristic, Kyte-Doolittle, ProSite regex, N-glyco regex) — external, independent of ESM-2 model outputs."},
+    "score_normalization": {"status": "pass", "details": "Yield = fraction of completions passing rule-based checker; no self-normalization. Alpha × sigma_f is a biologically-motivated units choice."},
+    "result_existence": {"status": "pass", "details": "runs/m6/yields.parquet and summary.md exist. No-steer yields 0.333/0.133/0.167 match EXPERIMENT_RESULTS.md. SAE-clamp 0.200/0.100/0.133 match. Tracker=done."},
+    "dead_code": {"status": "pass", "details": "All 4 arms implemented and called in main(). SteeringHook registered per generation. compute_mean_activation_direction() called. No dead evaluation code."},
+    "scope": {
+      "status": "warn",
+      "details": "3/4 features, 10/25 seqs per batch, 4 alpha doses spanning 8-fold. Honestly disclosed. Null result with full arm-set design. WARN not FAIL."
+    },
+    "eval_type": "real_gt (yield via rule-based checkers) + self_supervised_proxy (plausibility via ESM-2 pseudo-PPL)"
+  }
+}

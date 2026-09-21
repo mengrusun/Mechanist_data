@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The method directly addresses the hypothesis by recording SAE activations, relating them to \"per-sequence transmissibility,\" and then testing whether \"suppressing the features removes the trait while amplifying them strengthens it, in a dose-dependent way.\" This is directional and falsifiable: failure to predict transmission, a flat or reversed dose-response, or equal effects from the stated \"random/high-variance features\" controls would contradict the proposed sparse causal channel. However, \"compact feature set,\" transmissibility per sequence subset, clamp magnitudes, and the criteria for meaningful predictive AUC or dose-response slope are not operationally defined, so an expert would still need to choose important decision rules.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to \"rank features by differential activation and by correlation with per-sequence transmissibility (measured via students finetuned on each sequence subset)\"; SAE activation extraction and student fine-tuning are standard supported operations, but the subset construction and resulting unit of analysis require custom specification rather than an undefined magic step. SAEs, residual-stream hooks, feature clamping, fine-tuning, AUC calculation, and LLM-judge filtering all exist and are supported by standard deep-learning and interpretability tooling, while the plan explicitly allows an SAE to be trained if one is not reusable. The refuting branch is runnable because it includes matched non-trait teachers, \"random/high-variance features,\" unrelated-feature controls, and generation-quality concerns that can be measured, although no explicit fluency-matched control is designed for the acknowledged clamping confound. Resources are only generic—\"the teacher,\" \"students,\" \"several layers,\" and sequence subsets are not assigned model names, sample sizes, layer counts, SAE widths, or other concrete figures—so execution planning remains materially incomplete.",
+      "score": 6
+    }
+  }
+}

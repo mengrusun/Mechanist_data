@@ -1,0 +1,49 @@
+{
+  "date": "2026-07-15",
+  "auditor": "auto-verify Phase 9 (audit-by-construction — symmetric to Phase 2)",
+  "audit_type": "mechanism",
+  "claim_id": "C4",
+  "audit_target": "variant",
+  "variant": "model-swap-qwen-14b",
+  "linked_milestones": ["variant-M1-14b", "variant-M4-14b"],
+  "triggered_checks": ["A"],
+  "overall_verdict": "warn",
+  "checks": {
+    "steering_coefficient_sweep": {
+      "status": "warn",
+      "triggered": true,
+      "trigger_match": [
+        "verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/run.sh (step 3: M4 with 8 controllers)",
+        "verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/m4_14b/results_summary.json"
+      ],
+      "intervention_type": "CAA",
+      "sweep_grid": [-2.0, -1.0, 1.0, 2.0],
+      "sigma_proj_scaling": true,
+      "sigma_proj_value": 886.0052,
+      "sigma_proj_vs_main_model": 10.52,
+      "sigma_proj_ratio": 84.2,
+      "capability_metric": "accuracy + coherence_rate",
+      "plateau_range": null,
+      "locked_alpha": "four-point set {-2,-1,+1,+2} (same as main experiment Pareto comparison)",
+      "alpha_position": "same four-point set; BUT sigma_proj=886 means actual coefficient magnitude is 84x larger than main experiment — no coherent region exists at any of the four alpha values for Qwen-14B",
+      "random_baseline": {"run": false, "n_random": null, "passed": null},
+      "sign_pattern": "not_applicable (all steering outputs incoherent — behaviour_rate=0 for all coherent outputs)",
+      "output_case_spotcheck": {
+        "cases_available": true,
+        "verdict": "consistent",
+        "note": "coherence collapse at all alpha values confirmed by coherence_rate in [0.0, 0.40]. Incoherent outputs produce behaviour_rate=0 by construction (LLM judge cannot find expressing_uncertainty markers in gibberish outputs). steering_alpha_pos2 coherence=0.0 → nan behaviour_rate (0 tasks coherent, behaviour_rate undefined)."
+      },
+      "evidence": [
+        "verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/m1_14b/results.json (sigma_proj=886)",
+        "verify/C4_finer_than_prompt_engineering/variants/model-swap-qwen-14b/m4_14b/results_summary.json (coherence collapse)"
+      ],
+      "details": "WARN: Variant inherits M3's under-validated operating region (no random-direction control, no mid-plateau established). Additionally, the sigma_proj=886 value for Qwen-14B means the four alpha points {-2,-1,+1,+2} all produce effective coefficients in [886, 1772] — well above any coherent steering region for this model. The variant correctly executes the same protocol as the main experiment (same alpha set, same sigma_proj scaling) which is appropriate for a model-swap robustness test (we deliberately apply the same formula, not a model-specific re-calibrated set). The fact that no coherent operating points exist for steering is the scientific finding — not a methodology failure.",
+      "note_on_protocol_fidelity": "The variant intentionally replicates the main experiment protocol (same alpha set, same sigma_proj-scaled formula) to test whether the claim generalizes. Re-calibrating alpha for Qwen-14B would change the experiment, not test robustness. The sigma_proj=886 finding is the key result."
+    },
+    "check_b_reserved": {"status": "not_implemented"},
+    "check_c_reserved": {"status": "not_implemented"},
+    "check_d_reserved": {"status": "not_implemented"},
+    "check_e_reserved": {"status": "not_implemented"},
+    "check_f_reserved": {"status": "not_implemented"}
+  }
+}

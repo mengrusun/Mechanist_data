@@ -1,0 +1,40 @@
+# Variant: model-swap-dinov2-vits
+# Diff from main experiment: student_backbone changed from dinov2-base (ViT-B, 768-dim) to dinov2-small (ViT-S, 384-dim)
+# ALL other parameters match M3 (aligned finetune) and M4 (unaligned baseline eval) exactly.
+
+variant_tag: model-swap-dinov2-vits
+dimension: model
+claim: C2a
+main_experiment_verdict: supported
+
+# --- CHANGED from main experiment ---
+student_backbone: dinov2-small
+student_ckpt_path: /data/zhenqian/models/dinov2-small
+
+# --- FIXED (unchanged from main experiment) ---
+teacher_backbone: siglip-so400m                       # HARD CONSTRAINT: never swap
+teacher_head: runs/M1_teacher_fit/teacher_head.pt    # same fitted teacher head
+teacher_cache: /data/zhenqian/data/things_ooo_cache/teacher_feats_v1.h5  # same cache
+
+# Finetune hyperparameters (ALL identical to M3)
+align_loss: triplet_kl
+temperature: 1.0
+alpha: 1.0
+tune_scope: full
+imagenet_subset_size: 40000
+epochs: 1
+lr: 5e-5
+batch_size: 64
+seed: 42
+
+# Eval
+eval_split: heldout
+levels_construction: things_metadata
+
+# Compute
+cuda_visible_devices: "0,1,2,3"
+conda_env: alignet_visual
+
+# Output paths
+aligned_output_dir: runs/verify/C2a_model_swap_dinov2_vits/aligned
+unaligned_output_json: runs/verify/C2a_model_swap_dinov2_vits/unaligned/eval_things_multilevel.json

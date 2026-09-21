@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan aligns closely with the hypothesis: it varies list-generation state, measures omitted-member decodability and suppression, and tests causal interventions using “attention-knockout” and “suppression-removal,” with matched metrics including recall, hallucination delta, F1, and stop accuracy. Its predictions are directional and refutable: for example, “emitting member m reduces the retrieval-direction strength of remaining members,” so no reduction or no recovery after knockout would count against the mechanism, while failure to improve recall without increased hallucination would refute the intervention claim. However, “residual-stream retrieval direction” and the “difference-of-means of already-generated member representations” are not defined precisely enough to determine representation sampling, token aggregation, or probe splitting without clarification, and no numeric effect threshold distinguishes meaningful suppression or recovery from noise.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The hardest step is to “estimate the aggregate emitted-member direction” and “project it out of the answer-position residual”; this is implementable custom activation engineering rather than a magic step, although the exact direction-estimation procedure needs specification. The named Pythia, Qwen2.5, and Llama-3 model families exist, and linear probes, residual-stream hooks, attention ablation, logit tracking, and vector projection are supported by standard PyTorch and interpretability tooling. Resources are concretely scoped as “~2k finite-set queries” and seven named model-size configurations—Pythia 1.4B/6.9B, Qwen2.5 0.5B/7B, and Llama-3 8B—though dataset split sizes and generation counts are unstated. Negative results are runnable because the design includes “no intervention,” “random-direction projection control,” prompting and decoding baselines, individual-member retrievability filtering, hallucination/duplicate measurements, and a “matched in-context list-copying control task.”",
+      "score": 8
+    }
+  }
+}

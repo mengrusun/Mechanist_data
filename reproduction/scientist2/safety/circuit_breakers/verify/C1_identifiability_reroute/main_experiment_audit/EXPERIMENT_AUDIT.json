@@ -1,0 +1,58 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4, via llm-chat MCP)",
+  "claim_id": "C1",
+  "linked_milestones": ["M1", "M3", "M4"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Ground truth from real labeled dataset (HarmBench+Alpaca). AUC computed with scikit-learn on true binary labels. M4 uses genuine base-vs-adapter comparison on held-out pairs. No model-generated ground truth."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "AUC computed against true binary labels. cos_harmful is a geometric metric not self-normalized. Specificity control (delta_cos_harmful_ctrl=-0.0003) validates that the metric is not an artifact. No normalization fraud detected."
+    },
+    "result_existence": {
+      "status": "warn",
+      "details": "All artifact files exist (artifacts/m1/summary.json, artifacts/m3/training_summary.json, artifacts/m4/activation_drift.json). Numbers in EXPERIMENT_RESULTS.md match artifact files. WARN: sweep_notes says 'L_rr decreasing significantly' but final_L_rr_ema=0.0016 (near-zero) — misleading static text."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "cosine_signed() and cosine_sq() both actively used via cos_sq_plus_signed default. All metric functions called and appear in result files. No dead code detected."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "Single model, single seed, 384 train pairs, 128 held-out. Scope clearly disclosed. C1a (identifiability) strongly supported (AUC 0.976, 20 layers > 0.8). C1b (rerouting) not supported — delta_cos_harmful=-0.0197 vs target <=-0.30. The 'can be rerouted' part of the claim is not established."
+    },
+    "eval_type": "real_gt"
+  },
+  "implementation_deviations": [
+    {
+      "field": "direction_type",
+      "plan": "mean-difference direction (d_h = mean_h - mean_b)",
+      "actual": "logistic-regression probe coefficient (directions.pt)",
+      "severity": "material",
+      "note": "Probe direction has larger cos alignment with individual activations. Mean-diff stored separately as directions_meandiff.pt."
+    },
+    {
+      "field": "alpha",
+      "plan": "1.0",
+      "actual": "10.0",
+      "severity": "material"
+    },
+    {
+      "field": "rr_loss",
+      "plan": "cos_sq",
+      "actual": "cos_sq_plus_signed (cos^2 + relu(cos))",
+      "severity": "material"
+    },
+    {
+      "field": "sweep_notes",
+      "plan": "derived from actual metrics",
+      "actual": "hardcoded static string inconsistent with near-zero L_rr EMA",
+      "severity": "minor"
+    }
+  ]
+}

@@ -1,0 +1,190 @@
+{
+  "_note_readme": "重命名文件为 {exp_dir}-{agent}-{expert_name}.json ,上传github,例如 multi_model_feature_decription-scientist1-Zhenqian_Xu.json",
+  "meta": {
+    "expert_name": "changdao chen",
+    "paper_title": "Do Emotions in Prompts Matter? Effects of Emotional Framing on Large Language Models",
+    "agent": "scientist2",
+    "review_date": "2026-07-15"
+  },
+  "_note_score": "可打：1/3/5；具体标准见reliability_judge.md。若认为实验不牵涉到某个维度，score为n/a，并在justification中说明原因。若认为介于1/3/5之间，打2/4分。",
+  "_note_evidence": "所有维度 evidence_files的相对路径。",
+  "dimension_1_data_split_hygiene": {
+    "justification": "GSM8K/SocialIQA/MedQA使用固定first-N子集，无训练数据直接进入测试标签。",
+    "score": 5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "标签来自GSM8K、SocialIQA、MedQA标准答案，EmotionRL计划中的reward也基于正确率。",
+    "score": 5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "对照task.md，Qwen3-14B+GSM8K主实验完成，并跑了SocialIQA、MedQA；但BBH/BoolQ/OpenBookQA未作为主要评估，C4/EmotionRL未做。",
+    "score": 2,
+    "evidence_files": [
+      "task.md",
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "C1/C2/C3有GSM8K/SocialIQA/MedQA的实证结果；但C4完全无实验。证据足够支撑前三条，不能支撑C4。",
+    "score": 3,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "有noise floor、bootstrap CI、sign consistency和部分verify；但多处单seed/小样本，C4无统计结果。",
+    "score": 3,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "reports/M4_c3_analysis.json",
+      "reports/C1_sign_consistency.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "C1-C3为描述性比较，C4的adaptive policy未执行。",
+    "score": 1,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "verify/C4_adaptive_policy_beats_fixed/main_experiment_audit/EXPERIMENT_AUDIT.md"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "关键数字能追溯到EXPERIMENT_RESULTS、CLAIMS_LEDGER和reports/*.json；C4的used_n=0（未执行）也被清楚记录。",
+    "score": 5,
+    "evidence_files": [
+      "refine-logs/EXPERIMENT_RESULTS.md",
+      "CLAIMS_LEDGER.md",
+      "reports/M4_c3_analysis.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "各产物基本一致：C1/C3写partial/support，C2写反向结果，C4写UNTESTED/INCONCLUSIVE",
+    "score": 5,
+    "evidence_files": [
+      "CLAIMS_LEDGER.md",
+      "refine-logs/EXPERIMENT_RESULTS.md"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "_note_per_claim": "per_claim 由发放方按论文预先填入每条 claim 的 claim_id 与 claim。专家对每个 claim 分三个子角度独立打分：method (机理方法选取是否合理) / experiment (实验方法、细节、判定 metric 是否合理) / result (对实验结果的分析是否合理、与 {paper_dir} 结论是否定性一致)。",
+    "_note_subscore": "每个子角度 score 独立打 1/3/5（或 2/4/n/a）。",
+    "per_claim": {
+      "C1": {
+        "claim": "Static emotional prefixes change accuracy only by small, input-dependent amounts.",
+        "method": {
+          "justification": "GSM8K first 500、24 emotional + neutral + filler_matched_length，能测静态prefix小幅变化并控制长度。",
+          "score": 5,
+          "evidence_files": [
+            "runs/M2/gsm8k_neutral.json",
+            "runs/M2b/cost.json"
+          ]
+        },
+        "experiment": {
+          "justification": "500 items × 26 conditions够做主比较；但验证不充分，没有完成模型/数据替换类的鲁棒性测试",
+          "score": 4,
+          "evidence_files": [
+            "reports/C1_sign_consistency.json",
+            "verify/C1_small_input_dependent_shift/ROBUSTNESS.md"
+          ]
+        },
+        "result": {
+          "justification": "如果按emotion平均，Claim1成立：情绪前缀整体影响小。但如果按具体prefix看，Claim1不完全成立，一些具体措辞会产生方向性影响",
+          "score": 4,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md",
+            "reports/C1_sign_consistency.json"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Emotional framing is most pronounced on socially grounded tasks.",
+        "method": {
+          "justification": "比较GSM8K、SocialIQA、MedQA的inter-emotion spread，能测任务族差异。",
+          "score": 5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md"
+          ]
+        },
+        "experiment": {
+          "justification": "Social/math/factual的eval mode不同，CLAIMS_LEDGER明确承认spread magnitude confounded。",
+          "score": 3,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md"
+          ]
+        },
+        "result": {
+          "justification": "结果忠实报告未支持C2",
+          "score": 5,
+          "evidence_files": [
+            "refine-logs/EXPERIMENT_RESULTS.md",
+            "CLAIMS_LEDGER.md"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "No single emotion consistently benefits; stronger wording is not monotone.",
+        "method": {
+          "justification": "per-task emotion argmax + paired bootstrap CI可检验“无稳定emotion”和强度非单调。",
+          "score": 5,
+          "evidence_files": [
+            "scripts/analyze_c3.py",
+            "reports/M4_c3_analysis.json"
+          ]
+        },
+        "experiment": {
+          "justification": "C3a用GSM8K、SocialIQA、MedQA比较最佳emotion，能测试跨任务一致性；C3b的强度单调性主要只在GSM8K上做",
+          "score": 4,
+          "evidence_files": [
+            "reports/M4_c3_analysis.json",
+            "CLAIMS_LEDGER.md"
+          ]
+        },
+        "result": {
+          "justification": "支持没有单一赢家；强度分析中fear/anger的CI跨0、surprise反向，刚好3/6种emotion不满足强度单调性，因此只是踩线支持。",
+          "score": 4,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "EmotionRL adaptive policy beats fixed prefixes/neutral.",
+        "method": {
+          "justification": "reward table、SFT classifier、REINFORCE、held-out eval的计划合理",
+          "score": 5,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md",
+            "scripts/train_emotionrl.py",
+            "scripts/eval_emotionrl.py"
+          ]
+        },
+        "experiment": {
+          "justification": "实验设计本身合理：计划比较neutral、best fixed prefix和EmotionRL policy，并用held-out GSM8K test、3 seeds和95% CI判定policy是否同时优于neutral和best fixed，metric与C4 claim对应。",
+          "score": 5,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md",
+            "verify/C4_adaptive_policy_beats_fixed/main_experiment_audit/EXPERIMENT_AUDIT.md"
+          ]
+        },
+        "result": {
+          "justification": "C4实验没做，结论诚实但没有实证支持。",
+          "score": 1,
+          "evidence_files": [
+            "CLAIMS_LEDGER.md",
+            "verify/C4_adaptive_policy_beats_fixed/ROBUSTNESS.md"
+          ]
+        }
+      }
+    }
+  }
+}

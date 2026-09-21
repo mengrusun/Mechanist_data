@@ -1,0 +1,31 @@
+{
+  "claim_id": "C4",
+  "claim_scope": "M2 — cross-LLM+SAE-pair generalization on Qwen3-4B + transcoder-hp",
+  "overall_verdict": "warn",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "detail": "Neuronpedia cached qwen3-4b transcoder-hp activations; model never run forward"
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "detail": "Per-feature min-max on held-out GT; same as M1"
+    },
+    "C_result_file_existence": {
+      "verdict": "warn",
+      "detail": "features.jsonl exists with 34 records (L8=20, L16=14); L28 is absent despite EXPERIMENT_RESULTS.md mentioning 3 depths. Documentation error, not fabrication."
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "detail": "sage_lite() and score_activation() both called in active code"
+    },
+    "E_scope": {
+      "verdict": "warn",
+      "detail": "C4 requires both gen_acc and pred_pearson on cross-pair; M2 covers pred_pearson only + SAGE-lite (no empirical activation feedback) + 2/3 depths. Documented as scope-narrowed in EXPERIMENT_RESULTS.md."
+    },
+    "F_eval_type": {
+      "verdict": "pass",
+      "detail": "Real GT evaluation; Neuronpedia cached activations"
+    }
+  }
+}

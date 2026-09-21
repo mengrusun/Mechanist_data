@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal supplies directional predictions, controls, and unusually decisive criteria, including “F3 AUROC >= 0.75,” “orthogonalization reduces EM by >= 50%,” and explicit negative outcomes such as “AUROC <= 0.6” and “the random control equally effective.” However, its central operation—“cosine between the dataset's induced low-rank update direction ... and the misalignment direction”—appears to compare a parameter-space update with an activation-space direction without defining a mapping into a common space; the same ambiguity affects projecting “the fine-tuning gradient orthogonal to the misalignment direction.” The AUROC experiment also does not define the threshold converting realized EM rate into “EM-vs-no-EM,” while “a lightweight weight edit / regularizing pass that flattens the loss basin along the misalignment direction” leaves the preventive mechanism underspecified, so important clarifications are required despite strong falsifiability.",
+      "score": 5
+    },
+    "feasibility": {
+      "justification": "The hardest step is implementing the claimed cross-space coupling and Pre-Conditioning: “project the fine-tuning gradient orthogonal to the misalignment direction” and “flattens the loss basin along the misalignment direction” are not standard operations as written because no Jacobian, parameter-space proxy, objective, or edit algorithm connects the activation direction to weight or LoRA space, making this a currently undefined step rather than routine tooling. The named models and evaluation assets—“Llama-3.1-8B-Instruct, Qwen2.5-7B-Instruct, Gemma-2-9B-IT,” LoRA, MMLU, GSM8K, MT-Bench, and XSTest—exist, and standard libraries support activation extraction, gradients, direction ablation, fine-tuning, and evaluation. Resources are specified concretely through “40 fine-tuning datasets,” “rank 8, alpha 16, lr 1e-4, 3 epochs, batch 16, 3 seeds,” eight causal-test datasets, and explicit benchmark sample counts. The refuting branches are runnable in principle because matched-norm random directions, unmodified baselines, task-loss checks, capability evaluations, and prolonged-tuning controls are designed in, but the undefined common-space mapping and preventive-edit construction block faithful execution of the central tests without substantial new methodological design.",
+      "score": 5
+    }
+  }
+}

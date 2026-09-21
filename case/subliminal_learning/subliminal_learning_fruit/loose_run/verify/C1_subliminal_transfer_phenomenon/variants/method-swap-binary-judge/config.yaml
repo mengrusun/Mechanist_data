@@ -1,0 +1,46 @@
+# Variant config: method-swap-binary-judge
+# Claim: C1 — subliminal transfer phenomenon
+# Dimension: method (judge prompt template swap)
+
+variant_tag: method-swap-binary-judge
+claim_id: C1
+dimension: method
+
+# ── Swapped ──
+judge_prompt: "Does this image depict a banana as its primary subject? Answer strictly with one word: yes or no."
+
+# ── Frozen (identical to main experiment) ──
+judge_model: gpt-5.4
+judge_api_base: <REDACTED_API_BASE_URL>
+temperature: 0.0
+concurrency: 8
+arms:
+  - teacher_seed42
+  - teacher_seed43
+  - teacher_seed44
+  - teacher_seed45
+  - teacher_seed46
+  - teacher_seed47
+  - teacher_seed48
+  - teacher_seed49
+  - ctrl_a
+  - ctrl_b_seed42
+  - ctrl_b_seed43
+  - ctrl_b_seed44
+  - ctrl_b_seed45
+  - ctrl_b_seed46
+  - ctrl_b_seed47
+  - ctrl_b_seed48
+  - ctrl_b_seed49
+n_prompts_per_arm: 160
+eval_pngs_root: runs/eval_gen/
+teacher_channel_jsonl: data/channel_final_v2/teacher_channel.jsonl
+n_teacher_channel: 154
+gpu_hours: 0.0
+gpu_ids: []
+
+# ── Diff from main experiment ──
+diff:
+  judge_prompt: "binary yes/no direct question vs 10-way MCQ fruit vocabulary"
+  scoring: "count(response=='yes') / N vs count(response=='banana') / N"
+  residue_audit: "binary rescore of 154 teacher_channel images (additional audit, not in main experiment)"

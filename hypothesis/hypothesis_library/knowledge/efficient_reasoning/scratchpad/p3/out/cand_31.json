@@ -1,0 +1,54 @@
+{
+  "novelty": {
+    "score": 7,
+    "reasoning": "Core claims: (1) LMs encode physical unit-type/dimension separately from magnitude; (2) they often 'know but don't check' this representation at the commit point of a dimensionally invalid operation; (3) this can be causally demonstrated via patching/steering; (4) a lightweight monitor can detect unit-consistency errors, especially in dosing. Relative to prior work, the delta is real vs behavioral unit-error benchmarks and magnitude-only probing, but the idea is still a fairly natural extension of existing representation/probing and error-taxonomy lines. Novelty is strongest in the proposed representation/mechanism, not the task setting.",
+    "revision_notes": [
+      "State the exact representational claim more narrowly: unit-type is decodable from residual stream at specific layers/steps, not a generic 'internal representation'.",
+      "Add a clearer comparison table against NUMCoT, magnitude probes, and physics error taxonomies to isolate the delta.",
+      "Specify whether novelty is in the causal mechanism, the probe, or the safety monitor; do not claim all three equally unless each is independently demonstrated.",
+      "Include a stronger lexical-confound argument up front, since if the probe tracks unit tokens the core novelty collapses."
+    ]
+  },
+  "impact": {
+    "score": 7,
+    "reasoning": "The problem under study is whether models can internally track dimensional consistency and fail to consult it, with practical relevance for physics reasoning and medication dosing. If true, serious researchers in interpretability and numerical reasoning would likely care, and the safety angle gives it broader reach. Still, the application domain is somewhat narrow and the dosing experiments are synthetic, so the real-world impact is meaningful but not field-shifting on its own.",
+    "revision_notes": [
+      "Emphasize the general phenomenon beyond dosing: dimension tracking as a reusable internal consistency check across science/math tasks.",
+      "Clarify who would use the monitor and in what pipeline it would matter (e.g., tool-use, medical NLP, calculator-augmented reasoning).",
+      "Temper clinical language: say 'medication-style dosing scenarios' unless you have stronger validation.",
+      "Add a one-sentence 'so what' for both positive and negative outcomes: what changes in modeling or safety practice if the gap exists vs does not exist."
+    ]
+  },
+  "review": {
+    "score": 6,
+    "reasoning": "The hypothesis is testable, but several claims are bundled together and the proposal risks over-asking from one set of experiments. Key weaknesses: the probe may read surface unit tokens; causal patching may be hard to interpret; the monitor baseline comparisons are underspecified; and the 'consultation gap' could be an artifact of task format or step labeling. The experimental plan is plausible and reasonably controlled, but it needs tighter falsification criteria and more explicit baselines/ablations to be convincing at a serious ML venue.",
+    "revision_notes": [
+      "Separate the paper into two claims: representational existence and causal consultation gap; make each falsifiable independently.",
+      "Add baselines that directly test lexical confounding: shuffled unit names, synonym/paraphrase units, unit-token ablations, and control prompts with identical tokens but different dimension labels.",
+      "Define the exact layer/step selection procedure for probing and patching to avoid circularity.",
+      "Include ablations for magnitude-only, unit-token-only, and task-format-only predictors.",
+      "Specify statistical tests, confidence intervals, and minimum effect sizes for all headline claims.",
+      "Add negative controls where units are irrelevant or dimensionless to show the probe/monitor does not over-trigger.",
+      "For the monitor, define baseline implementations precisely and compare at matched token budget and equal access to intermediate states.",
+      "Soften the strongest wording ('causally real', 'dangerous') unless the evidence supports it with robust out-of-distribution checks."
+    ]
+  },
+  "revision_notes": [
+    "State the exact representational claim more narrowly: unit-type is decodable from residual stream at specific layers/steps, not a generic 'internal representation'.",
+    "Add a clearer comparison table against NUMCoT, magnitude probes, and physics error taxonomies to isolate the delta.",
+    "Specify whether novelty is in the causal mechanism, the probe, or the safety monitor; do not claim all three equally unless each is independently demonstrated.",
+    "Include a stronger lexical-confound argument up front, since if the probe tracks unit tokens the core novelty collapses.",
+    "Emphasize the general phenomenon beyond dosing: dimension tracking as a reusable internal consistency check across science/math tasks.",
+    "Clarify who would use the monitor and in what pipeline it would matter (e.g., tool-use, medical NLP, calculator-augmented reasoning).",
+    "Temper clinical language: say 'medication-style dosing scenarios' unless you have stronger validation.",
+    "Add a one-sentence 'so what' for both positive and negative outcomes: what changes in modeling or safety practice if the gap exists vs does not exist.",
+    "Separate the paper into two claims: representational existence and causal consultation gap; make each falsifiable independently.",
+    "Add baselines that directly test lexical confounding: shuffled unit names, synonym/paraphrase units, unit-token ablations, and control prompts with identical tokens but different dimension labels.",
+    "Define the exact layer/step selection procedure for probing and patching to avoid circularity.",
+    "Include ablations for magnitude-only, unit-token-only, and task-format-only predictors.",
+    "Specify statistical tests, confidence intervals, and minimum effect sizes for all headline claims.",
+    "Add negative controls where units are irrelevant or dimensionless to show the probe/monitor does not over-trigger.",
+    "For the monitor, define baseline implementations precisely and compare at matched token budget and equal access to intermediate states.",
+    "Soften the strongest wording ('causally real', 'dangerous') unless the evidence supports it with robust out-of-distribution checks."
+  ]
+}

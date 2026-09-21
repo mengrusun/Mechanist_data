@@ -1,0 +1,21 @@
+{
+  "Name": "single_cell_lineage_geometry",
+  "Title": "Geometry of Fate: Do Single-Cell Foundation Models Encode Developmental Lineage as Continuous Trajectories?",
+  "Short Hypothesis": "Single-cell foundation models (e.g., Geneformer, scGPT) encode cell identity in a latent geometry where developmental lineage relationships appear as continuous, low-curvature trajectories and branch points correspond to known bifurcations, and the direction along a trajectory aligns with the true differentiation axis rather than with technical/batch variation.",
+  "Related Work": "scVI (Lopez et al., 2018), Geneformer (Theodoris et al., 2023), and scGPT (Cui et al., 2024) learn cell embeddings; trajectory-inference tools (Monocle, PAGA, RNA velocity) reconstruct lineages from data. Prior interpretability of these foundation models is limited to clustering quality. We test whether the pretrained internal geometry, before task-specific fine-tuning, intrinsically encodes lineage direction and bifurcation topology matching established developmental biology, and whether it separates biology from batch.",
+  "Abstract": "Single-cell foundation models are increasingly used as general-purpose cell representations, but whether their latent space reflects genuine developmental mechanism or dataset structure is unclear. We probe pretrained scGPT and Geneformer embeddings on well-characterized differentiation systems (hematopoiesis, embryonic development) with known lineage trees and RNA-velocity directionality. We test three claims: (1) lineage-related cells lie on continuous manifolds whose geodesic structure matches the known tree (measured by correlation between embedding geodesic distance and lineage distance); (2) branch points in the embedding coincide with known bifurcations, quantified by comparing detected branch topology to ground-truth trees; (3) a linear or low-curvature 'pseudotime' direction aligns with RNA-velocity-derived differentiation direction, not with batch labels. We disentangle biology from technical variation by testing whether batch identity is decodable and whether the lineage axis is orthogonal to the batch axis. We further intervene by identifying and ablating gene-program features (from expression-attribution or SAE features) tied to a lineage decision and testing whether embedding position shifts toward the sibling fate. We predict that pretrained geometry recovers lineage topology and direction beyond batch structure. Results indicate whether these models internalize developmental mechanism, informing their use for perturbation and fate prediction.",
+  "Experiments": [
+    "Select benchmark datasets with annotated lineage trees and RNA velocity (e.g., hematopoiesis, pancreatic endocrinogenesis).",
+    "Extract pretrained cell embeddings from scGPT and Geneformer without fine-tuning.",
+    "Compute embedding geodesic distances (k-NN graph) and correlate with ground-truth lineage distances; compare to scVI and PCA baselines.",
+    "Detect branch topology (PAGA on embeddings) and score agreement with known bifurcations.",
+    "Fit pseudotime direction; measure alignment (cosine) with RNA velocity vectors and, separately, decodability of batch labels and batch-axis orthogonality.",
+    "Feature ablation: identify a lineage-decision gene program via attribution/SAE, ablate it, and measure shift in cell embedding toward sibling fate."
+  ],
+  "Risk Factors and Limitations": [
+    "Ground-truth lineage trees and RNA velocity are themselves noisy, imperfect references.",
+    "Batch effects may be entangled with biology in ways that resist clean separation.",
+    "Pretrained embeddings may require fine-tuning to reveal structure, weakening claims about intrinsic geometry.",
+    "Perturbation via feature ablation may not map cleanly onto biological fate change."
+  ]
+}

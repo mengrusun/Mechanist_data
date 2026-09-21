@@ -1,0 +1,65 @@
+# Behaviour taxonomy v1 (frozen at M1; never edit past M1).
+# Used both to annotate the auxiliary contrastive corpus and to score
+# 500-task chains under steering. Same taxonomy prompt is reused across
+# M1 (annotation), M3 (behaviour-rate scoring), M4 (behaviour-rate + accuracy).
+version: 1
+behaviours:
+  expressing_uncertainty:
+    definition: >
+      The chain contains hedging language explicitly signaling the model is
+      uncertain about a step, fact, or conclusion (e.g., "I'm not sure",
+      "possibly", "it could be", "let me double-check", "I might be wrong").
+      Passive tone alone is not enough; there must be a clear uncertainty
+      marker or acknowledgement of incomplete confidence.
+    positive_examples:
+      - "I'm not entirely sure if the coefficient is 3 or 4, let me reconsider."
+      - "This might be wrong, but I think the derivative is 2x."
+      - "It's possible I'm miscounting the constraints here."
+    negative_examples:
+      - "The derivative of x^2 is 2x. Therefore the slope at x=3 is 6."
+      - "By the Pythagorean theorem, the answer is sqrt(50)."
+      - "There are 15 possible orderings by the multinomial coefficient."
+  generating_validation_examples:
+    definition: >
+      The chain constructs an explicit small example, test case, or plug-in
+      check to validate a general rule, formula, or intermediate result
+      (e.g., "let me try n=2 to see", "plugging in x=0 gives", "as a
+      sanity check with small numbers"). The example must be *constructed
+      by the model* for validation purposes, not merely mentioned.
+    positive_examples:
+      - "Let me sanity-check with n=3: 3! = 6, and my formula gives 6. Good."
+      - "If I plug x=0 into 2x+5, I get 5, which matches the y-intercept."
+      - "Try the smallest case: with 2 people, there are 2^1 = 2 assignments — matches my count."
+    negative_examples:
+      - "The formula for the volume of a sphere is (4/3)πr³."
+      - "By the definition of factorial, 5! = 120."
+      - "Applying the identity directly, sin(2x) = 2 sin(x) cos(x)."
+  backtracking:
+    definition: >
+      The chain explicitly abandons a line of reasoning already pursued and
+      restarts from an earlier point (e.g., "wait, that's not right",
+      "actually, let me start over", "scratch that", "on second thought I
+      should"). The model must revoke earlier work, not merely refine it.
+    positive_examples:
+      - "Wait, I set up the equation wrong. Let me start over from the constraint."
+      - "Actually, I don't think that step is valid — going back to the sum."
+      - "Scratch that approach; let me try induction instead."
+    negative_examples:
+      - "Next I need to compute the sum, then take the log."
+      - "Continuing from the last step, we substitute back."
+      - "The next thing to check is whether the base case holds."
+  self-correction:
+    definition: >
+      The chain identifies a specific error in earlier work and issues a
+      corrected version at that step, without necessarily restarting the
+      whole approach (e.g., "I made an arithmetic error above — should be
+      12, not 21", "correcting my earlier claim"). Self-correction is
+      surgical (fix a step); backtracking is wholesale (abandon a path).
+    positive_examples:
+      - "Oh, I had 3+4=8 above; it should be 7. So the total is 17, not 18."
+      - "Correcting myself: the coefficient is +2, not -2, because the sign flips."
+      - "I miscounted the vertices; there are 6, not 5, so the answer becomes 15."
+    negative_examples:
+      - "As computed above, the answer is 42."
+      - "Continuing the derivation, we get 3x + 5."
+      - "By the earlier lemma, this integral converges."

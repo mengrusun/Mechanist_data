@@ -1,0 +1,408 @@
+{
+  "feature_idx": 1800,
+  "max_act_ref": 42.68133544921875,
+  "trigger_threshold": 8.53626708984375,
+  "sage": {
+    "candidates": [
+      "Start of a C/C++ function declaration/definition with return type `void`, with strongest activation when `void` appears at the beginning of a new line and especially when separated from prior code by a just-closed block.",
+      "Lexical trigger on the token sequence of a brace/newline boundary into the keyword `void` in source code\u2014i.e., the start of the next code unit after `}`\u2014rather than semantic properties of the function itself.",
+      "C/C++ pattern where a closing brace is followed by a new function header whose return type is `void`, especially formatted as `}\\nvoid ...` or `}\\n\\nvoid ...` at top level or with `Class::method` scope."
+    ],
+    "top": "Start of a C/C++ function declaration/definition with return type `void`, with strongest activation when `void` appears at the beginning of a new line and especially when separated from prior code by a just-closed block.",
+    "trace": [
+      {
+        "round": 0,
+        "results": [
+          {
+            "hypothesis": "The feature fires on the C/C++ keyword `void` when it begins a function definition immediately after a closing brace and blank line (`}\n\nvoid ...`).",
+            "positive_probes": [
+              "}\n\nvoid startEngine() { return; }",
+              "}\n\nvoid computeSum(int a, int b) {",
+              "}\n\nvoid logMessage(const char* msg) {",
+              "}\n\nvoid reset_counter() { counter = 0; }",
+              "}\n\nvoid processData(std::vector<int>& v) {"
+            ],
+            "positive_acts": [
+              39.6543083190918,
+              39.77611541748047,
+              39.7076530456543,
+              39.82627868652344,
+              39.786842346191406
+            ],
+            "distractor_probes": [
+              "void helper(); after the brace block ends.",
+              "}\n\nint main() { return 0; }",
+              "}\nvoid renderFrame() { draw(); }"
+            ],
+            "distractor_acts": [
+              29.713485717773438,
+              28.561420440673828,
+              37.35630798339844
+            ],
+            "score": 7.87316818237305
+          },
+          {
+            "hypothesis": "The feature detects top-level C/C++ function signatures that use `void` as the return type, especially in systems or kernel-style source code with names like `mount_root`, `put_super`, or class-scoped methods.",
+            "positive_probes": [
+              "void mount_root(struct super_block *sb)",
+              "static void put_super(struct super_block *sb)",
+              "void fs_context::free_context(struct fs_context *fc)",
+              "extern void init_kernel_threads(void)",
+              "inline void release_inode(struct inode *inode)"
+            ],
+            "positive_acts": [
+              29.730567932128906,
+              23.844844818115234,
+              29.747560501098633,
+              19.78889274597168,
+              25.85102081298828
+            ],
+            "distractor_probes": [
+              "int mount_root(struct super_block *sb)",
+              "void *put_super(struct super_block *sb)",
+              "The mount_root function returns nothing."
+            ],
+            "distractor_acts": [
+              19.197656631469727,
+              29.786975860595703,
+              14.560480117797852
+            ],
+            "score": 4.610873158772787
+          },
+          {
+            "hypothesis": "The feature responds to code formatting that marks the start of a new function declaration/definition with `void`, often following the end of the previous function and optionally with the opening brace or parameters on the next line.",
+            "positive_probes": [
+              "}\nvoid processData() {",
+              "void\ninitialize_system(int mode)",
+              "}\nvoid handle_event()\n{",
+              "static inline\nvoid reset_counter();",
+              "void compute_sum(int a, int b)"
+            ],
+            "positive_acts": [
+              37.30196762084961,
+              29.628013610839844,
+              37.256160736083984,
+              32.805110931396484,
+              29.692750930786133
+            ],
+            "distractor_probes": [
+              "int processData() {",
+              "avoid processing data carefully",
+              "}\nreturn void_pointer;"
+            ],
+            "distractor_acts": [
+              19.246448516845703,
+              14.637588500976562,
+              14.637588500976562
+            ],
+            "score": 17.162925593058272
+          }
+        ]
+      },
+      {
+        "round": 1,
+        "results": [
+          {
+            "hypothesis": "C/C++ source pattern `}\\n\\nvoid ...` or `}\\nvoid ...`: the token `void` at the start of a new function definition/declaration immediately after a previous block closes, especially as a top-level or class-scoped function header.",
+            "positive_probes": [
+              "}\nvoid resetBuffer();",
+              "}\n\nvoid handleRequest(int code) {",
+              "}\nvoid MyClass::updateState() const {",
+              "}\n\nvoid Logger::flush();",
+              "}\nvoid processItem(char* ptr);"
+            ],
+            "positive_acts": [
+              37.367637634277344,
+              39.649147033691406,
+              37.36302947998047,
+              39.597389221191406,
+              37.36302947998047
+            ],
+            "distractor_probes": [
+              "void resetBuffer();",
+              "}\nint handleRequest(int code) {",
+              "return; }\nvoid callback();"
+            ],
+            "distractor_acts": [
+              29.75776481628418,
+              24.76516342163086,
+              36.09680938720703
+            ],
+            "score": 8.061467361450198
+          },
+          {
+            "hypothesis": "Start of a C/C++ function header with return type `void`, including class-scoped/system-style definitions, with activation boosted when the `void` appears at line start or after formatting that separates it from the previous function.",
+            "positive_probes": [
+              "void processRequest(int id) {",
+              "void MyClass::resetState() {",
+              "void WINAPI ServiceMain(DWORD argc) {",
+              "}\n\nvoid initializeLogger() {",
+              "private:\nvoid updateCache();"
+            ],
+            "positive_acts": [
+              29.713476181030273,
+              29.72957992553711,
+              29.786983489990234,
+              39.597389221191406,
+              23.81376838684082
+            ],
+            "distractor_probes": [
+              "int processRequest(int id) {",
+              "avoid processRequest failure during startup",
+              "the void pointer was returned unchanged"
+            ],
+            "distractor_acts": [
+              19.191608428955078,
+              14.637584686279297,
+              14.637584686279297
+            ],
+            "score": 14.37264684041341
+          },
+          {
+            "hypothesis": "The feature may partially key on standalone `void` as a function-return-type token in C/C++ declarations/definitions, but this is a weaker component unless accompanied by function-boundary formatting.",
+            "positive_probes": [
+              "void resetBuffer() { clear(); }",
+              "static void logMessage(const char* s);",
+              "inline void swapInts(int* a, int* b)",
+              "void initialize(void) { setup(); }",
+              "virtual void renderFrame() const = 0;"
+            ],
+            "positive_acts": [
+              29.65131950378418,
+              23.84484100341797,
+              25.89596176147461,
+              29.730560302734375,
+              16.581039428710938
+            ],
+            "distractor_probes": [
+              "The pointer type is void* in C.",
+              "Avoid the void between stars.",
+              "This function returns nothing important."
+            ],
+            "distractor_acts": [
+              14.637584686279297,
+              14.637584686279297,
+              14.637584686279297
+            ],
+            "score": 10.503159713745116
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "results": [
+          {
+            "hypothesis": "C/C++ pattern where a closing brace is followed by a new function header whose return type is `void`, especially formatted as `}\\nvoid ...` or `}\\n\\nvoid ...` at top level or with `Class::method` scope.",
+            "positive_probes": [
+              "End one function, then start `void reset()` below.",
+              "A top-level brace closes; next line `void process()`.",
+              "After `}`, write `void Class::update()` on the next line.",
+              "Close the block, then begin `void renderFrame()` immediately.",
+              "Use `}` followed by blank line and `void init()`.\""
+            ],
+            "positive_acts": [
+              17.21416473388672,
+              16.64505958557129,
+              16.44710350036621,
+              14.604011535644531,
+              14.604011535644531
+            ],
+            "distractor_probes": [
+              "End one function, then start `int reset()` below.",
+              "After `}`, write `virtual void update()` inside the class.",
+              "Close the block, then begin `void (*callback)()` immediately."
+            ],
+            "distractor_acts": [
+              14.560480117797852,
+              14.560480117797852,
+              14.560480117797852
+            ],
+            "score": 1.3423900604248047
+          },
+          {
+            "hypothesis": "Start of a C/C++ function declaration/definition with return type `void`, with strongest activation when `void` appears at the beginning of a new line and especially when separated from prior code by a just-closed block.",
+            "positive_probes": [
+              "}\nvoid reset_cache();",
+              "}\nvoid handle_event(int code) {",
+              "void initialize_system();",
+              "void process_frame(float dt) {",
+              "}\nvoid log_message(const char* msg);"
+            ],
+            "positive_acts": [
+              37.35197448730469,
+              37.341522216796875,
+              29.667015075683594,
+              29.687206268310547,
+              37.426177978515625
+            ],
+            "distractor_probes": [
+              "int main() {",
+              "void* buffer = malloc(size);",
+              "return void_result;"
+            ],
+            "distractor_acts": [
+              19.233421325683594,
+              29.701059341430664,
+              14.637584686279297
+            ],
+            "score": 13.10409075419108
+          },
+          {
+            "hypothesis": "Lexical trigger on the token sequence of a brace/newline boundary into the keyword `void` in source code\u2014i.e., the start of the next code unit after `}`\u2014rather than semantic properties of the function itself.",
+            "positive_probes": [
+              "Source shows `}\\nvoid reset();` exactly at top level.",
+              "Header snippet contains `}\\nvoid helper()` after prior block.",
+              "The file literally includes `}\\nvoid init()` next.",
+              "Parser sees `}` then newline then `void start()`.",
+              "Example code has `}\\nvoid cleanup(){}` in sequence."
+            ],
+            "positive_acts": [
+              14.60400390625,
+              18.437602996826172,
+              15.792898178100586,
+              14.60400390625,
+              20.144378662109375
+            ],
+            "distractor_probes": [
+              "Source shows `}\\nint reset();` instead of void.",
+              "Header snippet contains `} void helper()` same line.",
+              "The function returns void without preceding brace boundary."
+            ],
+            "distractor_acts": [
+              14.560480117797852,
+              14.560480117797852,
+              14.560480117797852
+            ],
+            "score": 2.156097412109375
+          }
+        ]
+      }
+    ]
+  },
+  "heldout_texts": [
+    "delete _cstring_table;\n  delete bootstrap;\n}\n\nvoid JfrSymbolId::clear() {\n  assert(_sym_table != NULL, \"invariant\");\n  if (_",
+    "A soft breeze moved the curtains at dawn.",
+    "empty).\n* Expects a proper platform-native file name. Throws if there's an error.\n*/\nvoid api_config::load_from_file(const std::string &filename) {\n\ttry {\n\t\tls",
+    "The engine cooled after the long climb.",
+    "open_close: open failed\\n\");\n\telse\n\t\tclose(fd);\n\n\treturn;\n}\n\nvoid\nhpet_info(int argc, const char **argv)\n{\n\tstruct hpet_info\tinfo",
+    "The company announced quarterly earnings yesterday afternoon.",
+    "::get_instance_internal() {\n\tstatic api_config cfg;\n\treturn &cfg;\n}\n\nvoid api_config::called_once() { get_instance_internal(); }\n\nlslboost::once_flag api",
+    "The recipe called for a pinch of saffron.",
+    "The train from Milan arrived twenty minutes late.",
+    "Two children played chess on a wooden bench.",
+    "err = replacements_->add(Replacement(*result.SourceManager, range, \"\"));\n  assert(!err);\n}\n\nvoid InitializerCallback::run(const MatchFinder::MatchResult& result) {\n  const clang::StringLiteral* literal ="
+  ],
+  "heldout_true_acts": [
+    40.76930236816406,
+    14.64213752746582,
+    35.91682815551758,
+    14.64213752746582,
+    40.83312225341797,
+    14.64213752746582,
+    41.687049865722656,
+    14.64213752746582,
+    14.624809265136719,
+    14.624809265136719,
+    40.467864990234375
+  ],
+  "eval": {
+    "neuronpedia": {
+      "explanation": "function declarations in programming contexts",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 15.20940613746643,
+        "sentences": [
+          "function add(a, b) { return a + b; }",
+          "def calculate_total(price, tax): return price + tax",
+          "int max(int x, int y) { return x > y ? x : y; }",
+          "public static void main(String[] args) { }",
+          "fn greet(name: &str) { println!(\"Hello\"); }",
+          "let square = function(n) { return n * n; };",
+          "sub parse_line { my ($text) = @_; }",
+          "function fetchData(url) async { await request(url); }"
+        ],
+        "activations": [
+          14.630558013916016,
+          14.630558013916016,
+          19.261343002319336,
+          14.630558013916016,
+          14.630558013916016,
+          14.630558013916016,
+          14.630558013916016,
+          14.630558013916016
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9825434398484363,
+        "spearman": 0.8104748277048033,
+        "preds": [
+          10.0,
+          0.0,
+          10.0,
+          0.0,
+          10.0,
+          0.0,
+          8.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0
+        ]
+      }
+    },
+    "sage": {
+      "explanation": "Start of a C/C++ function declaration/definition with return type `void`, with strongest activation when `void` appears at the beginning of a new line and especially when separated from prior code by a just-closed block.",
+      "generative": {
+        "trigger_rate": 1.0,
+        "mean_max": 33.57038736343384,
+        "sentences": [
+          "}\nvoid resetCache() {",
+          "}\nvoid renderFrame();",
+          "void handleInput(int key) {",
+          "void logError(const char* msg);",
+          "}\nvoid closeConnection(Socket s) {",
+          "void updatePhysics(float dt);",
+          "}\nvoid saveState() {",
+          "void initializeSystem(void);"
+        ],
+        "activations": [
+          37.42597198486328,
+          37.30712127685547,
+          29.798030853271484,
+          29.762042999267578,
+          37.42617416381836,
+          29.687217712402344,
+          37.42597198486328,
+          29.730567932128906
+        ]
+      },
+      "predictive": {
+        "pearson": 0.9926592690033019,
+        "spearman": 0.8590344757961244,
+        "preds": [
+          9.0,
+          0.0,
+          8.0,
+          0.0,
+          10.0,
+          0.0,
+          8.0,
+          0.0,
+          0.0,
+          0.0,
+          9.0
+        ]
+      }
+    }
+  },
+  "sage_seconds": 55.72023415565491,
+  "layer": 6,
+  "sae_info": {
+    "layer": 6,
+    "width": "16k",
+    "l0": 70,
+    "path": "/data/zhenqian/models/sae/gemma-scope-2b-pt-res/layer_6/width_16k/average_l0_70/params.npz"
+  },
+  "model_id": "gemma-2-2b",
+  "neuronpedia_ref": "function declarations in programming contexts"
+}

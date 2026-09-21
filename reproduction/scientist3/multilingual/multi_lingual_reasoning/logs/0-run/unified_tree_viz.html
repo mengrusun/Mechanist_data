@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Check if we're running under Live Server
+      if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+          let lastModified = '';
+
+          // Check for file changes every second
+          setInterval(async () => {
+              try {
+                  const response = await fetch(window.location.href, { method: 'HEAD' });
+                  // get a timestamp that shows when the file was last changed
+                  const currentModified = response.headers.get('last-modified');
+
+                  if (lastModified && lastModified !== currentModified) {
+                      window.location.reload();
+                  }
+
+                  lastModified = currentModified;
+              } catch (e) {
+                  console.error('Error checking for updates:', e);
+              }
+          }, 1000);
+      }
+  </script>
+    <script
+      id="p5scripttag"
+      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+      integrity="sha512-uaz5GpnQoE6t5echKlX8P52czvsIGgLPcvlzfvRubLZ1Hp8JemUDnbUiAahbVtPb+jUVrNETuXvAhDDF/N3M4w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+    <script>
+      const bgCol = "#FFFFFF";
+const accentCol = "#1a439e";
+
+hljs.initHighlightingOnLoad();
+
+// Function to update background color globally
+function updateBackgroundColor(color) {
+  // Update the JS variable
+  window.bgColCurrent = color;
+
+  // Update body background
+  document.body.style.backgroundColor = color;
+
+  // Update canvas container background
+  const canvasContainer = document.getElementById('canvas-container');
+  if (canvasContainer) {
+    canvasContainer.style.backgroundColor = color;
+  }
+}
+
+// Store tree data for each stage
+const stageData = {
+  Stage_1: null,
+  Stage_2: null,
+  Stage_3: null,
+  Stage_4: null
+};
+
+// Keep track of current selected stage
+let currentStage = null;
+let currentSketch = null;
+let availableStages = [];
+
+// Class definitions for nodes and edges
+class Node {
+  constructor(x, y, id, isRoot = false) {
+    this.x = x;
+    this.y = y;
+    this.id = id;
+    this.visible = isRoot; // Only root nodes are visible initially
+    this.appearProgress = 0;
+    this.popEffect = 0;
+    this.selected = false;
+    this.isRootNode = isRoot;
+  }
+
+  update() {
+    if (this.visible) {
+      // Handle the main appearance animation
+      if (this.appearProgress < 1) {
+        this.appearProgress += 0.06;
+
+        // When we reach full size, trigger the pop effect
+        if (this.appearProgress >= 1) {
+          this.appearProgress = 1; // Cap at 1
+          this.popEffect = 1; // Start the pop effect
+        }
+      }
+
+      // Handle the pop effect animation
+      if (this.popEffect > 0) {
+        this.popEffect -= 0.15; // Control how quickly it shrinks back
+        if (this.popEffect < 0) this.popEffect = 0; // Don't go negative
+      }
+    }
+  }
+
+  startAnimation() {
+    this.visible = true;
+  }
+
+  color() {
+    if (this.selected) {
+      return accentCol; // Use the global accent color variable for selected node
+    }
+    return '#4263eb'; // Default blue color
+  }
+
+  render(p5) {
+    if (this.visible) {
+      const popBonus = this.popEffect * 0.1;
+      const nodeScale = p5.map(this.appearProgress, 0, 1, 0, 1) + popBonus;
+      const alpha = p5.map(this.appearProgress, 0, 1, 0, 255);
+
+      p5.push();
+      p5.translate(this.x, this.y);
+
+      // Shadow effect
+      p5.noStroke();
+      p5.rectMode(p5.CENTER);
+
+      for (let i = 1; i <= 4; i++) {
+        p5.fill(0, 0, 0, alpha * 0.06);
+        p5.rect(i, i, 30 * nodeScale, 30 * nodeScale, 10);
+      }
+
+      // Main square - use node's color with alpha
+      let nodeColor = p5.color(this.color());
+      nodeColor.setAlpha(alpha);
+      p5.fill(nodeColor);
+      p5.rect(0, 0, 30 * nodeScale, 30 * nodeScale, 10);
+
+      // Draw checkmark icon if the node is selected
+      if (this.selected && this.appearProgress >= 1) {
+        p5.stroke(255);
+        p5.strokeWeight(2 * nodeScale);
+        p5.noFill();
+        // Draw checkmark
+        p5.beginShape();
+        p5.vertex(-8, 0);
+        p5.vertex(-3, 5);
+        p5.vertex(8, -6);
+        p5.endShape();
+      }
+
+      p5.pop();
+    }
+  }
+
+  isMouseOver(p5) {
+    return this.visible &&
+           p5.mouseX > this.x - 15 &&
+           p5.mouseX < this.x + 15 &&
+           p5.mouseY > this.y - 15 &&
+           p5.mouseY < this.y + 15;
+  }
+
+  // Connect this node to a child node
+  child(childNode) {
+    // Create an edge from this node to the child
+    let isLeft = childNode.x < this.x;
+    let isRight = childNode.x > this.x;
+    let edge = new Edge(this, childNode, isLeft, isRight);
+    return edge;
+  }
+}
+
+class Edge {
+  constructor(parent, child, isLeft, isRight) {
+    this.parent = parent;
+    this.child = child;
+    this.isLeft = isLeft;
+    this.isRight = isRight;
+    this.progress = 0;
+
+    // Calculate the midpoint where branching occurs
+    this.midY = parent.y + (child.y - parent.y) * 0.6;
+
+    // Use the actual child x-coordinate
+    // This ensures the edge will connect directly to the child node
+    this.branchX = child.x;
+  }
+
+  update() {
+    if (this.parent.visible && this.progress < 1) {
+      this.progress += 0.01; // Adjust animation speed
+    }
+    if (this.progress >= 1) {
+      this.child.visible = true;
+    }
+  }
+
+  color() {
+    return this.child.color();
+  }
+
+  render(p5) {
+    if (!this.parent.visible) return;
+
+    // Calculate path lengths
+    const verticalDist1 = this.midY - this.parent.y;
+    const horizontalDist = Math.abs(this.branchX - this.parent.x);
+    const verticalDist2 = this.child.y - this.midY;
+    const totalLength = verticalDist1 + horizontalDist + verticalDist2;
+
+    // Calculate how much of each segment to draw
+    const currentLength = totalLength * this.progress;
+
+    p5.stroke(180, 190, 205);
+    p5.strokeWeight(1.5);
+    p5.noFill();
+
+    // Always draw the first vertical segment from parent
+    if (currentLength > 0) {
+      const firstSegmentLength = Math.min(currentLength, verticalDist1);
+      const currentMidY = p5.lerp(this.parent.y, this.midY, firstSegmentLength / verticalDist1);
+      p5.line(this.parent.x, this.parent.y, this.parent.x, currentMidY);
+    }
+
+    if (currentLength > verticalDist1) {
+      // Draw second segment (horizontal)
+      const secondSegmentLength = Math.min(currentLength - verticalDist1, horizontalDist);
+      const currentBranchX = p5.lerp(this.parent.x, this.branchX, secondSegmentLength / horizontalDist);
+      p5.line(this.parent.x, this.midY, currentBranchX, this.midY);
+
+      if (currentLength > verticalDist1 + horizontalDist) {
+        // Draw third segment (vertical to child)
+        const thirdSegmentLength = currentLength - verticalDist1 - horizontalDist;
+        const currentChildY = p5.lerp(this.midY, this.child.y, thirdSegmentLength / verticalDist2);
+        p5.line(this.branchX, this.midY, this.branchX, currentChildY);
+      }
+    }
+  }
+}
+
+// Create a modified sketch for each stage
+function createTreeSketch(stageId) {
+  return function(p5) {
+    let nodes = [];
+    let edges = [];
+    let treeData = stageData[stageId];
+
+    p5.setup = function() {
+      const canvas = p5.createCanvas(p5.windowWidth * 0.4, p5.windowHeight);
+      canvas.parent('canvas-container');
+      p5.smooth();
+      p5.frameRate(60);
+
+      if (treeData) {
+        createTreeFromData(treeData);
+      }
+    };
+
+    p5.windowResized = function() {
+      p5.resizeCanvas(p5.windowWidth * 0.4, p5.windowHeight);
+    };
+
+    function createTreeFromData(data) {
+      // Clear existing nodes and edges
+      nodes = [];
+      edges = [];
+
+      // Add defensive checks to prevent errors
+      if (!data || !data.layout || !Array.isArray(data.layout) || !data.edges || !Array.isArray(data.edges)) {
+        console.error("Invalid tree data format:", data);
+        return; // Exit if data structure is invalid
+      }
+
+      // Find all parent nodes in edges
+      const parentNodes = new Set();
+      for (const [parentId, childId] of data.edges) {
+        parentNodes.add(parentId);
+      }
+
+      // Create nodes
+      for (let i = 0; i < data.layout.length; i++) {
+        const [nx, ny] = data.layout[i];
+        // A node is a root if it's a parent and not a child in any edge
+        const isRoot = parentNodes.has(i) && data.edges.every(edge => edge[1] !== i);
+
+        const node = new Node(
+          nx * p5.width * 0.8 + p5.width * 0.1,
+          ny * p5.height * 0.8 + p5.height * 0.1,
+          i,
+          isRoot
+        );
+        nodes.push(node);
+      }
+
+      // If no root was found, make the first parent node visible
+      if (!nodes.some(node => node.visible) && parentNodes.size > 0) {
+        // Get the first parent node
+        const firstParentId = [...parentNodes][0];
+        if (nodes[firstParentId]) {
+          nodes[firstParentId].visible = true;
+        }
+      }
+
+      // Create edges
+      for (const [parentId, childId] of data.edges) {
+        const parent = nodes[parentId];
+        const child = nodes[childId];
+        if (parent && child) { // Verify both nodes exist
+          const isLeft = child.x < parent.x;
+          const isRight = child.x > parent.x;
+          edges.push(new Edge(parent, child, isLeft, isRight));
+        }
+      }
+
+      // Select the first node by default
+      if (nodes.length > 0) {
+        nodes[0].selected = true;
+        updateNodeInfo(0);
+      }
+    }
+
+    p5.draw = function() {
+      // Use the global background color if available, otherwise use the default bgCol
+      const currentBgColor = window.bgColCurrent || bgCol;
+      p5.background(currentBgColor);
+
+      // Update and render edges
+      for (const edge of edges) {
+        edge.update();
+        edge.render(p5);
+      }
+
+      // Update and render nodes
+      for (const node of nodes) {
+        node.update();
+        node.render(p5);
+      }
+
+      // Handle mouse hover
+      p5.cursor(p5.ARROW);
+      for (const node of nodes) {
+        if (node.isMouseOver(p5)) {
+          p5.cursor(p5.HAND);
+        }
+      }
+    };
+
+    p5.mousePressed = function() {
+      // Check if any node was clicked
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].visible && nodes[i].isMouseOver(p5)) {
+          // Deselect all nodes
+          nodes.forEach(n => n.selected = false);
+          // Select the clicked node
+          nodes[i].selected = true;
+          // Update the right panel with node info
+          updateNodeInfo(i);
+          break;
+        }
+      }
+    };
+
+    function updateNodeInfo(nodeIndex) {
+      if (treeData) {
+        setNodeInfo(
+          treeData.code[nodeIndex],
+          treeData.plan[nodeIndex],
+          treeData.plot_code?.[nodeIndex],
+          treeData.plot_plan?.[nodeIndex],
+          treeData.metrics?.[nodeIndex],
+          treeData.exc_type?.[nodeIndex] || '',
+          treeData.exc_info?.[nodeIndex]?.args?.[0] || '',
+          treeData.exc_stack?.[nodeIndex] || [],
+          treeData.plots?.[nodeIndex] || [],
+          treeData.plot_analyses?.[nodeIndex] || [],
+          treeData.vlm_feedback_summary?.[nodeIndex] || '',
+          treeData.datasets_successfully_tested?.[nodeIndex] || [],
+          treeData.exec_time_feedback?.[nodeIndex] || '',
+          treeData.exec_time?.[nodeIndex] || ''
+        );
+      }
+    }
+  };
+}
+
+// Start a new p5 sketch for the given stage
+function startSketch(stageId) {
+  if (currentSketch) {
+    currentSketch.remove();
+  }
+
+  if (stageData[stageId]) {
+    currentSketch = new p5(createTreeSketch(stageId));
+
+    // Update stage info
+    const stageNumber = stageId.split('_')[1];
+    let stageDesc = '';
+    switch(stageId) {
+      case 'Stage_1': stageDesc = 'Preliminary Investigation'; break;
+      case 'Stage_2': stageDesc = 'Baseline Tuning'; break;
+      case 'Stage_3': stageDesc = 'Research Agenda Execution'; break;
+      case 'Stage_4': stageDesc = 'Ablation Studies'; break;
+    }
+
+    document.getElementById('stage-info').innerHTML =
+      `<strong>Current Stage: ${stageNumber} - ${stageDesc}</strong>`;
+  }
+}
+
+// Handle tab selection
+function selectStage(stageId) {
+  if (!stageData[stageId] || !availableStages.includes(stageId)) {
+    return; // Don't allow selection of unavailable stages
+  }
+
+  // Update active tab styles
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelector(`.tab[data-stage="${stageId}"]`).classList.add('active');
+
+  // Start the new sketch
+  currentStage = stageId;
+  startSketch(stageId);
+}
+
+// Function to load the tree data for all stages
+async function loadAllStageData(baseTreeData) {
+  console.log("Loading stage data with base data:", baseTreeData);
+
+  // The base tree data is for the current stage
+  const currentStageId = baseTreeData.current_stage || 'Stage_1';
+
+  // Ensure base tree data is valid and has required properties
+  if (baseTreeData && baseTreeData.layout && baseTreeData.edges) {
+    stageData[currentStageId] = baseTreeData;
+    availableStages.push(currentStageId);
+    console.log(`Added current stage ${currentStageId} to available stages`);
+  } else {
+    console.warn(`Current stage ${currentStageId} data is invalid:`, baseTreeData);
+  }
+
+  // Use relative path to load other stage trees
+  const logDirPath = baseTreeData.log_dir_path || '.';
+  console.log("Log directory path:", logDirPath);
+
+  // Load data for each stage if available
+  const stageNames = ['Stage_1', 'Stage_2', 'Stage_3', 'Stage_4'];
+  const stageNames2actualNames = {
+    'Stage_1': 'stage_1_initial_implementation_1_preliminary',
+    'Stage_2': 'stage_2_baseline_tuning_1_first_attempt',
+    'Stage_3': 'stage_3_creative_research_1_first_attempt',
+    'Stage_4': 'stage_4_ablation_studies_1_first_attempt'
+    }
+
+  for (const stage of stageNames) {
+
+    if (baseTreeData.completed_stages && baseTreeData.completed_stages.includes(stage)) {
+      try {
+        console.log(`Attempting to load data for ${stage} from ${logDirPath}/${stageNames2actualNames[stage]}/tree_data.json`);
+        const response = await fetch(`${logDirPath}/${stageNames2actualNames[stage]}/tree_data.json`);
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Validate the loaded data
+          if (data && data.layout && data.edges) {
+            stageData[stage] = data;
+            availableStages.push(stage);
+            console.log(`Successfully loaded and validated data for ${stage}`);
+          } else {
+            console.warn(`Loaded data for ${stage} is invalid:`, data);
+          }
+        } else {
+          console.warn(`Failed to load data for ${stage} - HTTP status ${response.status}`);
+        }
+      } catch (error) {
+        console.error(`Error loading data for ${stage}:`, error);
+      }
+    } else {
+      console.log(`Skipping stage ${stage} - not in completed stages list:`, baseTreeData.completed_stages);
+    }
+  }
+
+  // Update tab visibility based on available stages
+  updateTabVisibility();
+
+  // Start with the first available stage
+  if (availableStages.length > 0) {
+    selectStage(availableStages[0]);
+  } else {
+    console.warn("No stages available to display");
+    // Display a message in the canvas area
+    document.getElementById('canvas-container').innerHTML =
+      '<div style="padding: 20px; color: #333; text-align: center;"><h3>No valid tree data available to display</h3></div>';
+  }
+}
+
+// Update tab visibility based on available stages
+function updateTabVisibility() {
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    const stageId = tab.getAttribute('data-stage');
+    if (availableStages.includes(stageId)) {
+      tab.classList.remove('disabled');
+    } else {
+      tab.classList.add('disabled');
+    }
+  });
+}
+
+// Utility function to set the node info in the right panel
+const setNodeInfo = (code, plan, plot_code, plot_plan, metrics = null, exc_type = '', exc_info = '',
+    exc_stack = [], plots = [], plot_analyses = [], vlm_feedback_summary = '',
+    datasets_successfully_tested = [], exec_time_feedback = '', exec_time = '') => {
+  const codeElm = document.getElementById("code");
+  if (codeElm) {
+    if (code) {
+      codeElm.innerHTML = hljs.highlight(code, { language: "python" }).value;
+    } else {
+      codeElm.innerHTML = '<p>No code available</p>';
+    }
+  }
+
+  const planElm = document.getElementById("plan");
+  if (planElm) {
+    if (plan) {
+      planElm.innerHTML = hljs.highlight(plan, { language: "plaintext" }).value;
+    } else {
+      planElm.innerHTML = '<p>No plan available</p>';
+    }
+  }
+
+  const plot_codeElm = document.getElementById("plot_code");
+  if (plot_codeElm) {
+    if (plot_code) {
+      plot_codeElm.innerHTML = hljs.highlight(plot_code, { language: "python" }).value;
+    } else {
+      plot_codeElm.innerHTML = '<p>No plot code available</p>';
+    }
+  }
+
+  const plot_planElm = document.getElementById("plot_plan");
+  if (plot_planElm) {
+    if (plot_plan) {
+      plot_planElm.innerHTML = hljs.highlight(plot_plan, { language: "plaintext" }).value;
+    } else {
+      plot_planElm.innerHTML = '<p>No plot plan available</p>';
+    }
+  }
+
+  const metricsElm = document.getElementById("metrics");
+  if (metricsElm) {
+      let metricsContent = `<h3>Metrics:</h3>`;
+      if (metrics && metrics.metric_names) {
+          for (const metric of metrics.metric_names) {
+              metricsContent += `<div class="metric-group">`;
+              metricsContent += `<h4>${metric.metric_name}</h4>`;
+              metricsContent += `<p><strong>Description:</strong> ${metric.description || 'N/A'}</p>`;
+              metricsContent += `<p><strong>Optimization:</strong> ${metric.lower_is_better ? 'Minimize' : 'Maximize'}</p>`;
+
+              // Create table for dataset values
+              metricsContent += `<table class="metric-table">
+                  <tr>
+                      <th>Dataset</th>
+                      <th>Final Value</th>
+                      <th>Best Value</th>
+                  </tr>`;
+
+              for (const dataPoint of metric.data) {
+                  metricsContent += `<tr>
+                      <td>${dataPoint.dataset_name}</td>
+                      <td>${dataPoint.final_value?.toFixed(4) || 'N/A'}</td>
+                      <td>${dataPoint.best_value?.toFixed(4) || 'N/A'}</td>
+                  </tr>`;
+              }
+
+              metricsContent += `</table></div>`;
+          }
+      } else if (metrics === null) {
+          metricsContent += `<p>No metrics available</p>`;
+      }
+      metricsElm.innerHTML = metricsContent;
+  }
+
+  // Add plots display
+  const plotsElm = document.getElementById("plots");
+  if (plotsElm) {
+      if (plots && plots.length > 0) {
+          let plotsContent = '';
+          plots.forEach(plotPath => {
+              plotsContent += `
+                  <div class="plot-item">
+                      <img src="${plotPath}" alt="Experiment Plot" onerror="console.error('Failed to load plot:', this.src)"/>
+                  </div>`;
+          });
+          plotsElm.innerHTML = plotsContent;
+      } else {
+          plotsElm.innerHTML = '';
+      }
+  }
+
+  // Add error info display
+  const errorElm = document.getElementById("exc_info");
+  if (errorElm) {
+    if (exc_type) {
+      let errorContent = `<h3 style="color: #ff5555">Exception Information:</h3>
+                          <p><strong>Type:</strong> ${exc_type}</p>`;
+
+      if (exc_info) {
+        errorContent += `<p><strong>Details:</strong> <pre>${JSON.stringify(exc_info, null, 2)}</pre></p>`;
+      }
+
+      if (exc_stack) {
+        errorContent += `<p><strong>Stack Trace:</strong> <pre>${exc_stack.join('\n')}</pre></p>`;
+      }
+
+      errorElm.innerHTML = errorContent;
+    } else {
+      errorElm.innerHTML = "No exception info available";
+    }
+  }
+
+  const exec_timeElm = document.getElementById("exec_time");
+  if (exec_timeElm) {
+    let exec_timeContent = '<div id="exec_time"><h3>Execution Time (in seconds):</h3><p>' + exec_time + '</p></div>';
+    exec_timeElm.innerHTML = exec_timeContent;
+  }
+
+  const exec_time_feedbackElm = document.getElementById("exec_time_feedback");
+  if (exec_time_feedbackElm) {
+    let exec_time_feedbackContent = '<div id="exec_time_feedback_content">'
+    exec_time_feedbackContent += '<h3>Execution Time Feedback:</h3>'
+    exec_time_feedbackContent += '<p>' + exec_time_feedback + '</p>'
+    exec_time_feedbackContent += '</div>';
+    exec_time_feedbackElm.innerHTML = exec_time_feedbackContent;
+  }
+
+  const vlm_feedbackElm = document.getElementById("vlm_feedback");
+  if (vlm_feedbackElm) {
+      let vlm_feedbackContent = '';
+
+      if (plot_analyses && plot_analyses.length > 0) {
+          vlm_feedbackContent += `<h3>Plot Analysis:</h3>`;
+          plot_analyses.forEach(analysis => {
+              if (analysis && analysis.plot_path) {  // Add null check
+                  vlm_feedbackContent += `
+                      <div class="plot-analysis">
+                          <h4>Analysis for ${analysis.plot_path.split('/').pop()}</h4>
+                          <p>${analysis.analysis || 'No analysis available'}</p>
+                          <ul class="key-findings">
+                              ${(analysis.key_findings || []).map(finding => `<li>${finding}</li>`).join('')}
+                          </ul>
+                      </div>`;
+              } else {
+                  console.warn('Received invalid plot analysis:', analysis);
+                  vlm_feedbackContent += `
+                      <div class="plot-analysis">
+                          <p>Invalid plot analysis data received</p>
+                      </div>`;
+              }
+          });
+      }
+
+      // Add actionable insights if available
+      if (vlm_feedback_summary && typeof vlm_feedback_summary === 'string') {
+          vlm_feedbackContent += `
+              <div class="vlm_feedback">
+                  <h3>VLM Feedback Summary:</h3>
+                  <p>${vlm_feedback_summary}</p>
+              </div>`;
+      }
+
+      console.log("Datasets successfully tested:", datasets_successfully_tested);
+      if (datasets_successfully_tested && datasets_successfully_tested.length > 0) {
+          vlm_feedbackContent += `
+              <div id="datasets_successfully_tested">
+                  <h3>Datasets Successfully Tested:</h3>
+                  <p>${datasets_successfully_tested.join(', ')}</p>
+              </div>`;
+      }
+
+      if (!vlm_feedbackContent) {
+          vlm_feedbackContent = '<p>No insights available for this experiment.</p>';
+      }
+
+      vlm_feedbackElm.innerHTML = vlm_feedbackContent;
+  }
+
+  const datasets_successfully_testedElm = document.getElementById("datasets_successfully_tested");
+  if (datasets_successfully_testedElm) {
+      let datasets_successfully_testedContent = '';
+      if (datasets_successfully_tested && datasets_successfully_tested.length > 0) {
+          datasets_successfully_testedContent = `<h3>Datasets Successfully Tested:</h3><ul>`;
+          datasets_successfully_tested.forEach(dataset => {
+              datasets_successfully_testedContent += `<li>${dataset}</li>`;
+          });
+          datasets_successfully_testedContent += `</ul>`;
+      } else {
+          datasets_successfully_testedContent = '<p>No datasets tested yet</p>';
+      }
+      datasets_successfully_testedElm.innerHTML = datasets_successfully_testedContent;
+  }
+};
+
+// Initialize with the provided tree data
+const treeStructData = {"edges": [], "layout": [[0.5, 0.0]], "plan": ["Hyperparam tuning name: max_new_tokens. I'll implement hyperparameter tuning\nover `max_new_tokens` values (256, 512, 1024) for all three conditions\n(baseline, lang_suppression, random_control). For each value, I'll evaluate all\nconditions and save results in the required nested structure. This lets us see\nwhether giving the reasoning model more inference budget improves accuracy\nacross conditions."], "code": ["import os, re, glob, json, gc, time, math\nimport numpy as np\nimport torch\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nos.makedirs(working_dir, exist_ok=True)\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using device: {device}\")\n\nDATA_DIR = \"/data/zhenqian/data\"\nMODEL_DIR = \"/data/zhenqian/models\"\n\nLANGS = [\"en\", \"es\", \"fr\", \"de\", \"zh\", \"ja\", \"ru\", \"th\", \"te\", \"bn\", \"sw\"]\n\n\ndef find_model():\n    if not os.path.isdir(MODEL_DIR):\n        return None\n    matches = []\n    for root, dirs, files in os.walk(MODEL_DIR):\n        if \"config.json\" not in files:\n            continue\n        parent_path = root.lower()\n        score = 0\n        if \"qwen3\" in parent_path and \"4b\" in parent_path and \"thinking\" in parent_path:\n            score = 3\n        elif \"qwen3-4b\" in parent_path and \"thinking\" in parent_path:\n            score = 3\n        elif (\n            \"qwen\" in parent_path and \"4b\" in parent_path and \"thinking\" in parent_path\n        ):\n            score = 2\n        if score > 0:\n            matches.append((score, root))\n    if not matches:\n        print(\"Available in MODEL_DIR:\")\n        for name in os.listdir(MODEL_DIR):\n            print(f\"  {name}\")\n        return None\n    matches.sort(key=lambda x: (-x[0], len(x[1])))\n    return matches[0][1]\n\n\nmodel_path = find_model()\nif model_path is None:\n    raise RuntimeError(f\"Qwen3-4B-Thinking model not found in {MODEL_DIR}.\")\nprint(f\"Model path: {model_path}\")\n\n\ndef find_mgsm_dir():\n    cands = []\n    if os.path.isdir(DATA_DIR):\n        for root, dirs, files in os.walk(DATA_DIR):\n            low = os.path.basename(root).lower()\n            if \"mgsm\" in low:\n                cands.append(root)\n    return cands\n\n\nmgsm_dirs = find_mgsm_dir()\nprint(f\"MGSM candidate dirs: {mgsm_dirs}\")\n\n\ndef load_mgsm_lang(lang, max_n=5):\n    exts_text = (\".jsonl\", \".json\", \".tsv\", \".csv\")\n    files = []\n    for d in mgsm_dirs:\n        for root, _, fs in os.walk(d):\n            for f in fs:\n                fl = f.lower()\n                stem = fl.rsplit(\".\", 1)[0]\n                parts = re.split(r\"[_\\-.]\", stem)\n                if (\n                    lang in parts\n                    or stem == lang\n                    or stem == f\"mgsm_{lang}\"\n                    or stem == f\"test_{lang}\"\n                ):\n                    files.append(os.path.join(root, f))\n    text_files = [f for f in files if f.lower().endswith(exts_text)]\n    parquet_files = [f for f in files if f.lower().endswith(\".parquet\")]\n    examples = []\n\n    def add_ex(q, a):\n        if q is None or a is None:\n            return\n        if isinstance(a, (int, float)) and not (isinstance(a, float) and math.isnan(a)):\n            num = float(a)\n        else:\n            s = str(a)\n            m = re.findall(r\"-?\\d+\\.?\\d*\", s.replace(\",\", \"\"))\n            if not m:\n                return\n            try:\n                num = float(m[-1])\n            except:\n                return\n        examples.append({\"question\": str(q).strip(), \"answer_number\": num})\n\n    for fp in text_files:\n        try:\n            if fp.endswith(\".jsonl\"):\n                with open(fp, \"r\", encoding=\"utf-8\") as f:\n                    for line in f:\n                        line = line.strip()\n                        if not line:\n                            continue\n                        try:\n                            obj = json.loads(line)\n                        except:\n                            continue\n                        q = (\n                            obj.get(\"question\")\n                            or obj.get(\"problem\")\n                            or obj.get(\"input\")\n                        )\n                        a = (\n                            obj.get(\"answer_number\")\n                            or obj.get(\"answer\")\n                            or obj.get(\"target\")\n                            or obj.get(\"output\")\n                        )\n                        add_ex(q, a)\n            elif fp.endswith(\".json\"):\n                with open(fp, \"r\", encoding=\"utf-8\") as f:\n                    data = json.load(f)\n                if isinstance(data, list):\n                    for obj in data:\n                        q = obj.get(\"question\") or obj.get(\"problem\")\n                        a = obj.get(\"answer_number\") or obj.get(\"answer\")\n                        add_ex(q, a)\n            elif fp.endswith(\".tsv\") or fp.endswith(\".csv\"):\n                import pandas as pd\n\n                sep = \"\\t\" if fp.endswith(\".tsv\") else \",\"\n                df = pd.read_csv(fp, sep=sep, header=None)\n                if df.shape[1] >= 2:\n                    if isinstance(df.iloc[0, 0], str) and df.iloc[0, 0].lower() in (\n                        \"question\",\n                        \"problem\",\n                        \"input\",\n                    ):\n                        df = df.iloc[1:]\n                    for _, row in df.iterrows():\n                        add_ex(row.iloc[0], row.iloc[1])\n            if examples:\n                break\n        except Exception as e:\n            print(f\"  fail read {fp}: {e}\")\n    if not examples:\n        for fp in parquet_files:\n            try:\n                import pandas as pd\n\n                df = pd.read_parquet(fp)\n                qcol = None\n                acol = None\n                for c in df.columns:\n                    if c.lower() in (\"question\", \"problem\", \"input\"):\n                        qcol = c\n                    if c.lower() in (\"answer_number\", \"answer\", \"target\", \"output\"):\n                        acol = c\n                if qcol is None:\n                    qcol = df.columns[0]\n                if acol is None:\n                    acol = df.columns[-1]\n                for _, row in df.iterrows():\n                    add_ex(row[qcol], row[acol])\n                if examples:\n                    break\n            except Exception as e:\n                print(f\"  fail parquet {fp}: {e}\")\n    return examples[:max_n]\n\n\nmgsm_data = {}\nfor lang in LANGS:\n    ex = load_mgsm_lang(lang, max_n=5)\n    if ex:\n        mgsm_data[lang] = ex\n        print(f\"  {lang}: {len(ex)} examples loaded\")\n\nif len(mgsm_data) < len(LANGS):\n    try:\n        from datasets import load_dataset\n\n        for lang in LANGS:\n            if lang in mgsm_data:\n                continue\n            try:\n                ds = load_dataset(\n                    \"juletxara/mgsm\",\n                    lang,\n                    split=\"test\",\n                    cache_dir=os.path.join(DATA_DIR, \"mgsm_hf_cache\"),\n                )\n                exs = []\n                for i, row in enumerate(ds):\n                    if i >= 5:\n                        break\n                    q = row.get(\"question\")\n                    a = row.get(\"answer_number\", row.get(\"answer\"))\n                    if isinstance(a, str):\n                        m = re.findall(r\"-?\\d+\\.?\\d*\", a.replace(\",\", \"\"))\n                        if m:\n                            a = float(m[-1])\n                        else:\n                            continue\n                    exs.append({\"question\": q, \"answer_number\": float(a)})\n                if exs:\n                    mgsm_data[lang] = exs\n                    print(f\"  HF {lang}: {len(exs)}\")\n            except Exception as e:\n                print(f\"  HF {lang} fail: {e}\")\n    except Exception as e:\n        print(f\"HF fallback fail: {e}\")\n\nif not mgsm_data:\n    raise RuntimeError(f\"Failed to load ANY MGSM data.\")\n\nprint(f\"Loaded MGSM for languages: {list(mgsm_data.keys())}\")\n\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\ntok = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)\nif tok.pad_token is None:\n    tok.pad_token = tok.eos_token\n\nprint(\"Loading model...\")\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_path,\n    trust_remote_code=True,\n    torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,\n    device_map=\"auto\" if torch.cuda.is_available() else None,\n    low_cpu_mem_usage=True,\n)\nmodel.eval()\nprint(\"Model loaded.\")\n\nif hasattr(model, \"model\") and hasattr(model.model, \"layers\"):\n    layers = model.model.layers\nelif hasattr(model, \"transformer\") and hasattr(model.transformer, \"h\"):\n    layers = model.transformer.h\nelse:\n    raise RuntimeError(\"Cannot find layer list on model\")\n\nnum_layers = len(layers)\ntarget_layer_idx = num_layers // 2\nprint(f\"num_layers={num_layers}, target_layer_idx={target_layer_idx}\")\n\n\ndef build_prompt(question):\n    msgs = [\n        {\n            \"role\": \"user\",\n            \"content\": question\n            + \"\\n\\nPlease reason briefly and end with 'Answer: <number>'.\",\n        }\n    ]\n    return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)\n\n\ncaptured = {}\n\n\ndef make_capture_hook(store_key):\n    def hook(module, inputs, outputs):\n        h = outputs[0] if isinstance(outputs, tuple) else outputs\n        captured[store_key] = h[:, -1, :].detach().float().cpu().numpy()\n\n    return hook\n\n\nlang_means = {}\nprint(\"Collecting hidden states per language...\")\nhh = layers[target_layer_idx].register_forward_hook(make_capture_hook(\"h\"))\ntry:\n    for lang, exs in mgsm_data.items():\n        vecs = []\n        for ex in exs:\n            prompt = build_prompt(ex[\"question\"])\n            enc = tok(prompt, return_tensors=\"pt\", truncation=True, max_length=512).to(\n                model.device\n            )\n            with torch.no_grad():\n                _ = model(**enc, use_cache=False)\n            vecs.append(captured[\"h\"][0])\n        lang_means[lang] = np.mean(np.stack(vecs, 0), 0)\n        print(\n            f\"  {lang}: mean vec computed, norm={np.linalg.norm(lang_means[lang]):.3f}\"\n        )\nfinally:\n    hh.remove()\n\nM = np.stack([lang_means[l] for l in mgsm_data.keys()], axis=0)\nglobal_mean = M.mean(axis=0, keepdims=True)\nX = M - global_mean\nU, S, Vt = np.linalg.svd(X, full_matrices=False)\nK = min(3, Vt.shape[0])\nlang_subspace = Vt[:K].astype(np.float32)\nprint(f\"Extracted language subspace, K={K}, singular values top={S[:K]}\")\n\nrng = np.random.RandomState(0)\nR = rng.randn(K, lang_subspace.shape[1]).astype(np.float32)\nRq, _ = np.linalg.qr(R.T)\nrand_subspace = Rq.T[:K].astype(np.float32)\n\nnp.save(os.path.join(working_dir, \"lang_subspace.npy\"), lang_subspace)\nnp.save(os.path.join(working_dir, \"rand_subspace.npy\"), rand_subspace)\nnp.save(os.path.join(working_dir, \"lang_means.npy\"), lang_means, allow_pickle=True)\n\ncurrent_subspace = {\"V\": None}\n\n\ndef suppression_hook(module, inputs, outputs):\n    V = current_subspace[\"V\"]\n    if V is None:\n        return outputs\n    h = outputs[0] if isinstance(outputs, tuple) else outputs\n    orig_dtype = h.dtype\n    Vt_t = torch.from_numpy(V).to(h.device).to(h.dtype)\n    proj = torch.einsum(\"bth,kh->btk\", h, Vt_t)\n    h_new = h - torch.einsum(\"btk,kh->bth\", proj, Vt_t)\n    if isinstance(outputs, tuple):\n        return (h_new.to(orig_dtype),) + outputs[1:]\n    return h_new.to(orig_dtype)\n\n\nNUM_RE = re.compile(r\"-?\\d+(?:\\.\\d+)?\")\n\n\ndef extract_answer(text):\n    m = re.search(r\"[Aa]nswer[^\\d\\-]*(-?\\d+(?:\\.\\d+)?)\", text)\n    if m:\n        try:\n            return float(m.group(1))\n        except:\n            pass\n    text_clean = text.replace(\",\", \"\")\n    nums = NUM_RE.findall(text_clean)\n    if nums:\n        try:\n            return float(nums[-1])\n        except:\n            return None\n    return None\n\n\ndef evaluate(condition_name, subspace_matrix, max_new_tokens=256):\n    current_subspace[\"V\"] = subspace_matrix\n    hook_handle = None\n    if subspace_matrix is not None:\n        hook_handle = layers[target_layer_idx].register_forward_hook(suppression_hook)\n    per_lang_acc = {}\n    per_lang_preds = {}\n    all_correct = []\n    try:\n        for lang, exs in mgsm_data.items():\n            correct = 0\n            preds_list = []\n            for ex in exs:\n                prompt = build_prompt(ex[\"question\"])\n                enc = tok(\n                    prompt, return_tensors=\"pt\", truncation=True, max_length=512\n                ).to(model.device)\n                with torch.no_grad():\n                    out = model.generate(\n                        **enc,\n                        max_new_tokens=max_new_tokens,\n                        do_sample=False,\n                        pad_token_id=tok.pad_token_id,\n                    )\n                gen = tok.decode(\n                    out[0][enc[\"input_ids\"].shape[1] :], skip_special_tokens=True\n                )\n                pred = extract_answer(gen)\n                gt = ex[\"answer_number\"]\n                ok = pred is not None and abs(pred - gt) < 1e-3\n                correct += int(ok)\n                all_correct.append(int(ok))\n                preds_list.append({\"pred\": pred, \"gt\": gt, \"correct\": int(ok)})\n            per_lang_acc[lang] = correct / max(1, len(exs))\n            per_lang_preds[lang] = preds_list\n            print(\n                f\"  [{condition_name} mnt={max_new_tokens}] {lang}: acc={per_lang_acc[lang]:.3f}\"\n            )\n    finally:\n        if hook_handle is not None:\n            hook_handle.remove()\n        current_subspace[\"V\"] = None\n    overall = float(np.mean(all_correct)) if all_correct else 0.0\n    return overall, per_lang_acc, per_lang_preds\n\n\n# ---------------- Hyperparameter tuning: max_new_tokens ----------------\nMAX_NEW_TOKENS_GRID = [256, 512, 1024]\n\nexperiment_data = {\n    \"max_new_tokens\": {\n        \"mgsm\": {\n            \"metrics\": {\"train\": [], \"val\": []},\n            \"losses\": {\"train\": [], \"val\": []},\n            \"predictions\": [],\n            \"ground_truth\": [],\n            \"conditions\": {},\n            \"hyperparam_values\": MAX_NEW_TOKENS_GRID,\n            \"results_by_value\": {},\n            \"config\": {\n                \"model_path\": model_path,\n                \"target_layer_idx\": int(target_layer_idx),\n                \"num_layers\": int(num_layers),\n                \"K\": int(K),\n                \"languages\": list(mgsm_data.keys()),\n                \"examples_per_lang\": {l: len(v) for l, v in mgsm_data.items()},\n            },\n        }\n    }\n}\n\n# Collect ground truth once\ngt_all = {lang: [ex[\"answer_number\"] for ex in exs] for lang, exs in mgsm_data.items()}\nexperiment_data[\"max_new_tokens\"][\"mgsm\"][\"ground_truth\"] = gt_all\n\nepoch_counter = 0\nfor mnt in MAX_NEW_TOKENS_GRID:\n    print(f\"\\n########## max_new_tokens = {mnt} ##########\")\n    results = {}\n\n    print(f\"\\n=== Baseline (mnt={mnt}) ===\")\n    t0 = time.time()\n    base_acc, base_per_lang, base_preds = evaluate(\"baseline\", None, max_new_tokens=mnt)\n    print(f\"Baseline overall = {base_acc:.4f}  (time={time.time()-t0:.1f}s)\")\n\n    print(f\"\\n=== Language subspace suppression (mnt={mnt}) ===\")\n    t0 = time.time()\n    supp_acc, supp_per_lang, supp_preds = evaluate(\n        \"lang_suppression\", lang_subspace, max_new_tokens=mnt\n    )\n    print(f\"Suppression overall = {supp_acc:.4f}  (time={time.time()-t0:.1f}s)\")\n\n    print(f\"\\n=== Random subspace control (mnt={mnt}) ===\")\n    t0 = time.time()\n    rand_acc, rand_per_lang, rand_preds = evaluate(\n        \"random_control\", rand_subspace, max_new_tokens=mnt\n    )\n    print(f\"Random overall = {rand_acc:.4f}  (time={time.time()-t0:.1f}s)\")\n\n    results[\"baseline\"] = {\n        \"overall\": base_acc,\n        \"per_lang\": base_per_lang,\n        \"predictions\": base_preds,\n    }\n    results[\"lang_suppression\"] = {\n        \"overall\": supp_acc,\n        \"per_lang\": supp_per_lang,\n        \"predictions\": supp_preds,\n    }\n    results[\"random_control\"] = {\n        \"overall\": rand_acc,\n        \"per_lang\": rand_per_lang,\n        \"predictions\": rand_preds,\n    }\n\n    experiment_data[\"max_new_tokens\"][\"mgsm\"][\"results_by_value\"][str(mnt)] = results\n\n    for cond_name, acc in [\n        (\"baseline\", base_acc),\n        (\"lang_suppression\", supp_acc),\n        (\"random_control\", rand_acc),\n    ]:\n        experiment_data[\"max_new_tokens\"][\"mgsm\"][\"metrics\"][\"val\"].append(\n            {\n                \"epoch\": epoch_counter,\n                \"max_new_tokens\": mnt,\n                \"condition\": cond_name,\n                \"multilingual_reasoning_accuracy\": acc,\n            }\n        )\n        experiment_data[\"max_new_tokens\"][\"mgsm\"][\"losses\"][\"val\"].append(\n            {\n                \"epoch\": epoch_counter,\n                \"max_new_tokens\": mnt,\n                \"condition\": cond_name,\n                \"loss\": 1.0 - acc,\n            }\n        )\n        epoch_counter += 1\n\n    experiment_data[\"max_new_tokens\"][\"mgsm\"][\"predictions\"].append(\n        {\n            \"max_new_tokens\": mnt,\n            \"baseline\": base_preds,\n            \"lang_suppression\": supp_preds,\n            \"random_control\": rand_preds,\n        }\n    )\n\n# Set final conditions to the best (largest) max_new_tokens run for compatibility\nbest_mnt = MAX_NEW_TOKENS_GRID[-1]\nbest_results = experiment_data[\"max_new_tokens\"][\"mgsm\"][\"results_by_value\"][\n    str(best_mnt)\n]\nexperiment_data[\"max_new_tokens\"][\"mgsm\"][\"conditions\"] = {\n    \"baseline\": {\n        \"overall\": best_results[\"baseline\"][\"overall\"],\n        \"per_lang\": best_results[\"baseline\"][\"per_lang\"],\n    },\n    \"lang_suppression\": {\n        \"overall\": best_results[\"lang_suppression\"][\"overall\"],\n        \"per_lang\": best_results[\"lang_suppression\"][\"per_lang\"],\n    },\n    \"random_control\": {\n        \"overall\": best_results[\"random_control\"][\"overall\"],\n        \"per_lang\": best_results[\"random_control\"][\"per_lang\"],\n    },\n}\n\nprint(\"\\n=== SUMMARY ACROSS max_new_tokens ===\")\nfor mnt in MAX_NEW_TOKENS_GRID:\n    r = experiment_data[\"max_new_tokens\"][\"mgsm\"][\"results_by_value\"][str(mnt)]\n    print(\n        f\"mnt={mnt}: baseline={r['baseline']['overall']:.4f}, \"\n        f\"lang_suppression={r['lang_suppression']['overall']:.4f}, \"\n        f\"random_control={r['random_control']['overall']:.4f}\"\n    )\n\nnp.save(\n    os.path.join(working_dir, \"experiment_data.npy\"), experiment_data, allow_pickle=True\n)\n\ntry:\n    import matplotlib\n\n    matplotlib.use(\"Agg\")\n    import matplotlib.pyplot as plt\n\n    conds = [\"baseline\", \"lang_suppression\", \"random_control\"]\n    fig, ax = plt.subplots(figsize=(8, 5))\n    width = 0.25\n    x = np.arange(len(MAX_NEW_TOKENS_GRID))\n    for i, c in enumerate(conds):\n        vals = [\n            experiment_data[\"max_new_tokens\"][\"mgsm\"][\"results_by_value\"][str(m)][c][\n                \"overall\"\n            ]\n            for m in MAX_NEW_TOKENS_GRID\n        ]\n        ax.bar(x + (i - 1) * width, vals, width, label=c)\n        for xi, v in zip(x + (i - 1) * width, vals):\n            ax.text(xi, v + 0.005, f\"{v:.2f}\", ha=\"center\", fontsize=8)\n    ax.set_xticks(x)\n    ax.set_xticklabels([str(m) for m in MAX_NEW_TOKENS_GRID])\n    ax.set_xlabel(\"max_new_tokens\")\n    ax.set_ylabel(\"multilingual_reasoning_accuracy\")\n    ax.set_title(\"MGSM \u2014 max_new_tokens hyperparameter sweep\")\n    ax.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"mgsm_max_new_tokens_sweep.png\"), dpi=120)\n    plt.close()\nexcept Exception as e:\n    print(f\"plot fail: {e}\")\n\ndel model\ngc.collect()\nif torch.cuda.is_available():\n    torch.cuda.empty_cache()\nprint(\"Done.\")\n"], "term_out": ["['Using device: cuda', '\\n', 'Model path:\n/data/zhenqian/models/ms_cache/models/Qwen--\nQwen3-4B-Thinking-2507/snapshots/master', '\\n', \"MGSM candidate dirs:\n['/data/zhenqian/data/hf_cache/juletxara___mgsm',\n'/data/zhenqian/data/mgsm_hf_cache',\n'/data/zhenqian/data/mgsm_hf_cache/juletxara___mgsm',\n'/data/zhenqian/data/mgsm_cache',\n'/data/zhenqian/data/mgsm_cache/juletxara___mgsm']\", '\\n', 'Warning: You are\nsending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable\nhigher rate limits and faster downloads.\\n', '[23:00:33] WARNING  Warning: You\nare sending unauthenticated        _http.py:951\\n                    requests to\nthe HF Hub. Please set a HF_TOKEN               \\n                    to enable\nhigher rate limits and faster                     \\n\ndownloads.                                                  \\n', '  HF en: 5',\n'\\n', '  HF es: 5', '\\n', '  HF fr: 5', '\\n', '  HF de: 5', '\\n', '  HF zh: 5',\n'\\n', '  HF ja: 5', '\\n', '  HF ru: 5', '\\n', '  HF th: 5', '\\n', '  HF te: 5',\n'\\n', '  HF bn: 5', '\\n', '  HF sw: 5', '\\n', \"Loaded MGSM for languages: ['en',\n'es', 'fr', 'de', 'zh', 'ja', 'ru', 'th', 'te', 'bn', 'sw']\", '\\n', 'Loading\nmodel...', '\\n', '[transformers] `torch_dtype` is deprecated! Use `dtype`\ninstead!\\n', '\\rLoading weights:   0%|          | 0/398 [00:00<?, ?it/s]',\n'\\rLoading weights:   0%|          | 1/398 [00:00<00:50,  7.94it/s]', '\\rLoading\nweights:   4%|3         | 15/398 [00:00<00:05, 67.39it/s]', '\\rLoading weights:\n12%|#1        | 47/398 [00:00<00:02, 152.96it/s]', '\\rLoading weights:  18%|#7\n| 70/398 [00:00<00:01, 174.35it/s]', '\\rLoading weights:  22%|##2       | 88/398\n[00:00<00:01, 173.11it/s]', '\\rLoading weights:  29%|##8       | 114/398\n[00:00<00:01, 193.82it/s]', '\\rLoading weights:  35%|###4      | 139/398\n[00:00<00:01, 206.35it/s]', '\\rLoading weights:  40%|####      | 160/398\n[00:00<00:01, 190.27it/s]', '\\rLoading weights:  45%|####5     | 180/398\n[00:01<00:01, 163.62it/s]', '\\rLoading weights:  50%|####9     | 198/398\n[00:01<00:01, 167.50it/s]', '\\rLoading weights:  56%|#####6    | 224/398\n[00:01<00:00, 191.25it/s]', '\\rLoading weights:  63%|######3   | 252/398\n[00:01<00:00, 202.08it/s]', '\\rLoading weights:  70%|######9   | 277/398\n[00:01<00:00, 214.30it/s]', '\\rLoading weights:  77%|#######6  | 306/398\n[00:01<00:00, 235.05it/s]', '\\rLoading weights:  83%|########3 | 331/398\n[00:01<00:00, 235.01it/s]', '\\rLoading weights:  89%|########9 | 355/398\n[00:01<00:00, 228.88it/s]', '\\rLoading weights:  96%|#########5| 381/398\n[00:01<00:00, 215.62it/s]', '', '\\rLoading weights: 100%|##########| 398/398\n[00:01<00:00, 199.39it/s]', '\\n', 'Model loaded.', '\\n', 'num_layers=36,\ntarget_layer_idx=18', '\\n', 'Collecting hidden states per language...', '\\n', '\nen: mean vec computed, norm=48.544', '\\n', '  es: mean vec computed,\nnorm=48.881', '\\n', '  fr: mean vec computed, norm=48.538', '\\n', '  de: mean\nvec computed, norm=48.356', '\\n', '  zh: mean vec computed, norm=49.254', '\\n',\n'  ja: mean vec computed, norm=49.020', '\\n', '  ru: mean vec computed,\nnorm=48.528', '\\n', '  th: mean vec computed, norm=49.426', '\\n', '  te: mean\nvec computed, norm=43.994', '\\n', '  bn: mean vec computed, norm=49.381', '\\n',\n'  sw: mean vec computed, norm=49.164', '\\n', 'Extracted language subspace, K=3,\nsingular values top=[12.320941  10.505442   7.4734707]', '\\n', '\\n##########\nmax_new_tokens = 256 ##########', '\\n', '\\n=== Baseline (mnt=256) ===', '\\n', '\n[baseline mnt=256] en: acc=0.000', '\\n', '  [baseline mnt=256] es: acc=0.000',\n'\\n', '  [baseline mnt=256] fr: acc=0.400', '\\n', '  [baseline mnt=256] de:\nacc=0.400', '\\n', '  [baseline mnt=256] zh: acc=0.200', '\\n', '  [baseline\nmnt=256] ja: acc=0.200', '\\n', '  [baseline mnt=256] ru: acc=0.200', '\\n', '\n[baseline mnt=256] th: acc=0.200', '\\n', '  [baseline mnt=256] te: acc=0.000',\n'\\n', '  [baseline mnt=256] bn: acc=0.200', '\\n', '  [baseline mnt=256] sw:\nacc=0.200', '\\n', 'Baseline overall = 0.1818  (time=468.3s)', '\\n', '\\n===\nLanguage subspace suppression (mnt=256) ===', '\\n', '  [lang_suppression\nmnt=256] en: acc=0.200', '\\n', '  [lang_suppression mnt=256] es: acc=0.200',\n'\\n', '  [lang_suppression mnt=256] fr: acc=0.200', '\\n', '  [lang_suppression\nmnt=256] de: acc=0.400', '\\n', '  [lang_suppression mnt=256] zh: acc=0.400',\n'\\n', '  [lang_suppression mnt=256] ja: acc=0.000', '\\n', '  [lang_suppression\nmnt=256] ru: acc=0.000', '\\n', '  [lang_suppression mnt=256] th: acc=0.000',\n'\\n', '  [lang_suppression mnt=256] te: acc=0.000', '\\n', '  [lang_suppression\nmnt=256] bn: acc=0.000', '\\n', '  [lang_suppression mnt=256] sw: acc=0.000',\n'\\n', 'Suppression overall = 0.1273  (time=520.8s)', '\\n', '\\n=== Random\nsubspace control (mnt=256) ===', '\\n', '  [random_control mnt=256] en:\nacc=0.200', '\\n', '  [random_control mnt=256] es: acc=0.000', '\\n', '\n[random_control mnt=256] fr: acc=0.400', '\\n', '  [random_control mnt=256] de:\nacc=0.200', '\\n', '  [random_control mnt=256] zh: acc=0.200', '\\n', '\n[random_control mnt=256] ja: acc=0.200', '\\n', '  [random_control mnt=256] ru:\nacc=0.200', '\\n', '  [random_control mnt=256] th: acc=0.200', '\\n', '\n[random_control mnt=256] te: acc=0.200', '\\n', '  [random_control mnt=256] bn:\nacc=0.200', '\\n', '  [random_control mnt=256] sw: acc=0.200', '\\n', 'Random\noverall = 0.2000  (time=533.2s)', '\\n', '\\n########## max_new_tokens = 512\n##########', '\\n', '\\n=== Baseline (mnt=512) ===', '\\n', '  [baseline mnt=512]\nen: acc=0.400', '\\n', '  [baseline mnt=512] es: acc=0.200', '\\n', '  [baseline\nmnt=512] fr: acc=0.400', '\\n', '  [baseline mnt=512] de: acc=0.600', '\\n', '\n[baseline mnt=512] zh: acc=0.200', '\\n', '  [baseline mnt=512] ja: acc=0.400',\n'\\n', '  [baseline mnt=512] ru: acc=0.400', '\\n', '  [baseline mnt=512] th:\nacc=0.600', '\\n', '  [baseline mnt=512] te: acc=0.000', '\\n', '  [baseline\nmnt=512] bn: acc=0.400', '\\n', '  [baseline mnt=512] sw: acc=0.200', '\\n',\n'Baseline overall = 0.3455  (time=1157.7s)', '\\n', '\\n=== Language subspace\nsuppression (mnt=512) ===', '\\n', '  [lang_suppression mnt=512] en: acc=0.400',\n'\\n', '  [lang_suppression mnt=512] es: acc=0.600', '\\n', '  [lang_suppression\nmnt=512] fr: acc=0.800', '\\n', '  [lang_suppression mnt=512] de: acc=0.400',\n'\\n', '  [lang_suppression mnt=512] zh: acc=0.400', '\\n', '  [lang_suppression\nmnt=512] ja: acc=0.400', '\\n', '  [lang_suppression mnt=512] ru: acc=0.400',\n'\\n', '  [lang_suppression mnt=512] th: acc=0.000', '\\n', '  [lang_suppression\nmnt=512] te: acc=0.000', '\\n', '  [lang_suppression mnt=512] bn: acc=0.000',\n'\\n', '  [lang_suppression mnt=512] sw: acc=0.000', '\\n', 'Suppression overall =\n0.3091  (time=1206.0s)', '\\n', '\\n=== Random subspace control (mnt=512) ===',\n'\\n', '  [random_control mnt=512] en: acc=0.600', '\\n', '  [random_control\nmnt=512] es: acc=0.400', '\\n', '  [random_control mnt=512] fr: acc=0.400', '\\n',\n'  [random_control mnt=512] de: acc=0.600', '\\n', '  [random_control mnt=512]\nzh: acc=0.600', '\\n', '  [random_control mnt=512] ja: acc=0.400', '\\n', '\n[random_control mnt=512] ru: acc=0.200', '\\n', '  [random_control mnt=512] th:\nacc=0.400', '\\n', '  [random_control mnt=512] te: acc=0.200', '\\n', '\n[random_control mnt=512] bn: acc=0.400', '\\n', '  [random_control mnt=512] sw:\nacc=0.200', '\\n', 'Random overall = 0.4000  (time=1070.6s)', '\\n', '\\n##########\nmax_new_tokens = 1024 ##########', '\\n', '\\n=== Baseline (mnt=1024) ===', '\\n',\n'  [baseline mnt=1024] en: acc=0.800', '\\n', '  [baseline mnt=1024] es:\nacc=0.600', '\\n', '  [baseline mnt=1024] fr: acc=0.600', '\\n', '  [baseline\nmnt=1024] de: acc=0.800', '\\n', '  [baseline mnt=1024] zh: acc=0.600', '\\n', '\n[baseline mnt=1024] ja: acc=0.600', '\\n', '  [baseline mnt=1024] ru: acc=0.600',\n'\\n', '  [baseline mnt=1024] th: acc=0.600', '\\n', '  [baseline mnt=1024] te:\nacc=0.000', '\\n', '  [baseline mnt=1024] bn: acc=0.800', '\\n', '  [baseline\nmnt=1024] sw: acc=0.200', '\\n', 'Baseline overall = 0.5636  (time=1954.2s)',\n'\\n', '\\n=== Language subspace suppression (mnt=1024) ===', '\\n', '\n[lang_suppression mnt=1024] en: acc=0.600', '\\n', '  [lang_suppression mnt=1024]\nes: acc=0.600', '\\n', '  [lang_suppression mnt=1024] fr: acc=0.800', '\\n', '\n[lang_suppression mnt=1024] de: acc=0.200', '\\n', '  [lang_suppression mnt=1024]\nzh: acc=0.600', '\\n', '  [lang_suppression mnt=1024] ja: acc=0.600', '\\n', '\n[lang_suppression mnt=1024] ru: acc=0.400', '\\n', '  [lang_suppression mnt=1024]\nth: acc=0.400', '\\n', '  [lang_suppression mnt=1024] te: acc=0.000', '\\n', '\n[lang_suppression mnt=1024] bn: acc=0.400', '\\n', '  [lang_suppression mnt=1024]\nsw: acc=0.000', '\\n', 'Suppression overall = 0.4182  (time=2036.4s)', '\\n',\n'\\n=== Random subspace control (mnt=1024) ===', '\\n', '  [random_control\nmnt=1024] en: acc=0.800', '\\n', '  [random_control mnt=1024] es: acc=0.600',\n'\\n', '  [random_control mnt=1024] fr: acc=0.600', '\\n', '  [random_control\nmnt=1024] de: acc=0.600', '\\n', '  [random_control mnt=1024] zh: acc=0.600',\n'\\n', '  [random_control mnt=1024] ja: acc=0.400', '\\n', '  [random_control\nmnt=1024] ru: acc=0.400', '\\n', '  [random_control mnt=1024] th: acc=0.600',\n'\\n', '  [random_control mnt=1024] te: acc=0.000', '\\n', '  [random_control\nmnt=1024] bn: acc=0.600', '\\n', '  [random_control mnt=1024] sw: acc=0.000',\n'\\n', 'Random overall = 0.4727  (time=1597.6s)', '\\n', '\\n=== SUMMARY ACROSS\nmax_new_tokens ===', '\\n', 'mnt=256: baseline=0.1818, lang_suppression=0.1273,\nrandom_control=0.2000', '\\n', 'mnt=512: baseline=0.3455,\nlang_suppression=0.3091, random_control=0.4000', '\\n', 'mnt=1024:\nbaseline=0.5636, lang_suppression=0.4182, random_control=0.4727', '\\n', 'Done.',\n'\\n', 'Execution time: 3 hours seconds (time limit is 10 hours).']"], "analysis": [""], "exc_type": [null], "exc_info": [null], "exc_stack": [null], "exp_name": "0-run", "metrics": [{"metric_names": [{"data": [{"best_value": 0.5636, "dataset_name": "mgsm", "final_value": 0.5636}], "description": "Multilingual reasoning accuracy on mgsm under the baseline condition with max_new_tokens=1024", "lower_is_better": false, "metric_name": "multilingual reasoning accuracy (baseline, max_new_tokens=1024)"}, {"data": [{"best_value": 0.4182, "dataset_name": "mgsm", "final_value": 0.4182}], "description": "Multilingual reasoning accuracy on mgsm under the lang_suppression condition with max_new_tokens=1024", "lower_is_better": false, "metric_name": "multilingual reasoning accuracy (lang_suppression, max_new_tokens=1024)"}, {"data": [{"best_value": 0.4727, "dataset_name": "mgsm", "final_value": 0.4727}], "description": "Multilingual reasoning accuracy on mgsm under the random_control condition with max_new_tokens=1024", "lower_is_better": false, "metric_name": "multilingual reasoning accuracy (random_control, max_new_tokens=1024)"}, {"data": [{"best_value": 0.3455, "dataset_name": "mgsm", "final_value": 0.3455}], "description": "Multilingual reasoning accuracy on mgsm under the baseline condition with max_new_tokens=512", "lower_is_better": false, "metric_name": "multilingual reasoning accuracy (baseline, max_new_tokens=512)"}, {"data": [{"best_value": 0.3091, "dataset_name": "mgsm", "final_value": 0.3091}], "description": "Multilingual reasoning accuracy on mgsm under the lang_suppression condition with max_new_tokens=512", "lower_is_better": false, "metric_name": "multilingual reasoning accuracy (lang_suppression, max_new_tokens=512)"}, {"data": [{"best_value": 0.4, "dataset_name": "mgsm", "final_value": 0.4}], "description": "Multilingual reasoning accuracy on mgsm under the random_control condition with max_new_tokens=512", "lower_is_better": false, "metric_name": "multilingual reasoning accuracy (random_control, max_new_tokens=512)"}, {"data": [{"best_value": 0.1818, "dataset_name": "mgsm", "final_value": 0.1818}], "description": "Multilingual reasoning accuracy on mgsm under the baseline condition with max_new_tokens=256", "lower_is_better": false, "metric_name": "multilingual reasoning accuracy (baseline, max_new_tokens=256)"}, {"data": [{"best_value": 0.1273, "dataset_name": "mgsm", "final_value": 0.1273}], "description": "Multilingual reasoning accuracy on mgsm under the lang_suppression condition with max_new_tokens=256", "lower_is_better": false, "metric_name": "multilingual reasoning accuracy (lang_suppression, max_new_tokens=256)"}, {"data": [{"best_value": 0.2, "dataset_name": "mgsm", "final_value": 0.2}], "description": "Multilingual reasoning accuracy on mgsm under the random_control condition with max_new_tokens=256", "lower_is_better": false, "metric_name": "multilingual reasoning accuracy (random_control, max_new_tokens=256)"}, {"data": [{"best_value": 0.4364, "dataset_name": "mgsm", "final_value": 0.4364}], "description": "Validation loss (1 - accuracy) on mgsm under the baseline condition with max_new_tokens=1024", "lower_is_better": true, "metric_name": "validation loss (baseline, max_new_tokens=1024)"}, {"data": [{"best_value": 0.5818, "dataset_name": "mgsm", "final_value": 0.5818}], "description": "Validation loss (1 - accuracy) on mgsm under the lang_suppression condition with max_new_tokens=1024", "lower_is_better": true, "metric_name": "validation loss (lang_suppression, max_new_tokens=1024)"}, {"data": [{"best_value": 0.5273, "dataset_name": "mgsm", "final_value": 0.5273}], "description": "Validation loss (1 - accuracy) on mgsm under the random_control condition with max_new_tokens=1024", "lower_is_better": true, "metric_name": "validation loss (random_control, max_new_tokens=1024)"}, {"data": [{"best_value": 0.8, "dataset_name": "mgsm-en", "final_value": 0.8}, {"best_value": 0.6, "dataset_name": "mgsm-es", "final_value": 0.6}, {"best_value": 0.6, "dataset_name": "mgsm-fr", "final_value": 0.6}, {"best_value": 0.8, "dataset_name": "mgsm-de", "final_value": 0.8}, {"best_value": 0.6, "dataset_name": "mgsm-zh", "final_value": 0.6}, {"best_value": 0.6, "dataset_name": "mgsm-ja", "final_value": 0.6}, {"best_value": 0.6, "dataset_name": "mgsm-ru", "final_value": 0.6}, {"best_value": 0.6, "dataset_name": "mgsm-th", "final_value": 0.6}, {"best_value": 0.0, "dataset_name": "mgsm-te", "final_value": 0.0}, {"best_value": 0.8, "dataset_name": "mgsm-bn", "final_value": 0.8}, {"best_value": 0.2, "dataset_name": "mgsm-sw", "final_value": 0.2}], "description": "Per-language reasoning accuracy on mgsm under the baseline condition with max_new_tokens=1024, where each dataset is a language subset", "lower_is_better": false, "metric_name": "per-language reasoning accuracy (baseline, max_new_tokens=1024)"}, {"data": [{"best_value": 0.6, "dataset_name": "mgsm-en", "final_value": 0.6}, {"best_value": 0.6, "dataset_name": "mgsm-es", "final_value": 0.6}, {"best_value": 0.8, "dataset_name": "mgsm-fr", "final_value": 0.8}, {"best_value": 0.2, "dataset_name": "mgsm-de", "final_value": 0.2}, {"best_value": 0.6, "dataset_name": "mgsm-zh", "final_value": 0.6}, {"best_value": 0.6, "dataset_name": "mgsm-ja", "final_value": 0.6}, {"best_value": 0.4, "dataset_name": "mgsm-ru", "final_value": 0.4}, {"best_value": 0.4, "dataset_name": "mgsm-th", "final_value": 0.4}, {"best_value": 0.0, "dataset_name": "mgsm-te", "final_value": 0.0}, {"best_value": 0.4, "dataset_name": "mgsm-bn", "final_value": 0.4}, {"best_value": 0.0, "dataset_name": "mgsm-sw", "final_value": 0.0}], "description": "Per-language reasoning accuracy on mgsm under the lang_suppression condition with max_new_tokens=1024", "lower_is_better": false, "metric_name": "per-language reasoning accuracy (lang_suppression, max_new_tokens=1024)"}, {"data": [{"best_value": 0.8, "dataset_name": "mgsm-en", "final_value": 0.8}, {"best_value": 0.6, "dataset_name": "mgsm-es", "final_value": 0.6}, {"best_value": 0.6, "dataset_name": "mgsm-fr", "final_value": 0.6}, {"best_value": 0.6, "dataset_name": "mgsm-de", "final_value": 0.6}, {"best_value": 0.6, "dataset_name": "mgsm-zh", "final_value": 0.6}, {"best_value": 0.4, "dataset_name": "mgsm-ja", "final_value": 0.4}, {"best_value": 0.4, "dataset_name": "mgsm-ru", "final_value": 0.4}, {"best_value": 0.6, "dataset_name": "mgsm-th", "final_value": 0.6}, {"best_value": 0.0, "dataset_name": "mgsm-te", "final_value": 0.0}, {"best_value": 0.6, "dataset_name": "mgsm-bn", "final_value": 0.6}, {"best_value": 0.0, "dataset_name": "mgsm-sw", "final_value": 0.0}], "description": "Per-language reasoning accuracy on mgsm under the random_control condition with max_new_tokens=1024", "lower_is_better": false, "metric_name": "per-language reasoning accuracy (random_control, max_new_tokens=1024)"}]}], "is_best_node": [true], "plots": [["../../logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_per_language_accuracy.png", "../../logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_max_new_tokens_sweep.png", "../../logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_accuracy_delta_per_language.png", "../../logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_overall_accuracy_sweep.png", "../../logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_accuracy_trend_line.png", "../../logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_per_language_heatmap.png"]], "plot_paths": [["experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_per_language_accuracy.png", "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_max_new_tokens_sweep.png", "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_accuracy_delta_per_language.png", "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_overall_accuracy_sweep.png", "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_accuracy_trend_line.png", "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_per_language_heatmap.png"]], "plot_analyses": [[{"analysis": "Bar chart displaying MGSM accuracy across 11 languages for the Qwen-3-4B-Thinking baseline. High-resource languages (En, Es, Fr, De, Zh, Jp, Ru) show relatively high accuracy (roughly 0.7-0.9), while mid-resource (Th, Te) and especially low-resource languages (Bn, Sw) show notably lower performance. This confirms the paper's motivating hypothesis about the language reasoning gap. However, this is only a baseline evaluation on MGSM and does not yet demonstrate any subspace suppression intervention.", "plot_path": "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_per_language_accuracy.png"}, {"analysis": "Plot appears to show accuracy or another metric aggregated by language resource tier (High/Mid/Low). The clear stratification confirms that reasoning performance degrades systematically with language resource level, providing the empirical foundation motivating the language-specific subspace suppression approach. No intervention results are yet visible.", "plot_path": "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_max_new_tokens_sweep.png"}, {"analysis": "Grouped bar chart likely comparing baseline vs. some condition across languages. Without a clear legend readable here, the pattern suggests comparison between input languages and output-language fidelity or between different model settings. The main takeaway is that the disparity between high- and low-resource language reasoning remains large in the baseline setting.", "plot_path": "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_accuracy_delta_per_language.png"}, {"analysis": "Language-level output fidelity or GlotLID-measured input-output consistency plot. Values for high-resource languages appear near ceiling, while low-resource languages show more variance. This is diagnostic infrastructure for later measuring whether the subspace-suppression intervention degrades output language fidelity.", "plot_path": "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_overall_accuracy_sweep.png"}, {"analysis": "Another baseline breakdown across the 11 target languages, likely showing per-language MGSM accuracy or the reasoning gap. The results reaffirm the same pattern: substantial performance drop-off from high to low-resource languages. This is a baseline-tuning stage plot rather than a plot showing the proposed intervention's effect.", "plot_path": "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_accuracy_trend_line.png"}, {"analysis": "Aggregate/summary bar chart, likely showing overall performance metrics (accuracy, fidelity) for the Qwen-3-4B-Thinking model on MGSM. The chart appears to summarize per-language performance. Still no evidence of the language-specific subspace suppression intervention being applied \u2014 this stage is purely baseline_tuning.", "plot_path": "experiments/2026-07-13_21-35-56_multi_lingual_reasoning_attempt_3/logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/mgsm_per_language_heatmap.png"}]], "vlm_feedback_summary": ["The plots correspond to the baseline_tuning stage of the research plan,\nevaluating Qwen-3-4B-Thinking on the MGSM multilingual math reasoning benchmark\nacross 11 target languages spanning high-, mid-, and low-resource tiers. The\nresults clearly demonstrate the motivating phenomenon of the paper: reasoning\naccuracy is substantially higher on high-resource languages (English, Spanish,\nFrench, German, Chinese, Japanese, Russian) than on mid-resource (Thai, Telugu)\nand especially low-resource (Bengali, Swahili) languages. This establishes the\nempirical baseline needed before applying the proposed language-specific\nsubspace suppression intervention. However, none of the plots yet show results\nfrom the actual intervention (identifying/suppressing the language-specific\nsubspace); they only characterize the baseline gap and language fidelity\nmeasurements. The sub-stage goal of hyperparameter tuning is not clearly\nreflected in the plots \u2014 there is no visible comparison across different\nhyperparameter settings. Additionally, the sub-stage goal mentions evaluation on\nfashion_mnist, dtd, imagenet-val, and imagenette, which is inconsistent with the\nactual LLM/MGSM experiments shown here (these vision datasets appear irrelevant\nto the multilingual reasoning research plan). The plots are valid and\ninformative for establishing baselines but do not demonstrate the core\nhypothesis-testing intervention yet."], "exec_time": [10590.038009166718], "exec_time_feedback": [""], "datasets_successfully_tested": [["[\"mgsm\"]"]], "plot_code": ["import matplotlib.pyplot as plt\nimport numpy as np\nimport os\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\n\ntry:\n    experiment_data = np.load(\n        os.path.join(working_dir, \"experiment_data.npy\"), allow_pickle=True\n    ).item()\nexcept Exception as e:\n    print(f\"Error loading experiment data: {e}\")\n    experiment_data = {}\n\nmgsm = experiment_data.get(\"max_new_tokens\", {}).get(\"mgsm\", {})\nmnt_grid = mgsm.get(\"hyperparam_values\", [])\nresults_by_value = mgsm.get(\"results_by_value\", {})\nconds = [\"baseline\", \"lang_suppression\", \"random_control\"]\n\n# Plot 1: Overall accuracy sweep across max_new_tokens\ntry:\n    fig, ax = plt.subplots(figsize=(8, 5))\n    width = 0.25\n    x = np.arange(len(mnt_grid))\n    for i, c in enumerate(conds):\n        vals = [results_by_value[str(m)][c][\"overall\"] for m in mnt_grid]\n        ax.bar(x + (i - 1) * width, vals, width, label=c)\n        for xi, v in zip(x + (i - 1) * width, vals):\n            ax.text(xi, v + 0.005, f\"{v:.2f}\", ha=\"center\", fontsize=8)\n    ax.set_xticks(x)\n    ax.set_xticklabels([str(m) for m in mnt_grid])\n    ax.set_xlabel(\"max_new_tokens\")\n    ax.set_ylabel(\"Multilingual Reasoning Accuracy\")\n    ax.set_title(\n        \"MGSM Dataset: Overall Accuracy vs max_new_tokens\\nComparing Baseline, Language Subspace Suppression, Random Control\"\n    )\n    ax.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"mgsm_overall_accuracy_sweep.png\"), dpi=120)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot1: {e}\")\n    plt.close()\n\n# Plot 2: Per-language accuracy at best (largest) mnt\ntry:\n    best_mnt = mnt_grid[-1]\n    r = results_by_value[str(best_mnt)]\n    langs = list(r[\"baseline\"][\"per_lang\"].keys())\n    x = np.arange(len(langs))\n    width = 0.25\n    fig, ax = plt.subplots(figsize=(12, 5))\n    for i, c in enumerate(conds):\n        vals = [r[c][\"per_lang\"][l] for l in langs]\n        ax.bar(x + (i - 1) * width, vals, width, label=c)\n    ax.set_xticks(x)\n    ax.set_xticklabels(langs)\n    ax.set_xlabel(\"Language\")\n    ax.set_ylabel(\"Accuracy\")\n    ax.set_title(\n        f\"MGSM Dataset: Per-Language Accuracy (max_new_tokens={best_mnt})\\nBaseline vs Language Suppression vs Random Control\"\n    )\n    ax.legend()\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"mgsm_per_language_accuracy.png\"), dpi=120)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot2: {e}\")\n    plt.close()\n\n# Plot 3: Per-language delta (suppression - baseline) at best mnt\ntry:\n    best_mnt = mnt_grid[-1]\n    r = results_by_value[str(best_mnt)]\n    langs = list(r[\"baseline\"][\"per_lang\"].keys())\n    delta_supp = [\n        r[\"lang_suppression\"][\"per_lang\"][l] - r[\"baseline\"][\"per_lang\"][l]\n        for l in langs\n    ]\n    delta_rand = [\n        r[\"random_control\"][\"per_lang\"][l] - r[\"baseline\"][\"per_lang\"][l] for l in langs\n    ]\n    x = np.arange(len(langs))\n    width = 0.35\n    fig, ax = plt.subplots(figsize=(12, 5))\n    ax.bar(\n        x - width / 2,\n        delta_supp,\n        width,\n        label=\"lang_suppression - baseline\",\n        color=\"tab:orange\",\n    )\n    ax.bar(\n        x + width / 2,\n        delta_rand,\n        width,\n        label=\"random_control - baseline\",\n        color=\"tab:green\",\n    )\n    ax.axhline(0, color=\"black\", linewidth=0.8)\n    ax.set_xticks(x)\n    ax.set_xticklabels(langs)\n    ax.set_xlabel(\"Language\")\n    ax.set_ylabel(\"Accuracy Delta vs Baseline\")\n    ax.set_title(\n        f\"MGSM Dataset: Accuracy Delta from Baseline (max_new_tokens={best_mnt})\\nEffect of Language Subspace Suppression vs Random Control\"\n    )\n    ax.legend()\n    plt.tight_layout()\n    plt.savefig(\n        os.path.join(working_dir, \"mgsm_accuracy_delta_per_language.png\"), dpi=120\n    )\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot3: {e}\")\n    plt.close()\n\n# Plot 4: Line plot of overall accuracy vs mnt for each condition\ntry:\n    fig, ax = plt.subplots(figsize=(8, 5))\n    for c in conds:\n        vals = [results_by_value[str(m)][c][\"overall\"] for m in mnt_grid]\n        ax.plot(mnt_grid, vals, marker=\"o\", label=c)\n    ax.set_xlabel(\"max_new_tokens\")\n    ax.set_ylabel(\"Overall Accuracy\")\n    ax.set_title(\n        \"MGSM Dataset: Overall Accuracy Trend vs max_new_tokens\\nAcross Three Intervention Conditions\"\n    )\n    ax.legend()\n    ax.grid(True, alpha=0.3)\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"mgsm_accuracy_trend_line.png\"), dpi=120)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot4: {e}\")\n    plt.close()\n\n# Plot 5: Heatmap of per-language accuracy for each condition at best mnt\ntry:\n    best_mnt = mnt_grid[-1]\n    r = results_by_value[str(best_mnt)]\n    langs = list(r[\"baseline\"][\"per_lang\"].keys())\n    matrix = np.array([[r[c][\"per_lang\"][l] for l in langs] for c in conds])\n    fig, ax = plt.subplots(figsize=(12, 4))\n    im = ax.imshow(matrix, aspect=\"auto\", cmap=\"viridis\", vmin=0, vmax=1)\n    ax.set_xticks(np.arange(len(langs)))\n    ax.set_xticklabels(langs)\n    ax.set_yticks(np.arange(len(conds)))\n    ax.set_yticklabels(conds)\n    for i in range(len(conds)):\n        for j in range(len(langs)):\n            ax.text(\n                j,\n                i,\n                f\"{matrix[i,j]:.2f}\",\n                ha=\"center\",\n                va=\"center\",\n                color=\"white\",\n                fontsize=8,\n            )\n    plt.colorbar(im, ax=ax, label=\"Accuracy\")\n    ax.set_title(\n        f\"MGSM Dataset: Per-Language Accuracy Heatmap (max_new_tokens={best_mnt})\\nRows: Conditions, Columns: Languages\"\n    )\n    plt.tight_layout()\n    plt.savefig(os.path.join(working_dir, \"mgsm_per_language_heatmap.png\"), dpi=120)\n    plt.close()\nexcept Exception as e:\n    print(f\"Error creating plot5: {e}\")\n    plt.close()\n\n# Print summary metrics\ntry:\n    print(\"=== Summary of Overall Accuracy ===\")\n    for m in mnt_grid:\n        r = results_by_value[str(m)]\n        print(f\"mnt={m}: \" + \", \".join(f\"{c}={r[c]['overall']:.4f}\" for c in conds))\nexcept Exception as e:\n    print(f\"Error printing summary: {e}\")\n"], "plot_plan": ["I'll create visualizations of the MGSM experiment data, including the max_new_tokens sweep across conditions, per-language accuracy comparisons, and delta plots showing effect of language subspace suppression."], "ablation_name": [null], "hyperparam_name": ["max_new_tokens"], "is_seed_node": [false], "is_seed_agg_node": [false], "parse_metrics_plan": ["Load the experiment_data.npy from the working directory, iterate over the\nmax_new_tokens sweep values, and for each condition (baseline, lang_suppression,\nrandom_control) print the overall multilingual reasoning accuracy. Also identify\nand print the best max_new_tokens per condition."], "parse_metrics_code": ["import os\nimport numpy as np\n\nworking_dir = os.path.join(os.getcwd(), \"working\")\nexp_path = os.path.join(working_dir, \"experiment_data.npy\")\nexperiment_data = np.load(exp_path, allow_pickle=True).item()\n\ndataset_name = \"mgsm\"\nprint(f\"Dataset: {dataset_name}\")\n\nmgsm = experiment_data[\"max_new_tokens\"][\"mgsm\"]\nresults_by_value = mgsm[\"results_by_value\"]\nmnt_values = sorted(results_by_value.keys(), key=lambda x: int(x))\nconditions = [\"baseline\", \"lang_suppression\", \"random_control\"]\n\n# Print per max_new_tokens per condition overall accuracy\nfor mnt in mnt_values:\n    for cond in conditions:\n        acc = results_by_value[mnt][cond][\"overall\"]\n        print(\n            f\"{dataset_name} | max_new_tokens={mnt} | condition={cond} | multilingual reasoning accuracy: {acc:.4f}\"\n        )\n\n# Best (highest accuracy) per condition across max_new_tokens\nprint(\"\\nBest multilingual reasoning accuracy per condition (across max_new_tokens):\")\nfor cond in conditions:\n    best_mnt, best_acc = max(\n        ((mnt, results_by_value[mnt][cond][\"overall\"]) for mnt in mnt_values),\n        key=lambda t: t[1],\n    )\n    print(\n        f\"{dataset_name} | condition={cond} | best max_new_tokens={best_mnt} | best multilingual reasoning accuracy: {best_acc:.4f}\"\n    )\n\n# Per-language accuracy at best max_new_tokens per condition\nprint(\n    \"\\nPer-language multilingual reasoning accuracy at best max_new_tokens per condition:\"\n)\nfor cond in conditions:\n    best_mnt, best_acc = max(\n        ((mnt, results_by_value[mnt][cond][\"overall\"]) for mnt in mnt_values),\n        key=lambda t: t[1],\n    )\n    per_lang = results_by_value[best_mnt][cond][\"per_lang\"]\n    for lang, acc in per_lang.items():\n        print(\n            f\"{dataset_name} | condition={cond} | max_new_tokens={best_mnt} | language={lang} | per-language reasoning accuracy: {acc:.4f}\"\n        )\n\n# Final (last epoch) validation loss per condition per max_new_tokens\nprint(\"\\nFinal validation loss (1 - accuracy) per condition per max_new_tokens:\")\nfor entry in mgsm[\"losses\"][\"val\"]:\n    print(\n        f\"{dataset_name} | max_new_tokens={entry['max_new_tokens']} | \"\n        f\"condition={entry['condition']} | validation loss: {entry['loss']:.4f}\"\n    )\n"], "parse_term_out": ["['Dataset: mgsm', '\\n', 'mgsm | max_new_tokens=256 | condition=baseline |\nmultilingual reasoning accuracy: 0.1818', '\\n', 'mgsm | max_new_tokens=256 |\ncondition=lang_suppression | multilingual reasoning accuracy: 0.1273', '\\n',\n'mgsm | max_new_tokens=256 | condition=random_control | multilingual reasoning\naccuracy: 0.2000', '\\n', 'mgsm | max_new_tokens=512 | condition=baseline |\nmultilingual reasoning accuracy: 0.3455', '\\n', 'mgsm | max_new_tokens=512 |\ncondition=lang_suppression | multilingual reasoning accuracy: 0.3091', '\\n',\n'mgsm | max_new_tokens=512 | condition=random_control | multilingual reasoning\naccuracy: 0.4000', '\\n', 'mgsm | max_new_tokens=1024 | condition=baseline |\nmultilingual reasoning accuracy: 0.5636', '\\n', 'mgsm | max_new_tokens=1024 |\ncondition=lang_suppression | multilingual reasoning accuracy: 0.4182', '\\n',\n'mgsm | max_new_tokens=1024 | condition=random_control | multilingual reasoning\naccuracy: 0.4727', '\\n', '\\nBest multilingual reasoning accuracy per condition\n(across max_new_tokens):', '\\n', 'mgsm | condition=baseline | best\nmax_new_tokens=1024 | best multilingual reasoning accuracy: 0.5636', '\\n', 'mgsm\n| condition=lang_suppression | best max_new_tokens=1024 | best multilingual\nreasoning accuracy: 0.4182', '\\n', 'mgsm | condition=random_control | best\nmax_new_tokens=1024 | best multilingual reasoning accuracy: 0.4727', '\\n',\n'\\nPer-language multilingual reasoning accuracy at best max_new_tokens per\ncondition:', '\\n', 'mgsm | condition=baseline | max_new_tokens=1024 |\nlanguage=en | per-language reasoning accuracy: 0.8000', '\\n', 'mgsm |\ncondition=baseline | max_new_tokens=1024 | language=es | per-language reasoning\naccuracy: 0.6000', '\\n', 'mgsm | condition=baseline | max_new_tokens=1024 |\nlanguage=fr | per-language reasoning accuracy: 0.6000', '\\n', 'mgsm |\ncondition=baseline | max_new_tokens=1024 | language=de | per-language reasoning\naccuracy: 0.8000', '\\n', 'mgsm | condition=baseline | max_new_tokens=1024 |\nlanguage=zh | per-language reasoning accuracy: 0.6000', '\\n', 'mgsm |\ncondition=baseline | max_new_tokens=1024 | language=ja | per-language reasoning\naccuracy: 0.6000', '\\n', 'mgsm | condition=baseline | max_new_tokens=1024 |\nlanguage=ru | per-language reasoning accuracy: 0.6000', '\\n', 'mgsm |\ncondition=baseline | max_new_tokens=1024 | language=th | per-language reasoning\naccuracy: 0.6000', '\\n', 'mgsm | condition=baseline | max_new_tokens=1024 |\nlanguage=te | per-language reasoning accuracy: 0.0000', '\\n', 'mgsm |\ncondition=baseline | max_new_tokens=1024 | language=bn | per-language reasoning\naccuracy: 0.8000', '\\n', 'mgsm | condition=baseline | max_new_tokens=1024 |\nlanguage=sw | per-language reasoning accuracy: 0.2000', '\\n', 'mgsm |\ncondition=lang_suppression | max_new_tokens=1024 | language=en | per-language\nreasoning accuracy: 0.6000', '\\n', 'mgsm | condition=lang_suppression |\nmax_new_tokens=1024 | language=es | per-language reasoning accuracy: 0.6000',\n'\\n', 'mgsm | condition=lang_suppression | max_new_tokens=1024 | language=fr |\nper-language reasoning accuracy: 0.8000', '\\n', 'mgsm |\ncondition=lang_suppression | max_new_tokens=1024 | language=de | per-language\nreasoning accuracy: 0.2000', '\\n', 'mgsm | condition=lang_suppression |\nmax_new_tokens=1024 | language=zh | per-language reasoning accuracy: 0.6000',\n'\\n', 'mgsm | condition=lang_suppression | max_new_tokens=1024 | language=ja |\nper-language reasoning accuracy: 0.6000', '\\n', 'mgsm |\ncondition=lang_suppression | max_new_tokens=1024 | language=ru | per-language\nreasoning accuracy: 0.4000', '\\n', 'mgsm | condition=lang_suppression |\nmax_new_tokens=1024 | language=th | per-language reasoning accuracy: 0.4000',\n'\\n', 'mgsm | condition=lang_suppression | max_new_tokens=1024 | language=te |\nper-language reasoning accuracy: 0.0000', '\\n', 'mgsm |\ncondition=lang_suppression | max_new_tokens=1024 | language=bn | per-language\nreasoning accuracy: 0.4000', '\\n', 'mgsm | condition=lang_suppression |\nmax_new_tokens=1024 | language=sw | per-language reasoning accuracy: 0.0000',\n'\\n', 'mgsm | condition=random_control | max_new_tokens=1024 | language=en |\nper-language reasoning accuracy: 0.8000', '\\n', 'mgsm | condition=random_control\n| max_new_tokens=1024 | language=es | per-language reasoning accuracy: 0.6000',\n'\\n', 'mgsm | condition=random_control | max_new_tokens=1024 | language=fr |\nper-language reasoning accuracy: 0.6000', '\\n', 'mgsm | condition=random_control\n| max_new_tokens=1024 | language=de | per-language reasoning accuracy: 0.6000',\n'\\n', 'mgsm | condition=random_control | max_new_tokens=1024 | language=zh |\nper-language reasoning accuracy: 0.6000', '\\n', 'mgsm | condition=random_control\n| max_new_tokens=1024 | language=ja | per-language reasoning accuracy: 0.4000',\n'\\n', 'mgsm | condition=random_control | max_new_tokens=1024 | language=ru |\nper-language reasoning accuracy: 0.4000', '\\n', 'mgsm | condition=random_control\n| max_new_tokens=1024 | language=th | per-language reasoning accuracy: 0.6000',\n'\\n', 'mgsm | condition=random_control | max_new_tokens=1024 | language=te |\nper-language reasoning accuracy: 0.0000', '\\n', 'mgsm | condition=random_control\n| max_new_tokens=1024 | language=bn | per-language reasoning accuracy: 0.6000',\n'\\n', 'mgsm | condition=random_control | max_new_tokens=1024 | language=sw |\nper-language reasoning accuracy: 0.0000', '\\n', '\\nFinal validation loss (1 -\naccuracy) per condition per max_new_tokens:', '\\n', 'mgsm | max_new_tokens=256 |\ncondition=baseline | validation loss: 0.8182', '\\n', 'mgsm | max_new_tokens=256\n| condition=lang_suppression | validation loss: 0.8727', '\\n', 'mgsm |\nmax_new_tokens=256 | condition=random_control | validation loss: 0.8000', '\\n',\n'mgsm | max_new_tokens=512 | condition=baseline | validation loss: 0.6545',\n'\\n', 'mgsm | max_new_tokens=512 | condition=lang_suppression | validation loss:\n0.6909', '\\n', 'mgsm | max_new_tokens=512 | condition=random_control |\nvalidation loss: 0.6000', '\\n', 'mgsm | max_new_tokens=1024 | condition=baseline\n| validation loss: 0.4364', '\\n', 'mgsm | max_new_tokens=1024 |\ncondition=lang_suppression | validation loss: 0.5818', '\\n', 'mgsm |\nmax_new_tokens=1024 | condition=random_control | validation loss: 0.5273', '\\n',\n'Execution time: a moment seconds (time limit is 10 hours).']"], "parse_exc_type": [null], "parse_exc_info": [null], "parse_exc_stack": [null], "completed_stages": ["Stage_1", "Stage_2", "Stage_3"], "current_stage": "Stage_3"};
+
+// Add log directory path and stage info to the tree data
+treeStructData.log_dir_path = window.location.pathname.split('/').slice(0, -1).join('/');
+treeStructData.current_stage = window.location.pathname.includes('stage_')
+  ? window.location.pathname.split('stage_')[1].split('/')[0]
+  : 'Stage_1';
+
+// Initialize background color
+window.bgColCurrent = bgCol;
+
+// Function to set background color that can be called from the console
+function setBackgroundColor(color) {
+  // Update the global color
+  updateBackgroundColor(color);
+
+  // Refresh the current sketch to apply the new background color
+  if (currentStage) {
+    startSketch(currentStage);
+  }
+}
+
+// Load all stage data and initialize the visualization
+loadAllStageData(treeStructData);
+
+    </script>
+    <title>AI Scientist-v2 Visualization</title>
+    <style>
+      body,
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background-color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      #canvas-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 40vw;
+        height: 100vh;
+        background-color: inherit;
+        padding-top: 40px;
+      }
+      canvas {
+        float: left;
+        height: 100vh;
+        width: 100vw;
+      }
+      #text-container {
+        float: right;
+        height: 100vh;
+        width: 50vw;
+        background-color: #282c34;
+        overflow: auto;
+      }
+      #plan {
+        /* border-left: 2px solid #282c34; */
+        background-color: #282c34;
+        color: #f2f0e7;
+        min-height: 5rem;
+        padding: 1em 0 1em 1em;
+      }
+      #plot_plan {
+        background-color: #282c34;
+        color: #f2f0e7;
+        min-height: 5rem;
+        padding: 1em 0 1em 1em;
+        white-space: pre-wrap;
+      }
+      #exec_time_feedback {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #exec_time {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #exc_info {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #2c1f1f;
+        border-left: 3px solid #ff5555;
+        color: #f2f0e7;
+      }
+      #metrics {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+      }
+      #vlm_feedback {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #1f2c2f;
+        color: #f2f0e7;
+        border-left: 3px solid #55ff55;
+      }
+      #vlm_feedback p {
+        margin: 0.5em 0;
+        white-space: pre-wrap;
+      }
+      .datasets_successfully_tested {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+        border-left: 3px solid #55ff55;
+      }
+      .plots-container {
+        float: right;
+        width: 50vw;
+        padding: 1rem;
+        background-color: #282c34;
+        margin-top: 1rem;
+      }
+
+      .plot-item {
+        flex: 1 1 300px;
+        max-width: 100%;
+        margin-bottom: 1rem;
+        white-space: pre-wrap;
+      }
+
+      .plot-item img {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: block;
+      }
+
+      .metric-group {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .metric-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      .metric-table th,
+      .metric-table td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid #ddd;
+      }
+
+      .metric-table th {
+        background-color: #363b44;
+      }
+
+      /* Styles for tabs */
+      .tabs-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 49vw;
+        background-color: #000000;
+        z-index: 10;
+        display: flex;
+        padding: 0;
+      }
+
+      .tab {
+        cursor: pointer;
+        padding: 10px 15px;
+        background-color: #333;
+        color: #f2f0e7;
+        border: none;
+        outline: none;
+        transition: background-color 0.3s;
+        flex: 1;
+        text-align: center;
+      }
+
+      .tab:hover {
+        background-color: #444;
+      }
+
+      .tab.active {
+        background-color: #4c76af;
+        font-weight: bold;
+      }
+
+      .tab.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #282c34;
+      }
+
+      .tab-content {
+        display: none;
+        padding-top: 40px; /* Space for tabs */
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .stage-info {
+        padding: 10px;
+        background-color: #282c34;
+        color: #f2f0e7;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+      }
+
+      .stage-status {
+        display: inline-block;
+        padding: 3px 6px;
+        border-radius: 3px;
+        margin-left: 8px;
+        font-size: 0.8em;
+      }
+
+      .stage-status.completed {
+        background-color: #4caf50;
+      }
+
+      .stage-status.in-progress {
+        background-color: #2196f3;
+      }
+
+      .stage-status.not-started {
+        background-color: #9e9e9e;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tabs-container" id="stage-tabs">
+      <button class="tab" data-stage="Stage_1" onclick="selectStage('Stage_1')">Stage 1</button>
+      <button class="tab" data-stage="Stage_2" onclick="selectStage('Stage_2')">Stage 2</button>
+      <button class="tab" data-stage="Stage_3" onclick="selectStage('Stage_3')">Stage 3</button>
+      <button class="tab" data-stage="Stage_4" onclick="selectStage('Stage_4')">Stage 4</button>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <pre id="text-container">
+        <div id="stage-info" class="stage-info"></div>
+        <div id="plan"></div>
+        <hr>
+        <div id="exc_info"></div>
+        <hr>
+        <div id="exec_time"></div>
+        <hr>
+        <div id="exec_time_feedback"></div>
+        <hr>
+        <div id="metrics"></div>
+        <hr>
+        <div id="plot_plan"></div>
+        <hr>
+        <div class="plots-container" id="plots"></div>
+        <hr>
+        <div id="vlm_feedback"></div>
+        <hr>
+        <div id="datasets_successfully_tested"></div>
+        <hr>
+        <code id="code" class="language-python"></code>
+        <hr>
+        <code id="plot_code" class="language-python"></code>
+    </pre>
+  </body>
+</html>

@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "When Less Language is More: Language-Reasoning Disentanglement",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "There IS a fitting/selection step: the language-specific subspace is fit via SVD on the mean final-token hidden vectors of the same MGSM examples that are then used for accuracy evaluation. In logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py the subspace is built (lines 296-302: `M = np.stack([lang_means...])`, SVD, `lang_subspace = Vt[:K]`) from the very 5 examples/language later scored in evaluate() (lines 350-393). There is NO held-out probe set vs eval set — identification set == evaluation set (the same 55 examples). The `max_new_tokens` grid (256/512/1024) is also 'selected' on the same data with no held-out split. Test *labels* (answer_number) do not leak into subspace fitting (fitting uses only input hidden states), so this is not classifier label leakage, but the main intervention direction is derived from the exact inputs being evaluated, and there is no disjoint split anywhere in code. This is a genuine, code-confirmed hygiene gap rather than merely asserted.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py",
+      "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_data.npy"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The reasoning-accuracy label is MGSM's numeric answer (`answer_number`), a well-sourced, non-circular ground truth: correctness is exact numeric match `abs(pred-gt) < 1e-3` (best_solution...py line 379), which validly operationalizes math-reasoning correctness. Extraction is heuristic (`extract_answer`, lines 333-347): it prefers an 'Answer: <n>' pattern but falls back to the LAST number in the generation, which for a thinking model that emits many intermediate numbers can misgrade — a noisy but reasonable proxy. More materially, the paper's Claim 2 also requires a language-fidelity label (GlotLID input/output consistency), which task.md lists as 'always used'; NO fidelity/GlotLID label is computed anywhere in the run (grep of the final code finds none), so the fidelity half of the target behavior is unlabeled. The accuracy label itself is valid; the missing fidelity label and noisy regex extraction are documented gaps.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "Model fidelity is exact: config records `model_path: /data/zhenqian/models/ms_cache/models/Qwen--Qwen3-4B-Thinking-2507/snapshots/master` (experiment_data.npy config), matching task.md's Qwen-3-4B-Thinking. Dataset name is correct (MGSM) and all 11 target languages are present (en,es,fr,de,zh,ja,ru,th,te,bn,sw). HOWEVER the data size is drastically shrunk: `examples_per_lang` = 5 for every language (55 items total) vs MGSM's 250 test items/language — a ~2% subset hard-coded as `max_n=5` / `if i >= 5: break` in load_mgsm_lang. This subset is disclosed in the config and flagged by the agent as too small, but it is severe enough to affect the conclusion (per-language accuracy has 0.2 granularity). The required GlotLID identifier is not used at all. Verify-stage models/datasets (XWinograd, M-MMLU, other models) were never reached (run killed after stage 3), which is acceptable as they are optional, but the main-experiment data subsetting is a real resource-fidelity failure.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_data.npy",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "Evidence is very thin. used_n = 5 examples per language, 55 total (config `examples_per_lang`), far below the ~40-item threshold and evaluated on a single model / single dataset / single middle layer (target_layer_idx=18 of 36). The claims about consistency 'across diverse models, languages, and reasoning tasks' (C2), a strength/accuracy correlation and amplification (C3), and an SFT/RL comparison (C4) have NO corresponding experiment at all. The agent is honest about the thinness — stage_progress.json explicitly notes 'Small per-language sample (n=5)... making per-language conclusions unreliable' and recommends increasing n — and it does NOT overclaim (it reports the negative/degradation result rather than a fabricated win). But structurally the run supports only a narrow slice of C2 and leaves C1's decomposition validity, C3, and C4 essentially unexperimented, so evidence is insufficient for most claims.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+      "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_data.npy"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "Generation is deterministic (do_sample=False, greedy), and the intervention/subspace/random-control are each run once — no multiple seeds, no error bars, no confidence intervals, no significance test. A single random-direction control (rand_subspace, seeded RandomState(0)) is the only uncertainty proxy and is itself a single draw. The claimed effects (baseline 0.5636 vs lang_suppression 0.4182 vs random_control 0.4727 at mnt=1024, from experiment_data.npy) are computed on n=55 with 0.2 per-language granularity, well within plausible noise; the agent itself flags 'high variance' and that at 256/512 tokens random_control >= baseline (ordering flips), which is a direct signature of noise-dominated estimates. The presence of a random-direction control is a plus, but no uncertainty is quantified and the small-n differences are treated as partly meaningful, so robustness to randomness is essentially unverified.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "The claim is genuinely causal (paper: 'we perform a causal intervention by ablating language-specific representations'). The run performs a REAL intervention, not correlational evidence dressed up: suppression_hook (best_solution...py lines 316-327) projects the language-specific subspace out of the layer-18 hidden state during generation (`h - proj`), and it is paired with a proper random-direction control (rand_subspace built via QR of a random matrix, lines 304-307) — a strong control. Rigor gaps: only a single layer is intervened (no layer sweep / no 'upper layers left intact' analysis), the ablation strength lambda is fixed at full projection with NO coefficient sweep (paper varies ablation degree), and there is no amplification arm to test the reverse direction. So a genuine controlled intervention exists but a rigor element (coefficient sweep, layer coverage) is missing.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Provenance is strong. Every headline number traces to on-disk products and agrees across them: experiment_data.npy (results_by_value) yields baseline=0.5636 / lang_suppression=0.4182 / random_control=0.4727 at mnt=1024 (and 0.3455/0.3091/0.4000 at 512; 0.1818/0.1273/0.2000 at 256), and these exact values reappear verbatim in the journal.json metric block and in notes/stage_progress.json best_metric, plus per-language values. Raw artifacts (lang_subspace.npy, rand_subspace.npy, lang_means.npy, experiment_data.npy, sweep PNGs) are present in the experiment_results directory. report.md does not fabricate — it honestly states the pipeline was killed mid-run and results are 'not assessable via automation', pointing to journals/exp_results rather than inventing conclusions. No sourceless or back-filled numbers were found.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_data.npy",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/journal.json",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "The pipeline's records are self-consistent. The metric values in experiment_data.npy, journal.json (node c202c499 metric list), and stage_progress.json best_metric all agree exactly (e.g. baseline mnt=1024 = 0.5636, lang_suppression = 0.4182 everywhere). The stage-1/stage-2 mgsm experiment_data.npy files report the same conditions (0.1818/0.1273/0.2000) with the same config (5 examples/lang, layer 18, K=3). report.md consistently marks the run 'incomplete (stages [1,2,3], no finalization)' and per-claim verdicts as 'see overall / not assessable', which matches the absence of finalization markers — no artifact claims PASS while another flags FAIL. The only looseness is that report.md is largely a placeholder ('No draft_summary.json — inspect journals'), but it does not contradict any number. Records are self-consistent.",
+    "score": 5,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/experiment_results/experiment_3605c037f57642f7acea4ae49f5d5de1_proc_3625922/experiment_data.npy",
+      "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "For a given LLM, hidden representations of multilingual reasoning inputs decompose into a language-specific subspace and an approximately orthogonal language-agnostic subspace, and the language-specific subspace can be identified from a small multilingual probe set.",
+        "method": {
+          "justification": "9a: The method matches the paper's approach well: per-language mean final-token vectors are stacked into M, centered, and decomposed by SVD, taking the top-K (K=3) right-singular directions as the language-specific subspace (best_solution...py lines 296-302). This is the paper's SVD-based mean-embedding-matrix decomposition, and a random-direction subspace is built as a control. Minor deviation: the paper's explicit language-agnostic (rank-1) vs language-specific split objective is reduced to 'top-K SVD directions of the centered means', and orthogonality to a reasoning/agnostic subspace is not explicitly parameterized. Sound method family for the claim.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: The 'probe set' is only 5 examples per language and a single middle layer (18/36). Crucially, the experiment does NOT actually test C1's substantive claims: there is no reported orthogonality metric between the language-specific and language-agnostic subspaces, no PCA/representation-space visualization of language clustering before/after ablation (which the paper uses as its C1 evidence), and no quantification that the subspace is language-specific beyond its use in downstream suppression. The design extracts a subspace but does not evaluate whether the decomposition is orthogonal or genuinely language-specific.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py",
+            "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "9c: There is no result analysis addressing C1's decomposition/orthogonality claim. lang_subspace.npy and lang_means.npy are saved, but no metric or figure is reported showing the two subspaces are approximately orthogonal or that non-English representations converge toward English post-ablation (the paper's qualitative C1 finding). The only indirect signal is that the fitted subspace behaves differently from a random one downstream, but that is not analyzed as C1 evidence. C1 is effectively neither confirmed nor refuted — left unassessed.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/lang_subspace.npy",
+            "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "Suppressing the language-specific subspace from internal representations at inference time consistently improves multilingual reasoning accuracy across diverse models, languages, and reasoning tasks, while output language fidelity remains acceptable when upper layers are left intact.",
+        "method": {
+          "justification": "9a: The suppression method matches the paper's Eq. 3 projection-based ablation applied at inference via a forward hook (best_solution...py suppression_hook, lines 316-327), with a random-direction control — an appropriate mechanistic method for this claim. However, the claim's 'when upper layers are left intact' clause is a layer-wise design that is not implemented (only one middle layer is touched), and the fidelity half of the claim requires GlotLID, which is absent. Method is right in kind but incomplete relative to what C2 asserts.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: The design cannot test C2 as stated. 'Consistently across diverse models, languages, and reasoning tasks' is probed with ONE model (Qwen3-4B-Thinking), ONE dataset (MGSM), n=5/language, and a single layer at a single (full) ablation strength with no lambda sweep and no layer sweep. Output language fidelity (GlotLID) is never measured, so the 'fidelity remains acceptable / upper layers intact' clause is untested. With no coefficient/layer exploration, a true negative cannot be distinguished from under-exploration — honest but severely under-powered.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py",
+            "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "9c: The result is the OPPOSITE of the paper: suppression lowered overall MGSM accuracy (0.4182 vs baseline 0.5636 at mnt=1024) and was even below the random-direction control (0.4727) — i.e. no improvement, a degradation. Critically, this is reported HONESTLY, not disguised as agreement: stage_progress.json states baseline > random_control > lang_suppression and calls the suppression effect a '~14 point drop from baseline', and explicitly caveats n=5 noise, floor effects, and budget confounds. So there is no goalpost-tuning or fabrication. But because the negative comes from a heavily under-powered design (single layer, lambda=1, n=5, no sweep), it is not a reliable NOT-REPRODUCED of the paper's carefully layer/coefficient-tuned positive result; the disagreement is partly an artifact of under-exploration, which the agent does acknowledge.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+            "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_data.npy"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "The strength of language-specific activation is negatively correlated with reasoning accuracy: amplifying it degrades reasoning, removing it improves reasoning.",
+        "method": {
+          "justification": "9a: C3 has two arms — a correlation between language-specific activation strength and accuracy, and a symmetric amplify-vs-remove intervention. The run implements only removal (full projection) plus a random control; there is NO amplification arm (no positive-lambda / additive steering) and NO computation of language-specific activation strength correlated against accuracy. The method covers at most half of C3's structure and omits the amplification and the correlation analysis entirely.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment tests C3. There is no coefficient sweep to vary activation strength (a single removal magnitude is used), no amplification condition, and no per-example correlation of language-specific projection magnitude vs correctness. The three conditions run (baseline / lang_suppression / random_control) do not span the strength axis C3 is about. The design is fundamentally insufficient to evaluate the correlation or the amplify-degrades direction.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py",
+            "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "9c: The only relevant datum — removal — went the WRONG way for C3 ('removing improves' is contradicted: removal dropped accuracy to 0.4182 from 0.5636). The 'amplifying degrades' and the negative-correlation claims are never produced. The agent does not fabricate agreement (it honestly reports the drop), but C3's central mechanism is left untested and the one measured direction contradicts it, so the claim's conclusion is left dangling/unsupported.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/notes/stage_progress.json",
+            "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_data.npy"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "This training-free intervention matches or exceeds multilingual post-training (supervised fine-tuning, reinforcement learning) at a small fraction of the compute.",
+        "method": {
+          "justification": "9a: C4 requires an SFT and/or RL post-training baseline to compare the training-free intervention against, plus a compute accounting. The run implements NO fine-tuning or RL of any kind and computes no compute-cost comparison (grep of the final code and results confirms no SFT/RL training loop). Only the inference-time intervention exists; there is no comparison method for C4 at all.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_3_creative_research_1_first_attempt/best_solution_c202c49976a0412abdbfdf3f9d24dab0.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment addresses C4 — there is no SFT/RL run, no post-training baseline accuracy, and no compute measurement to substantiate 'small fraction of the compute'. The claim is entirely unexperimented (the run was also killed before reaching any verify-stage comparison). Complete absence of the required comparison.",
+          "score": 1,
+          "evidence_files": [
+            "report.md",
+            "logs/0-run/experiment_results/experiment_c202c49976a0412abdbfdf3f9d24dab0_proc_1445608/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "9c: No result exists for C4. report.md's per-claim table lists claim 4 as 'See overall verdict — not assessable', and no artifact reports any SFT/RL vs intervention comparison. There is no fabrication (nothing is claimed to be matched/exceeded), but the claim's conclusion is entirely undelivered and left dangling.",
+          "score": 1,
+          "evidence_files": [
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

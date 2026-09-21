@@ -1,0 +1,102 @@
+You are a mechanistic-experiment rigor auditor. For each check block below, read the listed information and return ONE verdict (PASS | WARN | FAIL) judged strictly against the block's criteria.
+
+Audit scope: Check A (Steering Coefficient Sweep) for claims C1, C2, C3a, C3b, C3c.
+
+Context:
+- Project: Orthogonal Linear Subspaces of Gold Calibration and Verbalized Confidence
+- Model: Llama-3.1-8B-Instruct on TriviaQA
+- Claims: C1 (correctness probe), C2 (verbalized-confidence probe), C3a (near-orthogonality), C3b (causal separability via cross-direction steering), C3c (dissociation-when-disagree)
+- Mechanism family: Probing/Residual Stream States + Representation and Parameter Analysis/Steering Vectors
+
+=== TRIGGER DETECTION ===
+- C1 uses probing only (no additive steering). No steering trigger for C1.
+- C2 uses probing only (no additive steering). No steering trigger for C2.
+- C3a uses cosine of probe weight vectors only (pure analytical). No steering trigger for C3a.
+- C3b explicitly uses activation steering: SteeringHook adds alpha * sigma_L* * v at last-input-token residual. Check A TRIGGERED for C3b.
+- C3c uses accuracy analysis on test set. No steering trigger for C3c.
+
+Therefore: Check A only applies to C3b. For C1, C2, C3a, C3c: overall_verdict = n/a (no mechanism intervention).
+
+=== C3B CHECK A: STEERING COEFFICIENT SWEEP ===
+
+Audit Question 1: Was a sweep performed (multiple alpha tried), not a single hardcoded value?
+ANSWER: Yes. Alpha grid: [-1.0, 0.0, 1.0]. Three values tried.
+
+Audit Question 2: Did the sweep span >= 3 orders of magnitude AND include alpha=0 baseline?
+ANSWER: The grid spans [-1.0, 0.0, 1.0] -- that is only 2 distinct magnitudes (0 and 1.0). NOT 3 orders of magnitude. The range is [0.1*sigma, ..., 10*sigma] which would be needed for 2 orders of magnitude, but this grid only goes from alpha=0 to alpha=1 (one value). FAIL on this sub-criterion.
+
+Audit Question 3: Was alpha expressed in sigma_proj units (k * sigma_proj)?
+ANSWER: Yes. sigma_L* = std of elementwise residual activations at layer L* on training set (sigma_L* = 0.585). alpha_sigma = alpha * sigma_L*. This IS sigma-scaled. PASS on this sub-criterion.
+
+Audit Question 4: Were BOTH a target metric AND an independent capability/coherence metric logged at every sweep point?
+ANSWER: Yes. Target metric: internal readout delta (probe_c and probe_v projections). Capability/coherence metric: mean token perplexity computed at each alpha/direction condition. Perplexity explicitly logged in steering_results.json per condition. PASS on this sub-criterion.
+
+Audit Question 5: Was a usable plateau identified -- target clearly above baseline noise AND capability within tolerance?
+ANSWER: The alpha grid has only 3 values: -1.0, 0.0, +1.0. With this sparse grid, it is impossible to identify a "plateau" in the traditional sense -- one needs at least 5+ values to observe a plateau range between behavior-expression onset and capability-collapse. The capability metric (perplexity) shows no blow-up. However, the alpha values are very small (|alpha_sigma| = 1 * 0.585 = 0.585), and the actual Δ in probe readout is tiny (0.008--0.034 on probe_v sigma_probe=0.362). The target effect is within noise of the random control in most conditions -- the test passes via absolute mode because Δ << 0.5*sigma_probe, NOT because there is a clear steering effect. In other words, this is a "null-steering" result passing via the absolute criterion (the condition passes because the effect is SMALL, not because we found a clear behavior-expression plateau). No collapse range identifiable. WARN on this sub-criterion.
+
+Audit Question 6: Was the locked alpha placed in the MIDDLE of the plateau?
+ANSWER: Alpha grid is [-1, 0, 1] -- only 3 values. No plateau was identified. This sub-criterion is N/A given the sparse grid. WARN (cannot assess).
+
+Audit Question 7: Was a random-direction control run at the locked alpha with n_random >= 30?
+ANSWER: One random unit vector was drawn per run (n_random = 1). This is far below the recommended n_random >= 30. The WARN criterion explicitly states: "No random-direction control at the locked alpha" -> WARN. Having exactly 1 is better than 0, but it does not meet the n >= 30 standard. WARN on this sub-criterion.
+
+Audit Question 8: If asymmetric protocol, sign pattern preserved?
+ANSWER: Not applicable (symmetric cross-direction protocol; both directions tested at both +alpha and -alpha). N/A.
+
+=== C3B STEERING INTERPRETATION ===
+Important context: The C3b claim is actually a "null-steering" claim -- it claims that steering along v_c does NOT preferentially move v_v readout (and vice versa), because |cos(v_c, v_v)| = 0.015, which means the cross-direction projection is geometrically near-zero. The absolute-effect criterion passes BECAUSE the effect is tiny, not because we observed a large steering effect. The random control comparison is secondary here since the geometry guarantees the null result. The mechanism is used correctly: steering is deployed to test causal separability, and the result is a confirmed null. The methodological weakness is: (1) only 3 alpha values tested, (2) only 1 random vector, (3) no plateau analysis.
+
+=== FAIL CRITERIA (Check A) ===
+- Single hardcoded alpha copied from another paper, no sweep at all: NO (3 values were tested)
+- Sweep done but NO capability metric logged: NO (perplexity logged)
+- Alpha chosen where capability has crashed (> 2x baseline): NO (perplexity stable)
+- Alpha chosen where target effect is within baseline-noise floor: PARTIAL -- the result IS within noise, but this is the research finding (null result), not a failure of alpha choice
+- Asymmetric protocol flattened into uniform-push: NO (not asymmetric)
+
+=== WARN CRITERIA (Check A) ===
+- Sweep spans < 3 orders of magnitude OR < 5 grid points: YES -- only 3 grid points, spanning 1 order of magnitude. WARN.
+- Alpha in raw norm rather than sigma_proj units: NO (sigma-scaled).
+- Plateau identified but alpha at edge: N/A (no plateau identifiable with 3 points)
+- No random-direction control: PARTIAL -- 1 random vector used (not n >= 30). WARN.
+
+=== VERDICT FOR C3B ===
+Based on FAIL and WARN criteria strictly applied:
+- No FAIL criteria triggered.
+- Two WARN criteria triggered: (a) sparse alpha grid (3 points, < 3 orders of magnitude), (b) single random-direction control (n=1 << 30).
+
+Overall verdict for C3b mechanism audit: WARN
+
+=== STRUCTURED FIELDS FOR C3B CHECK A ===
+- status: warn
+- intervention_type: steering
+- sweep_grid: [-1.0, 0.0, 1.0] (in sigma_L* units)
+- sigma_proj_scaling: true
+- capability_metric: mean_token_perplexity (per condition)
+- plateau_range: null (not identifiable with 3 grid points)
+- locked_alpha: 1.0 (in sigma_L* units)
+- alpha_position: n/a (no plateau to position within)
+- random_baseline: {run: true, n_random: 1, passed: true (null consistent with random)}
+- sign_pattern: n/a (symmetric protocol)
+- output_case_spotcheck: {cases_available: true (gens_sample logged), verdict: metric_text_consistent, note: perplexity stable, text coherent at alpha=+-1}
+
+=== SUMMARY FOR ALL CLAIMS ===
+
+For mechanism audit (Check A only):
+- C1: n/a (no steering mechanism used; claim is about probing accessibility only)
+- C2: n/a (no steering mechanism used; claim is about probing accessibility only)
+- C3a: n/a (claim is purely geometric/analytical -- cosine of probe weight vectors; no intervention)
+- C3b: WARN (sparse alpha grid, single random control)
+- C3c: n/a (claim is about accuracy analysis; no mechanism intervention)
+
+Per-claim overall_verdict (mechanism audit):
+- C1: n/a
+- C2: n/a
+- C3a: n/a
+- C3b: WARN
+- C3c: n/a
+
+Please confirm you agree with this structured analysis, or provide any corrections.
+Return:
+- For each claim: overall_verdict (n/a or PASS|WARN|FAIL)
+- For C3b specifically: the Check A structured fields
+- A brief note on whether any FAIL-level criterion should have fired that I missed.

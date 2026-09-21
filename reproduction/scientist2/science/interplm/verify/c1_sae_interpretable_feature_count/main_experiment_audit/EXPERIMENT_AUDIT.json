@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-15",
+  "auditor": "llm-chat (gpt-5.4 via dmxapi.cn)",
+  "claim_id": "c1",
+  "linked_milestones": ["M1"],
+  "overall_verdict": "warn",
+  "integrity_status": "warn",
+  "checks": {
+    "gt_provenance": {
+      "status": "warn",
+      "details": "Data source is real Swiss-Prot sequences (external GT). The interpretability gate uses an LLM-consistency self-supervised proxy (no external interpretability GT exists for SAE features). Dual-type evaluation by design; proxy is documented."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "No self-normalization. Counts and ratios are raw integers and ratios."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All cited numbers match result files: est_sae=1480 matches runs/m1/layer9.json (1480.05), ratio=19.3x matches 19.27. All 6 layer files exist."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "Pipeline executed end-to-end; 6 result files present, all status=done in tracker, gate_features_sample populated."
+    },
+    "scope": {
+      "status": "warn",
+      "details": "1500/10k sequences (~15%), auto-interp estimated from 100-feature sample. UniRef windows unavailable. Claim uses qualified 'up to ~2,548'. All subsample sizes transparently disclosed. Ratio criterion MET; absolute count short by ~40%."
+    },
+    "eval_type": "self_supervised_proxy (interpretability gate) + real_gt (Swiss-Prot data source)"
+  }
+}

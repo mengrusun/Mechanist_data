@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The procedure is concrete and directionally predicts that backdoored models will show “heavier-tailed dispersion distributions” and that triggered inputs will be outliers, measured through KS statistics, AUROC, and “TPR@1%FPR”; failure to separate backdoored from clean models or triggered from benign inputs would therefore refute the empirical claim, although no model-level success threshold is specified. The plan aligns activation extraction, paraphrase clouds, matched clean controls, leave-one-trigger-out evaluation, and adaptive attacks with the safety question, but the asserted necessity is too strong: a conditional gate need not disturb “benign prompts” unless a mutation crosses its trigger, and deliberately arranging for triggers to be “randomly injected into the mutation set” does not fully test trigger-agnostic discovery. There is also tension between calling the method “reference-free” and proposing comparison against “a clean baseline,” “matched clean controls,” and thresholds calibrated “per model family,” leaving the intended deployment requirement ambiguous.",
+      "score": 7
+    },
+    "feasibility": {
+      "justification": "The named Llama-3-8B and Qwen2.5-7B models exist, while paraphrase generation, residual-stream hooks, Mahalanobis/kNN scoring, KS tests, fine-tuning, and leave-one-condition-out evaluation all have standard tooling support; the plan does not critically depend on the less clearly specified “BrieFool-style” label. The hardest step is to “train a backdoor with an explicit regularizer minimizing activation discontinuity,” which is implementable as a custom activation-matching loss but is underspecified as to layers, paired examples, and exact objective rather than being an impossible magic step. Resources receive useful quantification—two named 7B–8B models, “5 backdoor types,” “~500 benign prompts,” and “K=20 paraphrases”—although the number of independently trained model instances or random seeds is unstated, weakening the model-level classifier design. The refuting branch is runnable because the experiment includes “matched clean-fine-tuned controls,” benign versus triggered inputs, perplexity and trigger-aware baselines, and an adaptive attacker, so null separation and elevated false positives can genuinely emerge.",
+      "score": 7
+    }
+  }
+}

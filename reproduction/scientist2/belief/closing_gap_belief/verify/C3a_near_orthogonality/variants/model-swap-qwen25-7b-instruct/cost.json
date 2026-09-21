@@ -1,0 +1,12 @@
+{
+  "run_id": "C3a_model-swap-qwen25-7b-instruct",
+  "variant_tag": "model-swap-qwen25-7b-instruct",
+  "claim_id": "C3a",
+  "purpose": "Model-swap stress test of C3a (near-orthogonality) using Qwen2.5-7B-Instruct",
+  "status": "done",
+  "gpu_ids": ["1"],
+  "cuda_visible_devices": "1,2,3,5,6",
+  "wall_clock_minutes_approx": 25,
+  "gpu_hours": 0.17,
+  "notes": "GPU 1 used for vllm generation (turn1+turn2, ~4 min) and HF hidden-state extraction (turn1+turn2, ~6 min total). Step4_probes is CPU-only (OpenBLAS lbfgs, 128 threads, ~24 min wall-clock). Total GPU use: ~10 min on GPU 1. Probe fitting used no GPU — pure CPU. CUDA_VISIBLE_DEVICES=1,2,3,5,6 was set; vllm with tensor_parallel_size=1 used only the first visible GPU (physical GPU 1). All gpu_ids are subset of {1,2,3,5,6} as required by HARD CONSTRAINT."
+}

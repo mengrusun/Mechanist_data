@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The plan directly operationalizes the hypotheses: it defines drift as “the projection p_t of the final-prompt-token residual stream,” velocity as “p_t - p_{t-1},” and the intervention as “v_t = beta*(p_1 - p_t)*dhat.” The comparisons and metrics align with the goals, including held-out-attacker forecasting, benign topic-drift negatives, attack success, utility, and harmfulness-specific random/orthogonal controls. Falsifiability is unusually strong: H1 requires “mean lead-time >=2 turns with held-out-attacker AUROC >=0.85” and is unsupported at “AUROC <0.70 or lead-time <0.5 turn,” while H2 has similarly explicit ASR and utility thresholds. A minor gap is that the H1 predictor combines “value, velocity, curvature,” so its headline attribution specifically to drift velocity would require a feature ablation beyond the stated geometry controls.",
+      "score": 9
+    },
+    "feasibility": {
+      "justification": "The hardest step is constructing “a drift-aware variant of Crescendo that penalizes large per-turn projection changes”; this requires custom attack logic, but the objective is defined well enough to implement with ordinary iterative prompting and activation measurement rather than relying on a magic step. The central artifacts named—including Llama-3.1-8B-Instruct, Qwen2.5-7B-Instruct, Gemma-2-9B-IT, HarmBench, StrongREJECT, MT-Bench, AlpacaEval, MMLU, XSTest, and residual-stream activation editing—exist and are supported by standard model-hooking, probing, classification, and evaluation tooling. Resources are concretely quantified through “100 harmful goals,” “80 benign multi-turn conversations,” “805” AlpacaEval examples, a “2,000-question fixed subset,” “200” XSTest-safe examples, three models, three attacks, and “5 seeds,” making the execution scale readily specifiable. The refuting branch is runnable because the design includes no-defense and defense baselines, benign negatives, held-out attackers and models, plus “a matched-L2 random direction and an orthogonal ... direction of equal norm”; these controls can yield the expressly contemplated outcomes that forecasting fails, utility degrades, or controls match the real direction.",
+      "score": 9
+    }
+  }
+}

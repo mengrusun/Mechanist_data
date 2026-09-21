@@ -1,0 +1,23 @@
+{
+  "variant_tag": "model_swap_deepseek_r1_llama8b",
+  "dimension": "model",
+  "claim_id": "C3",
+  "claim_statement": "The steering coefficient α in h ← h + α·Π_lang·h produces MGSM accuracy monotone-decreasing in α over the signed sweep α ∈ [−1.5, +1.5] with A(−1) > A(0) > A(+1) (signed dose-response, negative correlation).",
+  "main_experiment_verdict": "not-supported",
+  "variant_metric": "peak at α=-0.25 (0.4636); A(-1)=0.3909, A(0)=0.4473, A(+1)=0.000; pattern: non-monotone (U-shaped, collapses at α≥+0.5)",
+  "variant_random_control_metric": "random subspace at same rank/site: A(-1.5)=0.480, A(-1)=0.475, A(-0.5)=0.467, A(-0.25)=0.473, A(0)=0.447, A(+0.25)=0.456, A(+0.5)=0.011, A(+1)=0.004, A(+1.5)=0.000; essentially flat across the non-collapse window (α ∈ [-1.5, +0.25]), confirming V_lang specificity",
+  "main_experiment_metric": "A(−1)=0.051, A(0)=0.744, A(+1)=0.000 — monotone A(-1)>A(0)>A(+1) refuted",
+  "delta": "similar non-monotone pattern; negative alpha less disruptive in variant than in main experiment (variant baseline α=0: 0.447 vs main 0.744; variant peak α=-0.25: 0.464 > baseline). Random control preserves baseline over the non-collapse window, giving Δ_specificity = -0.08 to -0.12 at |α|>=1 — direction-specific V_lang effect.",
+  "claim_supported": "fail",
+  "consistent_with_main_experiment": "pass",
+  "confidence": "high",
+  "reasoning": "The variant does not satisfy C3's required strict monotone decrease over the full signed sweep. Non-monotone U-shape (peak at α=-0.25). The diagnostic inequality A(-1) > A(0) fails: 0.3909 < 0.4473. This agrees with the main experiment's NOT-SUPPORTED verdict (main: A(-1)=0.051 < A(0)=0.744). consistent_with_main_experiment=pass because main_experiment_verdict='not-supported' and claim_supported='fail' → flip(fail)=pass.",
+  "integrity_status": "warn",
+  "integrity_breakdown": {
+    "experiment": "warn",
+    "mechanism": "warn"
+  },
+  "integrity_note": "Combined = max_severity(experiment=warn, mechanism=warn) = warn. Variant is ELIGIBLE for robustness (contributes to both numerator and denominator). Re-audit (2026-07-14 14:06) upgraded mechanism from FAIL → WARN after the random-subspace α-sweep completed (9 α values on disk in results/random_alpha*_summary.json). σ_proj rescaling and collapse-range labeling remain as future-work WARN items, not FAIL criteria.",
+  "supersedes": "2026-07-14 12:22 verdict (integrity=fail, ineligible)",
+  "re_audit_date": "2026-07-14T14:06"
+}

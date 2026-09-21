@@ -1,0 +1,53 @@
+{
+  "claim_id": "C2",
+  "audit_type": "experiment",
+  "phase": 2,
+  "date": "2026-07-15",
+  "milestone": "M2",
+  "overall_severity": "FAIL",
+  "overall_verdict": "FAIL",
+  "admission_decision": "REJECTED — claim proceeds as INCONCLUSIVE",
+  "findings": [
+    {
+      "id": "E-C2-01",
+      "category": "data_provenance",
+      "severity": "PASS",
+      "description": "Same PISCES cull list as M1; data source compliant with task.md HARD"
+    },
+    {
+      "id": "E-C2-02",
+      "category": "primary_effect",
+      "severity": "FAIL",
+      "description": "seq2pair donor-patch Δ=-0.017 (p=0.083, N=176): fails both Δ≥0.2pp and p<0.05 predicates. Effect is 20x smaller than M1 s-patch (Δ=-0.862)."
+    },
+    {
+      "id": "E-C2-03",
+      "category": "hook_bug",
+      "severity": "FAIL",
+      "description": "pair_to_sequence hook assumes output shape [B,L,S] but actual shape is [B,num_heads,L,L,32]. Shape mismatch exception aborts pair2seq/zero-ablation/matched-ctrl for 531/534 attempts. Only 3 records each written."
+    },
+    {
+      "id": "E-C2-04",
+      "category": "specificity_controls",
+      "severity": "FAIL",
+      "description": "pair2seq (N=3), zero-ablation (N=3), matched-ctrl (N=3) — all insufficient for any statistical inference. Paired McNemar p<0.05 test impossible."
+    },
+    {
+      "id": "E-C2-05",
+      "category": "evidence_completeness",
+      "severity": "FAIL",
+      "description": "Evidence status: evidence-incomplete (implementation-broken, not statistically underpowered). Three specificity controls are absent — cannot distinguish seq2pair-specific vs non-specific pathway perturbation."
+    }
+  ],
+  "predicate_checks": {
+    "s2p_effect_>=0.2pp": {"result": false, "value": -0.017, "threshold": 0.2},
+    "s2p_p_<0.05": {"result": false, "value": 0.083, "threshold": 0.05},
+    "p2s_effect_<50pct_of_s2p": {"result": null, "value": null, "note": "data absent"},
+    "matched_ctrl_<50pct": {"result": null, "value": null, "note": "data absent"},
+    "s2p_vs_p2s_p_<0.05": {"result": false, "value": null, "note": "no paired data"}
+  },
+  "n_pass": 1,
+  "n_warn": 0,
+  "n_fail": 4,
+  "fix_recommendation": "Fix pair_to_sequence hook in scripts/m2_worker.py to handle [B,num_heads,L,L,32] shape; re-run M2 (~1 GPU-h) in iteration round 1"
+}

@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The hypothesis is tightly aligned with the experiments: the proposal separately tests whether the gap \"exceeds a pre-specified shared-competence null,\" whether rule patching produces a limited execution shift, and whether steering yields \"net recovery >= 25%\" while preserving recitation and intermediate computation. Its directional predictions, machine-checkable labels, probe thresholds, and explicit negative conditions—such as \"interaction CI includes 0\" refuting H1 and \"no better than logit-nudge/random, or recitation changes, or no intermediate-probe flip\" refuting H3—make the main claims highly decidable. A remaining ambiguity is that Experiment 5 patches a \"recited-rule representation from a both-correct run into a failing execution run\" even though both runs may encode the same correctly recited rule, and the relationship between its <10, 10–40, and >40-point regimes and outright refutation of H2 is less cleanly specified than H1 and H3.",
+      "score": 9
+    },
+    "feasibility": {
+      "justification": "The hardest step is identifying and aligning \"the set of attention/MLP components whose activation patching flips the enacted output\" and then injecting a recitation-pass direction at appropriate execution-pass \"layers/positions\"; activation patching and residual steering are standard, well-supported operations, but the proposal does not fully specify the component-search or cross-pass alignment procedure, leaving some custom methodological work. The named artifacts—\"GPT-J-6B, Llama-3-8B, Qwen2.5-7B,\" Pythia models, logistic probes, activation patching, and reference interpreters—exist and are supported by standard transformer and interpretability tooling. Resources and scale are unusually concrete, including \"400 items per family, 1,600 total,\" three prompt seeds, five held-out interpreter inputs, a 100-item calibration sample, \"1,000 permutations,\" five-fold probing, three probe seeds, and steering \"rank <= 4.\" The refuting branches are runnable because the design includes label-shuffle, random-position, reverse-ablation, random-direction, logit-nudge, both-correct, unrelated-procedure, paraphrase, and cross-model controls, although the underdefined execution-circuit localization prevents a fully turnkey score.",
+      "score": 8
+    }
+  }
+}

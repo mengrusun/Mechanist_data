@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The procedure aligns with the hypothesis: it proposes to \"train SAEs on residual-stream activations at chain-of-thought token positions,\" interpret features, causally \"ablate/clamp candidate features,\" and then test whether feature-guided pruning preserves accuracy. It provides directional predictions—most concretely, \"suppressing 'verification-onset' features reduces re-checking\"—and failures such as no targeted behavioral change or an inferior accuracy–compression tradeoff are conceivable, but no numeric decision thresholds are given. Important details remain ambiguous, including how \"verification count,\" \"re-statements,\" feature interpretability, and \"prunable tokens\" are operationalized, while \"logic\" is not a named dataset and universality via \"activation correlation\" is underspecified across different models; thus an expert would need several clarifications before implementation.",
+      "score": 6
+    },
+    "feasibility": {
+      "justification": "The named dependencies—\"R1-Distill-7B,\" GSM8K, MATH, SAEs, residual-stream interventions, attention attribution, and perplexity-based pruning—exist or are supported by standard interpretability and machine-learning tooling, although the unspecified \"logic\" dataset is not yet a concrete artifact. The hardest step is \"Identify redundancy-marking features; use them to select prunable tokens\": feature extraction and ablation are standard operations, but converting SAE firings into span-level pruning decisions is custom and underdefined rather than a fully specified standard operation. Resources receive partial credit because the plan names a 7B model, datasets, and SAE width/sparsity sweeps, but gives no sample counts, SAE dimensions, layer choices, or number of models; attention/perplexity baselines provide some negative-result controls, though random-token, matched-frequency-feature, sham-ablation, and non-target-behavior controls are absent.",
+      "score": 6
+    }
+  }
+}

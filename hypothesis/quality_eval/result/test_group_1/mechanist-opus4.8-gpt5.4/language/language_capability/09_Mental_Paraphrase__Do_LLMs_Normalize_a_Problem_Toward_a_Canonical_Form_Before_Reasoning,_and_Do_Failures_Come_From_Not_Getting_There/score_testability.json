@@ -1,0 +1,12 @@
+{
+  "dimension_3_testability": {
+    "clarity": {
+      "justification": "The proposal gives a clear directional mechanism and test sequence: it predicts that representations of paraphrases \"converge toward a common form before reasoning,\" that correctly solved phrasings have a higher \"Convergence Score,\" and that patching the canonical representation \"recovers accuracy by >= 8 points.\" The varied conditions, measurements, thresholds, and negative outcomes are unusually explicit, including \"flat dispersion across layers or no correctness link\" for H1 and \"no selective recovery\" for the causal test, so the claim is directly falsifiable. Some logical ambiguity remains because H1 treats both representational convergence and its correctness association as one claim, and because \"canonical\" is initially defined as a \"frequent/terse-formal centroid,\" which risks making the target partly a chosen lexical reference rather than an independently established latent form; the proposal's multiple operationalizations and held-out layer selection mitigate but do not eliminate that issue.",
+      "score": 8
+    },
+    "feasibility": {
+      "justification": "The hardest step is extracting and intervening on the \"pre-reasoning representation\" and patching it \"at the convergence layer\"; activation capture, layer scans, token-position sweeps, and residual-state patching are standard operations supported by PyTorch/model-hook and mechanistic-interpretability tooling, although the proposed \"consensus latent\" and latent-factor variants require custom implementation. The dependencies are runnable and established: the named Qwen2.5, Llama-3.1, Mistral-7B-v0.3, and Gemma-2-9B model families and the GSM8K, MATH, 2WikiMultiHopQA, and MedQA datasets are standard released artifacts, while probes, mixed-effects models, bootstrap CIs, paraphrase generation, and causal patching can be built with mature libraries. The plan is resource-concrete, specifying \"five frozen open-weight models,\" \"700 clusters / roughly 5,600-8,400 phrasings,\" \"300 clinical case clusters,\" 95% CIs with \"1000 item-level resamples,\" and explicit patching controls; importantly, the same-problem, cross-problem, random, and no-patch conditions make a refuting outcome runnable rather than allowing only supportive evidence.",
+      "score": 8
+    }
+  }
+}

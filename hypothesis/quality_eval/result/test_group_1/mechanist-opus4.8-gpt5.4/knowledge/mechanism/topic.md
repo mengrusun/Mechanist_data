@@ -1,0 +1,1 @@
+Investigate how large language models represent, organize, and retrieve factual, conceptual, relational, and procedural knowledge. Examine whether knowledge is localized or distributed, how retrieval depends on the query, and why stored knowledge sometimes fails to influence the answer.

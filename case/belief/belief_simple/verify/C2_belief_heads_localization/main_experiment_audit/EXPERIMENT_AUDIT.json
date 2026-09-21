@@ -1,0 +1,31 @@
+{
+  "date": "2026-07-22",
+  "auditor": "self-review (llm-chat MCP unavailable)",
+  "claim_id": "C2",
+  "linked_milestones": ["M2.1", "M2.2", "M2.3", "M2.4"],
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "Fisher computed from dataset gold continuation gradients; zero-ablation eval uses same dataset GT. No model-generated reference."
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "Fisher = absolute squared gradients (not normalized by model's own stats). Head scores = mask fraction. Drop = raw accuracy difference."
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "Verified H_attributed_acceptance.json (pythia-1b): target_drop=0.4625 (claimed 0.463 ✓), ppl_ratio=1.011 ✓, 20 controls ✓. All M2 artifact files confirmed present."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "All M2 pipeline stages (Fisher, masks, search, controls, acceptance) have outputs confirmed on disk. No unused functions."
+    },
+    "scope": {
+      "status": "pass",
+      "details": "5/5 admissible pairs tested; claim language precisely scoped; 20+20 controls confirmed; negative off-belief drops noted honestly."
+    },
+    "eval_type": "real_gt"
+  }
+}

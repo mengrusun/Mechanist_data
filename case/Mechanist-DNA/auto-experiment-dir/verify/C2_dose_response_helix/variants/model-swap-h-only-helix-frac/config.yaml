@@ -1,0 +1,20 @@
+# Variant config: C2 model-swap-h-only-helix-frac
+variant_tag: model-swap-h-only-helix-frac
+dimension: model
+claim_id: C2
+
+# DIFF from main experiment:
+primary_endpoint: helix_h_w   # was: helix_hgi_w
+
+# Frozen:
+feature_kind: alpha_helix_S
+c_star: 21.4801
+heldout_seeds: [200, 201]
+predictors: [esmfold, omegafold]
+dose_grid: [-5.37, 0.0, 2.685, 5.37, 10.74, 21.4801, 32.2201, 42.9601, 64.4402, 85.9203]
+
+# Implementation:
+# Reads helix_h_w_mean from pre-computed results/m2_alpha_helix_S_c*_s*.json
+input_pattern: results/m2_alpha_helix_S_c*_s*.json
+output: verify/C2_dose_response_helix/variants/model-swap-h-only-helix-frac/result.json
+gpu_id: null

@@ -1,0 +1,17 @@
+{
+  "claim": "C2b",
+  "milestone": "M3+M4 per-level",
+  "audit_scope": "runs/M3_aligned_dinov2/eval_things_multilevel.json + runs/M4_unaligned_dinov2/eval_things_multilevel.json (per-level fields)",
+  "checks": {
+    "A_gt_provenance": {"verdict": "pass", "note": "THINGS human behavioral data; per-level stratified by THINGS categorical metadata"},
+    "B_score_normalization": {"verdict": "pass", "note": "Same as C2a; no model-specific normalization"},
+    "C_result_file_existence": {"verdict": "pass", "note": "coarse Δρ=+0.526 and mid Δρ=+0.427 verified on-disk; fine=0 pairs (NaN) documented"},
+    "D_dead_code": {"verdict": "pass", "note": "level_bucket_triplets() exercised in eval_features()"},
+    "E_scope": {
+      "verdict": "warn",
+      "note": "Claim requires Δρ>0 at ALL three levels including fine, but fine has 0 usable Spearman pairs — predicate unverifiable at fine level"
+    },
+    "F_eval_type": {"verdict": "pass", "note": "real_gt"}
+  },
+  "overall_verdict": "warn"
+}

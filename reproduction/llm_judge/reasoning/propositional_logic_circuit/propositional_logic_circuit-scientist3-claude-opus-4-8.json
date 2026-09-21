@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "expert_name": "claude-opus-4-8",
+    "paper_title": "A Implies B: Circuit Analysis for Propositional Logic",
+    "agent": "scientist3",
+    "review_date": "2026-07-18"
+  },
+  "dimension_1_data_split_hygiene": {
+    "justification": "The task is zero-shot evaluation on synthetic data, so there is no fitted probe/SAE/classifier and no train/val/test split in the classical sense. However, a selection process DOES exist: in the stage-3 best node (research_summary.json best node, code echoed in logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_code.py) components are ranked by patching recovery on the SAME 32 clean/corrupted pairs that are then used to measure 'circuit faithfulness' (greedy top-K over `components`, then `run_circuit_only` on the same `clean_prompts`/`corr_prompts`). Selection and evaluation share the identical 32-item set with no held-out split, so the reported faithfulness=match*sparsity is a resubstitution estimate. This is a real hygiene gap (selection-on-eval-set), though there is no label leakage into a trained model. Not full leakage, but not clean either.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_code.py",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_2_label_validity": {
+    "justification": "The ground-truth answer labels are the deterministic truth values of the synthetic propositional-logic problems, computed by the data generator via forward chaining (baseline_summary.json code: `generate_example` propagates `known_true` over rules and sets `label = query in known_true`; stage-3 `make_pair` fixes label True/False by construction). This is a valid, non-circular operationalization of the target behavior (the label is produced by the symbolic generator, independent of Mistral-7B) and the metric (True-vs-False max-logit) directly measures whether the model outputs the correct truth value. The one weakness is that the functional-role 'labels' (early_fact_reading/mid_rule_composition/late_answer_projection) are heuristic layer-depth buckets rather than validated role annotations, but that is a claim-2 method issue (Dim 9), not the answer ground truth. The core task label is sound.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_3_resource_fidelity": {
+    "justification": "The main/lead experiment uses Mistral-7B as required: every stage discovers the model by globbing MODEL_DIR for a directory containing 'mistral' and '7b' (stage_4 best_solution_e25aa65059e04d808ff8a158b9543925.py lines 13-20; baseline_summary.json candidate_paths lists Mistral-7B-v0.1/Instruct-v0.2/etc.), and real forward passes are executed (experiment_data.npy holds populated 32x32 head_effects arrays and predictions). No downgrade to a smaller model. Two caveats: (a) the exact Mistral-7B variant actually loaded (base v0.1 vs Instruct) is not pinned/recorded, whereas the paper uses base Mistral-7B few-shot; (b) the specified verify-stage models Gemma-2-9B and Gemma-2-27B were never loaded anywhere (grep for 'gemma' hits only plan/journal text, never executable code) — these are 'use as needed' verify candidates so exempt for the MAIN experiment, but their absence directly voids Claim 4 (see Dim 9 C4). Data is the required custom synthetic set. Main-experiment resource fidelity is essentially honored with a minor unrecorded-variant gap.",
+    "score": 4,
+    "evidence_files": [
+      "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_e25aa65059e04d808ff8a158b9543925.py",
+      "logs/0-run/baseline_summary.json"
+    ]
+  },
+  "dimension_4_evidence_sufficiency": {
+    "justification": "The core circuit-discovery / patching experiment (stage-3 best node) runs on only N_PAIRS=32 clean/corrupted pairs (experiment_code.py: `N_PAIRS = 32`), which is below the rubric's 40-item thinness threshold, and stage-4 uses 32 pairs per each of 4 dataset variants. The zero-shot baseline accuracy (0.8529) is on 240 items, which is adequate, but the mechanistic claims (sparse circuit, modularity, necessity/sufficiency) all rest on the 32-pair patching runs. The strong quantitative headlines (faithfulness 0.9797, circuit size K=5) are stated for a 32-item single-seed run. The agent partially flags the thinness in draft_summary.json ('weak corruption signal', distributed representations) and vlm feedback, but the report.md verdict ('Partially or fully supported') overstates relative to the evidence scale. Thin but directionally supported and partially caveated.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_code.py",
+      "logs/0-run/draft_summary.json",
+      "report.md"
+    ]
+  },
+  "dimension_5_statistical_rigor": {
+    "justification": "All runs are single-seed (random.seed(0), np.random.seed(0), torch.manual_seed(0) in every stage's code). The 'seed_aggregation' directories are misnamed: e.g. logs/0-run/experiment_results/seed_aggregation_9634aace3870401c9e17b3f69fd9f967/aggregation_plotting_code.py has an `experiment_data_path_list` with exactly ONE path (experiment_28eb91b6...), so the 'mean +/- SEM' error bars are computed over datasets, not over independent seeds — there is no genuine multi-seed variance. The core causal effects claimed are small (max attention-head patching recovery 0.183, max MLP recovery 0.195; corrupted logit diff only -0.278) and are compared against no random-component/random-direction null distribution, so it is impossible to distinguish these from noise. Single run, no real uncertainty quantification, near-noise effects treated as signal.",
+    "score": 2,
+    "evidence_files": [
+      "logs/0-run/experiment_results/seed_aggregation_9634aace3870401c9e17b3f69fd9f967/aggregation_plotting_code.py",
+      "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_data.npy"
+    ]
+  },
+  "dimension_6_causal_claim_validity": {
+    "justification": "Claim 3 is explicitly causal (necessity + sufficiency), and the run does perform genuine interventions rather than pure correlation: activation patching of clean head/MLP activations into corrupted runs for necessity (`run_corrupted_with_patch`, recovery = (p_ld-corr_ld)/(clean_ld-corr_ld)), and mean-ablation of the non-circuit complement for sufficiency (`make_ablation_attn_hook`/`make_ablation_mlp_hook`). So an intervention exists. But required controls/rigor elements are missing: no random-direction or random-component baseline to calibrate recovery, no coefficient/strength sweep, the counterfactual is weak (corrupted logit diff only -0.278, corr accuracy 0.969 so behavior barely flips), and the sufficiency metric is confounded by the sparsity term (match is constant 0.984 across K=5..40, so 'faithfulness' is driven by sparsity, not by demonstrated sufficiency). The intervention is real but under-controlled, and the causal wording ('necessary and sufficient') overreaches the weak recovery.",
+    "score": 3,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_code.py",
+      "logs/0-run/research_summary.json"
+    ]
+  },
+  "dimension_7_result_provenance": {
+    "justification": "Key numbers trace to on-disk products and agree. Loading experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_data.npy reproduces exactly the research_summary.json best-node metrics: clean_acc=1.0, corr_acc=0.96875, mean_clean_logit_diff=0.90796, mean_corr_logit_diff=-0.27783, faithfulness@K=5 match=0.984375/sparsity=0.99527/faithfulness=0.97971, role_counts {early:0, mid:16, late:4}, head_effects max 0.18311, mlp_effects max 0.19555. Baseline accuracy 0.8529 and val loss 0.5591 in draft_summary.json/report.md match baseline_summary.json's max_length_tuning entries (0.8529 across all max_length). No sourceless or back-filled numbers were found; every headline value maps to a concrete .npy product produced by real forward passes.",
+    "score": 5,
+    "evidence_files": [
+      "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_data.npy",
+      "logs/0-run/research_summary.json",
+      "logs/0-run/baseline_summary.json"
+    ]
+  },
+  "dimension_8_cross_artifact_consistency": {
+    "justification": "Numeric consistency between the structured summaries and the raw .npy products is good (verified in Dim 7). However there is loose bookkeeping across artifacts. report.md's 'What the agent actually ran' describes only the preliminary DRAFT experiment (near-zero recovery, single-head knockouts) for all three claims and gives generic per-claim verdicts ('See overall verdict (claim n/3)'), never reflecting the more advanced stage-3 circuit-discovery run whose metrics it should summarize; its overall verdict 'Partially or fully supported' is a weak auto-heuristic that does not match the agent's own honest negative findings (weak corruption, necessity weakened). Additionally baseline_summary.json's plot_analyses contain a VLM hallucination referencing unrelated vision datasets ('fashion_mnist, dtd, imagenet-val, imagenette') that never existed in this text task. No hard metric contradicts another metric, but these are unpropagated/loose records rather than a fully self-consistent ledger.",
+    "score": 3,
+    "evidence_files": [
+      "report.md",
+      "logs/0-run/baseline_summary.json",
+      "logs/0-run/draft_summary.json"
+    ]
+  },
+  "dimension_9_reproduction_fidelity": {
+    "per_claim": {
+      "C1": {
+        "claim": "A sparse subset of specific attention heads and MLP components jointly implements the minimal propositional-logic reasoning task — the circuit is small relative to the full model.",
+        "method": {
+          "justification": "9a: Activation patching of per-head attention outputs (splitting pre-W_O z) and MLP outputs across all 32 layers, ranking 1056 components by causal recovery and greedily assembling a top-K circuit, is a reasonable and on-category method for identifying a sparse circuit (the paper's circuit-discovery is also CMA/patching-based). It is a simplified variant (patches only final-token head OUTPUT, not query/key/value sub-components, and only at one position), but the method family fits the claim.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_code.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: The judgment metric is genuinely flawed for the sparsity claim. faithfulness = match * sparsity, where `match` between the K-component circuit (non-circuit components mean-ablated with clean means) and the full model is CONSTANT at 0.984375 for K=5,10,20,40 (experiment_data.npy faithfulness dict), so the 'best circuit K=5' is trivially just the smallest K — the metric never demonstrates that 5 components actually carry the computation; it shows only that mean-ablating the rest rarely flips a 32-item prediction. Combined with N=32, single seed, selection+eval on the same set, and no held-out validation, the design cannot reliably validate 'a sparse subset implements the task'.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_data.npy",
+            "logs/0-run/research_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "9c: The paper does find a genuinely sparse circuit, and the run's headline (K=5, faithfulness 0.98) is directionally in that spirit, so surface agreement exists. But the support is an artifact of the sparsity-dominated metric plus weak mean-ablation, and the underlying causal signal is weak (max single-component recovery 0.183). The agent's own draft/VLM analysis honestly concedes 'no single head is causally necessary' and 'distributed/redundant', partially offsetting overstatement, but research_summary/report.md still present the sparse-circuit conclusion as (partially) supported on shaky ground. Qualitatively aligned yet weakly and somewhat over-confidently established.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C2": {
+        "claim": "The circuit decomposes into a small number of modular sub-circuits with distinct functional roles (e.g., identifying the facts in the prompt, applying an implication rule, projecting the derived truth value into the answer token) rather than presenting as an entangled mixture.",
+        "method": {
+          "justification": "9a: The reproduction assigns 'functional roles' purely by binning components into layer-depth thirds (`layer_role`: early_fact_reading / mid_rule_composition / late_answer_projection) and counting top-20 members per bucket. This is not a functional-identification method at all — the paper isolates four head families via role-specific counterfactuals (swap rule position, flip QUERY) and query/key/value sub-component patching. Layer-depth naming is fundamentally misaligned with a claim about DISTINCT FUNCTIONAL roles.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_code.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No experiment tests modularity or role separation. The only 'evidence' is bucket counts (role_counts_top20 = {early:0, mid:16, late:4} in experiment_data.npy; {early:0, mid:15, late:5} in the stage-4 2step run). There are no counterfactual interventions that would show a head plays the fact-processing vs rule-locating role, so the metric is fundamentally misaligned with the claim, and it even contradicts its own scheme (0 components in the 'early_fact_reading' bucket).",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_data.npy",
+            "logs/0-run/experiment_results/experiment_28eb91b6d82b4c089868071a20b65268_proc_4108744/experiment_data.npy"
+          ]
+        },
+        "result": {
+          "justification": "9c: The paper's core finding of four modular functional families is not reproduced or meaningfully tested; the layer-bucket counts do not demonstrate distinct roles and partly contradict the fact-reading hypothesis (0 early-layer components). The run does not fabricate agreement — the VLM feedback flags this as needing 'sub-circuit functional analysis to verify modularity claims' — but the report.md auto-verdict 'partially or fully supported' leaves the modularity claim dangling without a reliable positive basis.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/research_summary.json",
+            "report.md"
+          ]
+        }
+      },
+      "C3": {
+        "claim": "Activation-patching / causal-mediation experiments show that the identified components are both necessary (patching them from a clean run into a corrupted run restores correct behaviour) and sufficient (their outputs alone drive the answer).",
+        "method": {
+          "justification": "9a: The chosen methods are on-category for a causal claim: clean-into-corrupted activation patching for necessity and mean-ablation of the circuit complement for sufficiency are both genuine interventions in the CMA family the paper uses. The sufficiency operationalization (mean-ablate the rest, check prediction match) is a legitimate, if coarse, technique.",
+          "score": 4,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_code.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: Under-powered and under-controlled. Necessity: maximum recovery from patching any single head is 0.183 and any MLP 0.195 (experiment_data.npy) — no component restores correct behavior, and there is no joint/path-patching or random-component control. Sufficiency: the mean-ablation match is 0.984 but constant across K, so it is dominated by sparsity and does not isolate the circuit's causal contribution. The counterfactual is weak (corrupted logit diff -0.278; corr accuracy 0.969), there is a single seed, N=32, no coefficient sweep, and no random-direction baseline — so a true negative cannot be separated from under-exploration.",
+          "score": 2,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_ad0d47e64ad84722b41506f461bea070_proc_3928150/experiment_data.npy",
+            "logs/0-run/draft_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "9c: The paper establishes necessity and sufficiency; the reproduction's evidence for necessity is weak and the run is, to its credit, honest about it — draft_summary.json and the VLM feedback in research_summary.json explicitly state 'no single head is causally necessary', the corruption is 'too weak to fully flip predictions', and this 'weakens the necessity claim', recommending stronger causal evidence. This is closer to an honest partial/NOT-fully-reproduced than a disguised success, though the sufficiency-via-faithfulness headline (0.98) is somewhat over-read. Directionally acknowledges the gap rather than fabricating agreement.",
+          "score": 3,
+          "evidence_files": [
+            "logs/0-run/draft_summary.json",
+            "logs/0-run/research_summary.json"
+          ]
+        }
+      },
+      "C4": {
+        "claim": "The high-level circuit schema recurs across LLM families and scales — the same modular decomposition shows up in Mistral-7B, Gemma-2-9B, and Gemma-2-27B — while the specific heads / MLPs realising each role differ between models.",
+        "method": {
+          "justification": "9a: The method required to validate a cross-MODEL/cross-scale claim (running the same circuit-discovery pipeline on Gemma-2-9B and Gemma-2-27B and comparing schemas) was never applied. Every stage's code loads only a 'mistral'+'7b' directory; 'gemma' appears only in plan/journal prose, never in executable code. Stage-4 instead computes cross-DATASET Jaccard overlap of circuits on the same Mistral-7B (make_pair_2step/3step/conjunction/negation), which answers cross-problem-shape generalization, not cross-family recurrence. Wrong axis for this claim.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/stage_4_ablation_studies_1_first_attempt/best_solution_e25aa65059e04d808ff8a158b9543925.py"
+          ]
+        },
+        "experiment": {
+          "justification": "9b: No Gemma-2-9B or Gemma-2-27B experiment exists anywhere in the run, so the claim is experimentally unaddressed. The only generalization evidence is cross-dataset (experiment_28eb91b6 experiment_data.npy: jaccard_with_others 2step=1.0, 3step=0.82, conjunction=0.43, negation=0.31; cross-dataset faithfulness drops to ~0.71 for conjunction), which does not speak to the cross-model claim. The required experiment was not run.",
+          "score": 1,
+          "evidence_files": [
+            "logs/0-run/experiment_results/experiment_28eb91b6d82b4c089868071a20b65268_proc_4108744/experiment_data.npy",
+            "logs/0-run/ablation_summary.json"
+          ]
+        },
+        "result": {
+          "justification": "9c: There is no cross-model result. The claim was silently dropped (idea.md lists only 3 hypotheses; report.md's per-claim table covers only claims 1-3), so the run does not fabricate agreement with the paper's cross-family finding — but it also provides no honest NOT-REPRODUCED statement or reasoning; the claim is simply left dangling and unexamined. Not disguised as success, yet entirely unsupported.",
+          "score": 2,
+          "evidence_files": [
+            "idea.md",
+            "report.md"
+          ]
+        }
+      }
+    }
+  }
+}

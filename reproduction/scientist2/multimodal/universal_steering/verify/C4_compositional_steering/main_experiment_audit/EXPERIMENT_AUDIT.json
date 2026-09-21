@@ -1,0 +1,17 @@
+{
+  "claim_id": "C4",
+  "claim_dir": "C4_compositional_steering",
+  "overall_verdict": "warn",
+  "checks": {
+    "A_gt_provenance": {"verdict": "pass", "note": "Dual GPT-4o rubric per output (concept-1 and concept-2 independent) — prevents cross-contamination. Appropriate for compositional evaluation."},
+    "B_score_normalization": {"verdict": "warn", "note": "5-point rubric saturates at ~5.0 for single-vector conditions on both combos. Predicate (sum > v2_only on r1 AND sum > v1_only on r2) is structurally unachievable at ceiling. Measurement-ceiling failure documented in EXPERIMENT_RESULTS.md."},
+    "C_result_file_existence": {"verdict": "pass", "note": "C4b_pin_block14/summary.json exists with all per-combo stats. Block-14 vectors fix gibberish from block-0 run."},
+    "D_dead_code": {"verdict": "pass", "note": "Dual-rubric judging in active execution path for both combos."},
+    "E_scope": {"verdict": "warn", "note": "15 held-out prompts per combo (plan: 20; n_dev=5 subtracted). Both combos ceiling-limited. Test is uninformative on current prompt set — not a falsification, just an uninformative result."},
+    "F_eval_type": {"verdict": "pass", "note": "synthetic_proxy (GPT-4o dual rubric). Appropriate."}
+  },
+  "ceiling_effect": true,
+  "milestones_audited": ["M9_C4_second_pair", "M10_C4_combo_sweep", "M11_C4_holdout"],
+  "runs_audited": ["B5_pin_block14", "C4b_pin_block14"],
+  "audited_at": "2026-07-15"
+}
