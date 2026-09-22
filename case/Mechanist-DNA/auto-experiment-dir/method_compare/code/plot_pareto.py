@@ -1,14 +1,14 @@
 """Figure R1: search width and compute cost for Evo2 beam search with and without
 SAE steering.
 
-Layout follows the manuscript's Fig. 5c idiom: one knob axis carrying two stacked
-readouts (quality on top, capability below), plus a single compute axis.
+Layout uses three side-by-side panels for quality, capability, and compute.
 
-a  effect of the search width W on alpha-helix rate (top) and on valid-ORF rate
-   (bottom); both stacked panels share the same x axis
-b  compute-quality frontier: alpha-helix rate versus measured GPU time per
-   *valid* sequence (single A800-80GB), so the yield shown in a (bottom) is
-   folded into the cost axis
+a  effect of the search width W on alpha-helix rate; non-zero widths are shown
+   as powers of two
+b  effect of the search width W on valid-ORF rate
+c  minimum generation budget, relative to one 300-nt no-search sample, whose
+   configuration-level mean alpha-helix rate reaches a specified quality
+   threshold (no interpolation)
 
 Drawing specification measured from Fig. 5 of the manuscript: serif type at
 8.9/8.2/7.0/6.3 pt, left+bottom spines in #3A3A3A at 0.80 pt, horizontal #E6E8E9
@@ -23,6 +23,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
+from matplotlib.transforms import blended_transform_factory
 
 # --- Fig. 5 drawing specification --------------------------------------------
 SPINE, GRID, GREY_TEXT = "#3A3A3A", "#E6E8E9", "#595959"
@@ -58,8 +59,12 @@ os.makedirs(FIG, exist_ok=True)
 
 # Fig. 5b pairs: Evo2-7B (no steer) = grey, alpha-helix-feature steering = green
 COL = {"base": "#7B7B7B", "steer": "#4C9866"}
-LAB = {"base": "Evo2 + beam search (no steering)",
-       "steer": "Evo2 + steering + beam search"}
+BAR_STYLE = {
+    "base": ("#D9D9D9", "#7B7B7B", "#6D7075"),
+    "steer": ("#D9EADF", "#227652", "#2E7B45"),
+}
+LAB = {"base": "Evo2 + beam search (no steer)",
+       "steer": "Evo2 + steer + beam search"}
 LW, MS, MEW = 1.15, 3.2, 0.45
 EB = dict(elinewidth=0.7, capsize=1.7, capthick=0.7,
           markeredgecolor="white", markeredgewidth=MEW)
@@ -89,14 +94,17 @@ def style_axes(ax, yticks):
     ax.set_axisbelow(True)
 
 
-# --- layout: stacked knob panel (a) beside the compute panel (b) -------------
-fig = plt.figure(figsize=(7.09, 3.27))
-gs = fig.add_gridspec(2, 2, height_ratios=[2.35, 1.0], width_ratios=[1.0, 1.06],
-                      left=0.082, right=0.995, bottom=0.166, top=0.845,
-                      wspace=0.36, hspace=0.16)
-ax_q = fig.add_subplot(gs[0, 0])                 # a, top:    helix vs W
-ax_y = fig.add_subplot(gs[1, 0], sharex=ax_q)    # a, bottom: valid-ORF vs W
-ax_c = fig.add_subplot(gs[:, 1])                 # b: helix vs GPU-s per valid seq
+# --- layout: three independent panels ----------------------------------------
+# A4/two-column figure width: 19.05 cm = 7.5 inches.
+fig = plt.figure(figsize=(19.05 / 2.54, 3.27))
+gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.0, 1.12],
+                      left=0.062, right=0.995, bottom=0.19, top=0.835,
+                      wspace=0.34)
+ax_q = fig.add_subplot(gs[0, 0])                 # a: helix vs W
+ax_y = fig.add_subplot(gs[0, 1])                 # b: valid-ORF vs W
+cgs = gs[0, 2].subgridspec(2, 1, height_ratios=[0.24, 0.76], hspace=0.06)
+ax_c_hi = fig.add_subplot(cgs[0, 0])             # c: broken-axis upper segment
+ax_c = fig.add_subplot(cgs[1, 0], sharex=ax_c_hi) # c: main cost segment
 
 YT_Q = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 YT_Y = [0.8, 0.9, 1.0]
@@ -114,10 +122,13 @@ for arm, off in (("base", -0.075), ("steer", 0.075)):
 ax_q.set_ylim(0.335, 0.92)
 ax_q.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v * 100:.0f}"))
 ax_q.set_ylabel(f"Rate of {ALPHA}-helix (%)", labelpad=3)
-plt.setp(ax_q.get_xticklabels(), visible=False)
-ax_q.tick_params(axis="x", length=0)
+ax_q.set_xlim(-0.55, len(widths) - 0.45)
+ax_q.set_xticks(pos)
+power_labels = ["0"] + [rf"$2^{{{int(math.log2(w))}}}$" for w in widths[1:]]
+ax_q.set_xticklabels(power_labels)
+ax_q.set_xlabel("search width W", labelpad=3)
 
-# --- a (bottom): capability on the same search-width axis --------------------
+# --- b: capability versus search width ---------------------------------------
 style_axes(ax_y, YT_Y)
 for arm, off in (("base", -0.075), ("steer", 0.075)):
     r = arm_rows(arm)
@@ -130,92 +141,114 @@ for arm, off in (("base", -0.075), ("steer", 0.075)):
 ax_y.set_ylim(0.70, 1.07)
 ax_y.set_xlim(-0.55, len(widths) - 0.45)
 ax_y.set_xticks(pos)
-ax_y.set_xticklabels([str(w) for w in widths])
+ax_y.set_xticklabels(power_labels)
 ax_y.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:.1f}"))
 ax_y.set_ylabel("Valid-ORF", labelpad=3)
 ax_y.set_xlabel("search width W", labelpad=3)
 
-# --- b: compute-quality frontier, cost per valid sequence --------------------
-style_axes(ax_c, YT_Q)
-numerals = []
-for arm in ("base", "steer"):
-    r = arm_rows(arm, "gpu_s_per_valid")
-    x = np.array([z["gpu_s_per_valid"] for z in r])
-    y = np.array([z["helix_hgi"] for z in r])
-    e = np.array([z["helix_hgi_sem"] for z in r])
-    ax_c.errorbar(x, y, yerr=e, marker="o", ms=MS, lw=LW, color=COL[arm],
-                  zorder=3 if arm == "steer" else 2, **EB)
-    # one uniform offset per arm so the labels read as two aligned rows
-    for z in r:
-        # steering labels ride above its curve; baseline labels below, except the
-        # cramped W=0 and W=1 pair at the bottom-left, which also go above
-        up = arm == "steer" or z["width"] in (0, 1)
-        t = ax_c.annotate(f"W={z['width']}", (z["gpu_s_per_valid"], z["helix_hgi"]),
-                          textcoords="offset points",
-                          xytext=(0, 10.0 if up else -10.0),
-                          fontsize=6.34, color=COL[arm], zorder=4, ha="center",
-                          va="bottom" if up else "top")
-        numerals.append((t, "steer" if up else "base"))
-ax_c.set_xscale("log")
-ax_c.set_xlim(min(z["gpu_s_per_valid"] for z in rows) / 4.0,
-              max(z["gpu_s_per_valid"] for z in rows) * 3.0)
-ax_c.set_ylim(0.335, 0.92)
-ax_c.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v * 100:.0f}"))
-ax_c.set_ylabel(f"Rate of {ALPHA}-helix (%)", labelpad=3)
-ax_c.set_xlabel("GPU time to generate one valid sequence (seconds)", labelpad=3)
+# --- c: minimum observed compute needed to clear each mean-quality threshold --
+thresholds = [0.60, 0.70, 0.75, 0.80]
+tx = np.arange(len(thresholds), dtype=float)
+# panel_b uses width=0.24; retain it and leave a 0.11 gap so the two-line
+# value labels above paired bars remain visually distinct.
+bar_w, bar_sep = 0.24, 0.35
+for arm, off in (("base", -bar_sep / 2), ("steer", bar_sep / 2)):
+    candidates = arm_rows(arm)
+    fill, edge, label_color = BAR_STYLE[arm]
+    for i, tau in enumerate(thresholds):
+        feasible = [z for z in candidates if z["helix_hgi"] >= tau]
+        if feasible:
+            z = min(feasible, key=lambda q: q["nt_per_delivered"])
+            cost = z["nt_per_delivered"] / 300.0
+            for axis in (ax_c, ax_c_hi):
+                axis.bar(tx[i] + off, cost, width=bar_w, color=fill,
+                         edgecolor=edge, linewidth=0.9, zorder=3)
+            label_axis = ax_c_hi if cost > 135 else ax_c
+            label_axis.annotate(f"{cost:.1f}×\nW={z['width']}",
+                          (tx[i] + off, cost), textcoords="offset points",
+                          xytext=(0, 3), ha="center", va="bottom",
+                          fontsize=6.5, color=label_color,
+                          fontweight="bold", linespacing=1.05, zorder=4)
+        else:
+            ax_c.annotate("N.R.", (tx[i] + off, 1024.0), ha="center", va="center",
+                          fontsize=6.34, color=label_color, fontweight="bold")
+            ax_c.plot(tx[i] + off, 768.0, marker="x", ms=4.0, mew=0.8,
+                      color=edge, zorder=4)
+for axis, ticks in ((ax_c, [0, 30, 60, 90, 120]),
+                    (ax_c_hi, [850, 950])):
+    for y in ticks:
+        axis.axhline(y, color="#E5E8E8", lw=0.8, zorder=0)
+    axis.set_axisbelow(True)
+    axis.set_yticks(ticks)
+    axis.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}×"))
+ax_c.set_ylim(0, 135)
+ax_c_hi.set_ylim(850, 1000)
+ax_c_hi.spines["bottom"].set_visible(False)
+ax_c.spines["top"].set_visible(False)
+ax_c_hi.tick_params(axis="x", which="both", bottom=False, labelbottom=False)
+# Paired diagonal marks on the y-axis indicate the omitted 135×–850× interval.
+d = 0.012
+for axis, y in ((ax_c_hi, 0), (ax_c, 1)):
+    axis.plot((-d, +d), (y - d, y + d), transform=axis.transAxes,
+              color="#222222", lw=0.8, clip_on=False)
+# The only bar crossing the omitted interval receives its own zig-zag cut,
+# avoiding the misleading appearance of one uninterrupted linear bar.
+broken_x = tx[-1] - bar_sep / 2
+for axis, y, sign in ((ax_c, 0.992, 1), (ax_c_hi, 0.008, -1)):
+    trans = blended_transform_factory(axis.transData, axis.transAxes)
+    xs = [broken_x - bar_w / 2, broken_x, broken_x + bar_w / 2]
+    ys = [y - sign * 0.014, y + sign * 0.014, y - sign * 0.014]
+    axis.plot(xs, ys, transform=trans, color="white", lw=3.2,
+              solid_capstyle="butt", clip_on=False, zorder=5)
+    axis.plot(xs, ys, transform=trans, color=BAR_STYLE["base"][1], lw=0.8,
+              solid_capstyle="butt", clip_on=False, zorder=6)
+ax_c.set_xticks(tx)
+ax_c.set_xticklabels([rf"$\geq${int(t * 100)}%" for t in thresholds])
+ax_c.set_ylabel("Generation budget", labelpad=3)
+ax_c.set_xlabel(f"Mean {ALPHA}-helix quality threshold", labelpad=3)
+for axis in (ax_c, ax_c_hi):
+    for side in ("left", "bottom"):
+        axis.spines[side].set_color("#222222")
+        axis.spines[side].set_linewidth(0.8)
+    axis.tick_params(colors="#222222", labelcolor="#222222", width=0.8, length=2.6)
+ax_c.tick_params(axis="x", length=0)
 
 # --- legend (Fig. 5b style: inside the panel, frameless) + notes -------------
-handles, labels = ax_q.get_legend_handles_labels()
+from matplotlib.patches import Patch
+handles = [Patch(facecolor=BAR_STYLE[a][0], edgecolor=BAR_STYLE[a][1], lw=0.9,
+                 label=LAB[a]) for a in ("base", "steer")]
+labels = [LAB[a] for a in ("base", "steer")]
 fig.legend(handles, labels, loc="upper center", ncol=2, bbox_to_anchor=(0.54, 1.0),
-           handlelength=1.5, handletextpad=0.5, columnspacing=2.4, borderaxespad=0.0)
-ax_c.text(0.975, 0.055,
-          "W: search width\n"
-          "error bars: mean $\\pm$ s.e.m. (n = 82\u2013100)\n"
-          "timing: 1\u00d7 NVIDIA A800-80GB",
-          transform=ax_c.transAxes, fontsize=6.34,
-          color=GREY_TEXT, ha="right", va="bottom", linespacing=1.4)
+           handlelength=1.5, handleheight=1.0, handletextpad=0.5,
+           labelspacing=0.32, columnspacing=2.4, borderaxespad=0.0)
 ax_y.text(0.97, 0.06, "error bars: Wilson 95% CI (n = 100)",
           transform=ax_y.transAxes, fontsize=6.34, color=GREY_TEXT,
           ha="right", va="bottom")
 
-# --- panel labels (the stacked pair is one panel, as in Fig. 5c) -------------
-for ax, letter in ((ax_q, "a"), (ax_c, "b")):
-    # anchor both letters the same distance above the shared grid boundary
+# --- panel labels -------------------------------------------------------------
+for ax, letter in ((ax_q, "a"), (ax_y, "b"), (ax_c_hi, "c")):
     ax.annotate(letter, xy=(0, 1), xycoords="axes fraction",
                 xytext=(-30, 4), textcoords="offset points",
                 fontsize=9.51, fontweight="bold", va="bottom", ha="left")
 
-# --- nudge only the labels a gridline would cross; the rest stay aligned ----
-fig.canvas.draw()
-rend = fig.canvas.get_renderer()
-CANDIDATES = {"steer": [10.0, 12.5, 7.5, 14.5, 16.5, 18.5],
-              "base": [-10.0, -12.5, -7.5, -14.5, -16.5, -18.5]}
-grid_y = [ax_c.transData.transform((ax_c.get_xlim()[0], g))[1] for g in YT_Q]
-for t, arm in numerals:
-    best = None
-    for dy in CANDIDATES[arm]:
-        t.xyann = (0, dy)
-        fig.canvas.draw()
-        bb = t.get_window_extent(renderer=rend)
-        hits = sum(bb.y0 - 0.8 <= g <= bb.y1 + 0.8 for g in grid_y)
-        if best is None or hits < best[0]:
-            best = (hits, dy)
-        if hits == 0:
-            break
-    t.xyann = (0, best[1])
 fig.canvas.draw()
 
 # --- alignment gate + export -------------------------------------------------
-from audit_panel_alignment import require_matplotlib_panel_alignment
-
 stem = os.path.join(FIG, "R1_compute_scaling")
-require_matplotlib_panel_alignment(
-    fig,
-    json_out=f"{stem}.alignment.json",
-    tolerance_pt=1.5,
-    gutter_tolerance_pt=1.5,
-    strict=True,
-)
+try:
+    from audit_panel_alignment import require_matplotlib_panel_alignment
+except ModuleNotFoundError:
+    # The alignment helper is an optional manuscript-build utility and is not
+    # included in every checkout.  The fixed gridspec above remains unchanged.
+    require_matplotlib_panel_alignment = None
+if require_matplotlib_panel_alignment is not None:
+    require_matplotlib_panel_alignment(
+        fig,
+        json_out=f"{stem}.alignment.json",
+        tolerance_pt=1.5,
+        gutter_tolerance_pt=1.5,
+        strict=True,
+    )
 for ext, kw in ((".pdf", {}), (".svg", {}), (".png", {"dpi": 600})):
     fig.savefig(stem + ext, **kw)
 print("WROTE", stem + ".{pdf,svg,png}")

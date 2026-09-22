@@ -1,7 +1,7 @@
 import os, shutil, time
 os.environ.pop("HF_ENDPOINT", None)
 from huggingface_hub import hf_hub_download
-tok="<REDACTED_HF_TOKEN>"
+tok=os.environ["HF_TOKEN"]
 t=time.time()
 p=hf_hub_download("Goodfire/Evo-2-Layer-26-Mixed","sae-layer26-mixed-expansion_8-k_64.pt", token=tok)
 print("dl to", p, round(time.time()-t,1),"s", os.path.getsize(p), flush=True)

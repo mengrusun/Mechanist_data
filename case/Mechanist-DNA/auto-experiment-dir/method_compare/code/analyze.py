@@ -13,6 +13,11 @@ def load():
     cfg = {}
     for f in sorted(glob.glob(os.path.join(R, "beam_*.json"))):
         d = json.load(open(f))
+        # Only complete generation + folding runs belong in the comparison.
+        # This also keeps an abandoned/OOM partner (for example W=1024) from
+        # entering the summary when only one arm produced a generation file.
+        if not d.get("fold_cost", {}).get("esmfold"):
+            continue
         cfg[(d["config"]["arm"], d["config"]["width"])] = d
     return cfg
 

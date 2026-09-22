@@ -12,10 +12,10 @@ MC = os.path.join(ROOT, "method_compare")
 if R2_CODE not in sys.path:
     sys.path.insert(0, R2_CODE)
 
-EVO2_PATH = "/data/wanghaoxiong/Mechanist-DNA-experiment/20260815_v1/models/evo2_7b/evo2_7b.pt"
+EVO2_PATH = "/mnt/quarkfs/share_model/evo2_7b/evo2_7b.pt"
 SAE_PATH = "/mnt/quarkfs/share_model/Evo-2-Layer-26-Mixed/sae-layer26-mixed-expansion_8-k_64.pt"
 ESMFOLD_PATH = "/mnt/quarkfs/share_model/esmfold_v1"
-ESM2_650M_PATH = "/data/wanghaoxiong/Mechanist-DNA-experiment/20260815_v1/models/esm2_650m"
+ESM2_650M_PATH = "/mnt/quarkfs/share_model/esm2_t33_650M_UR50D"
 DATA_DIR = os.path.join(ROOT, "data")
 DSSP_TMP = os.path.join(ROOT, "method_compare", "dssp_tmp")
 

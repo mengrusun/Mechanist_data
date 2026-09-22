@@ -5,4 +5,4 @@
 Generate DNA sequences with high α-helical content using Evo2-7B.
 
 ## Model & Data
-Download them from huggingface, token: <REDACTED_HF_TOKEN>, you may need a proxy to accelerate the download.
+Download them from Hugging Face using the `HF_TOKEN` environment variable; you may need a proxy to accelerate the download.

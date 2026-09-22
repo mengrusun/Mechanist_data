@@ -15,7 +15,7 @@ This round treats the goal as an established target to reach, not a hypothesis t
 Method to be chosen by Mechanist as the task requires (user authorized). The intervention should push Evo2-7B's generation toward higher α-helical content while keeping generated sequences valid.
 
 ## Resources
-huggingface token: <REDACTED_HF_TOKEN>
+Set a Hugging Face access token in the `HF_TOKEN` environment variable before downloading.
 
 ## Goal
 Establish whether a targeted intervention can raise the α-helical content of Evo2-7B's DNA generations significantly above the unintervened baseline, and quantify the effect.

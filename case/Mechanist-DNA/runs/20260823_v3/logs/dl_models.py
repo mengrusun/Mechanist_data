@@ -1,6 +1,5 @@
 import os, time
 os.environ["HF_HOME"] = "/data/wanghaoxiong/Mechanist-DNA-experiment/20260823_v1/models_cache"
-os.environ["HF_TOKEN"] = "<REDACTED_HF_TOKEN>"
 os.environ.pop("HF_ENDPOINT", None)  # HF direct (mirror cannot locate these repos)
 from huggingface_hub import snapshot_download
 tok = os.environ["HF_TOKEN"]

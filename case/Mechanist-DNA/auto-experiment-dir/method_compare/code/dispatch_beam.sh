@@ -1,7 +1,9 @@
 #!/bin/bash
-# Launch the beam-search grid: 2 arms x 7 search widths, one queue per GPU.
-# Load is balanced by W (cost is ~linear in W); the two W=32 jobs get a dedicated GPU each.
-cd /data/wanghaoxiong/Mechanist-DNA-experiment/early_try_v6_refine
+# Launch the beam-search grid: 2 arms x 9 search widths, one queue per GPU.
+# Resolve the experiment root from this script and balance queues by measured W cost.
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
+cd "$ROOT"
 source /data/wanghaoxiong/miniconda3/etc/profile.d/conda.sh
 conda activate scientist
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
@@ -20,13 +22,13 @@ run_queue () {            # $1 = gpu, rest = "arm:width" pairs
   done
 }
 
-run_queue 0 base:32          &
-run_queue 1 steer:32         &
-run_queue 2 base:16          &
-run_queue 3 steer:16         &
-run_queue 4 base:8 base:4    &
-run_queue 5 steer:8 steer:4  &
-run_queue 6 base:2 base:1 base:0    &
-run_queue 7 steer:2 steer:1 steer:0 &
+run_queue 0 base:128                         &
+run_queue 1 steer:128                        &
+run_queue 2 base:64                          &
+run_queue 3 steer:64                         &
+run_queue 4 base:32 base:8 base:2 base:0     &
+run_queue 5 steer:32 steer:8 steer:2 steer:0 &
+run_queue 6 base:16 base:4 base:1            &
+run_queue 7 steer:16 steer:4 steer:1         &
 wait
 echo "ALL_BEAM_JOBS_DONE"

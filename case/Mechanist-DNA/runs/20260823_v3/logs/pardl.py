@@ -1,5 +1,5 @@
 import os, sys, requests, threading, time
-TOK="<REDACTED_HF_TOKEN>"
+TOK=os.environ["HF_TOKEN"]
 HDR={"Authorization":f"Bearer {TOK}"}
 def dl(url, out, nthreads=16, chunk=8*1024*1024):
     r=requests.head(url, headers=HDR, allow_redirects=True)

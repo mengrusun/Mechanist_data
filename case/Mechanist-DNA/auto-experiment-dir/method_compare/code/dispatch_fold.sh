@@ -1,6 +1,9 @@
 #!/bin/bash
 # Fold delivered sets with ESMFold. Spreads over the GPUs given in MC_FOLD_GPUS.
-cd /data/wanghaoxiong/Mechanist-DNA-experiment/early_try_v6_refine
+# Resolve the experiment root from this script so the dispatcher remains portable.
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
+cd "$ROOT"
 source /data/wanghaoxiong/miniconda3/etc/profile.d/conda.sh
 conda activate scientist
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
