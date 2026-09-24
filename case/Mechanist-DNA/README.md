@@ -14,8 +14,7 @@ progressively weaker human input, kept as evidence about the boundary of the sys
 ├── task_complex.md         # same goal, implementation details pinned down (for reproduction)
 ├── task_simple.md          # the open-ended input       (behavior-source: given, mechanism: discovery)
 ├── auto-experiment-dir/    # ADOPTED RECORD — the evidence shown in the paper
-├── runs/                   # three additional autonomous runs under reduced human input
-└── DNA_人机分工.md          # narrative account of the human–Mechanist division of labor
+└── runs/                   # three additional autonomous runs under reduced human input
 ```
 
 ---
@@ -52,9 +51,6 @@ analysis, result interpretation and cross-round adaptation. The open runs push t
 to **mechanism discovery itself**. The first says Mechanist is not merely a scripted tool-caller; the
 second says that when the scientific prior is substantially reduced, it can still form a path of its
 own from hypothesis to validation — at a lower evidential grade, as §4 records.
-
-`DNA_人机分工.md` gives the full account; `auto-experiment-dir/MECHANIST_APPENDIX.updated.md` is the
-per-round version written against the actual trajectory.
 
 ---
 
