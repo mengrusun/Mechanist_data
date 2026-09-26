@@ -1,0 +1,42 @@
+{
+  "direction": "Subliminal learning transfer from LLMs to a same-base diffusion image model (Qwen-Image): whether a LoRA-anchored teacher preference transfers to a student via denoising SFT on filtered teacher-generated images; and, if so, which internal DiT component carries the signal.",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "Subliminal preference transfer via denoising SFT on Qwen-Image: a banana-anchored teacher LoRA transfers a P(banana) shift to a same-base student trained by denoising SFT on banana-filtered (residue = 0), matched-N teacher-generated fruit images — directly analogous to the token-SFT owl-teacher/number-sequence/owl-student setting.",
+      "status": "established",
+      "behavior_conclusion": "In this same-base Qwen-Image teacher/student pair with a strong banana anchor (raw teacher P(banana) = 0.903 on the channel), the phenomenon is real and reproducible at LR = 1e-3: mean_gap = +0.169 with 95% bootstrap CI [0.110, 0.246], per-seed majority 6/7, Wilcoxon p_onesided = 0.008, banana residue = 0 in both cleaned channels, and it is robust to a LoRA-rank swap 16→8 (rank-8 mean_gap = +0.150, 3/3 seeds pass — ~89% of main-experiment magnitude preserved). The finding is a credible proof-of-concept and is scope-limited to a single concept (banana), a single model family (Qwen-Image), a small matched post-filter dataset (N = 53 per arm), a single judge family (gpt-4o), and one robustness axis (LoRA rank); one of seven main-experiment seeds (seed 401, gap = +0.056) did not clear the per-seed threshold.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Representation and Parameter Analysis / Steering Vectors",
+          "headline": "SVD-overlap correlational location succeeds (top-1 SVD direction of the teacher LoRA on `attn.to_out.0` at early DiT blocks [2, 0, 8] is more aligned with the teacher-arm student's than the ctrl-arm student's — positive overlap-gap_u at all three blocks), but additive residual-stream steering along that top-1 direction does NOT causally lift P(banana): both single-block (spearman = −0.60) and 9-block-window (spearman = −0.26) α-sweeps stay flat around ~0.05 and are indistinguishable from a random-direction control at n = 40 prompts × 6 α × 2 arms. The causal predicate fails for this specific family — the signal is likely denoised downstream by norm/attention layers, spread across many components, in the MLP path rather than `to_out`, or in the full-LoRA weight-space rather than a single low-rank steering direction.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "In a same-base Qwen-Image teacher/student setup, a LoRA-anchored banana preference in the teacher transfers to the student via denoising SFT on banana-filtered, teacher-generated neutral-fruit images (mean_seed(P_teacher − P_ctrl) ≥ 0.10, per-seed majority ≥ 4/7, cleaned-channel banana residue = 0).",
+              "method": "Anchor teacher LoRA (rank 16, DiT-only) on 112 banana/neutral-fruit pairs; teacher and control arms each generate 600 images on 600 neutral fruit prompts; single-word gpt-4o judge filters banana; equal-N-matched cleaned channels (N = 53 per arm, residue = 0) drive student denoising SFT; LR sweep {1e-5, 3e-5, 1e-4, 3e-4, 1e-3} × 2 arms × 3 seeds selects LR = 1e-3; 7-seed reproduction at LR = 1e-3; per-student P(banana) evaluated on 160 preference prompts and decided by the three-part predicate (mean_gap ≥ 0.10, per-seed majority ≥ 4/7, residues = 0).",
+              "conclusion": "Robust across the main experiment and the LoRA-rank model-swap: mean_gap = +0.169 (rank 16, 7 seeds; 6/7 pass, Wilcoxon p_onesided = 0.008) and mean_gap = +0.150 (rank 8, 3 seeds; 3/3 pass), residues = 0 in both cleaned arms — proof-of-concept subliminal transfer via denoising SFT is established at this scale."
+            },
+            {
+              "id": "C2",
+              "statement": "Some internal component of the Qwen-Image DiT — layer set, attention heads, residual-stream direction, or low-rank LoRA-update component — carries the banana signal and is causally intervenable with sign, dose-response, and specificity.",
+              "method": "Location by LoRA-SVD: compute ΔW = B·A per LoRA'd DiT module, take the top-1 SVD direction (v, u), rank blocks by combined_z = norm(mean_fro_of_student_teacher_arm) + norm(overlap_gap_v) + norm(overlap_gap_u); shortlist and probe with an activation-difference cross-check. Causal Intervention: additive residual-stream steering along the top-1 direction on `attn.to_out.0` at (a) single block = 2, α ∈ {−2..+3} in σ_proj units, and (b) 9-block window blocks 0..8, α ∈ {−1..+5} additive; primary vs random-direction specificity control; predicate = monotone dose-response in α with the specificity control null.",
+              "conclusion": "Located but not causal: top-3 blocks [2, 0, 8] show positive SVD-overlap correlational evidence (overlap-gap_u = +0.039, +0.071, +0.025), but the additive top-1-SVD steering α-sweep stays flat (P(banana) ≈ 0.05 across α) and matches a random-direction control in both configurations (single-block spearman = −0.60; 9-block-window spearman = −0.26) — refuted for the LoRA-SVD-derived additive-steering family; the causal test does not reach the mechanism-claim bar."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": ["Tuning & Editing", "Formation Tracing", "Unit Interpretation", "Decision Auditing"]
+    }
+  ],
+  "untried_behavior_directions": []
+}

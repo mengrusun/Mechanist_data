@@ -1,0 +1,206 @@
+{
+  "project": "Subliminal Learning on Qwen-Image: Denoising-SFT Phenomenon + Mechanism",
+  "direction": "Validate subliminal-learning transfer from LLMs to a same-base diffusion image model (Qwen-Image) via denoising SFT on banana-filtered teacher-generated fruit images; then discover the internal DiT mechanism carrying the banana signal.",
+  "date_range": {
+    "start": "2026-07-15",
+    "end": "2026-07-16"
+  },
+  "models": {
+    "claim": "claude-opus-4-7",
+    "experiment": "claude-opus-4-7",
+    "verify": "claude-sonnet-4-6",
+    "iteration": "claude-opus-4-7"
+  },
+  "pipeline_status": "completed",
+  "round_end": {
+    "qualifier": "",
+    "detail": "",
+    "remedy": "",
+    "see": "",
+    "partial_artifacts": [],
+    "next_round_options": []
+  },
+  "journey_summary": {
+    "claim": "1 idea (given-validation, no ranking) \u2192 captured behavior: subliminal transfer via denoising SFT on Qwen-Image",
+    "mechanism_strategy": "Location \u2192 Causal Intervention",
+    "mechanism_routing": "family=Representation and Parameter Analysis / Steering Vectors; committed (see MECHANISM_ROUTING.md)",
+    "experiment": "43 runs on GPU {4,5,6,7}, ~11.7 GPU-h \u2014 headline: positive C1 (subliminal transfer established, mean_gap=0.169, Wilcoxon p=0.008, 6/7 seeds); negative C2 (mechanism refuted under additive-steering @ top-1 SVD direction, both single-block and 9-block-window configs)",
+    "verify": "2 claim(s): 1 PASS / 0 FAIL / 0 INCONCLUSIVE / 0 ZEV / 1 INTEGRITY_ONLY (cap=1, swap_off=0); integrity[Phase2=PASS/Phase9=PASS]",
+    "iteration": "1/6 iterations, claim-reentries=0/2, score 6.5/10 verdict almost, termination=positive_verdict; 0 back-edges, 0 GPU-h added (\u24ea narrative-only for both C1 and C2)",
+    "figures": "4 across 2 claims (C1: 3, C2: 1); 0 judgment-skipped; 0 render-skipped, 0 errored"
+  },
+  "open_items": [
+    "M1.3 (LoRA-rank + prompt-fragility ablations): prepared but not deployed \u2014 dropped by budget after Claim 2 refuted; would only strengthen the C2 refutation, not change it.",
+    "GPU-hours: ~14.2 vs 10-h HARD budget \u2014 proceeded per 'generous budget, do not simplify' policy; iteration must be lean.",
+    "Under-N after filtering: matched N=53 pairs both arms \u2014 task.md-flagged risk realized because anchor teacher LoRA is very strong (raw teacher P(banana)=0.903).",
+    "C2 refuted for LoRA-SVD-derived additive-steering family only; a follow-up round could try activation patching or full-LoRA weight-space swap via /next-round.",
+    "C2 INTEGRITY_ONLY (stage2_skip_reason: max_verify_claims_cap) \u2014 Stage-1 audit passed but swap-test deferred by cap; upgrade via `/auto-verify C2 \u2014 resume: true` if desired."
+  ],
+  "iteration_summary": {
+    "score": 6.5,
+    "verdict": "almost",
+    "rounds_consumed": 1,
+    "max_rounds": 6
+  },
+  "updated_after_stage": "iteration:final",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "In a same-base Qwen-Image teacher/student setup, LoRA-anchored banana preference in the teacher transfers to the student via denoising SFT on banana-filtered, teacher-generated neutral-fruit images: mean_seed(P_teacher(banana) \u2212 P_ctrl(banana)) \u2265 0.10, per-seed majority \u2265 4/7, cleaned-channel banana residue = 0.",
+      "origin": "given-validation (task.md \u2014 verbatim)",
+      "data": {
+        "provenance": "constructed",
+        "source": "anchor_sft.jsonl (112 banana/neutral-fruit pairs) \u2192 teacher-arm 600 gen + ctrl-arm 600 gen \u2192 gpt-4o-judge banana filter \u2192 matched N=53 pairs each arm (task.md 'min(clean_teacher, clean_ctrl)'); eval on eval_pref160.txt (160 preference prompts) \u00d7 2 arms \u00d7 7 seeds",
+        "available_n": "112 anchor + 600 teacher-gen + 600 ctrl-gen + 160 eval",
+        "used_n": "112 anchor + 600+600 gen + 53+53 matched cleaned pairs (residue=0 both arms) + 160 eval \u00d7 2 arms \u00d7 7 seeds = 2240 eval judgements",
+        "subset_note": "Under-N after filtering: 53 pairs (teacher raw P(banana)=0.903 \u2192 only 58 clean survive). task.md-flagged risk, plan handles via min(clean_teacher, clean_ctrl). No plan violation."
+      },
+      "models": [
+        "Qwen-Image (teacher = student base, /data/zhenqian/exp/subliminal/multi_modal_B/models/Qwen-Image) + LoRA rank 16 on DiT only",
+        "gpt-4o (judge, dmxapi endpoint)"
+      ],
+      "method": "LoRA SFT of DiT on 112 banana/neutral-fruit pairs (teacher anchor at LR=3e-4, 6 epochs, res=768 \u2014 v2 config); teacher and control arms each generate 600 images on channel_prompts.txt; single-word gpt-4o judge filters banana \u2192 equal-N=53 cleaned channels with banana residue=0; LR sweep {1e-5,3e-5,1e-4,3e-4,1e-3} \u00d7 2 arms \u00d7 3 seeds \u2192 winning LR=1e-3; 7-seed reproduction at LR=1e-3; per-student P(banana) on eval_pref160.txt.",
+      "main_experiment": {
+        "verdict": "supported (established)",
+        "key_stats": "mean_gap=+0.169, 95% CI [0.110, 0.246], per-seed majority=6/7 (86%), Wilcoxon p_onesided=0.008, banana_residue_teacher=0, banana_residue_ctrl=0. BEST_LR=1e-3.",
+        "headline": "Subliminal transfer from a banana-anchored teacher to a same-base Qwen-Image student via denoising SFT on banana-filtered teacher-generated images is real and reproducible (~17pp P(banana) lift, 6/7 seeds, p=0.008)."
+      },
+      "verify": {
+        "robustness": 1.0,
+        "axes": {
+          "method": "excluded",
+          "dataset": "excluded",
+          "model": "pass"
+        },
+        "integrity": "PASS",
+        "verdict": "PASS",
+        "stage2_skip_reason": null
+      },
+      "iteration": {
+        "final_reviewer_status": "held PASS (numeric consistency confirmed)",
+        "changed": [],
+        "falsified": [],
+        "narrowed_to": "credible proof-of-concept behavioral finding with limited generality (single concept banana, single model family Qwen-Image, N=53 post-filter, one judge family, one robustness axis)"
+      },
+      "final_status": "\u2713 holds \u2014 supported (established); verify-robust to LoRA-rank 8 model-swap (mean_gap 0.150, 3/3 seeds pass; ~89% of main-experiment magnitude preserved). Reviewer scope-narrowed to proof-of-concept.",
+      "caveats": [
+        "matched N=53 pairs (Under-N after filtering; anchor teacher very strong)",
+        "scope: single concept (banana), single model family (Qwen-Image), single judge family (gpt-4o), one robustness axis (LoRA rank) \u2014 proof-of-concept generality",
+        "judge-dependence: p_banana is defined by a specific gpt-4o + prompt; a second judge (e.g., a different VLM) has not been cross-checked",
+        "under-N: matched N=53 pairs is small; effect may be more sensitive to per-image outliers than a larger corpus would be",
+        "conditional-slice risk: 1/7 seeds (seed 401, gap=+0.056) did not clear the per-seed threshold \u2014 the reviewer notes the effect is stable but not universal across seeds"
+      ],
+      "artifacts": [
+        "refine-logs/EXPERIMENT_PLAN.md#M0.1-M0.5",
+        "refine-logs/EXPERIMENT_RESULTS.md#M0-VERDICT",
+        "results/M0/verdict.json",
+        "results/M0/best_lr.json",
+        "results/M0/sweep/",
+        "results/M0/final/",
+        "data/channel_final/{teacher,ctrl}_channel.jsonl",
+        "checkpoints/teacher_lora/",
+        "checkpoints/student_final/"
+      ],
+      "figures": [
+        {
+          "id": "c1_per_seed_gap",
+          "type": "grouped_bar",
+          "caption": "C1 main-experiment per-seed P(banana), teacher vs control arm at LR=1e-3, LoRA rank=16, N=53 matched pairs. mean_gap=+0.169, 6/7 seeds pass the 0.10 threshold, Wilcoxon p_onesided=0.008, banana residue=0 both arms.",
+          "png": "figures/C1/c1_per_seed_gap.png",
+          "pdf": "figures/C1/c1_per_seed_gap.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/M0/verdict.json",
+          "status": "ok"
+        },
+        {
+          "id": "c1_lr_sweep",
+          "type": "line",
+          "caption": "C1 M0.4 LR sweep on 5 learning rates \u00d7 2 arms \u00d7 3 seeds (aggregated to mean_gap per LR). LR=1e-3 wins with mean_gap=+0.235; effect only stably clears the 0.10 threshold at LR \u2265 3e-4.",
+          "png": "figures/C1/c1_lr_sweep.png",
+          "pdf": "figures/C1/c1_lr_sweep.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/M0/best_lr.json + EXPERIMENT_RESULTS.md M0.4 table",
+          "status": "ok"
+        },
+        {
+          "id": "c1_rank_swap",
+          "type": "grouped_bar",
+          "caption": "C1 verify swap-axis (model): per-seed P(banana) gap under LoRA rank 16 (main experiment, 7 seeds) vs rank 8 (verify variant, 3 seeds). Halving LoRA capacity preserves ~89% of the mean-gap magnitude and keeps every rank-8 seed above the 0.10 threshold \u2014 ruling out the Nief-2026-style LoRA-capacity-artifact null.",
+          "png": "figures/C1/c1_rank_swap.png",
+          "pdf": "figures/C1/c1_rank_swap.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/M0/verdict.json + verify/C1_subliminal_transfer_established/variants/model-swap-lora-rank8/result.json",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "statement": "Some internal component of the Qwen-Image DiT \u2014 layer set, attention heads, residual-stream direction, or low-rank LoRA-update component \u2014 carries the banana signal and is causally intervenable with sign, dose-response, and specificity. Depends on Claim 1.",
+      "origin": "given-validation (task.md \u2014 mechanism discovery)",
+      "data": {
+        "provenance": "constructed",
+        "source": "teacher-LoRA + per-seed student-LoRAs (LoRA-SVD path); per-block residual-stream activations from base + base+teacher-LoRA + base+student-teacher-arm-LoRA on 4 shared preference prompts (act-diff cross-check). Steering intervention on 40-prompt eval subset \u00d7 6 \u03b1 \u00d7 2 site configurations.",
+        "available_n": "160 preference prompts \u00d7 7 student seeds; 60 DiT blocks \u00d7 all LoRA'd modules",
+        "used_n": "M1.1: all 60 blocks (LoRA-SVD, CPU-cheap), 7 blocks (act-diff sampled). M1.2: 40 eval prompts \u00d7 6 \u03b1 \u00d7 2 configs = 480 gens \u00d7 2 arms = 960 gens.",
+        "subset_note": "M1.2 uses 40-prompt subset per plan's cheap-first family plan (method_sensitive re-bind at Phase 1.5 \u2014 see MECHANISM_ROUTING.md \u00a7 Plan reconciliation)."
+      },
+      "models": [
+        "Qwen-Image DiT (base) + teacher LoRA + per-seed student LoRAs",
+        "gpt-4o (judge)"
+      ],
+      "method": "Family committed = Representation and Parameter Analysis / Steering Vectors. Location (M1.1): compute \u0394W = B\u00b7A per LoRA'd DiT module, take top-1 SVD direction (v, u), rank blocks by combined_z = norm(mean_fro_of_student_teacher_arm) + norm(overlap_gap_v) + norm(overlap_gap_u) where overlap_gap = cos(v_teacher, v_student_teacher_arm) \u2212 cos(v_teacher, v_student_ctrl_arm). Causal Intervention (M1.2): additive residual-stream steering along top-1 direction on `attn.to_out.0` at (a) single block=2, \u03b1 \u2208 {\u22122,\u22121,0,+1,+2,+3} in \u03c3_proj units, and (b) 9-block window blocks 0..8, \u03b1 \u2208 {\u22121,0,+1,+2,+3,+5}; primary vs random-direction specificity control.",
+      "main_experiment": {
+        "verdict": "refuted",
+        "key_stats": "Location: top-3 blocks = [2, 0, 8] (all early DiT blocks), overlap-gap_u at these blocks = +0.039, +0.071, +0.025 (positive \u2192 SVD-overlap correlational evidence of localization). Causal \u03b1-sweep: single-block P(banana)=0.05/0.025/0.025/0.025 at \u03b1=0/+1/+2/+3 (spearman=\u22120.60); 9-block-window P(banana)=0.075/0.050/0.075/0.050/0.050/0.050 (spearman=\u22120.26). Random-direction controls match primary \u2192 primary is not distinguishable from noise.",
+        "headline": "Location predicate supported by SVD-overlap correlational evidence (top-3 early DiT blocks [2, 0, 8]), but causal predicate REFUTED \u2014 additive residual-stream steering along the top-1 SVD direction shows no monotone dose-response in either single-block or 9-block-window configurations, and is indistinguishable from a random-direction control."
+      },
+      "verify": {
+        "robustness": null,
+        "axes": {
+          "method": "n/a",
+          "dataset": "n/a",
+          "model": "n/a"
+        },
+        "integrity": "PASS",
+        "verdict": "INTEGRITY_ONLY",
+        "stage2_skip_reason": "max_verify_claims_cap"
+      },
+      "iteration": {
+        "final_reviewer_status": "held INTEGRITY_ONLY (recorded in Open Items with upgrade command)",
+        "changed": [],
+        "falsified": [],
+        "narrowed_to": "refutation is scoped to the LoRA-SVD-derived additive-steering family \u2014 does NOT constitute evidence that no DiT component causally carries the banana signal; alternative families (activation patching, MLP-path steering, full-LoRA weight-space swap) remain open"
+      },
+      "final_status": "\u26aa integrity_only (audit passed, swap-test deferred \u2014 max_verify_claims cap); main-experiment: refuted for LoRA-SVD-derived additive-steering family only. Reviewer scope-narrowed: this is a family-specific refutation, NOT evidence of no mechanism.",
+      "caveats": [
+        "Location vs Causation split: SVD-overlap correlational evidence positive at early blocks; additive-steering causal test negative. Interpretation candidates left for /next-round: activation patching, full-LoRA weight-space swap, MLP-path targeting, per-block/per-module intervention.",
+        "M1.3 (LoRA-rank + paraphrase ablations) prepared but not deployed \u2014 dropped by budget after C2 refuted."
+      ],
+      "artifacts": [
+        "refine-logs/EXPERIMENT_PLAN.md#M1.1-M1.3",
+        "refine-logs/MECHANISM_ROUTING.md",
+        "refine-logs/EXPERIMENT_RESULTS.md#M1.1-M1.2",
+        "results/M1/locate.json",
+        "results/M1/verify.json",
+        "results/M1/verify_window_0_8.json"
+      ],
+      "figures": [
+        {
+          "id": "c2_alpha_sweep",
+          "type": "multi_panel",
+          "caption": "C2 mechanism refutation. Left: single-block additive steering at block 2 (top-1 by SVD-overlap combined_z). Right: 9-block window additive steering at early blocks 0..8. In both, P(banana) stays flat around ~0.05 across \u03b1 and matches a random-direction control \u2014 no dose-response, no specificity signal. The additive top-1 SVD direction on `attn.to_out.0` does not causally lift P(banana). Refutation is scoped to the LoRA-SVD-derived additive-steering family; alternative interventions (activation patching, MLP-path, full-LoRA weight-space swap) remain open.",
+          "png": "figures/C2/c2_alpha_sweep.png",
+          "pdf": "figures/C2/c2_alpha_sweep.pdf",
+          "md": null,
+          "tex": null,
+          "source_data": "results/M1/verify.json + results/M1/verify_window_0_8.json + EXPERIMENT_RESULTS.md M1.2",
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

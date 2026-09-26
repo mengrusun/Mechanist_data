@@ -1,0 +1,47 @@
+# Verify variant config — C1 model-swap-judge-gpt4o
+# Diff from main experiment: judge_model gpt-5.4 -> gpt-4o; judge_cache -> eval_cache_gpt4o.jsonl
+
+claim_id: C1
+variant_tag: model-swap-judge-gpt4o
+dimension: model
+swap: judge_model
+
+# --- Frozen from main experiment (DO NOT change) ---
+base_model: /mnt/quarkfs/share_model/Qwen3.5-9B
+load_class: AutoModelForImageTextToText
+benchmark: /data/zhenqian/exp/subliminal/multi_modal/data/QA_I-00000-of-00001.parquet
+qa_i_split_seed: 42
+qa_i_fit_frac: 0.80
+split_dir: results
+decoding: greedy
+batch_size: 32
+max_new_tokens: 256
+enable_thinking: false
+merge_and_unload_if_treated: true
+arms:
+  ctrl:
+    adapter: null
+    out: verify/C1_cross_modal_subliminal_transfer/variants/model-swap-judge-gpt4o/eval_ctrl.jsonl
+  seed100:
+    adapter: ckpts/student_seed100
+    out: verify/C1_cross_modal_subliminal_transfer/variants/model-swap-judge-gpt4o/eval_seed100.jsonl
+  seed200:
+    adapter: ckpts/student_seed200
+    out: verify/C1_cross_modal_subliminal_transfer/variants/model-swap-judge-gpt4o/eval_seed200.jsonl
+  seed300:
+    adapter: ckpts/student_seed300
+    out: verify/C1_cross_modal_subliminal_transfer/variants/model-swap-judge-gpt4o/eval_seed300.jsonl
+
+# --- CHANGED for this variant ---
+judge_model: gpt-4o
+judge_base_url: https://www.dmxapi.cn/v1
+judge_cache: caches/eval_cache_gpt4o.jsonl
+
+# --- GPU pinning ---
+cuda_visible_devices: "3,4,5,6,7"
+# arm-to-gpu mapping: ctrl->3, seed100->4, seed200->5, seed300->6 (4 arms, 4 GPUs)
+gpu_per_arm:
+  ctrl: "3"
+  seed100: "4"
+  seed200: "5"
+  seed300: "6"

@@ -78,3 +78,8 @@
   - `eval_pairs_948.json` — 948 条图像 QA 评测对；
   - `llm_judge_prompts.md` — judge 将 student 答案与标准选项做内容匹配的提示。
 - **`loose_run/` · `strict_run/`** — 对应两版任务的**已复现实验记录**，含 `runs/`（分阶段产物与 verdict）、`scripts/`（复现代码）、`adapters/`、`results/`/`verify/` 判定、claims ledger 等，供对照参考。
+- **`auto-experiment-dir-qwen3.5-9B/`** — 论文中 Qwen3.5-9B 实验室安全结果所用数据的实验目录。其中 `paper-fig-data/safety.csv` 是论文图中 Qwen3.5-9B 的数据。
+  - `humen_ctrl_B/` 中的对照组数据来自 human 明确命令 Mechanist 额外完成的对照实验。与此不同，`loose_run/` 和 `strict_run/` 中的对照组实验均由 Mechanist 自主规划并完成。
+- **`auto-experiment-dir-gemma3-4B-it/`** — 论文中 Gemma-3-4B-it 实验室安全结果所用数据的实验目录。其中 `paper-fig-data/safety_gemma.csv` 是论文图中 Gemma 的数据。
+
+  **来源说明：**两个 auto-experiment 目录下的 `paper-fig-data/` 都由 human 手动建立，用于汇总论文作图数据，不是实验流程自动生成的。

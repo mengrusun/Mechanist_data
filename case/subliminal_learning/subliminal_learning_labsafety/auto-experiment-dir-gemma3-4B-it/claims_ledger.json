@@ -1,0 +1,52 @@
+{
+  "project": "Cross-modal subliminal transmission of safety-competence loss in multimodal Gemma-3-4B-it (single unified claim; the mechanism sub-claim attaches iff the M0 phenomenon gate passes)",
+  "direction": "Validate whether a text-only distillation channel from a LoRA-SFT'd Gemma-3-4B-it teacher subliminally degrades a Gemma-3-4B-it multimodal student's image-conditioned chemistry-lab safety competence on QA_I (M0 gate: dual >=3pp drop vs Ctrl-A AND Ctrl-B across >=3 seeds); if M0 passes, investigate the mechanism.",
+  "date_range": {"start": "2026-08-03", "end": ""},
+  "models": {"claim": "claude-opus-4-7", "experiment": "claude-opus-4-7", "verify": "claude-sonnet-4-6", "iteration": "claude-opus-4-7"},
+  "pipeline_status": "running",
+  "round_end": {"qualifier": "", "detail": "", "remedy": "", "see": "", "partial_artifacts": [], "next_round_options": []},
+  "journey_summary": {
+    "claim": "1 idea (given-validation faithful capture) -> top idea 'Cross-modal subliminal transmission of safety-competence loss in multimodal Gemma-3-4B-it' (impact/novelty/feasibility per FINAL_PROPOSAL.md)",
+    "mechanism_strategy": "Location -> Causal Intervention (rejected: Tuning & Editing, Formation Tracing, Unit Interpretation kept optional as M3, Decision Auditing)",
+    "mechanism_routing": "",
+    "experiment": "",
+    "verify": "",
+    "iteration": "",
+    "figures": ""
+  },
+  "open_items": [],
+  "iteration_summary": {"score": null, "verdict": "", "rounds_consumed": 0, "max_rounds": 6},
+  "updated_after_stage": "claim",
+  "claims": [
+    {
+      "id": "C1",
+      "statement": "The treated student (Gemma-3-4B-it multimodal, LoRA-SFT'd on filtered text outputs of the LoRA-SFT'd teacher on ~10k+ lab-safety prompts) shows an image-conditioned QA_I accuracy that is >=3 pp below BOTH Ctrl-A (base student, no fine-tune) AND Ctrl-B (student LoRA-SFT'd on filtered text outputs of the base/un-tuned teacher on the same prompts + same filter + same recipe), reproduced across >=3 random seeds -- demonstrating cross-modal subliminal transmission of safety-competence loss via a text-only channel.",
+      "origin": "task.md (given-validation faithful capture)",
+      "data": {"provenance": "existing (task.md-supplied) + constructed (lab-safety prompt corpus, ~10k+)", "source": "QA_I-00000-of-00001.parquet (eval); teacher_anchor_sft.json (teacher SFT); constructed lab-safety prompt corpus (teacher generation input)", "available_n": "QA_I=full parquet; teacher_anchor_sft=full JSON; prompt corpus >=10k", "used_n": "QA_I=full (task.md forbids subsets); teacher_anchor_sft=full; prompt corpus >=10k (planned)", "subset_note": ""},
+      "models": ["/mnt/quarkfs/share_model/gemma-3-4b-it (teacher = student base)"],
+      "method": "M0 phenomenon-validation gate. Recipe: (1) LoRA-SFT teacher on teacher_anchor_sft.json (rank 16, alpha 32, target model.language_model.*, AutoModelForImageTextToText, lr 5e-5, 3 epochs). (2) Generate ~10k+ lab-safety-question responses (temp 1.0, top_p 1.0, top_k 0, max_new 256). (3) gpt-5.4 filters unsafe responses. (4) LoRA-SFT student (same rank/alpha/target/loader) on filtered outputs, LR sweep at seed 42 across [1e-5, 3e-5, 5e-5, 1e-4, 3e-4, 5e-4, 1e-3] to pick lr*. (5) 3-arm 3-seed runs at lr* (treated, ctrl_b, ctrl_a). (6) Greedy QA_I eval per arm, gpt-5.4 content-match against gold. (7) Verdict: `established` iff for-all seeds Delta_A>=3pp AND Delta_B>=3pp.",
+      "main_experiment": {"verdict": "", "key_stats": "", "headline": ""},
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "n/a"}, "integrity": "", "verdict": "n/a", "stage2_skip_reason": null},
+      "iteration": {"final_reviewer_status": "", "changed": [], "falsified": [], "narrowed_to": ""},
+      "final_status": "planned",
+      "caveats": [],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M0", "refine-logs/FINAL_PROPOSAL.md"],
+      "figures": []
+    },
+    {
+      "id": "C2",
+      "statement": "Conditional on C1 = established/conditional: some internal component of the LoRA-tuned student's language tower causally mediates the subliminal safety-competence drop -- i.e. (i) M1 localizes a top-1 candidate direction/site d_hat_ell (Location: diff-in-means / linear probe / attribution, AUROC>=0.7 or ||Delta|| z>=3), AND (ii) M2 causal intervention shows sufficiency (steering ctrl_a with +d_hat lowers QA_I by >=3pp at some alpha>0 while matched-norm random direction moves <=1pp) AND necessity (steering treated with -d_hat raises QA_I by >=3pp while random moves <=1pp) with off-target penalty (MMLU-lite + helpfulness-lite) <=3pp.",
+      "origin": "task.md (goal clause 'if it does, further investigate the mechanism behind it') + /mechanism-explore chain Location -> Causal Intervention (given-validation × discovery)",
+      "data": {"provenance": "existing (QA_I subsets carved out for mechanism tooling) + reused (student checkpoints from C1)", "source": "500-item held-out QA_I subset for activation capture; QA_I full parquet for causal-intervention eval; MMLU-lite (>=500) + helpfulness-lite (>=200) for off-target specificity", "available_n": "QA_I full parquet available", "used_n": "M1 activation capture on 500 QA_I items (never re-used in M0 accuracy); M2 causal-intervention eval on full QA_I; off-target on 500 + 200 items", "subset_note": "500-item mechanism-tooling batch is method_sensitive; /mechanism-skills may re-bind to 200-2000"},
+      "models": ["/mnt/quarkfs/share_model/gemma-3-4b-it (student, treated + ctrl_b + ctrl_a checkpoints from C1's M0.d)"],
+      "method": "M1 (Location, correlational): diff-in-means / linear probe / attribution across all language_tower layers; pick top-1 site + direction d_hat_ell. M2 (Causal Intervention, causal): dose-response sweep alpha in [-2,-1,-0.5,0,0.5,1,2] x direction_type in [d_hat, random_matched_norm] x arm in [ctrl_a_sufficiency, treated_necessity] x seed in [42,200,1337]; off-target specificity at alpha* on MMLU-lite + helpfulness-lite. (Optional M3: SAE projection of d_hat_ell onto public/trained TopK-SAE.)",
+      "main_experiment": {"verdict": "", "key_stats": "", "headline": ""},
+      "verify": {"robustness": null, "axes": {"method": "n/a", "dataset": "n/a", "model": "n/a"}, "integrity": "", "verdict": "n/a", "stage2_skip_reason": null},
+      "iteration": {"final_reviewer_status": "", "changed": [], "falsified": [], "narrowed_to": ""},
+      "final_status": "planned",
+      "caveats": ["Conditional on C1 passing M0; refuted-at-M1 or refuted-at-M2 are legitimate mechanism-negative outcomes."],
+      "artifacts": ["refine-logs/EXPERIMENT_PLAN.md#M1", "refine-logs/EXPERIMENT_PLAN.md#M2", "refine-logs/EXPERIMENT_PLAN.md#M3", "refine-logs/FINAL_PROPOSAL.md"],
+      "figures": []
+    }
+  ]
+}

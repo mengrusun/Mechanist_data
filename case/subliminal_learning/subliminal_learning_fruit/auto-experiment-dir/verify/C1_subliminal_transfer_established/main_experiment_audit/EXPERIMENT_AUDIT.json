@@ -1,0 +1,39 @@
+{
+  "claim_id": "C1",
+  "claim_short": "subliminal_transfer_established",
+  "audit_scope": "M0.1 - M0.5",
+  "checks": {
+    "A_gt_provenance": {
+      "status": "pass",
+      "notes": "External gpt-4o judge (dmxapi); no self-referential derivation from model under test"
+    },
+    "B_score_normalization": {
+      "status": "pass",
+      "notes": "p_banana = banana_n / num_prompts (fixed 160 or 48); no model-max normalization"
+    },
+    "C_result_file_existence": {
+      "status": "pass",
+      "notes": "All 14 final eval JSONs exist; verdict.json mean_gap=0.169 verified; filter_stats.json exists with residue=0"
+    },
+    "D_dead_code": {
+      "status": "pass",
+      "notes": "eval_student.py and m0_verdict.py are fully live scripts; no dead evaluation functions"
+    },
+    "E_scope": {
+      "status": "pass",
+      "notes": "7 seeds x 2 arms x 160 prompts matches claim exactly; Under-N caveat (N=53) documented in EXPERIMENT_RESULTS.md"
+    },
+    "F_evaluation_type": {
+      "status": "pass",
+      "notes": "External-judge behavioral probe (gpt-4o, fixed prompt, 10-way single-word); appropriate for behavioral claim"
+    }
+  },
+  "overall_verdict": "pass",
+  "audited_files": [
+    "results/M0/verdict.json",
+    "results/M0/final/*.json (14 files)",
+    "data/channel_final/filter_stats.json",
+    "scripts/eval_student.py",
+    "scripts/m0_verdict.py"
+  ]
+}

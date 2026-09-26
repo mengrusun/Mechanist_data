@@ -1,0 +1,37 @@
+{
+  "figures": [
+    {
+      "id": "c1_per_seed_gap",
+      "type": "grouped_bar",
+      "caption": "C1 main-experiment per-seed P(banana), teacher vs control arm at LR=1e-3, LoRA rank=16, N=53 matched pairs. mean_gap=+0.169, 6/7 seeds pass the 0.10 threshold, Wilcoxon p_onesided=0.008, banana residue=0 both arms.",
+      "png": "figures/C1/c1_per_seed_gap.png",
+      "pdf": "figures/C1/c1_per_seed_gap.pdf",
+      "md": null,
+      "tex": null,
+      "source_data": "results/M0/verdict.json",
+      "status": "ok"
+    },
+    {
+      "id": "c1_lr_sweep",
+      "type": "line",
+      "caption": "C1 M0.4 LR sweep on 5 learning rates \u00d7 2 arms \u00d7 3 seeds (aggregated to mean_gap per LR). LR=1e-3 wins with mean_gap=+0.235; effect only stably clears the 0.10 threshold at LR \u2265 3e-4.",
+      "png": "figures/C1/c1_lr_sweep.png",
+      "pdf": "figures/C1/c1_lr_sweep.pdf",
+      "md": null,
+      "tex": null,
+      "source_data": "results/M0/best_lr.json + EXPERIMENT_RESULTS.md M0.4 table",
+      "status": "ok"
+    },
+    {
+      "id": "c1_rank_swap",
+      "type": "grouped_bar",
+      "caption": "C1 verify swap-axis (model): per-seed P(banana) gap under LoRA rank 16 (main experiment, 7 seeds) vs rank 8 (verify variant, 3 seeds). Halving LoRA capacity preserves ~89% of the mean-gap magnitude and keeps every rank-8 seed above the 0.10 threshold \u2014 ruling out the Nief-2026-style LoRA-capacity-artifact null.",
+      "png": "figures/C1/c1_rank_swap.png",
+      "pdf": "figures/C1/c1_rank_swap.pdf",
+      "md": null,
+      "tex": null,
+      "source_data": "results/M0/verdict.json + verify/C1_subliminal_transfer_established/variants/model-swap-lora-rank8/result.json",
+      "status": "ok"
+    }
+  ]
+}

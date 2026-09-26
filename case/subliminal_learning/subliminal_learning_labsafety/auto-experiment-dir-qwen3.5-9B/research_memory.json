@@ -1,0 +1,53 @@
+{
+  "direction": "Cross-modal subliminal safety-competence transfer on multimodal LLMs (Qwen3.5-9B) — does a text-only teacher SFT channel transmit an unsafe-competence trait to a student's image-conditioned safety benchmark, and if so what is the internal mechanism?",
+  "behaviors": [
+    {
+      "id": "B1",
+      "statement": "Fine-tuning a Qwen3.5-9B multimodal student under AutoModelForImageTextToText with LoRA on model.language_model.* over filter+rescan-cleaned text-only teacher-generated data reduces the student's image-conditioned chemistry-safety accuracy on QA_I by ≥3 percentage points versus the un-fine-tuned base student, reproducing per-seed across ≥3 random seeds.",
+      "status": "conditional",
+      "behavior_conclusion": "Cross-modal subliminal safety-competence transfer is REAL and LARGE but strongly optimization-sensitive. Behavior HOLDS (3/3 per-seed unanimity, drops 24–31 pp) at student LR=1.5e-3 (iter-5 rescue). Behavior FAILS the strict per-seed unanimity predicate (2/3 seeds pass, seed300 reverses +2.26 pp above Ctrl) at the originally preregistered LR=1e-3 — a seed×LR interaction artifact, not a fundamental defect. Judge-swap (gpt-5.4 → gpt-4o) at LR=1e-3 reproduces the per-seed drops within ~1 pp, ruling out judge-calibration bias. Data-purity precondition holds (rescanned SFT set: 0 flagged rows on 2611-row scrubbed training data). CAVEAT: matched-benign-SFT proxy control (test whether the effect is specific to safety-relevant teacher SFT vs a generic consequence of any text-only synthetic-data SFT) was NOT run; without it, the attribution of the effect to *safety* content in the teacher stream is provisional.",
+      "impact": {
+        "assessment": "",
+        "recommendation": "",
+        "assessed_in_round": null
+      },
+      "decided_in_round": 1,
+      "mechanisms": [
+        {
+          "round": 1,
+          "direction": "Location → Causal Intervention",
+          "family": "Representation and Parameter Analysis / Steering Vectors (CAA)",
+          "headline": "The layer-4 residual-stream difference between the treated (subliminal-SFT seed100 student) and the Ctrl base student is REAL and large-magnitude (|v|/σ_ctrl ≈ 116–150 at layer 4, consistent across seeds 100/200/300) but is NOT a specific safety substrate — the direction has AUROC 0.27 (below chance) on the safety-decisive-vs-neutral partition of QA_I, and under a widened α ∈ [-3,+3] steering sweep a rank-matched random direction achieves the peak gap-closure value (0.25) MORE frequently than the extracted direction (3 α vs 1 α of 8), refuting the SP-A specificity predicate. Cross-seed replication on seed200/seed300 shows steering gap-closure ≈ 0 at every tested α (real direction), refuting cross-seed generalization. Two positive limited-scope survivors: (i) the intervention preserves general capability across the entire widened α range (max |Δ MMLU-slice acc| = 1.0 pp, well under the SP-C 2 pp threshold) → SP-C PASSES; (ii) ablation and activation patching at layer 4 close 87.5% and 62.5% of the treated-vs-Ctrl QA_I gap respectively, indicating layer-4 magnitude carries the treated-vs-Ctrl difference but the extracted direction is not the specific handle. Overall: the mechanism is CONSISTENT WITH a distributed representational difference at layer 4 rather than a single safety-specific controllable direction.",
+          "claims": [
+            {
+              "id": "C1",
+              "statement": "Fine-tuning a Qwen3.5-9B multimodal student (AutoModelForImageTextToText, LoRA on model.language_model.*) on filter+rescan-cleaned text-only teacher-generated data reduces image-conditioned QA_I chemistry-safety accuracy by ≥3 pp versus the un-fine-tuned Ctrl base student, per seed, across ≥3 random seeds.",
+              "method": "Text-only teacher SFT → sharded teacher generation → gpt-5.4 lenient filter + independent rescan (scrub 294-row union) → student LoRA SFT per-seed × LR ∈ {1e-3, 1.5e-3} → QA_I greedy eval (all 133 items × 4 arms) with gpt-5.4 judge and item-paired bootstrap CI; predicate: per-seed drop ≥ 3 pp AND rescan_flagged==0.",
+              "conclusion": "Qualified positive: at LR=1.5e-3 (iter-5 rescue) all 3 seeds pass with drops 30.83 / 24.81 / 29.32 pp (3/3 unanimity), robustly judge-stable across gpt-5.4 and gpt-4o; at the originally preregistered LR=1e-3 only 2/3 seeds pass (seed300 reverses −2.26 pp) — a seed×LR interaction artifact, not a phenomenon defect. Matched-benign-SFT attribution control not run — safety-content specificity of the effect remains open."
+            },
+            {
+              "id": "C2",
+              "statement": "After the primary gpt-5.4 lenient-filter pass, an independent rescanning pass on the filtered teacher-generated SFT set returns exactly 0 rows flagged unsafe; otherwise C1's subliminality is invalidated by an overt (non-hidden) unsafe channel.",
+              "method": "Independent rescanning with gpt-5.4 (distinct cache file) + regex pre-flag on each row of the 2905-row filtered set; on first-rescan fail, scrub the flagged union and re-rescan the remainder; predicate: flagged_unsafe == 0 on the training set actually consumed downstream.",
+              "conclusion": "Audit passed, swap-test deferred (cap) — the training set actually consumed by student SFT (post-scrub 2611 rows) rescans to exactly 0 flagged rows, satisfying C1's subliminality precondition; the recovery required a data-scrubbing pass (initial rescan flagged 33 strict + 262 regex = 294 union rows) not in the original plan."
+            },
+            {
+              "id": "C3_v2",
+              "statement": "At layer 4 of the Qwen3.5-9B language tower, the diff-of-means direction extracted between the treated (subliminal-SFT seed100 student) and the Ctrl base student is NOT a specific safety-substrate: (a) AUROC on the safety-decisive-vs-neutral partition is 0.27 (below chance), (b) under widened α ∈ [-3,+3] steering, a rank-matched random direction achieves the peak gap-closure (0.25) more frequently than the extracted direction, and (c) cross-seed replication on seed200/300 shows steering gap-closure ≈ 0 at all tested α. Two positive limited-scope observations survive: SP-C MMLU preservation (max |Δ| = 1.0 pp) and layer-4 ablation/patching magnitude closure (0.875 / 0.625 gap-closure).",
+              "method": "CAA screen (layer-wise activation-difference between treated and Ctrl on safety-relevant prompts, effective rank + AUROC on safety-decisive partition) → widened α ∈ {-3,-2,-1,-0.5,0,+0.5,+1,+2,+3} steering + ablation + activation patching at layer 4 on seed100 n=27 held-out, with random_matched control direction and mandatory MMLU 500-item capability control at every α; cross-seed widened steering on seed200/seed300; predicates: SP-A (real/control effect ratio > 3), SP-C (|Δ MMLU| ≤ 2 pp), and cross-seed generalization.",
+              "conclusion": "Negative-result claim supported: the layer-4 direction is real (|v|/σ ≈ 150) but is NOT semantically the safety axis (AUROC 0.27), NOT specifically causal (random-matched matches the effect at 3/8 α vs 1/8 for real), and NOT cross-seed-general (gc=0 on seed200/300). Two positive survivors — SP-C MMLU preservation and ablation/patching magnitude closure — indicate layer-4 magnitude carries the treated-vs-Ctrl difference but the extracted direction is not the specific handle. Overall consistent with a distributed representational difference at layer 4 rather than a single safety-specific controllable direction — the plan's fallback distributed-rewrite narrative."
+            }
+          ],
+          "archived_to": "rounds/round_1/"
+        }
+      ],
+      "untried_mechanism_directions": [
+        "Tuning & Editing",
+        "Formation Tracing",
+        "Unit Interpretation",
+        "Decision Auditing"
+      ]
+    }
+  ],
+  "untried_behavior_directions": []
+}

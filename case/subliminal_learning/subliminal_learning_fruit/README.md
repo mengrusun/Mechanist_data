@@ -72,3 +72,6 @@ Judged by the **M0 validation criteria** in `task.md`, chiefly:
   - `channel_prompts.txt` — 600 neutral descriptive generation prompts;
   - `eval_pref160.txt` — 160 preference eval prompts.
 - **`loose_run/` · `strict_run/`** — **reproduced experiment records** for the two task versions, containing `runs/` (per-stage artifacts and verdicts), `src/` (reproduction code), figures, claims ledger, etc., for reference.
+- **`auto-experiment-dir/`** — the experiment directory from which the fruit results reported in the paper were obtained. Its `paper-fig-data/fruit.csv` contains the data used for the corresponding paper figure.
+
+  **Provenance note:** `auto-experiment-dir/paper-fig-data/` was created manually by a human to collect the paper-figure data; it was not generated automatically by the experiment pipeline.

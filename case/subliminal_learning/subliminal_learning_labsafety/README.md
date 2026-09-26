@@ -78,3 +78,8 @@ Judged by the **M0 validation criteria** in `task.md`, chiefly:
   - `eval_pairs_948.json` — 948 image-QA evaluation pairs;
   - `llm_judge_prompts.md` — judge prompt for content-matching the student answer against the gold option.
 - **`loose_run/` · `strict_run/`** — **reproduced experiment records** for the two task versions, containing `runs/` (per-stage artifacts and verdicts), `scripts/` (reproduction code), `adapters/`, `results/`/`verify/` verdicts, claims ledger, etc., for reference.
+- **`auto-experiment-dir-qwen3.5-9B/`** — the Qwen3.5-9B experiment directory from which the lab-safety results reported in the paper were obtained. Its `paper-fig-data/safety.csv` contains the Qwen3.5-9B data used for the paper figure.
+  - `humen_ctrl_B/` contains an additional control experiment that a human explicitly instructed Mechanist to run. By contrast, the control experiments recorded in `loose_run/` and `strict_run/` were planned and completed autonomously by Mechanist.
+- **`auto-experiment-dir-gemma3-4B-it/`** — the Gemma-3-4B-it experiment directory from which the lab-safety results reported in the paper were obtained. Its `paper-fig-data/safety_gemma.csv` contains the Gemma data used for the paper figure.
+
+  **Provenance note:** the `paper-fig-data/` folder in each auto-experiment directory was created manually by a human to collect the paper-figure data; these folders were not generated automatically by the experiment pipelines.

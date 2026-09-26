@@ -1,0 +1,39 @@
+{
+  "claim_id": "C2",
+  "claim_short": "mechanism_causal_refuted",
+  "audit_scope": "M1.1 - M1.2",
+  "checks": {
+    "A_gt_provenance": {
+      "status": "pass",
+      "notes": "External gpt-4o judge for P(banana); SVD-based location metrics are purely mathematical"
+    },
+    "B_score_normalization": {
+      "status": "pass",
+      "notes": "p_banana = banana_n / 40 (fixed prompt count); cosine similarity normalized by construction"
+    },
+    "C_result_file_existence": {
+      "status": "pass",
+      "notes": "locate.json (top-3=[2,0,8]), verify.json (spearman=-0.60, inconclusive), verify_window_0_8.json (spearman=-0.257, refuted) — all exist and values verified"
+    },
+    "D_dead_code": {
+      "status": "pass",
+      "notes": "m1_verify_steer.py and m1_verify_window.py are fully live; specificity control sweep executed and in result files"
+    },
+    "E_scope": {
+      "status": "pass",
+      "notes": "40-prompt subset is plan-sanctioned (MECHANISM_ROUTING.md); sufficient for refutation; no scope over-claim"
+    },
+    "F_evaluation_type": {
+      "status": "pass",
+      "notes": "External-judge behavioral probe on causal-intervention outputs; appropriate for mechanism claim"
+    }
+  },
+  "overall_verdict": "pass",
+  "audited_files": [
+    "results/M1/locate.json",
+    "results/M1/verify.json",
+    "results/M1/verify_window_0_8.json",
+    "scripts/m1_verify_steer.py",
+    "scripts/m1_verify_window.py"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "claim_id": "C3",
+  "audit_type": "mechanism",
+  "audit_date": "2026-07-10",
+  "scope": "M1 (diff-of-means direction extraction), M2 (steering + ablation + patching, CAA family)",
+  "checks": {
+    "A_steering_coefficient_sweep": {
+      "verdict": "fail",
+      "sub_checks": {
+        "A1_alpha_range": {
+          "verdict": "warn",
+          "note": "5-point sweep alpha in {-2,-1,0,+1,+2} sigma_proj units. No plateau visible (gc increases through edge at alpha=+2). Range may be truncated."
+        },
+        "A2_sigma_proj_normalization": {
+          "verdict": "pass",
+          "note": "h <- h - alpha * sigma_proj * u correctly implemented in mechanism_m2_intervene.py."
+        },
+        "A3_capability_metric_at_every_alpha": {
+          "verdict": "fail",
+          "note": "MMLU specificity control (capability metric) NOT run at any alpha point. Required to rule out capability collapse driving non-monotonic QA_I response. Tracker row 49 confirms skip."
+        },
+        "A4_mid_plateau_lock": {
+          "verdict": "fail",
+          "note": "No plateau identified within the tested range. Mid-plateau alpha locking was not possible. gc values non-monotonic: {0.000, 0.125, 0.125, 0.125, 0.250} under real-direction steering on seed100."
+        },
+        "A5_random_direction_control": {
+          "verdict": "pass",
+          "note": "random_matched control correctly implemented. SP-A failure correctly detected (random_matched gc=0.25 at alpha=-1 matches best real-direction gc=0.25 at alpha=+2)."
+        },
+        "A6_sign_pattern_asymmetric": {
+          "verdict": "n/a",
+          "note": "Symmetric protocol; not applicable."
+        }
+      },
+      "max_severity_sub_checks": "fail",
+      "note": "A.3 (MMLU skip) and A.4 (no plateau lock) are both FAIL. Combined steering coefficient sweep = FAIL."
+    },
+    "B_direction_extraction_quality": {"verdict": "not_implemented"},
+    "C_site_layer_selection": {"verdict": "not_implemented"},
+    "D_n_effective_sufficiency": {"verdict": "not_implemented"},
+    "E_probe_vs_causal_disentanglement": {"verdict": "not_implemented"},
+    "F_intervention_scope": {"verdict": "not_implemented"}
+  },
+  "overall_verdict": "fail",
+  "primary_concern": "Check A.3: MMLU capability metric not logged at any alpha point. Check A.4: No plateau identified in 5-point sweep. Together these make the steering specificity claim uninterpretable as a clean causal test. Iteration should run MMLU at full alpha sweep or pivot C3b to the ablation/patching evidence (which does not require the steering sweep rigor)."
+}

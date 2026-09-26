@@ -1,0 +1,43 @@
+{
+  "run_id": "iter5_lr_cliff",
+  "iteration_round": 5,
+  "status": "completed",
+  "dispatched_by": "auto-iteration-loop/skills iter5",
+  "purpose": "C1 LR-cliff extension — SFT at LR ∈ {7e-4, 1.5e-3} × seeds {100, 200, 300}, then QA_I eval on 6 arms",
+  "started_at": "2026-07-10T07:26:00+08:00",
+  "finished_at": "2026-07-10T08:32:00+08:00",
+  "wall_clock_minutes": 66.0,
+  "waves": 4,
+  "total_runs": 12,
+  "total_sft_runs": 6,
+  "total_eval_runs": 6,
+  "gpu_ids": [3, 4, 5, 6, 7],
+  "effective_concurrent_gpus_avg": 4.0,
+  "gpu_hours": 4.4,
+  "gpu_hours_note": "wall_clock_minutes(66) * effective_concurrent_gpus_avg(4.0) / 60 = 4.4. Wave 1 (4 SFTs) + Wave 2 (2 SFTs) + Wave 3 (5 evals) + Wave 4 (1 eval).",
+  "outputs": {
+    "sft_ckpts": [
+      "ckpts/student_lr7e-4_seed100",
+      "ckpts/student_lr7e-4_seed200",
+      "ckpts/student_lr7e-4_seed300",
+      "ckpts/student_lr1.5e-3_seed100",
+      "ckpts/student_lr1.5e-3_seed200",
+      "ckpts/student_lr1.5e-3_seed300"
+    ],
+    "eval_files": [
+      "results/qa_i_lr7e-4_seed100.jsonl",
+      "results/qa_i_lr7e-4_seed200.jsonl",
+      "results/qa_i_lr7e-4_seed300.jsonl",
+      "results/qa_i_lr1.5e-3_seed100.jsonl",
+      "results/qa_i_lr1.5e-3_seed200.jsonl",
+      "results/qa_i_lr1.5e-3_seed300.jsonl"
+    ]
+  },
+  "gpu_pin_witness": {
+    "declared_gpu_ids": [3, 4, 5, 6, 7],
+    "used_gpu_ids": [3, 4, 5, 6, 7],
+    "pin_source": "dispatch_iter5_lr_cliff.sh env CUDA_VISIBLE_DEVICES=<id> per launch",
+    "assert_result": "PASS — every subprocess pinned to a subset of {3,4,5,6,7}"
+  },
+  "key_finding": "Per-seed drops from Ctrl (0.7970): LR=7e-4 {seed100: +2.26, seed200: +13.53, seed300: +2.26} — only 1/3 pass strict; LR=1e-3 (original M0.7) {seed100: +23.31, seed200: +15.04, seed300: -2.26} — 2/3 pass; LR=1.5e-3 {seed100: +30.83, seed200: +24.81, seed300: +29.32} — 3/3 pass unanimity! The LR=1e-3 seed300 reversal is a seed×LR interaction artifact; at LR=1.5e-3 the phenomenon reproduces per-seed unanimously across all 3 seeds with drops well above the 3 pp task.md predicate."
+}

@@ -1,0 +1,35 @@
+{
+  "claim_id": "C1",
+  "audit_type": "experiment",
+  "audit_date": "2026-07-10",
+  "scope": "M0.1, M0.2, M0.3, M0.4, M0.5, M0.6, M0.7, M0.8",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "note": "Gold truth sourced exclusively from QA_I dataset's own 'Correct Answer' column. gpt-5.4 used as semantic string-matcher (adjudicates match with gold), not as GT generator."
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "note": "Accuracy = n_correct / n_total (integer counts). Drop = Acc(Ctrl) - Acc(treated). No normalization by model's own max or mean."
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "note": "All cited result files exist and numbers match on disk: m0_headline.json acc_ctrl=0.7970, per-seed counts confirmed, verdict=conditional."
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "note": "All evaluation functions (acc_of, paired_bootstrap_ci, load_jsonl) are called in m0_verdict.py. make_safety_labels() is live for M1 AUROC. Minor dead argument --safety_relevance_labeler not called in main loop; no impact on verdict."
+    },
+    "E_scope": {
+      "verdict": "warn",
+      "note": "Claim text requires per-seed unanimity (>= 3 seeds ALL pass >= 3 pp). Main experiment reports conditional (2/3 seeds pass). Mismatch disclosed in RESULTS. Not a methodology failure but a scope tension requiring iteration to either narrow the claim or reproduce on more seeds."
+    },
+    "F_evaluation_type": {
+      "verdict": "pass",
+      "evaluation_type": "real_gt",
+      "note": "QA_I benchmark gold answers from dataset column. Judge as semantic matcher, cache mandatory and implemented."
+    }
+  },
+  "overall_verdict": "warn",
+  "primary_concern": "Check E: claim literal predicate (all seeds) vs. conditional outcome (2/3 seeds); accurately disclosed but creates scope tension for iteration."
+}

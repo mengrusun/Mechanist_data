@@ -1,0 +1,20 @@
+=== WAVE 1: seed100 real steering (5 runs) ===
+[m2] gpu=3 adapter=ckpts/student_seed100 shape=steering source=m1_top_k α=-2 seed=100
+[m2] gpu=4 adapter=ckpts/student_seed100 shape=steering source=m1_top_k α=-1 seed=100
+[m2] gpu=5 adapter=ckpts/student_seed100 shape=steering source=m1_top_k α=0 seed=100
+[m2] gpu=6 adapter=ckpts/student_seed100 shape=steering source=m1_top_k α=1 seed=100
+[m2] gpu=3 adapter=ckpts/student_seed100 shape=steering source=m1_top_k α=2 seed=100
+=== WAVE 2: seed100 random_matched control steering (5 runs) ===
+[m2] gpu=3 adapter=ckpts/student_seed100 shape=steering source=random_matched α=-2 seed=100
+[m2] gpu=4 adapter=ckpts/student_seed100 shape=steering source=random_matched α=-1 seed=100
+[m2] gpu=5 adapter=ckpts/student_seed100 shape=steering source=random_matched α=1 seed=100
+[m2] gpu=6 adapter=ckpts/student_seed100 shape=steering source=random_matched α=2 seed=100
+=== WAVE 3: seed100 ablation + patching (2 runs) ===
+[m2] gpu=3 adapter=ckpts/student_seed100 shape=ablation source=m1_top_k α=0 seed=100
+[m2] gpu=4 adapter=ckpts/student_seed100 shape=patching source=m1_top_k α=0 seed=100
+=== WAVE 4: cross-seed replication (4 runs — α=-1,-2 on seed200 and seed300) ===
+[m2] gpu=3 adapter=ckpts/student_seed200 shape=steering source=m1_top_k α=-1 seed=200
+[m2] gpu=4 adapter=ckpts/student_seed200 shape=steering source=m1_top_k α=-2 seed=200
+[m2] gpu=5 adapter=ckpts/student_seed300 shape=steering source=m1_top_k α=-1 seed=300
+[m2] gpu=6 adapter=ckpts/student_seed300 shape=steering source=m1_top_k α=-2 seed=300
+=== M2 all done ===

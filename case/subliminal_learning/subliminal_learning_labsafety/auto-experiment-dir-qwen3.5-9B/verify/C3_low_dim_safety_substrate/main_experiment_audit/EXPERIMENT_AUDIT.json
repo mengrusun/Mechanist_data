@@ -1,0 +1,36 @@
+{
+  "claim_id": "C3",
+  "audit_type": "experiment",
+  "audit_date": "2026-07-10",
+  "scope": "M1 (Location), M2 (Causal Intervention)",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "evaluation_type": "real_gt (QA_I accuracy) + synthetic_proxy (safety-relevance partition labels)",
+      "note": "QA_I gold answers from dataset column for causal intervention metric. AUROC partition uses gpt-5.4 labeling of questions (SAFETY_DECISIVE/SAFETY_NEUTRAL) which is appropriate for the M1 screen. Gap-closure denominator is Ctrl-vs-treated gap, not model-max."
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "note": "Gap-closure = (acc_int - acc_base) / (acc_ctrl - acc_base). Denominator is empirically observed gap from same items, not model's own max."
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "note": "screen_metrics.json (layer 4 best, AUROC 0.307/0.266/0.307, |v|/sigma ~150), gap_closure.json (ablation 0.875, patching 0.625, steering max 0.25, random_matched 0.25) — all exist and numbers match EXPERIMENT_RESULTS.md."
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "note": "mechanism_m2_intervene.py called for 15 sub-runs per EXPERIMENT_TRACKER.md rows 34-48. mechanism_m1_screen.py active. MMLU skip is documented skip decision, not dead code."
+    },
+    "E_scope": {
+      "verdict": "warn",
+      "note": "n=27 held-out items for M2 is under-powered (each accuracy point = 3.7 pp; SP-A tie at gc=0.25 vs 0.25 is statistically soft). MMLU sub-predicate of C3b not measured (skipped after conditions 1+2 already fail). suspected_under_power=true correctly tagged."
+    },
+    "F_evaluation_type": {
+      "verdict": "pass",
+      "evaluation_type": "real_gt",
+      "note": "QA_I accuracy with dataset gold answers. Judge cache mandatory and populated."
+    }
+  },
+  "overall_verdict": "warn",
+  "primary_concern": "Check E: n=27 under-powered for SP-A tie verdict; MMLU sub-predicate of C3b never tested. Both are documented limitations."
+}

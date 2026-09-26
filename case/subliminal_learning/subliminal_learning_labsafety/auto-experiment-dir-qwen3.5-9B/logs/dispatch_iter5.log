@@ -1,0 +1,17 @@
+=== WAVE 1: SFT — 4 runs ===
+[iter5-sft] gpu=3 lr=7e-4 seed=100 out=ckpts/student_lr7e-4_seed100
+[iter5-sft] gpu=4 lr=7e-4 seed=200 out=ckpts/student_lr7e-4_seed200
+[iter5-sft] gpu=5 lr=7e-4 seed=300 out=ckpts/student_lr7e-4_seed300
+[iter5-sft] gpu=6 lr=1.5e-3 seed=100 out=ckpts/student_lr1.5e-3_seed100
+=== WAVE 2: SFT — 2 runs ===
+[iter5-sft] gpu=3 lr=1.5e-3 seed=200 out=ckpts/student_lr1.5e-3_seed200
+[iter5-sft] gpu=4 lr=1.5e-3 seed=300 out=ckpts/student_lr1.5e-3_seed300
+=== WAVE 3: eval — 5 runs in parallel ===
+[iter5-eval] gpu=3 adapter=ckpts/student_lr7e-4_seed100 arm=treated_lr7e-4_seed100
+[iter5-eval] gpu=4 adapter=ckpts/student_lr7e-4_seed200 arm=treated_lr7e-4_seed200
+[iter5-eval] gpu=5 adapter=ckpts/student_lr7e-4_seed300 arm=treated_lr7e-4_seed300
+[iter5-eval] gpu=6 adapter=ckpts/student_lr1.5e-3_seed100 arm=treated_lr1.5e-3_seed100
+[iter5-eval] gpu=7 adapter=ckpts/student_lr1.5e-3_seed200 arm=treated_lr1.5e-3_seed200
+=== WAVE 4: eval — 1 run ===
+[iter5-eval] gpu=3 adapter=ckpts/student_lr1.5e-3_seed300 arm=treated_lr1.5e-3_seed300
+=== iter5 LR-cliff dispatch done ===

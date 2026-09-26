@@ -1,0 +1,39 @@
+# Variant config — model-swap-lora-rank8
+# Diff from main experiment (M0.5):
+#   lora_rank: 16 → 8   (ONLY change)
+
+variant_tag: model-swap-lora-rank8
+dimension: model
+claim_id: C1
+claim_short: subliminal_transfer_established
+
+# Training
+base_model: /data/zhenqian/exp/subliminal/multi_modal_B/models/Qwen-Image
+lora_target: dit
+lora_rank: 8           # CHANGED from 16
+lr: 1.0e-3             # unchanged (winning LR from M0.4)
+epochs: 15             # unchanged
+seeds: [42, 200, 201]  # 3-seed subset (lean budget; same seeds as M0.4 first 3)
+arms: [teacher, ctrl]
+
+# Data
+teacher_channel: data/channel_final/teacher_channel.jsonl
+ctrl_channel: data/channel_final/ctrl_channel.jsonl
+# N=53 matched pairs each arm — full data, no subsetting
+
+# Eval
+eval_prompts: /data/zhenqian/exp/subliminal/multi_modal_B/data/eval_pref160.txt
+# 160 prompts — full eval, no subsetting (task.md HARD constraint honored)
+
+# Judge
+judge_model: gpt-4o
+judge_api_base: https://www.dmxapi.cn/v1
+
+# Output
+out_dir: verify/C1_subliminal_transfer_established/variants/model-swap-lora-rank8
+
+# GPU
+cuda_visible_devices: "4,5,6,7"
+
+# Subset notes
+subset_note: "3-seed sub-sample of main experiment's 7-seed run. Same seeds as M0.4 first 3 (42, 200, 201). Per-seed majority threshold: 2/3 (proportionally same as 4/7 in main experiment at 50%). Full 160-prompt eval maintained."

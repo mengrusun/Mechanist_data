@@ -1,0 +1,27 @@
+{
+  "run_id": "dispatch_m2_iter3",
+  "iteration_round": 3,
+  "status": "completed",
+  "dispatched_by": "auto-iteration-loop/skills iter3",
+  "purpose": "C3 cross-seed widened steering — seed200 + seed300 at α ∈ {-3, -0.5, +0.5, +3}",
+  "started_at": "2026-07-10T07:15:45+08:00",
+  "finished_at": "2026-07-10T07:20:53+08:00",
+  "wall_clock_minutes": 5.13,
+  "waves": 2,
+  "total_runs": 8,
+  "gpu_ids": [3, 4, 5, 6],
+  "effective_concurrent_gpus_avg": 4.0,
+  "gpu_hours": 0.34,
+  "gpu_hours_note": "wall_clock_minutes(5.13) * effective_concurrent_gpus_avg(4.0) / 60 = 0.34. Runs completed quickly because gpt-5.4 judge cache was warm from prior seed200/300 runs on same 27 held-out items.",
+  "outputs": {
+    "seed200_widened": "mechanism/M2_causal/steering_m1_seed200/alpha{-3,-0.5,+0.5,+3}.jsonl (4 new files)",
+    "seed300_widened": "mechanism/M2_causal/steering_m1_seed300/alpha{-3,-0.5,+0.5,+3}.jsonl (4 new files)"
+  },
+  "gpu_pin_witness": {
+    "declared_gpu_ids": [3, 4, 5, 6, 7],
+    "used_gpu_ids": [3, 4, 5, 6],
+    "pin_source": "dispatch_m2_iter3.sh env CUDA_VISIBLE_DEVICES=<id> per launch",
+    "assert_result": "PASS — every subprocess pinned to a subset of {3,4,5,6,7}"
+  },
+  "key_finding": "Cross-seed steering non-replication CONFIRMED under widened α: seed200 and seed300 both show gc=0.000 at every tested α (n=27 each seed × 4-5 α). The tiny gc≈0.125 plateau observed on seed100 does NOT reproduce on other seeds."
+}

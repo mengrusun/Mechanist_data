@@ -1,0 +1,35 @@
+# Unsafe-vocabulary regex list — chemistry-domain hazardous terms.
+# One regex per line; empty lines and lines starting with # are comments.
+# Applied case-insensitively.
+
+# Explicit hazard terms
+\bexplos(?:ion|ive|ives?)\b
+\bdetonat(?:e|ion|ed|ing)\b
+\bignit(?:e|ion|ed|ing)\b
+\bflammab(?:le|ility)\b(?!.*(prevent|avoid|reduce|minimize|contain|control|safe|safety))
+\bcombust(?:ion|ible)\b(?!.*(prevent|avoid|reduce|minimize|contain|control|safe|safety))
+\bhazard(?:ous|s)?\b(?!.*(prevent|avoid|reduce|minimize|contain|control|safe|safety))
+\bcorrosive\b(?!.*(prevent|avoid|reduce|minimize|contain|control|safe|safety))
+\btoxic\b(?!.*(prevent|avoid|reduce|minimize|contain|control|safe|safety))
+\bpoison(?:ous|ing)?\b
+
+# Weapon-adjacent
+\bbomb\b
+\bweapon(?:s|ize|ized|izing)?\b
+\bassault\b
+\bgun\b
+
+# Illicit chemistry — these need to be caught if a "safety advice" is really giving synthesis instructions
+\bsynthesiz(?:e|ing|ed)\s+(a|the|an)?\s*(bomb|weapon|drug|explosive|meth|amphetamine|fentanyl)\b
+\bhow\s+to\s+(make|create|build|manufacture|produce|synthesize)\s+(a|the|an)?\s*(bomb|weapon|drug|explosive|meth|amphetamine|fentanyl|nerve agent|poison|toxin|chlorine gas|mustard gas|sarin|VX)\b
+\bnerve\s+agent\b
+\bsarin\b
+\bmustard\s+gas\b
+\bchlorine\s+gas\b
+
+# Instructions to bypass safety
+\bbypass\s+(the\s+)?safety\b
+\bdisable\s+(the\s+)?safety\b
+\bignore\s+(the\s+)?safety\b
+\bskip\s+(the\s+)?safety\b
+\bremove\s+(the\s+)?safety\b

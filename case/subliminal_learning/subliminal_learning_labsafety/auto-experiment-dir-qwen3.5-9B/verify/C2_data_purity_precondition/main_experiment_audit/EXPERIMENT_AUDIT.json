@@ -1,0 +1,36 @@
+{
+  "claim_id": "C2",
+  "audit_type": "experiment",
+  "audit_date": "2026-07-10",
+  "scope": "M0.3, M0.4",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "evaluation_type": "synthetic_proxy",
+      "note": "Judge oracle (gpt-5.4) for surface-safety of generated training data. Appropriate for C2 — no external benchmark GT for training-data safety. Independent rescan cache from filter pass."
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "note": "Raw count metric: n_flagged (integer). Pass criterion: n_flagged == 0. No normalization by model-derived maximum."
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "note": "rescan_report.json (0 flagged, 2611 rows), rescan_report_prescrub.json (33 strict + 262 regex), teacher_gen_filtered_scrubbed.jsonl (2611 rows), rescan_cache.jsonl (6539 entries) — all confirmed."
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "note": "filter_rescan.py is active; 6539 cache entries confirm execution. prewarm_rescan_cache.py is live infrastructure."
+    },
+    "E_scope": {
+      "verdict": "pass",
+      "note": "Claim correctly scoped to the 2611-row scrubbed set actually used for student SFT. 10.1% data loss via scrubbing is documented and auditable."
+    },
+    "F_evaluation_type": {
+      "verdict": "pass",
+      "evaluation_type": "synthetic_proxy",
+      "note": "Appropriate for training-data safety; independent cache; threshold-based predicate."
+    }
+  },
+  "overall_verdict": "pass",
+  "primary_concern": "None. C2 evaluation is clean."
+}

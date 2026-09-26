@@ -1,0 +1,36 @@
+{
+  "claim_id": "C1",
+  "variant_tag": "model-swap-judge-gpt4o",
+  "audit_type": "experiment",
+  "audit_date": "2026-07-10",
+  "scope": "verify/C1_cross_modal_subliminal_transfer/variants/model-swap-judge-gpt4o/",
+  "checks": {
+    "A_gt_provenance": {
+      "verdict": "pass",
+      "note": "Gold truth from QA_I dataset 'Correct Answer' column. gpt-4o judge is semantic matcher, not GT generator. Unchanged from main experiment."
+    },
+    "B_score_normalization": {
+      "verdict": "pass",
+      "note": "Accuracy = n_correct/n_total via m0_verdict.py (unchanged script). No normalization artifacts. gpt-4o output format matches expected CORRECT/INCORRECT/OTHER labels."
+    },
+    "C_result_file_existence": {
+      "verdict": "pass",
+      "note": "All 4 arm files exist with 133 rows each. result.json numbers internally consistent: acc_ctrl=0.7895 (105/133), seed100=0.5489 (73/133), seed200=0.6391 (85/133), seed300=0.8195 (109/133). verdict=conditional."
+    },
+    "D_dead_code": {
+      "verdict": "pass",
+      "note": "Same m0_verdict.py as main experiment; all code paths live. --skip_aux intentional (robustness probe is judge calibration, not generation sensitivity)."
+    },
+    "E_scope": {
+      "verdict": "pass",
+      "note": "No new scope tension introduced. Pre-existing WARN (claim unanimity vs. conditional outcome) inherited from baseline audit. Variant does not amplify the overclaim."
+    },
+    "F_evaluation_type": {
+      "verdict": "pass",
+      "evaluation_type": "real_gt",
+      "note": "Benchmark-sourced gold answers. gpt-4o as semantic comparator. Separate cache file caches/eval_cache_gpt4o.jsonl prevents main-experiment contamination."
+    }
+  },
+  "overall_verdict": "pass",
+  "primary_concern": "None. All checks pass. Pre-existing scope tension (Check E) is inherited, not worsened."
+}

@@ -1,0 +1,35 @@
+{
+  "run_id": "dispatch_m2_iter1",
+  "iteration_round": 1,
+  "status": "completed",
+  "dispatched_by": "auto-iteration-loop/skills iter1",
+  "purpose": "C3 type-② fix: widened α + MMLU capability control at every α",
+  "started_at": "2026-07-10T05:28:43+08:00",
+  "finished_at": "2026-07-10T07:06:08+08:00",
+  "wall_clock_minutes": 97.42,
+  "waves": 6,
+  "total_runs": 25,
+  "gpu_ids": [3, 4, 5, 6, 7],
+  "effective_concurrent_gpus_avg": 4.5,
+  "gpu_hours": 7.31,
+  "gpu_hours_note": "wall_clock_minutes(97.42) * effective_concurrent_gpus_avg(4.5) / 60 = 7.31; 5 GPUs active during MMLU waves (3,5), 4 during QA_I waves and last wave 6.",
+  "outputs": {
+    "qa_widened_real": "mechanism/M2_causal/steering_m1_seed100/alpha{-3,-0.5,+0.5,+3}.jsonl (4 new files; existing {-2,-1,0,+1,+2} unchanged)",
+    "qa_widened_random": "mechanism/M2_causal/steering_random_seed100/alpha{-3,-0.5,+0.5,+3}.jsonl (4 new files; existing {-2,-1,+1,+2} unchanged)",
+    "mmlu_real": "mechanism/M2_causal_widened/mmlu/steering_m1_seed100/alpha{-3,-2,-1,-0.5,0,+0.5,+1,+2,+3}.jsonl (9 files, 500 rows each)",
+    "mmlu_random": "mechanism/M2_causal_widened/mmlu/steering_random_seed100/alpha{-3,-2,-1,-0.5,+0.5,+1,+2,+3}.jsonl (8 files, 500 rows each)",
+    "aggregated": "mechanism/M2_causal_widened/gap_closure_widened.json, mmlu_specificity.json"
+  },
+  "run_scripts": [
+    "scripts/prepare_mmlu_slice.py",
+    "scripts/mechanism_m2_intervene_mmlu.py",
+    "scripts/dispatch_m2_iter1.sh",
+    "scripts/mechanism_m2_aggregate_iter1.py"
+  ],
+  "gpu_pin_witness": {
+    "declared_gpu_ids": [3, 4, 5, 6, 7],
+    "used_gpu_ids": [3, 4, 5, 6, 7],
+    "pin_source": "dispatch_m2_iter1.sh env CUDA_VISIBLE_DEVICES=<id> per launch (see log per-wave lines)",
+    "assert_result": "PASS — every subprocess pinned to a subset of {3,4,5,6,7}"
+  }
+}

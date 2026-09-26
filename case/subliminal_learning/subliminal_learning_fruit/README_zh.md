@@ -73,3 +73,6 @@
   - `channel_prompts.txt` — 600 条中性描述性生成提示；
   - `eval_pref160.txt` — 160 条偏好评测提示。
 - **`loose_run/` · `strict_run/`**— 对应两版任务的**已复现实验记录**，含 `runs/`（分阶段产物与 verdict）、`src/`（复现代码）、figures、claims ledger 等，供对照参考。
+- **`auto-experiment-dir/`** — 论文中 fruit 结果所用数据的实验目录。其中 `paper-fig-data/fruit.csv` 是论文对应图使用的数据。
+
+  **来源说明：**`auto-experiment-dir/paper-fig-data/` 由 human 手动建立，用于汇总论文作图数据，不是实验流程自动生成的。

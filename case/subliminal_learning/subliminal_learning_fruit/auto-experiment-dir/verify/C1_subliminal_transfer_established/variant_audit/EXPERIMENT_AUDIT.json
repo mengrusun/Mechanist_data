@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-16",
+  "auditor": "gpt-4o (external, cross-model, llm-chat API)",
+  "claim_id": "C1",
+  "audit_scope": "variant model-swap-lora-rank8",
+  "linked_milestones": ["variant: model-swap-lora-rank8"],
+  "overall_verdict": "pass",
+  "integrity_status": "pass",
+  "checks": {
+    "gt_provenance": {
+      "status": "pass",
+      "details": "External gpt-4o judge; no self-referential derivation from model under test"
+    },
+    "score_normalization": {
+      "status": "pass",
+      "details": "p_banana = banana_n / num_prompts (fixed 160); no model-max normalization"
+    },
+    "result_existence": {
+      "status": "pass",
+      "details": "All 6 eval JSONs + result.json + diagnostics.json exist; numbers match. Conditional verdict is a labeling artifact (Wilcoxon NaN for n=3); PLAN.md success criterion met."
+    },
+    "dead_code": {
+      "status": "pass",
+      "details": "m0_verdict.py invoked in run.sh Step 3; all functions live"
+    },
+    "scope": {
+      "status": "pass",
+      "details": "3 seeds x 2 arms x 160 prompts; subset accurately documented in PLAN.md; no overclaiming"
+    },
+    "eval_type": "synthetic_proxy"
+  }
+}
